@@ -11,96 +11,56 @@ nextflow.enable.dsl = 2
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-include { GLSEQ  } from './workflows/glseq'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_glseq_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_glseq_pipeline'
-
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_glseq_pipeline'
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     GENOME PARAMETER VALUES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
+params.fasta         = WorkflowMain.getGenomeAttribute(params, 'fasta')
+params.bwa_index     = WorkflowMain.getGenomeAttribute(params, 'bwa')
+params.bowtie2_index = WorkflowMain.getGenomeAttribute(params, 'bowtie2')
+params.chromap_index = WorkflowMain.getGenomeAttribute(params, 'chromap')
+params.star_index    = WorkflowMain.getGenomeAttribute(params, 'star')
+params.gtf           = WorkflowMain.getGenomeAttribute(params, 'gtf')
+params.gff           = WorkflowMain.getGenomeAttribute(params, 'gff')
+params.gene_bed      = WorkflowMain.getGenomeAttribute(params, 'gene_bed')
+params.blacklist     = WorkflowMain.getGenomeAttribute(params, 'blacklist')
+params.macs_gsize    = WorkflowMain.getMacsGsize(params)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOWS FOR PIPELINE
+    VALIDATE & PRINT PARAMETER SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+WorkflowMain.initialise(workflow, params, log)
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    NAMED WORKFLOW FOR PIPELINE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+include { GLSEQ } from './workflows/glseq'
+
 //
-// WORKFLOW: Run main analysis pipeline depending on type of input
+// WORKFLOW: Run main grothlab/glseq analysis pipeline
 //
 workflow GROTHLAB_GLSEQ {
-
-    take:
-    samplesheet // channel: samplesheet read in from --input
-
-    main:
-
-    //
-    // WORKFLOW: Run pipeline
-    //
-    GLSEQ (
-        samplesheet
-    )
-
-    emit:
-    multiqc_report = GLSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
-
+    GLSEQ ()
 }
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
+    RUN ALL WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+//
+// WORKFLOW: Execute a single named workflow for the pipeline
+// See: https://github.com/nf-core/rnaseq/issues/619
+//
 workflow {
-
-    main:
-
-    //
-    // SUBWORKFLOW: Run initialisation tasks
-    //
-    PIPELINE_INITIALISATION (
-        params.version,
-        params.help,
-        params.validate_params,
-        params.monochrome_logs,
-        args,
-        params.outdir,
-        params.input
-    )
-
-    //
-    // WORKFLOW: Run main workflow
-    //
-    GROTHLAB_GLSEQ (
-        PIPELINE_INITIALISATION.out.samplesheet
-    )
-
-    //
-    // SUBWORKFLOW: Run completion tasks
-    //
-    PIPELINE_COMPLETION (
-        params.email,
-        params.email_on_fail,
-        params.plaintext_email,
-        params.outdir,
-        params.monochrome_logs,
-        params.hook_url,
-        GROTHLAB_GLSEQ.out.multiqc_report
-    )
+    GROTHLAB_GLSEQ ()
 }
 
 /*
