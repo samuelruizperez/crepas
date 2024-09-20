@@ -1,18 +1,18 @@
 process UNTAR {
     tag "$archive"
-    label 'process_low'
+    label 'process_single'
 
-    conda (params.enable_conda ? "conda-forge::sed=4.7" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ubuntu:20.04' :
-        'ubuntu:20.04' }"
+        'https://depot.galaxyproject.org/singularity/ubuntu:22.04' :
+        'nf-core/ubuntu:22.04' }"
 
     input:
     tuple val(meta), path(archive)
 
     output:
-    tuple val(meta), path("$untar"), emit: untar
-    path "versions.yml"            , emit: versions
+    tuple val(meta), path("$prefix"), emit: untar
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,19 +20,28 @@ process UNTAR {
     script:
     def args  = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    untar     = archive.toString() - '.tar.gz'
+    prefix    = task.ext.prefix ?: ( meta.id ? "${meta.id}" : archive.baseName.toString().replaceFirst(/\.tar$/, ""))
 
     """
-    mkdir output
+    mkdir $prefix
 
-    tar \\
-        -C output --strip-components 1 \\
-        -xzvf \\
-        $args \\
-        $archive \\
-        $args2
-
-    mv output ${untar}
+    ## Ensures --strip-components only applied when top level of tar contents is a directory
+    ## If just files or multiple directories, place all in prefix
+    if [[ \$(tar -taf ${archive} | grep -o -P "^.*?\\/" | uniq | wc -l) -eq 1 ]]; then
+        tar \\
+            -C $prefix --strip-components 1 \\
+            -xavf \\
+            $args \\
+            $archive \\
+            $args2
+    else
+        tar \\
+            -C $prefix \\
+            -xavf \\
+            $args \\
+            $archive \\
+            $args2
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -41,9 +50,31 @@ process UNTAR {
     """
 
     stub:
-    untar     = archive.toString() - '.tar.gz'
+    prefix    = task.ext.prefix ?: ( meta.id ? "${meta.id}" : archive.toString().replaceFirst(/\.[^\.]+(.gz)?$/, ""))
     """
-    touch $untar
+    mkdir ${prefix}
+    ## Dry-run untaring the archive to get the files and place all in prefix
+    if [[ \$(tar -taf ${archive} | grep -o -P "^.*?\\/" | uniq | wc -l) -eq 1 ]]; then
+        for i in `tar -tf ${archive}`;
+        do
+            if [[ \$(echo "\${i}" | grep -E "/\$") == "" ]];
+            then
+                touch \${i}
+            else
+                mkdir -p \${i}
+            fi
+        done
+    else
+        for i in `tar -tf ${archive}`;
+        do
+            if [[ \$(echo "\${i}" | grep -E "/\$") == "" ]];
+            then
+                touch ${prefix}/\${i}
+            else
+                mkdir -p ${prefix}/\${i}
+            fi
+        done
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

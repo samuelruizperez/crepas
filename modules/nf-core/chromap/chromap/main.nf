@@ -2,15 +2,15 @@ process CHROMAP_CHROMAP {
     tag "$meta.id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::chromap=0.2.1 bioconda::samtools=1.15.1" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:963e4fe6a85c548a4018585660aed79780a175d3-0' :
-        'quay.io/biocontainers/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:963e4fe6a85c548a4018585660aed79780a175d3-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' :
+        'biocontainers/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' }"
 
     input:
     tuple val(meta), path(reads)
-    path fasta
-    path index
+    tuple val(meta2), path(fasta)
+    tuple val(meta3), path(index)
     path barcodes
     path whitelist
     path chr_order
@@ -92,4 +92,19 @@ process CHROMAP_CHROMAP {
         END_VERSIONS
         """
     }
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    echo "" | gzip > ${prefix}.bed.gz
+    touch ${prefix}.bam
+    echo "" | gzip > ${prefix}.tagAlign.gz
+    echo "" | gzip > ${prefix}.pairs.gz
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        chromap: \$(echo \$(chromap --version 2>&1))
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
+    """
 }
