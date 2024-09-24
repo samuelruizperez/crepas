@@ -10,7 +10,7 @@ process GENOME_BLACKLIST_REGIONS {
         'quay.io/biocontainers/bedtools:2.30.0--hc088bd4_0' }"
 
     input:
-    path sizes
+    tuple val(meta), path(sizes)
     path blacklist
 
     output:

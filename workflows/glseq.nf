@@ -11,7 +11,7 @@ def valid_params = [
 def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
-WorkflowChipseq.initialise(params, log, valid_params)
+WorkflowGlseq.initialise(params, log, valid_params)
 
 // Check input path parameters to see if they exist
 def checkPathParamList = [
@@ -156,7 +156,11 @@ workflow GLSEQ {
     FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
         INPUT_CHECK.out.reads,
         params.skip_fastqc || params.skip_qc,
-        params.skip_trimming
+        params.with_umi,
+        params.skip_umi_extract,
+        params.skip_trimming,
+        params.umi_discard_read,
+        params.min_trimmed_reads
     )
     ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
 
@@ -171,7 +175,11 @@ workflow GLSEQ {
     if (params.aligner == 'bwa') {
         FASTQ_ALIGN_BWA (
             FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
-            PREPARE_GENOME.out.bwa_index
+            PREPARE_GENOME.out.bwa_index,
+            params.sort_bam,
+            // TODO: FIX this issue in general (fasta is a tuple)
+            PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it }
+        
         )
         ch_genome_bam        = FASTQ_ALIGN_BWA.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_BWA.out.bai
@@ -188,7 +196,9 @@ workflow GLSEQ {
         FASTQ_ALIGN_BOWTIE2 (
             FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.bowtie2_index,
-            params.save_unaligned
+            PREPARE_GENOME.out.fasta,
+            params.save_unaligned,
+            params.sort_bam
         )
         ch_genome_bam        = FASTQ_ALIGN_BOWTIE2.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_BOWTIE2.out.bai
@@ -205,7 +215,7 @@ workflow GLSEQ {
         FASTQ_ALIGN_CHROMAP (
             FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.chromap_index,
-            PREPARE_GENOME.out.fasta
+            PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it }
         )
 
         // Filter out paired-end reads until the issue below is fixed
@@ -292,7 +302,10 @@ workflow GLSEQ {
     // SUBWORKFLOW: Mark duplicates & filter BAM files after merging
     //
     BAM_MARKDUPLICATES_PICARD (
-        PICARD_MERGESAMFILES.out.bam
+        PICARD_MERGESAMFILES.out.bam,
+        PREPARE_GENOME.out.fasta,
+        PREPARE_GENOME.out.fai
+
     )
     ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
@@ -303,7 +316,8 @@ workflow GLSEQ {
         BAM_MARKDUPLICATES_PICARD.out.bam.join(BAM_MARKDUPLICATES_PICARD.out.bai, by: [0]),
         PREPARE_GENOME.out.filtered_bed.first(),
         ch_bamtools_filter_se_config,
-        ch_bamtools_filter_pe_config
+        ch_bamtools_filter_pe_config,
+        PREPARE_GENOME.out.fasta
     )
     ch_versions = ch_versions.mix(FILTER_BAM_BAMTOOLS.out.versions.first().ifEmpty(null))
 
@@ -325,9 +339,9 @@ workflow GLSEQ {
     ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
-            FILTER_BAM_BAMTOOLS.out.bam,
+            FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.bai, by: [0]),
             PREPARE_GENOME.out.fasta,
-            []
+            PREPARE_GENOME.out.fai
         )
         ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
@@ -364,7 +378,7 @@ workflow GLSEQ {
     //
     UCSC_BEDGRAPHTOBIGWIG (
         BEDTOOLS_GENOMECOV.out.bedgraph,
-        PREPARE_GENOME.out.chrom_sizes
+        PREPARE_GENOME.out.chrom_sizes.map{ it[1] }.collect{ it }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
 
@@ -437,7 +451,7 @@ workflow GLSEQ {
     ch_macs_gsize = params.macs_gsize
     if (!params.macs_gsize) {
         KHMER_UNIQUEKMERS (
-            PREPARE_GENOME.out.fasta,
+            PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it },
             params.read_length
         )
         ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it.text.trim() }
@@ -512,7 +526,7 @@ workflow GLSEQ {
         //
         HOMER_ANNOTATEPEAKS_MACS2 (
             ch_macs2_peaks,
-            PREPARE_GENOME.out.fasta,
+            PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it },
             PREPARE_GENOME.out.gtf
         )
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS_MACS2.out.versions.first())
@@ -589,7 +603,7 @@ workflow GLSEQ {
             //
             HOMER_ANNOTATEPEAKS_CONSENSUS (
                 MACS2_CONSENSUS.out.bed,
-                PREPARE_GENOME.out.fasta,
+                PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it },
                 PREPARE_GENOME.out.gtf
             )
             ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS_CONSENSUS.out.versions)
@@ -657,7 +671,7 @@ workflow GLSEQ {
         IGV (
             params.aligner,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
-            PREPARE_GENOME.out.fasta,
+            PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it },
             UCSC_BEDGRAPHTOBIGWIG.out.bigwig.collect{it[1]}.ifEmpty([]),
             ch_macs2_peaks.collect{it[1]}.ifEmpty([]),
             ch_macs2_consensus_bed_lib.collect{it[1]}.ifEmpty([]),

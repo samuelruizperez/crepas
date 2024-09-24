@@ -9,9 +9,9 @@ workflow FASTQ_ALIGN_BOWTIE2 {
     take:
     ch_reads          // channel: [ val(meta), [ reads ] ]
     ch_index          // channel: /path/to/bowtie2/index/
+    ch_fasta          // channel: [ val(meta), [ genome.fasta ] ]
     save_unaligned    // val
     sort_bam          // val
-    ch_fasta          // channel: /path/to/reference.fasta
 
     main:
 

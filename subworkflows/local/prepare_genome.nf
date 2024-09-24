@@ -38,16 +38,20 @@ workflow PREPARE_GENOME {
     //
     ch_fasta = Channel.empty()
     if (params.fasta.endsWith('.gz')) {
-        ch_fasta    = GUNZIP_FASTA ( [ [:], params.fasta ] ).gunzip.map{ it[1] }
+        ch_fasta    = Channel.of([
+                        [ id:'fasta' ], // meta map
+                         GUNZIP_FASTA ( [ [:], params.fasta ] ).gunzip.map{ it[1] }
+                        ])
         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else {
-        ch_fasta = file(params.fasta)
+        ch_fasta = Channel.of([ [ id:'fasta' ], file(params.fasta) ])
     }
 
     // Make fasta file available if reference saved or IGV is run
     if (params.save_reference || !params.skip_igv) {
         file("${params.outdir}/genome/").mkdirs()
-        ch_fasta.copyTo("${params.outdir}/genome/")
+        // copy fasta file (second element of tuple) to output directory
+        ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
     }
 
     //
@@ -114,7 +118,12 @@ workflow PREPARE_GENOME {
     //
     // Create chromosome sizes file
     //
-    ch_chrom_sizes = CUSTOM_GETCHROMSIZES ( ch_fasta ).sizes
+    CUSTOM_GETCHROMSIZES (
+        ch_fasta
+    )
+
+    ch_chrom_sizes = CUSTOM_GETCHROMSIZES.out.sizes
+    ch_fai         = CUSTOM_GETCHROMSIZES.out.fai
     ch_versions    = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
 
     //
@@ -203,10 +212,11 @@ workflow PREPARE_GENOME {
     }
 
     emit:
-    fasta         = ch_fasta                  //    path: genome.fasta
+    fasta         = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
+    fai           = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
     gtf           = ch_gtf                    //    path: genome.gtf
     gene_bed      = ch_gene_bed               //    path: gene.bed
-    chrom_sizes   = ch_chrom_sizes            //    path: genome.sizes
+    chrom_sizes   = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
     filtered_bed  = ch_genome_filtered_bed    //    path: *.include_regions.bed
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    path: bowtie2/index/

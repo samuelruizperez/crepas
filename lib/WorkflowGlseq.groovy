@@ -1,8 +1,8 @@
 //
-// This file holds several functions specific to the workflow/chipseq.nf in the nf-core/chipseq pipeline
+// This file holds several functions specific to the workflow/glseq.nf in the grothlab/glseq pipeline
 //
 
-class WorkflowChipseq {
+class WorkflowGlseq {
 
     //
     // Check and validate parameters
