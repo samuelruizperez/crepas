@@ -20,6 +20,9 @@ process BAM_FILTER {
     tuple val(meta), path("*.bam"), emit: bam
     path "versions.yml"           , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def prefix           = task.ext.prefix ?: "${meta.id}"
     def filter_params    = meta.single_end ? '-F 0x004' : '-F 0x004 -F 0x0008 -f 0x001'

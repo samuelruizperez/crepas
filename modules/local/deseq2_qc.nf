@@ -26,6 +26,9 @@ process DESEQ2_QC {
     path "size_factors"         , optional:true, emit: size_factors
     path "versions.yml"         , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def args      = task.ext.args ?: ''
     def peak_type = params.narrow_peak ? 'narrowPeak' : 'broadPeak'

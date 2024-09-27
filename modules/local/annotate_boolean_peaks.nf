@@ -14,6 +14,9 @@ process ANNOTATE_BOOLEAN_PEAKS {
     path '*.boolean.annotatePeaks.txt', emit: annotate_peaks_txt
     path "versions.yml"               , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """

@@ -1,6 +1,7 @@
 process MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS {
     tag "$meta.id"
-    conda (params.enable_conda ? "conda-forge::r-base=3.5.1" : null)
+
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/r-base:3.5.1':
         'quay.io/biocontainers/r-base:3.5.1' }"
@@ -15,6 +16,9 @@ process MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS {
     tuple val(meta), path("*.spp_nsc_mqc.tsv")        , emit: nsc
     tuple val(meta), path("*.spp_rsc_mqc.tsv")        , emit: rsc
     tuple val(meta), path("*.spp_correlation_mqc.tsv"), emit: correlation
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
