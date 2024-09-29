@@ -192,11 +192,12 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Alignment with Bowtie2 & BAM QC
     //
+    // TODO: using first() to convert the tuple to a value channel and make it consumable
     if (params.aligner == 'bowtie2') {
         FASTQ_ALIGN_BOWTIE2 (
             FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
-            PREPARE_GENOME.out.bowtie2_index,
-            PREPARE_GENOME.out.fasta,
+            PREPARE_GENOME.out.bowtie2_index.first(),
+            PREPARE_GENOME.out.fasta.first(),
             params.save_unaligned,
             params.sort_bam
         )
@@ -301,10 +302,11 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Mark duplicates & filter BAM files after merging
     //
+    // TODO: using first() to convert the tuple to a value channel and make it consumable
     BAM_MARKDUPLICATES_PICARD (
         PICARD_MERGESAMFILES.out.bam,
-        PREPARE_GENOME.out.fasta,
-        PREPARE_GENOME.out.fai
+        PREPARE_GENOME.out.fasta.first(),
+        PREPARE_GENOME.out.fai.first()
 
     )
     ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
@@ -317,7 +319,7 @@ workflow GLSEQ {
         PREPARE_GENOME.out.filtered_bed.first(),
         ch_bamtools_filter_se_config,
         ch_bamtools_filter_pe_config,
-        PREPARE_GENOME.out.fasta
+        PREPARE_GENOME.out.fasta.first()
     )
     ch_versions = ch_versions.mix(FILTER_BAM_BAMTOOLS.out.versions.first().ifEmpty(null))
 
@@ -336,12 +338,13 @@ workflow GLSEQ {
     //
     // MODULE: Picard post alignment QC
     //
+    // TODO: using first() to convert the tuple to a value channel and make it consumable
     ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
             FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.bai, by: [0]),
-            PREPARE_GENOME.out.fasta,
-            PREPARE_GENOME.out.fai
+            PREPARE_GENOME.out.fasta.first(),
+            PREPARE_GENOME.out.fai.first()
         )
         ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
@@ -419,6 +422,15 @@ workflow GLSEQ {
         .bam
         .join(FILTER_BAM_BAMTOOLS.out.bai, by: [0])
         .set { ch_genome_bam_bai }
+
+    // print to file for debugging
+    ch_genome_bam_bai
+        .map { 
+            meta, bam, bai -> 
+                "${meta.id}\t${bam}\t${bai}" 
+        }
+        .collectFile( name: 'ch_genome_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    //
     
     ch_genome_bam_bai
         .combine(ch_genome_bam_bai)
@@ -427,6 +439,16 @@ workflow GLSEQ {
                 meta1.control == meta2.id ? [ meta1, [ bam1, bam2 ], [ bai1, bai2 ] ] : null
         }
         .set { ch_ip_control_bam_bai }
+
+    // Print to file for debugging
+    ch_ip_control_bam_bai
+        .map { 
+            meta, bams, bais -> 
+                "${meta.id}\t${bams[0]}\t${bams[1]}\t${bais[0]}\t${bais[1]}" 
+        }
+        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        //
+
     
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
