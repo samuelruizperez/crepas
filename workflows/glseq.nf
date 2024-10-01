@@ -75,6 +75,8 @@ include { MULTIQC                             } from '../modules/local/multiqc'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools'
 include { MULTIQC_CUSTOM_PEAKS                } from '../modules/local/multiqc_custom_peaks'
 
+include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
+
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
@@ -113,7 +115,7 @@ include { HOMER_ANNOTATEPEAKS as HOMER_ANNOTATEPEAKS_CONSENSUS } from '../module
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
 
-include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
+// include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
 include { FASTQ_ALIGN_BWA          } from '../subworkflows/nf-core/fastq_align_bwa'
 include { FASTQ_ALIGN_BOWTIE2          } from '../subworkflows/nf-core/fastq_align_bowtie2'
 include { FASTQ_ALIGN_CHROMAP          } from '../subworkflows/nf-core/fastq_align_chromap'
@@ -153,7 +155,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Read QC and trim adapters
     //
-    FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
+    FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE (
         INPUT_CHECK.out.reads,
         params.skip_fastqc || params.skip_qc,
         params.with_umi,
@@ -162,7 +164,7 @@ workflow GLSEQ {
         params.umi_discard_read,
         params.min_trimmed_reads
     )
-    ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
+    ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.versions)
 
     //
     // SUBWORKFLOW: Alignment with BWA & BAM QC
@@ -174,7 +176,7 @@ workflow GLSEQ {
     ch_samtools_idxstats = Channel.empty()
     if (params.aligner == 'bwa') {
         FASTQ_ALIGN_BWA (
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.bwa_index,
             params.sort_bam,
             // TODO: FIX this issue in general (fasta is a tuple)
@@ -195,7 +197,7 @@ workflow GLSEQ {
     // TODO: using first() to convert the tuple to a value channel and make it consumable
     if (params.aligner == 'bowtie2') {
         FASTQ_ALIGN_BOWTIE2 (
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.bowtie2_index.first(),
             PREPARE_GENOME.out.fasta.first(),
             params.save_unaligned,
@@ -214,7 +216,7 @@ workflow GLSEQ {
     //
     if (params.aligner == 'chromap') {
         FASTQ_ALIGN_CHROMAP (
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.chromap_index,
             PREPARE_GENOME.out.fasta.map{ it[1] }.collect{ it }
         )
@@ -262,7 +264,7 @@ workflow GLSEQ {
     //
     if (params.aligner == 'star') {
         FASTQ_ALIGN_STAR (
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads,
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             PREPARE_GENOME.out.star_index
         )
         ch_genome_bam        = FASTQ_ALIGN_STAR.out.bam
@@ -722,9 +724,9 @@ workflow GLSEQ {
             CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
             ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
 
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]),
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]),
-            FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]),
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]),
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]),
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]),
 
             ch_samtools_stats.collect{it[1]}.ifEmpty([]),
             ch_samtools_flagstat.collect{it[1]}.ifEmpty([]),

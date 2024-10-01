@@ -38,7 +38,7 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,fastq_1,fastq_2,antibody,control
+    sample,fastq_1,fastq_2,fastq_umi,antibody,control
     SPT5_T0_REP1,SRR1822153_1.fastq.gz,SRR1822153_2.fastq.gz,SPT5,SPT5_INPUT_REP1
     SPT5_T0_REP2,SRR1822154_1.fastq.gz,SRR1822154_2.fastq.gz,SPT5,SPT5_INPUT_REP2
     SPT5_INPUT_REP1,SRR5204809_Spt5-ChIP_Input1_SacCer_ChIP-Seq_ss100k_R1.fastq.gz,SRR5204809_Spt5-ChIP_Input1_SacCer_ChIP-Seq_ss100k_R2.fastq.gz,,
@@ -52,7 +52,7 @@ def check_samplesheet(file_in, file_out):
 
         ## Check header
         MIN_COLS = 2
-        HEADER = ["sample", "fastq_1", "fastq_2", "antibody", "control"]
+        HEADER = ["sample", "fastq_1", "fastq_2", "fastq_umi", "antibody", "control"]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(f"ERROR: Please check samplesheet header -> {','.join(header)} != {','.join(HEADER)}")
@@ -78,7 +78,7 @@ def check_samplesheet(file_in, file_out):
                 )
 
             ## Check sample name entries
-            sample, fastq_1, fastq_2, antibody, control = lspl[: len(HEADER)]
+            sample, fastq_1, fastq_2, fastq_umi, antibody, control = lspl[: len(HEADER)]
             if sample.find(" ") != -1:
                 print(f"WARNING: Spaces have been replaced by underscores for sample: {sample}")
                 sample = sample.replace(" ", "_")
@@ -86,7 +86,7 @@ def check_samplesheet(file_in, file_out):
                 print_error("Sample entry has not been specified!", "Line", line)
 
             ## Check FastQ file extension
-            for fastq in [fastq_1, fastq_2]:
+            for fastq in [fastq_1, fastq_2, fastq_umi]:
                 if fastq:
                     if fastq.find(" ") != -1:
                         print_error("FastQ file contains spaces!", "Line", line)
@@ -120,15 +120,21 @@ def check_samplesheet(file_in, file_out):
                     )
 
             ## Auto-detect paired-end/single-end
-            sample_info = []  ## [single_end, fastq_1, fastq_2, antibody, control]
+            sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, antibody, control]
             if sample and fastq_1 and fastq_2:  ## Paired-end short reads
-                sample_info = ["0", fastq_1, fastq_2, antibody, control]
+                sample_info = ["0", fastq_1, fastq_2, fastq_umi, antibody, control]
             elif sample and fastq_1 and not fastq_2:  ## Single-end short reads
-                sample_info = ["1", fastq_1, fastq_2, antibody, control]
+                sample_info = ["1", fastq_1, fastq_2, fastq_umi, antibody, control]
             else:
                 print_error("Invalid combination of columns provided!", "Line", line)
 
-            ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, antibody, control ]]}
+            ## Auto-detect UMI fastq file
+            if fastq_umi:
+                sample_info.insert(1, "1")
+            else:
+                sample_info.insert(1, "0")
+
+            ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, antibody, control ]]}
             if sample not in sample_mapping_dict:
                 sample_mapping_dict[sample] = [sample_info]
             else:
@@ -147,8 +153,10 @@ def check_samplesheet(file_in, file_out):
                     [
                         "sample",
                         "single_end",
+                        "sep_umi_fq"
                         "fastq_1",
                         "fastq_2",
+                        "fastq_umi"
                         "antibody",
                         "control",
                     ]

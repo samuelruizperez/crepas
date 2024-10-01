@@ -592,5 +592,30 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "with_umi": {
+            "type": "boolean"
+        },
+        "skip_umi_extract": {
+            "type": "boolean",
+            "default": true
+        },
+        "umi_discard_read": {
+            "type": "integer",
+            "default": 0
+        },
+        "min_trimmed_reads": {
+            "type": "integer",
+            "default": 1
+        },
+        "sort_bam": {
+            "type": "boolean",
+            "default": true
+        },
+        "schema_ignore_params": {
+            "type": "string",
+            "default": "genomes"
+        }
+    }
 }
