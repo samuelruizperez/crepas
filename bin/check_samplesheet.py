@@ -129,7 +129,7 @@ def check_samplesheet(file_in, file_out):
                 print_error("Invalid combination of columns provided!", "Line", line)
 
             ## Auto-detect UMI fastq file
-            if fastq_umi:
+            if sample and fastq_umi:
                 sample_info.insert(1, "1")
             else:
                 sample_info.insert(1, "0")
@@ -153,10 +153,10 @@ def check_samplesheet(file_in, file_out):
                     [
                         "sample",
                         "single_end",
-                        "sep_umi_fq"
+                        "sep_umi_fq",
                         "fastq_1",
                         "fastq_2",
-                        "fastq_umi"
+                        "fastq_umi",
                         "antibody",
                         "control",
                     ]
