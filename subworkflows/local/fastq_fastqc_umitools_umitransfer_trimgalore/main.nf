@@ -44,32 +44,49 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     }
 
     umi_reads = reads
-    umi_log   = Channel.empty()
+    ch_sep_umi_fq       = Channel.empty()
+    ch_no_sep_umi_fq    = Channel.empty()
+    sep_umi_fq_log             = Channel.empty()
+    no_sep_umi_fq_log          = Channel.empty()
     if (with_umi && !skip_umi_extract) {
-            // if each reads has 3 elements
-            if (reads[1].size() == 3) {
-                UMITRANSFER (reads)
-                umi_reads = UMITRANSFER.out.reads
-                umi_log   = UMITRANSFER.out.log
-                ch_versions = ch_versions.mix(UMITRANSFER.out.versions.first())
-            } else {
-                UMITOOLS_EXTRACT (reads)
-                umi_reads = UMITOOLS_EXTRACT.out.reads
-                umi_log   = UMITOOLS_EXTRACT.out.log
-                ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions.first())
 
-                // Discard R1 / R2 if required
-                if (umi_discard_read in [1,2]) {
-                    UMITOOLS_EXTRACT
-                        .out
-                        .reads
-                        .map {
-                            meta, reads ->
-                                meta.single_end ? [ meta, reads ] : [ meta + ['single_end': true], reads[umi_discard_read % 2] ]
-                        }
-                        .set { umi_reads }
-                }
+        // split umi_reads channel into the ones that have meta.sep_umi_fq and the ones that don't
+        umi_reads
+            .branch { meta, reads -> 
+                sep_umi_fq: meta.sep_umi_fq
+                no_sep_umi_fq: !meta.sep_umi_fq
             }
+            .set { result }
+
+        // Move the key you want to join on to be the first element
+        ch_sep_umi_fq    = result.sep_umi_fq
+        ch_no_sep_umi_fq = result.no_sep_umi_fq
+
+        UMITRANSFER (ch_sep_umi_fq)
+        ch_sep_umi_fq = UMITRANSFER.out.reads
+        sep_umi_fq_log   = UMITRANSFER.out.log
+        ch_versions = ch_versions.mix(UMITRANSFER.out.versions.first())
+
+        UMITOOLS_EXTRACT (ch_no_sep_umi_fq)
+        ch_no_sep_umi_fq = UMITOOLS_EXTRACT.out.reads
+        no_sep_umi_fq_log   = UMITOOLS_EXTRACT.out.log
+        ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions.first())
+
+        // Discard R1 / R2 if required
+        if (umi_discard_read in [1,2]) {
+            UMITOOLS_EXTRACT
+                .out
+                .reads
+                .map {
+                    meta, reads ->
+                        meta.single_end ? [ meta, reads ] : [ meta + ['single_end': true], reads[umi_discard_read % 2] ]
+                }
+                .set { ch_no_sep_umi_fq }
+        }
+
+    // join ch_sep_umi_fq and ch_no_sep_umi_fq
+    umi_reads = ch_sep_umi_fq.mix(ch_no_sep_umi_fq)
+    
     }
 
     trim_reads      = umi_reads
@@ -120,7 +137,8 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     fastqc_html        // channel: [ val(meta), [ html ] ]
     fastqc_zip         // channel: [ val(meta), [ zip ] ]
 
-    umi_log            // channel: [ val(meta), [ log ] ]
+    sep_umi_fq_log            // channel: [ val(meta), [ log ] ]
+    no_sep_umi_fq_log         // channel: [ val(meta), [ log ] ]
 
     trim_unpaired      // channel: [ val(meta), [ reads ] ]
     trim_html          // channel: [ val(meta), [ html ] ]
