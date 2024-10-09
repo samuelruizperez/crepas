@@ -12,9 +12,9 @@ include {
 include {
     UNTAR as UNTAR_BWA_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
-    UNTAR as UNTAR_CHROMAP_INDEX
     UNTAR as UNTAR_STAR_INDEX    } from '../../modules/nf-core/untar/main'
 
+include { UNTARFILES           } from '../../modules/nf-core/untarfiles/main'
 include { GFFREAD              } from '../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../modules/nf-core/custom/getchromsizes/main'
 include { BWA_INDEX            } from '../../modules/nf-core/bwa/index/main'
@@ -23,11 +23,22 @@ include { CHROMAP_INDEX        } from '../../modules/nf-core/chromap/index/main'
 
 include { GTF2BED                  } from '../../modules/local/gtf2bed'
 include { GENOME_BLACKLIST_REGIONS } from '../../modules/local/genome_blacklist_regions'
-include { STAR_GENOMEGENERATE      } from '../../modules/local/star_genomegenerate'
+include { STAR_GENOMEGENERATE      } from '../../modules/nf-core/star/genomegenerate'
 
 workflow PREPARE_GENOME {
     take:
+    genome             //  string: genome name
+    genomes            //     map: genome attributes
     prepare_tool_index // string  : tool to prepare index for
+    fasta              //    path: path to genome fasta file
+    gtf                //    file: /path/to/genome.gtf
+    gff                //    file: /path/to/genome.gff
+    blacklist          //    file: /path/to/blacklist.bed
+    gene_bed           //    file: /path/to/gene.bed
+    bwa_index          //    file: /path/to/bwa/index/
+    bowtie2_index      //    file: /path/to/bowtie2/index/
+    chromap_index      //    file: /path/to/chromap/index/
+    star_index         //    file: /path/to/star/index/
 
     main:
 
@@ -47,11 +58,24 @@ workflow PREPARE_GENOME {
         ch_fasta = Channel.of([ [ id:'fasta' ], file(params.fasta) ])
     }
 
+    ch_fasta_exo = Channel.empty()
+    if (params.spikein_fasta && params.spikein_fasta.endsWith('.gz')) {
+        ch_fasta_exo = Channel.of([
+                        [ id:'spikein_fasta' ], // meta map
+                         GUNZIP_FASTA ( [ [:], params.spikein_fasta ] ).gunzip.map{ it[1] }
+                        ])
+        ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
+    } else if (params.spikein_fasta) {
+        ch_fasta_exo = Channel.of([ [ id:'spikein_fasta' ], file(params.spikein_fasta) ])
+    }
+
+
     // Make fasta file available if reference saved or IGV is run
     if (params.save_reference || !params.skip_igv) {
         file("${params.outdir}/genome/").mkdirs()
         // copy fasta file (second element of tuple) to output directory
         ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+        ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
     }
 
     //
@@ -118,10 +142,7 @@ workflow PREPARE_GENOME {
     //
     // Create chromosome sizes file
     //
-    CUSTOM_GETCHROMSIZES (
-        ch_fasta
-    )
-
+    CUSTOM_GETCHROMSIZES ( ch_fasta )
     ch_chrom_sizes = CUSTOM_GETCHROMSIZES.out.sizes
     ch_fai         = CUSTOM_GETCHROMSIZES.out.fai
     ch_versions    = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
@@ -132,7 +153,7 @@ workflow PREPARE_GENOME {
     ch_genome_filtered_bed = Channel.empty()
 
     GENOME_BLACKLIST_REGIONS (
-        CUSTOM_GETCHROMSIZES.out.sizes,
+        ch_chrom_sizes,
         ch_blacklist.ifEmpty([])
     )
     ch_genome_filtered_bed = GENOME_BLACKLIST_REGIONS.out.bed
@@ -204,7 +225,8 @@ workflow PREPARE_GENOME {
                 ch_star_index = UNTAR_STAR_INDEX ( [ [:], params.star_index ] ).untar.map{ it[1] }
                 ch_versions   = ch_versions.mix(UNTAR_STAR_INDEX.out.versions)
             } else {
-                ch_star_index = file(params.star_index)
+                ch_star_index = Channel.of( [ [:], file(params.star_index) ] )
+                // ch_star_index = file(params.star_index)
             }
         } else {
             ch_star_index = STAR_GENOMEGENERATE ( ch_fasta, ch_gtf ).index
@@ -223,6 +245,5 @@ workflow PREPARE_GENOME {
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index = ch_chromap_index          //    path: genome.index
     star_index    = ch_star_index             //    path: star/index/
-
     versions    = ch_versions.ifEmpty(null) // channel: [ versions.yml ]
 }
