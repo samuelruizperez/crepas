@@ -8,7 +8,7 @@ process SAMBAMBA_VIEW {
         'biocontainers/sambamba:1.0.1--h6f6fda4_0' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(bam), path(bai)
     path bed
 
     output:

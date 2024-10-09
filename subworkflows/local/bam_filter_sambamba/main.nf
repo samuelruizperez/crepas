@@ -10,15 +10,18 @@ workflow BAM_FILTER_SAMBAMBA {
     take:
     ch_bam              // channel: [ val(meta), [ bam ]]
     ch_bed                    // channel: [ bed ]
-    ch_fasta                  // channel: [ fasta ]       
+    ch_fasta                  // channel: [ fasta ]
 
     main:
     ch_versions = Channel.empty()
 
     SAMTOOLS_INDEX(ch_bam)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
-    
-    SAMBAMBA_VIEW(ch_bam, ch_bed)
+
+    SAMBAMBA_VIEW(
+        ch_bam.join(SAMTOOLS_INDEX.out.bai, by: [0]),
+        ch_bed
+    )
 
     BAM_SORT_STATS_SAMTOOLS(SAMBAMBA_VIEW.out.bam, ch_fasta)
 

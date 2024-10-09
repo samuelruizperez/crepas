@@ -297,6 +297,7 @@ workflow GLSEQ {
         ch_fasta.first()
     )
     ch_dedup_bam = BAM_FILTER_SAMBAMBA.out.bam
+    ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.bai
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
@@ -377,7 +378,7 @@ workflow GLSEQ {
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
         ch_dedup_bam.join(ch_dedup_flagstat, by: [0]),
-        ch_chrom_sizes
+        ch_chrom_sizes.map{ it[1] }.collect{ it }
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
@@ -426,7 +427,7 @@ workflow GLSEQ {
     //     .collectFile( name: 'ch_genome_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
     //
 
-   ch_genome_bam_bai
+    ch_genome_bam_bai
         .map {
             meta, bam, bai ->
                 meta.control ? null : [ meta.id, [ bam ] , [ bai ] ]
@@ -494,8 +495,8 @@ workflow GLSEQ {
     //
     BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
         ch_ip_control_bam,
-        ch_fasta,
-        ch_gtf,
+        ch_fasta.map{ it[1] }.collect{ it },
+        ch_gtf.map{ it[1] }.collect{ it },
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
