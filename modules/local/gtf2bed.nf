@@ -8,10 +8,10 @@ process GTF2BED {
         'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
-    path gtf
+    tuple val(meta), path(gtf)
 
     output:
-    path '*.bed'       , emit: bed
+    tuple val(meta), path("*.bed")       , emit: bed
     path "versions.yml", emit: versions
 
     when:

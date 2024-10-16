@@ -14,7 +14,7 @@ process GENOME_BLACKLIST_REGIONS {
     path blacklist
 
     output:
-    path '*.bed'       , emit: bed
+    tuple val(meta), path("*.bed")     , emit: bed
     path "versions.yml", emit: versions
 
     when:

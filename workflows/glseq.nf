@@ -46,8 +46,6 @@ include { DEEPTOOLS_PLOTFINGERPRINT     } from '../modules/nf-core/deeptools/plo
 include { KHMER_UNIQUEKMERS             } from '../modules/nf-core/khmer/uniquekmers/main'
 include { MACS2_CALLPEAK                } from '../modules/nf-core/macs2/callpeak/main'
 include { SUBREAD_FEATURECOUNTS         } from '../modules/nf-core/subread/featurecounts/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS   } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
@@ -150,7 +148,7 @@ workflow GLSEQ {
             ch_bwa_index,
             params.sort_bam,
             // TODO: FIX this issue in general (fasta is a tuple)
-            ch_fasta.map{ it[1] }.collect{ it }
+            ch_fasta.map{ it[1] }
 
         )
         ch_genome_bam        = FASTQ_ALIGN_BWA.out.bam
@@ -187,8 +185,8 @@ workflow GLSEQ {
     if (params.aligner == 'chromap') {
         FASTQ_ALIGN_CHROMAP (
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_chromap_index,
-            ch_fasta.map{ it[1] }.collect{ it }
+            ch_chromap_index.first(),
+            ch_fasta.map{ it[1] }
         )
 
         ch_genome_bam        = ALIGN_CHROMAP.out.bam
@@ -208,8 +206,8 @@ workflow GLSEQ {
             ch_star_index.first(),
             ch_gtf.first(),
             true,
-            false,
-            params.seq_center,
+            params.seq_platform ?: '',
+            params.seq_center ?: '',
             ch_fasta.first(),
             Channel.of([[:], []])
 
@@ -378,7 +376,7 @@ workflow GLSEQ {
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
         ch_dedup_bam.join(ch_dedup_flagstat, by: [0]),
-        ch_chrom_sizes.map{ it[1] }.collect{ it }
+        ch_chrom_sizes.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
@@ -476,7 +474,7 @@ workflow GLSEQ {
     ch_macs_gsize = params.macs_gsize
     if (!params.macs_gsize) {
         KHMER_UNIQUEKMERS (
-            ch_fasta.map{ it[1] }.collect{ it },
+            ch_fasta.map{ it[1] },
             params.read_length
         )
         ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it.text.trim() }
@@ -495,8 +493,8 @@ workflow GLSEQ {
     //
     BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
         ch_ip_control_bam,
-        ch_fasta.map{ it[1] }.collect{ it },
-        ch_gtf.map{ it[1] }.collect{ it },
+        ch_fasta.map{ it[1] },
+        ch_gtf.map{ it[1] },
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,

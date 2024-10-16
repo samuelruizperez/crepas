@@ -49,10 +49,7 @@ workflow PREPARE_GENOME {
     //
     ch_fasta = Channel.empty()
     if (params.fasta.endsWith('.gz')) {
-        ch_fasta    = Channel.of([
-                        [ id:'fasta' ], // meta map
-                         GUNZIP_FASTA ( [ [:], params.fasta ] ).gunzip.map{ it[1] }
-                        ])
+        ch_fasta    = GUNZIP_FASTA ( [ [id:'fasta'], params.fasta ] ).gunzip
         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else {
         ch_fasta = Channel.of([ [ id:'fasta' ], file(params.fasta) ])
@@ -60,13 +57,10 @@ workflow PREPARE_GENOME {
 
     ch_fasta_exo = Channel.empty()
     if (params.spikein_fasta && params.spikein_fasta.endsWith('.gz')) {
-        ch_fasta_exo = Channel.of([
-                        [ id:'spikein_fasta' ], // meta map
-                         GUNZIP_FASTA ( [ [:], params.spikein_fasta ] ).gunzip.map{ it[1] }
-                        ])
+        ch_fasta_exo = GUNZIP_FASTA ( [ [id:'spikein_fasta'], params.spikein_fasta ] ).gunzip
         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else if (params.spikein_fasta) {
-        ch_fasta_exo = Channel.of([ [ id:'spikein_fasta' ], file(params.spikein_fasta) ])
+        ch_fasta_exo = Channel.of([ [id:'spikein_fasta'], file(params.spikein_fasta) ])
     }
 
 
@@ -83,19 +77,19 @@ workflow PREPARE_GENOME {
     //
     if (params.gtf) {
         if (params.gtf.endsWith('.gz')) {
-            ch_gtf      = GUNZIP_GTF ( [ [:], params.gtf ] ).gunzip.map{ it[1] }
+            ch_gtf      = GUNZIP_GTF ( [ [id:'gtf'], params.gtf ] ).gunzip
             ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
         } else {
-            ch_gtf = file(params.gtf)
+            ch_gtf = Channel.of( [ [id:'gtf'], file(params.gtf) ] )
         }
     } else if (params.gff) {
         if (params.gff.endsWith('.gz')) {
-            ch_gff      = GUNZIP_GFF ( [ [:], params.gff ] ).gunzip.map{ it[1] }
+            ch_gff      = GUNZIP_GFF ( [ [id:'gff'], params.gff ] ).gunzip
             ch_versions = ch_versions.mix(GUNZIP_GFF.out.versions)
         } else {
-            ch_gff = file(params.gff)
+            ch_gff = Channel.of( [ [id:'gff'], file(params.gff) ] )
         }
-        ch_gtf      = GFFREAD ( ch_gff ).gtf
+        ch_gtf      = GFFREAD ( ch_gff ).gtf.map{ [ [id:'gtf'], it[1] ] }
         ch_versions = ch_versions.mix(GFFREAD.out.versions)
     }
 
@@ -105,10 +99,10 @@ workflow PREPARE_GENOME {
     ch_blacklist = Channel.empty()
     if (params.blacklist) {
         if (params.blacklist.endsWith('.gz')) {
-            ch_blacklist = GUNZIP_BLACKLIST ( [ [:], params.blacklist ] ).gunzip.map{ it[1] }
+            ch_blacklist = GUNZIP_BLACKLIST ( [ [id:'blacklist'], params.blacklist ] ).gunzip
             ch_versions  = ch_versions.mix(GUNZIP_BLACKLIST.out.versions)
         } else {
-            ch_blacklist = Channel.fromPath(file(params.blacklist))
+            ch_blacklist = Channel.of( [ [id:'blacklist'], file(params.blacklist) ] )
         }
     }
 
@@ -128,14 +122,14 @@ workflow PREPARE_GENOME {
     }
 
     if (make_bed) {
-        ch_gene_bed = GTF2BED ( ch_gtf ).bed
+        ch_gene_bed = GTF2BED ( ch_gtf ).bed.map{ [ [id:'gene_bed'], it[1] ] }
         ch_versions = ch_versions.mix(GTF2BED.out.versions)
     } else {
         if (params.gene_bed.endsWith('.gz')) {
-            ch_gene_bed = GUNZIP_GENE_BED ( [ [:], params.gene_bed ] ).gunzip.map{ it[1] }
+            ch_gene_bed = GUNZIP_GENE_BED ( [ [id:'gene_bed'], params.gene_bed ] ).gunzip
             ch_versions = ch_versions.mix(GUNZIP_GENE_BED.out.versions)
         } else {
-            ch_gene_bed = file(params.gene_bed)
+            ch_gene_bed = Channel.of( [ [id:'gene_bed'], file(params.ch_gene_bed) ] )
         }
     }
 
@@ -154,7 +148,8 @@ workflow PREPARE_GENOME {
 
     GENOME_BLACKLIST_REGIONS (
         ch_chrom_sizes,
-        ch_blacklist.ifEmpty([])
+        // if second element of tuple is empty, use [] as input for GENOME_BLACKLIST_REGIONS
+        ch_blacklist.map{ it[1] }.ifEmpty([])
     )
     ch_genome_filtered_bed = GENOME_BLACKLIST_REGIONS.out.bed
     ch_versions = ch_versions.mix(GENOME_BLACKLIST_REGIONS.out.versions)
@@ -185,11 +180,10 @@ workflow PREPARE_GENOME {
     if (prepare_tool_index == 'bowtie2') {
         if (params.bowtie2_index) {
             if (params.bowtie2_index.endsWith('.tar.gz')) {
-                ch_bowtie2_index = UNTAR_BOWTIE2_INDEX ( [ [:], params.bowtie2_index ] ).untar.map{ it[1] }
+                ch_bowtie2_index = UNTAR_BOWTIE2_INDEX ( [ [:], params.bowtie2_index ] ).untar
                 ch_versions  = ch_versions.mix(UNTAR_BOWTIE2_INDEX.out.versions)
             } else {
                 ch_bowtie2_index = Channel.of( [ [:], file(params.bowtie2_index) ] )
-                // ch_bowtie2_index = file(params.bowtie2_index)
             }
         } else {
             ch_bowtie2_index = BOWTIE2_BUILD ( ch_fasta ).index
@@ -204,7 +198,7 @@ workflow PREPARE_GENOME {
     if (prepare_tool_index == 'chromap') {
         if (params.chromap_index) {
             if (params.chromap_index.endsWith('.tar.gz')) {
-                ch_chromap_index = UNTAR_CHROMAP_INDEX ( [ [:], params.chromap_index ] ).untar.map{ it[1] }
+                ch_chromap_index = UNTAR_CHROMAP_INDEX ( [ [:], params.chromap_index ] ).untar
                 ch_versions  = ch_versions.mix(UNTAR.out.versions)
             } else {
                 ch_chromap_index = file(params.chromap_index)
@@ -222,11 +216,10 @@ workflow PREPARE_GENOME {
     if (prepare_tool_index == 'star') {
         if (params.star_index) {
             if (params.star_index.endsWith('.tar.gz')) {
-                ch_star_index = UNTAR_STAR_INDEX ( [ [:], params.star_index ] ).untar.map{ it[1] }
+                ch_star_index = UNTAR_STAR_INDEX ( [ [:], params.star_index ] ).untar
                 ch_versions   = ch_versions.mix(UNTAR_STAR_INDEX.out.versions)
             } else {
                 ch_star_index = Channel.of( [ [:], file(params.star_index) ] )
-                // ch_star_index = file(params.star_index)
             }
         } else {
             ch_star_index = STAR_GENOMEGENERATE ( ch_fasta, ch_gtf ).index
@@ -237,13 +230,13 @@ workflow PREPARE_GENOME {
     emit:
     fasta         = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
     fai           = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
-    gtf           = ch_gtf                    //    path: genome.gtf
-    gene_bed      = ch_gene_bed               //    path: gene.bed
+    gtf           = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
+    gene_bed      = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes   = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
-    filtered_bed  = ch_genome_filtered_bed    //    path: *.include_regions.bed
+    filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
-    chromap_index = ch_chromap_index          //    path: genome.index
-    star_index    = ch_star_index             //    path: star/index/
-    versions    = ch_versions.ifEmpty(null) // channel: [ versions.yml ]
+    chromap_index = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
+    star_index    = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
+    versions      = ch_versions.ifEmpty(null) //    channel: [ versions.yml ]
 }
