@@ -246,6 +246,19 @@ workflow GLSEQ {
 
     // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
     if (params.with_umi) {
+
+        //
+        // MODULE: Preseq coverage analysis
+        //
+        // TODO: this is done on the bams with spike-in included
+        ch_preseq_multiqc = Channel.empty()
+        if (!params.skip_preseq) {
+            PRESEQ_LCEXTRAP (
+                PICARD_MERGESAMFILES.out.bam
+            )
+            ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
+            ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
+        }
         //
         // SUBWORKFLOW: Deduplicate BAM files with UMI-tools
         //
@@ -276,12 +289,25 @@ workflow GLSEQ {
         )
         ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
-
-
         ch_dedup_bam = FILTER_BAM_BAMTOOLS.out.bam
         ch_dedup_bai = FILTER_BAM_BAMTOOLS.out.bai
         ch_dedup_flagstat = FILTER_BAM_BAMTOOLS.out.flagstat
-    }
+
+        //
+        // MODULE: Preseq coverage analysis
+        //
+        // TODO: this is done on the bams with spike-in included
+        ch_preseq_multiqc = Channel.empty()
+        if (!params.skip_preseq) {
+            PRESEQ_LCEXTRAP (
+                BAM_MARKDUPLICATES_PICARD.out.bam
+            )
+            ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
+            ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
+        }
+}
+
+
 
     //
     // SUBWORKFLOW: Filter BAM file with Sambamba
@@ -294,6 +320,8 @@ workflow GLSEQ {
     ch_dedup_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.bai
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
+
+
 
     //
     // SUBWORKFLOW: Spike-in splitting
@@ -309,19 +337,6 @@ workflow GLSEQ {
         ch_dedup_bam = BAM_SPIKEIN_SPLIT.out.bam
         ch_dedup_bai = BAM_SPIKEIN_SPLIT.out.bai
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
-    }
-
-    //
-    // MODULE: Preseq coverage analysis
-    //
-    // TODO: this is done on the bams with spike-in included
-    ch_preseq_multiqc = Channel.empty()
-    if (!params.skip_preseq) {
-        PRESEQ_LCEXTRAP (
-            ch_dedup_bam
-        )
-        ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
-        ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
     }
 
     //
@@ -385,7 +400,7 @@ workflow GLSEQ {
         //
         DEEPTOOLS_COMPUTEMATRIX (
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig,
-            ch_gene_bed
+            ch_gene_bed.map{ it[1] }
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
 
@@ -523,8 +538,8 @@ workflow GLSEQ {
         BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 (
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks,
             ch_antibody_bams,
-            ch_fasta,
-            ch_gtf,
+            ch_fasta.map{ it[1] },
+            ch_gtf.map{ it[1] },
             ch_deseq2_pca_header,
             ch_deseq2_clustering_header,
             params.narrow_peak,
@@ -546,7 +561,7 @@ workflow GLSEQ {
         IGV (
             params.aligner,
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
-            ch_fasta,
+            ch_fasta.map{ it[1] },
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig.collect{it[1]}.ifEmpty([]),
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),

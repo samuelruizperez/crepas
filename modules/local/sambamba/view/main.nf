@@ -9,7 +9,7 @@ process SAMBAMBA_VIEW {
 
     input:
     tuple val(meta), path(bam), path(bai)
-    path bed
+    tuple val(meta2), path(bed)
 
     output:
     tuple val(meta), path("*.bam"),     emit: bam,  optional: true
