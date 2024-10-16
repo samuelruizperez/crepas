@@ -38,14 +38,11 @@ include { PICARD_MERGESAMFILES          } from '../modules/nf-core/picard/merges
 include { PICARD_COLLECTMULTIPLEMETRICS } from '../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP               } from '../modules/nf-core/preseq/lcextrap/main'
 include { PHANTOMPEAKQUALTOOLS          } from '../modules/nf-core/phantompeakqualtools/main'
-include { UCSC_BEDGRAPHTOBIGWIG         } from '../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { DEEPTOOLS_COMPUTEMATRIX       } from '../modules/nf-core/deeptools/computematrix/main'
 include { DEEPTOOLS_PLOTPROFILE         } from '../modules/nf-core/deeptools/plotprofile/main'
 include { DEEPTOOLS_PLOTHEATMAP         } from '../modules/nf-core/deeptools/plotheatmap/main'
 include { DEEPTOOLS_PLOTFINGERPRINT     } from '../modules/nf-core/deeptools/plotfingerprint/main'
 include { KHMER_UNIQUEKMERS             } from '../modules/nf-core/khmer/uniquekmers/main'
-include { MACS2_CALLPEAK                } from '../modules/nf-core/macs2/callpeak/main'
-include { SUBREAD_FEATURECOUNTS         } from '../modules/nf-core/subread/featurecounts/main'
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
