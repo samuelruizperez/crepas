@@ -22,17 +22,22 @@ process BAM_SPLIT_BY_GENOME {
     when:
     task.ext.when == null || task.ext.when
 
+//                     samtools sort -T ${prefix} --threads $task.cpus - | \\
+
     script:
     def prefix           = task.ext.prefix ?: "${meta.id}"
     def grep_command     = filter_out ? "grep -v" : "grep"
-    def reheader_command = filter_out ? "samtools reheader -c 'grep -v _${genome_string}' - |" : ''
+    def reheader_command = filter_out ? "samtools reheader -c 'grep -v \"_${genome_string}\" -e ^@CO -e ^@PG' ${prefix}.sam > ${prefix}.tmp.sam && mv ${prefix}.tmp.sam ${prefix}.sam" : ''
     """
     samtools view \\
         -h $bam | \\
-            $grep_command "_${genome_string}" | \\
-                samtools view -bS - | \\
-                    $reheader_command \\
-                    > ${prefix}.bam
+            $grep_command "_${genome_string}" > ${prefix}.sam
+
+    # reaheader if filter_out is set
+    $reheader_command
+
+    samtools view -b ${prefix}.sam \\
+        > ${prefix}.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

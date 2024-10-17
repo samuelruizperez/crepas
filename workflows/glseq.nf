@@ -17,7 +17,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_chipseq_pipeline'
 include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
-include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split'
+include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
@@ -307,8 +307,6 @@ workflow GLSEQ {
         }
 }
 
-
-
     //
     // SUBWORKFLOW: Filter BAM file with Sambamba
     //
@@ -321,11 +319,10 @@ workflow GLSEQ {
     ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.bai
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
-
-
     //
     // SUBWORKFLOW: Spike-in splitting
-    if (params.spikein) {
+    //
+    if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_dedup_bam,
             ch_fasta.first(),
@@ -355,7 +352,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
 
- //
+    //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
     //
     ch_phantompeakqualtools_spp_multiqc                 = Channel.empty()

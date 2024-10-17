@@ -55,13 +55,13 @@ workflow PREPARE_GENOME {
         ch_fasta = Channel.of([ [ id:'fasta' ], file(params.fasta) ])
     }
 
-    ch_fasta_exo = Channel.empty()
-    if (params.spikein_fasta && params.spikein_fasta.endsWith('.gz')) {
-        ch_fasta_exo = GUNZIP_FASTA ( [ [id:'spikein_fasta'], params.spikein_fasta ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
-    } else if (params.spikein_fasta) {
-        ch_fasta_exo = Channel.of([ [id:'spikein_fasta'], file(params.spikein_fasta) ])
-    }
+    // ch_fasta_exo = Channel.empty()
+    // if (params.spikein_fasta && params.spikein_fasta.endsWith('.gz')) {
+    //     ch_fasta_exo = GUNZIP_FASTA ( [ [id:'spikein_fasta'], params.spikein_fasta ] ).gunzip
+    //     ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
+    // } else if (params.spikein_fasta) {
+    //     ch_fasta_exo = Channel.of([ [id:'spikein_fasta'], file(params.spikein_fasta) ])
+    // }
 
 
     // Make fasta file available if reference saved or IGV is run
@@ -69,7 +69,7 @@ workflow PREPARE_GENOME {
         file("${params.outdir}/genome/").mkdirs()
         // copy fasta file (second element of tuple) to output directory
         ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
-        ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+        //ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
     }
 
     //
