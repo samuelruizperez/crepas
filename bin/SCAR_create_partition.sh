@@ -229,7 +229,7 @@ if [[ -f ${INPUT_BAM_FILE} ]]; then
 	  awk -v c=${CPM} 'BEGIN{OFS="\t"}{print $1, $2, $3, ($4+1)/c, $5, $6}' ${TMP_DIR}/${CHR}_windows_F.tab > ${TMP_DIR}/${CHR}_windows_F_CPM.tab
 	  awk -v c=${CPM} 'BEGIN{OFS="\t"}{print $1, $2, $3, ($4+1)/c, $5, $6}' ${TMP_DIR}/${CHR}_windows_R.tab > ${TMP_DIR}/${CHR}_windows_R_CPM.tab
 	  awk -v c=${CPM2} 'BEGIN{OFS="\t"}{print $1, $2, $3, ($4+1)/c, $5, $6}' ${TMP_DIR}/${CHR}_windows_input_F.tab > ${TMP_DIR}/${CHR}_windows_input_F_CPM.tab
-    awk -v c=${CPM2} 'BEGIN{OFS="\t"}{print $1, $2, $3, ($4+1)/c, $5, $6}' ${TMP_DIR}/${CHR}_windows_input_R.tab > ${TMP_DIR}/${CHR}_windows_input_R_CPM.tab
+      awk -v c=${CPM2} 'BEGIN{OFS="\t"}{print $1, $2, $3, ($4+1)/c, $5, $6}' ${TMP_DIR}/${CHR}_windows_input_R.tab > ${TMP_DIR}/${CHR}_windows_input_R_CPM.tab
     paste ${TMP_DIR}/${CHR}_windows_F_CPM.tab ${TMP_DIR}/${CHR}_windows_input_F_CPM.tab | \
       awk -v c=${CPM} 'BEGIN{OFS="\t"}{if (($4-$10) > 1/c) print $1, $2, $3, $4-$10, $5, $6; else print $1, $2, $3, 1/c, $5, $6}' - > ${TMP_DIR}/${CHR}_windows_F_CPM_minusinput.tab
 	  paste ${TMP_DIR}/${CHR}_windows_R_CPM.tab ${TMP_DIR}/${CHR}_windows_input_R_CPM.tab | \

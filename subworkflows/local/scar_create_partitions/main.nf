@@ -1,10 +1,3 @@
-// TODO nf-core: If in doubt look at other nf-core/subworkflows to see how we are doing things! :)
-//               https://github.com/nf-core/modules/tree/master/subworkflows
-//               You can also ask for help via your pull request or on the #subworkflows channel on the nf-core Slack workspace:
-//               https://nf-co.re/join
-// TODO nf-core: A subworkflow SHOULD import at least two modules
-
-
 include { BAM_SPLIT_BY_STRAND   } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX        } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV             } from '../../../modules/nf-core/bedtools/genomecov/main'
@@ -12,38 +5,27 @@ include { BEDTOOLS_SLOP                  } from '../../../modules/nf-core/bedtoo
 include { UCSC_BEDCLIP               } from '../../../modules/nf-core/ucsc/bedclip/main'
 include { FILE_SORT                  } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG      } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { BEDTOOLS_MAKEWINDOWS           } from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BED_SPLIT_WINDOWS     } from '../../../modules/local/bed_split_windows/main'
-include { UCSC_BIGWIGAVERAGEOVERBED  } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
-include { NORMALIZE_STRANDS     } from '../../../modules/local/normalize_strands/main'
-
 
 
 workflow SCAR_CREATE_PARTITIONS {
 
     take:
-    // TODO nf-core: edit input (take) channels
-    ch_bam // channel: [ val(meta), [ bam ] ]
+    ch_bam          // channel: [ val(meta), [ bam ] ]
     ch_chrom_sizes  // channel: [ bed ]
-
 
     main:
 
     ch_versions = Channel.empty()
 
-    // TODO nf-core: substitute modules here for the modules of your subworkflow
-
-
     BAM_SPLIT_BY_STRAND ( ch_bam )
     ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
-
 
     BAM_SPLIT_BY_STRAND
         .out
         .f_bam
         .map {
             meta, f_bam ->
-                [ meta + ['strand': 'forward'], f_bam ]
+                [ meta + ['strand':'forward'], f_bam ]
         }
         .set { ch_f_bam }
 
@@ -52,7 +34,7 @@ workflow SCAR_CREATE_PARTITIONS {
         .r_bam
         .map {
             meta, r_bam ->
-                [ meta + ['strand': 'reverse'], r_bam ]
+                [ meta + ['strand':'reverse'], r_bam ]
         }
         .set { ch_r_bam }
 
@@ -101,22 +83,9 @@ workflow SCAR_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
 
-    BEDTOOLS_MAKEWINDOWS (
-        ch_chrom_sizes
-    )
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
-
-
-
-
-
-
     emit:
-    // TODO nf-core: edit emitted channels
-    bam      = SAMTOOLS_SORT.out.bam           // channel: [ val(meta), [ bam ] ]
-    bai      = SAMTOOLS_INDEX.out.bai          // channel: [ val(meta), [ bai ] ]
-    csi      = SAMTOOLS_INDEX.out.csi          // channel: [ val(meta), [ csi ] ]
+    bigwig      = UCSC_BEDGRAPHTOBIGWIG.out.bigwig   // channel: [ val(meta), [ bigwig ] ]
 
-    versions = ch_versions                     // channel: [ versions.yml ]
+      versions = ch_versions                         // channel: [ versions.yml ]
 }
 

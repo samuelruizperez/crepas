@@ -558,6 +558,7 @@ workflow GLSEQ {
     //     ch_dedup_bam,
     //     ch_chrom_sizes.map{ it[1] },
 
+    // SCAR_SMOOTH_PARTITIONS (
 
 
     //
