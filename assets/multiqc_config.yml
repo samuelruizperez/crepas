@@ -6,17 +6,6 @@ data_format: "yaml"
 
 export_plots: true
 
-run_modules:
-  - custom_content
-  - fastqc
-  - cutadapt
-  - samtools
-  - picard
-  - preseq
-  - featureCounts
-  - deeptools
-  - phantompeakqualtools
-
 exclude_modules:
   - "general_stats"
 
@@ -128,10 +117,12 @@ report_section_order:
     order: -3400
   deseq2_clustering_10:
     order: -3500
-  software_versions:
+  "grothlab-glseq-methods-description":
     order: -3600
-  nf-core-chipseq-summary:
+  software_versions:
     order: -3700
+  "grothlab-glseq-summary":
+    order: -3800
 
 custom_plot_config:
   picard_insert_size:
@@ -172,3 +163,5 @@ sp:
     fn: "*plotProfile*"
   phantompeakqualtools/out:
     fn: "*.spp.out"
+
+disable_version_detection: true

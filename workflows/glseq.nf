@@ -605,18 +605,10 @@ workflow GLSEQ {
             // BAM_MARKDUPLICATES_PICARD.out.idxstats.collect{it[1]}.ifEmpty([]),
             // BAM_MARKDUPLICATES_PICARD.out.metrics.collect{it[1]}.ifEmpty([]),
 
-            // BAM_FILTER_BAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            // BAM_FILTER_BAMTOOLS.out.flagstat.collect{it[1]}.ifEmpty([]),
-            // BAM_FILTER_BAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]),
+            BAM_FILTER_SAMBAMBA.out.stats.collect{it[1]}.ifEmpty([]),
+            BAM_FILTER_SAMBAMBA.out.flagstat.collect{it[1]}.ifEmpty([]),
+            BAM_FILTER_SAMBAMBA.out.idxstats.collect{it[1]}.ifEmpty([]),
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
-
-            Channel.empty(),
-            Channel.empty(),
-            Channel.empty(),
-            Channel.empty(),
-            Channel.empty(),
-            Channel.empty(),
-            Channel.empty(),
 
             ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
 
@@ -642,19 +634,6 @@ workflow GLSEQ {
     emit:
     multiqc_report = ch_multiqc_report  // channel: /path/to/multiqc_report.html
     versions       = ch_versions       // channel: [ path(versions.yml) ]
-}
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
 }
 
 /*

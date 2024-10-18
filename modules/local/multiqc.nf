@@ -1,16 +1,20 @@
 process MULTIQC {
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::multiqc=1.13a" : null)
+    // conda "bioconda::multiqc=1.23"
+    // container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    //     'https://depot.galaxyproject.org/singularity/multiqc:1.23--pyhdfd78af_0' :
+    //     'biocontainers/multiqc:1.23--pyhdfd78af_0' }"
+    conda "bioconda::multiqc=1.13a"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/multiqc:1.13a--pyhdfd78af_1':
         'quay.io/biocontainers/multiqc:1.13a--pyhdfd78af_1' }"
 
     input:
+    path workflow_summary
     path multiqc_config
     path mqc_custom_config
-    path software_versions
-    path workflow_summary
+    path logo
 
     path ('fastqc/*')
     path ('trimgalore/fastqc/*')
@@ -20,10 +24,10 @@ process MULTIQC {
     path ('alignment/library/*')
     path ('alignment/library/*')
 
-    path ('alignment/mergedLibrary/unfiltered/*')
-    path ('alignment/mergedLibrary/unfiltered/*')
-    path ('alignment/mergedLibrary/unfiltered/*')
-    path ('alignment/mergedLibrary/unfiltered/picard_metrics/*')
+    // path ('alignment/mergedLibrary/unfiltered/*')
+    // path ('alignment/mergedLibrary/unfiltered/*')
+    // path ('alignment/mergedLibrary/unfiltered/*')
+    // path ('alignment/mergedLibrary/unfiltered/picard_metrics/*')
 
     path ('alignment/mergedLibrary/filtered/*')
     path ('alignment/mergedLibrary/filtered/*')
