@@ -1,5 +1,5 @@
 /*
- * Split a BAM file by genome (in this case a string appended to chromosome names)
+ * Split a BAM file by strand
  */
 process BAM_SPLIT_BY_STRAND {
     tag "$meta.id"
@@ -14,16 +14,17 @@ process BAM_SPLIT_BY_STRAND {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bam"), emit: bam
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.F.bam"), emit: f_bam
+    tuple val(meta), path("*.R.bam"), emit: r_bam
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def prefix           = task.ext.prefix ?: "${meta.id}"
-    def strand_extension1 = meta.strandness == 'reverse' ? 'R' : 'F'
-    def strand_extension2 = meta.strandness == 'reverse' ? 'F' : 'R'
+    def prefix            = task.ext.prefix ?: "${meta.id}"
+    def strand_extension1 = meta.strandedness == 'reverse' ? 'R' : 'F'
+    def strand_extension2 = meta.strandedness == 'reverse' ? 'F' : 'R'
     """
     samtools view \\
         -F 20 -h $bam | \\

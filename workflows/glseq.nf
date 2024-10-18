@@ -552,6 +552,15 @@ workflow GLSEQ {
     }
 
     //
+    // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
+    //
+    // SCAR_CREATE_PARTITIONS (
+    //     ch_dedup_bam,
+    //     ch_chrom_sizes.map{ it[1] },
+
+
+
+    //
     // MODULE: Create IGV session
     //
     if (!params.skip_igv) {
