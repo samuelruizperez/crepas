@@ -71,7 +71,7 @@ workflow SCAR_CREATE_PARTITIONS {
     ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
 
     // TODO: maybe a whole module for this is overkill
-    SORT_FILE (
+    FILE_SORT (
         UCSC_BEDCLIP.out.bed,
         'clip'
     )
@@ -86,6 +86,6 @@ workflow SCAR_CREATE_PARTITIONS {
     emit:
     bigwig      = UCSC_BEDGRAPHTOBIGWIG.out.bigwig   // channel: [ val(meta), [ bigwig ] ]
 
-      versions = ch_versions                         // channel: [ versions.yml ]
+    versions = ch_versions                         // channel: [ versions.yml ]
 }
 

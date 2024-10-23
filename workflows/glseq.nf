@@ -556,7 +556,11 @@ workflow GLSEQ {
     //
     // SCAR_CREATE_PARTITIONS (
     //     ch_dedup_bam,
-    //     ch_chrom_sizes.map{ it[1] },
+    //     ch_chrom_sizes.map{ it[1] }
+    // )
+
+    // ch_scar_bw = SCAR_CREATE_PARTITIONS.out.bigwig
+    // ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
 
     // SCAR_SMOOTH_PARTITIONS (
 
