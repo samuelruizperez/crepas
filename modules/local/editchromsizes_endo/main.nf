@@ -1,6 +1,6 @@
-process NORMALIZE_STRANDS {
+process EDITCHROMSIZES_ENDO {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_single'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,10 +8,11 @@ process NORMALIZE_STRANDS {
         'nf-core/ubuntu:22.04' }"
 
     input:
-    tuple val(meta), path(tab), val(cpm)
+    tuple val(meta), path(sizes)
+    val genome_string
 
     output:
-    tuple val(updatedMeta), path("*.tab"), val(cpm), emit: tab
+    tuple val(meta), path ("*.sizes"), emit: sizes
     path  "versions.yml"          , emit: versions
 
     when:
@@ -20,15 +21,13 @@ process NORMALIZE_STRANDS {
     script:
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    updatedMeta = meta + ['cpm':cpm]  // Add cpm to meta
 
     """
     awk \\
         $args \\
-        -v c=$cpm \\
-        'BEGIN{OFS="\t"}{print \$1, \$2, \$3, (\$4+1)/c, \$5, \$6}' \\
-        $tab \\
-        > ${prefix}.norm.tab
+        '\$1 !~ /${genome_string}\$/ { print \$0 }' \\
+        $sizes \\
+        > ${prefix}.endo.sizes
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -39,7 +38,7 @@ process NORMALIZE_STRANDS {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.cpm.tab
+    touch  ${prefix}.cpm
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

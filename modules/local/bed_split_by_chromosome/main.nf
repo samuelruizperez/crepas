@@ -1,5 +1,5 @@
 process BED_SPLIT_BY_CHROMOSOME {
-    tag "$archive"
+    tag "$meta.id"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -12,7 +12,7 @@ process BED_SPLIT_BY_CHROMOSOME {
     tuple val(meta), path(bed)
 
     output:
-    tuple val(meta), path("*.bed"), emit: bed
+    tuple val(updatedMeta), path("*.bed"), emit: bed
     path  "versions.yml"          , emit: versions
 
     when:
@@ -21,6 +21,7 @@ process BED_SPLIT_BY_CHROMOSOME {
     script:
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    updatedMeta = ['chr':chrom]  // Add chromosome to meta
 
     """
     awk \\
@@ -32,7 +33,7 @@ process BED_SPLIT_BY_CHROMOSOME {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk --version 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 
@@ -43,7 +44,7 @@ process BED_SPLIT_BY_CHROMOSOME {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(awk --version | sed -e "s/awk v//g")
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 }

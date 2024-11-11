@@ -25,6 +25,7 @@ process BAM_SPLIT_BY_STRAND {
     def prefix            = task.ext.prefix ?: "${meta.id}"
     def strand_extension1 = meta.strandedness == 'reverse' ? 'R' : 'F'
     def strand_extension2 = meta.strandedness == 'reverse' ? 'F' : 'R'
+
     """
     samtools view \\
         -F 20 -h $bam | \\

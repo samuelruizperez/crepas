@@ -52,7 +52,7 @@ def check_samplesheet(file_in, file_out):
 
         ## Check header
         MIN_COLS = 3
-        HEADER = ["sample", "fastq_1", "fastq_2", "fastq_umi", "replicate", "antibody", "control", "control_replicate"]
+        HEADER = ["sample", "fastq_1", "fastq_2", "fastq_umi", "replicate", "exp_type", "strandedness", "antibody", "control", "control_replicate"]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(f"ERROR: Please check samplesheet header -> {','.join(header)} != {','.join(HEADER)}")
@@ -78,7 +78,7 @@ def check_samplesheet(file_in, file_out):
                 )
 
             ## Check sample name entries
-            sample, fastq_1, fastq_2, fastq_umi, replicate, antibody, control, control_replicate = lspl[: len(HEADER)]
+            sample, fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control, control_replicate = lspl[: len(HEADER)]
             if sample.find(" ") != -1:
                 print(f"WARNING: Spaces have been replaced by underscores for sample: {sample}")
                 sample = sample.replace(" ", "_")
@@ -101,6 +101,21 @@ def check_samplesheet(file_in, file_out):
                 print_error("Replicate id not an integer!", "Line", line)
                 sys.exit(1)
 
+            ## Check exp_type is either 'chipseq' or 'scarseq'
+            if exp_type not in ["chipseq", "scarseq"]:
+                print_error("Experiment type not 'chipseq' or 'scarseq'!", "Line", line)
+                sys.exit(1)
+
+            # strandedness should only be specified for scarseq
+            if strandedness and exp_type != "scarseq":
+                print_error("Strandedness should only be specified for scarseq samples!", "Line", line)
+                sys.exit(1)
+
+            ## Check strandedness is either 'forward' or 'reverse'
+            if strandedness and strandedness not in ["forward", "reverse"]:
+                print_error("Strandedness not 'forward' or 'reverse'!", "Line", line)
+                sys.exit(1)
+
             ## Check antibody and control columns have valid values
             if antibody:
                 if antibody.find(" ") != -1:
@@ -121,9 +136,9 @@ def check_samplesheet(file_in, file_out):
                     print_error("Control replicate id not an integer!", "Line", line)
                     sys.exit(1)
                 control = "{}_REP{}".format(control, control_replicate)
-                if not antibody:
+                if not antibody and exp_type == "chipseq":
                     print_error(
-                        "Both antibody and control columns must be specified!",
+                        "Both antibody and control columns must be specified for ChIP-seq samples!",
                         "Line",
                         line,
                     )
@@ -131,9 +146,9 @@ def check_samplesheet(file_in, file_out):
             ## Auto-detect paired-end/single-end
             sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, replicate, antibody, control]
             if sample and fastq_1 and fastq_2:  ## Paired-end short reads
-                sample_info = ["0", fastq_1, fastq_2, fastq_umi, replicate, antibody, control]
+                sample_info = ["0", fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control]
             elif sample and fastq_1 and not fastq_2:  ## Single-end short reads
-                sample_info = ["1", fastq_1, fastq_2, fastq_umi, replicate, antibody, control]
+                sample_info = ["1", fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control]
             else:
                 print_error("Invalid combination of columns provided!", "Line", line)
 
@@ -171,6 +186,8 @@ def check_samplesheet(file_in, file_out):
                         "fastq_2",
                         "fastq_umi",
                         "replicate",
+                        "exp_type",
+                        "strandedness",
                         "antibody",
                         "control",
                     ]
@@ -222,11 +239,14 @@ def check_samplesheet(file_in, file_out):
                                 "Control",
                                 val[4],
                             )
+                        # TODO: improve this maybe? prepend exp_type to control if not empty
+                        if control:
+                            sample_mapping_dict[sample][replicate][idx][-1] = "{}_{}".format(val[6], val[-1])
 
                     ## Write to file
                     for idx in range(len(sample_mapping_dict[sample][replicate])):
                         fastq_files = sample_mapping_dict[sample][replicate][idx]
-                        sample_id = "{}_REP{}_T{}".format(sample, replicate, idx + 1)
+                        sample_id = "{}_{}_REP{}_T{}".format(exp_type, sample, replicate, idx + 1)
                         if len(fastq_files) == 1:
                             fout.write(",".join([sample_id] + fastq_files) + ",\n")
                         else:

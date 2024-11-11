@@ -16,6 +16,7 @@ include {
 
 include { GFFREAD              } from '../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../modules/nf-core/custom/getchromsizes/main'
+include { EDITCHROMSIZES_ENDO  } from '../../modules/local/editchromsizes_endo/main'
 include { BWA_INDEX            } from '../../modules/nf-core/bwa/index/main'
 include { BOWTIE2_BUILD        } from '../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX        } from '../../modules/nf-core/chromap/index/main'
@@ -28,6 +29,7 @@ workflow PREPARE_GENOME {
     take:
     genome             //  string: genome name
     genomes            //     map: genome attributes
+    spikein_genome     //  string: spikein genome name
     prepare_tool_index // string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
     gtf                //    file: /path/to/genome.gtf
@@ -141,6 +143,14 @@ workflow PREPARE_GENOME {
     ch_versions    = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
 
     //
+    // Create endogenous genome chromosome sizes file
+    //
+
+    EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome)
+    ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
+    ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
+
+    //
     // Prepare genome intervals for filtering by removing regions in blacklist file
     //
     ch_genome_filtered_bed = Channel.empty()
@@ -232,6 +242,7 @@ workflow PREPARE_GENOME {
     gtf           = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed      = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes   = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
+    chrom_sizes_endo = ch_chrom_sizes_endo //    channel: [ val(meta), [ genome_endo.sizes ]]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]

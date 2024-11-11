@@ -55,8 +55,8 @@ workflow SCAR_CREATE_PARTITIONS {
         'bdg',
         false
     )
-    ch_genomecov = GENOMECOV.out.genomecov
-    ch_versions  = ch_versions.mix(GENOMECOV.out.versions.first())
+    ch_genomecov = BEDTOOLS_GENOMECOV.out.genomecov
+    ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
     BEDTOOLS_SLOP (
         ch_genomecov,
@@ -72,13 +72,13 @@ workflow SCAR_CREATE_PARTITIONS {
 
     // TODO: maybe a whole module for this is overkill
     FILE_SORT (
-        UCSC_BEDCLIP.out.bed,
+        UCSC_BEDCLIP.out.bedgraph,
         'clip'
     )
-    ch_versions = ch_versions.mix(SORT_FILE.out.versions.first())
+    ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 
     UCSC_BEDGRAPHTOBIGWIG (
-        SORT_FILE.out.sorted,
+        FILE_SORT.out.sorted,
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())

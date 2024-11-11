@@ -23,6 +23,9 @@ include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../sub
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 
+include { SCAR_CREATE_PARTITIONS } from '../subworkflows/local/scar_create_partitions/main'
+include { SCAR_SMOOTH_PARTITIONS } from '../subworkflows/local/scar_smooth_partitions/main'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -95,6 +98,7 @@ workflow GLSEQ {
     ch_gtf           // channel: path(genome.gtf)
     ch_gene_bed      // channel: path(gene.beds)
     ch_chrom_sizes   // channel: path(chrom.sizes)
+    ch_chrom_sizes_endo // path(chrom.sizes.endo)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_bwa_index     // channel: path(bwa/index/)
     ch_bowtie2_index // channel: path(bowtie2/index)
@@ -425,15 +429,6 @@ workflow GLSEQ {
     ch_dedup_bam.join(ch_dedup_bai, by: [0])
         .set { ch_genome_bam_bai }
 
-    // print to file for debugging
-    // ch_genome_bam_bai
-    //     .map {
-    //         meta, bam, bai ->
-    //             "${meta.id}\t${bam}\t${bai}"
-    //     }
-    //     .collectFile( name: 'ch_genome_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    //
-
     ch_genome_bam_bai
         .map {
             meta, bam, bai ->
@@ -449,16 +444,6 @@ workflow GLSEQ {
         .combine(ch_control_bam_bai, by: 0)
         .map { it -> [ it[1] , it[2] + it[4], it[3] + it[5] ] }
         .set { ch_ip_control_bam_bai }
-
-    // Print to file for debugging
-    // ch_ip_control_bam_bai
-    //     .map {
-    //         meta, bams, bais ->
-    //             "${meta.id}\t${bams[0]}\t${bams[1]}\t${bais[0]}\t${bais[1]}"
-    //     }
-    //     .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-        //
-
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
@@ -497,11 +482,15 @@ workflow GLSEQ {
         }
         .set { ch_ip_control_bam }
 
+    // separate chipseq and scarseq samples based on meta.exp_type
+    ch_ip_control_bam_cs = Channel.empty()
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' }
+
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
     //
     BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
-        ch_ip_control_bam,
+        ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] },
         ch_gtf.map{ it[1] },
         ch_macs_gsize,
@@ -524,7 +513,7 @@ workflow GLSEQ {
     ch_deseq2_clustering_multiqc = Channel.empty()
     if (!params.skip_consensus_peaks) {
         // Create channels: [ antibody, [ ip_bams ] ]
-        ch_ip_control_bam
+        ch_ip_control_bam_cs
             .map {
                 meta, ip_bam, control_bam ->
                     [ meta.antibody, ip_bam ]
@@ -551,18 +540,38 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
+
+
+
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
-    // SCAR_CREATE_PARTITIONS (
-    //     ch_dedup_bam,
-    //     ch_chrom_sizes.map{ it[1] }
-    // )
 
-    // ch_scar_bw = SCAR_CREATE_PARTITIONS.out.bigwig
-    // ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
 
-    // SCAR_SMOOTH_PARTITIONS (
+    ch_dedup_bam.map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_dedup_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
+    ch_dedup_bam_ss = Channel.empty()
+    ch_dedup_bam_ss = ch_dedup_bam.filter { it[0].exp_type == 'scarseq' }
+
+
+    SCAR_CREATE_PARTITIONS (
+        ch_dedup_bam_ss,
+        ch_chrom_sizes_endo.map{ it[1] }
+    )
+
+    ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
+
+    SCAR_SMOOTH_PARTITIONS (
+        SCAR_CREATE_PARTITIONS.out.bigwig,
+        ch_chrom_sizes_endo
+    )
+    ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
+    ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
 
 
     //

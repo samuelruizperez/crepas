@@ -1,5 +1,5 @@
 process CPM_CALCULATION {
-    tag "$archive"
+    tag "$meta.id"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -30,7 +30,7 @@ process CPM_CALCULATION {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk --version 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 
@@ -41,7 +41,7 @@ process CPM_CALCULATION {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(awk --version | sed -e "s/awk v//g")
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 }

@@ -316,7 +316,7 @@ bedGraphToBigWig ${OUT_CPM_R_BDG} ${CHROM_SIZES} ${OUT_CPM_R_BW}
 
 gzip ${OUT_NORMAL}
 
-if [[ -f ${INPUT_BAM_FILE} ]]; then
+if [[ -f ${INPUT_BAM_FILE} ]]; theth.pl n
   ## Gather output
   OUT_MINUSINPUT=${OUT_RFD_DIR}/${PREFIX}_SCARminusinput_smooth_results_w${WIN}_s${RADIUS}_d${DRADIUS}_z${ZRADIUS}.txt
   if [ -f ${OUT_MINUSINPUT} ]; then

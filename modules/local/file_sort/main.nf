@@ -1,5 +1,5 @@
 process FILE_SORT {
-    tag "$archive"
+    tag "$meta.id"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"

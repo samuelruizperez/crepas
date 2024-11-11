@@ -1,6 +1,6 @@
-process NORMALIZE_STRANDS {
+process FINAL_PARTITION_BEDGRAPH {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,42 +8,45 @@ process NORMALIZE_STRANDS {
         'nf-core/ubuntu:22.04' }"
 
     input:
-    tuple val(meta), path(tab), val(cpm)
+    tuple val(meta), path(file)
+    val   extension
 
     output:
-    tuple val(updatedMeta), path("*.tab"), val(cpm), emit: tab
-    path  "versions.yml"          , emit: versions
+    tuple val(meta), path("*.${extension}"), emit: sorted
+    path  "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args  = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
+    def buffer   = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    updatedMeta = meta + ['cpm':cpm]  // Add cpm to meta
 
     """
-    awk \\
+    LC_COLLATE=C sort \\
         $args \\
-        -v c=$cpm \\
-        'BEGIN{OFS="\t"}{print \$1, \$2, \$3, (\$4+1)/c, \$5, \$6}' \\
-        $tab \\
-        > ${prefix}.norm.tab
+        $args2 \\
+        --parallel=$task.cpus \\
+        $buffer \\
+        $file \\
+        > ${prefix}.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        sort: \$(echo \$(sort --version 2>&1) | sed 's/^.*(GNU coreutils) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.cpm.tab
+    touch  ${prefix}.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        sort: \$(sort --version | sed -e "s/sort v//g")
     END_VERSIONS
     """
 }

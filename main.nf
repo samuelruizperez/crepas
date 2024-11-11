@@ -56,6 +56,7 @@ workflow GROTHLAB_GLSEQ {
     PREPARE_GENOME (
         params.genome,
         params.genomes,
+        params.spikein_genome,
         params.aligner,
         params.fasta,
         params.gtf,
@@ -82,6 +83,7 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.gtf,
         PREPARE_GENOME.out.gene_bed,
         PREPARE_GENOME.out.chrom_sizes,
+        PREPARE_GENOME.out.chrom_sizes_endo,
         PREPARE_GENOME.out.filtered_bed,
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,

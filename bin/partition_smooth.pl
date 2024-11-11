@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
 
 # downloaded from https://github.com/grothlab/SCARseq_Pipeline/blob/main/libs/partition_smooth.pl
 

@@ -27,6 +27,8 @@ def create_fastq_channel(LinkedHashMap row, String seq_center) {
     meta.id         = row.sample
     meta.single_end = row.single_end.toBoolean()
     meta.sep_umi_fq = row.sep_umi_fq.toBoolean()
+    meta.exp_type   = row.exp_type
+    meta.strandedness = row.strandedness
     meta.antibody   = row.antibody
     meta.control    = row.control
 
