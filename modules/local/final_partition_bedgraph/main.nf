@@ -1,6 +1,6 @@
 process FINAL_PARTITION_BEDGRAPH {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,11 +8,11 @@ process FINAL_PARTITION_BEDGRAPH {
         'nf-core/ubuntu:22.04' }"
 
     input:
-    tuple val(meta), path(file)
-    val   extension
+    tuple val(meta), path(files)
 
     output:
-    tuple val(meta), path("*.${extension}"), emit: sorted
+    tuple val(meta), path("*.tmp"), emit: tmp
+    tuple val(meta), path("*.txt"), emit: txt
     path  "versions.yml"                   , emit: versions
 
     when:
@@ -21,32 +21,37 @@ process FINAL_PARTITION_BEDGRAPH {
     script:
     def args  = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def buffer   = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    LC_COLLATE=C sort \\
+    paste \\
         $args \\
+        ${files.join(' ')} \\
+            | awk '\$8>0 || \$14>0' \\
+                | cut -f -3,8,14,20,26,30- \\
+                > ${prefix}.txt
+
+    awk \\
         $args2 \\
-        --parallel=$task.cpus \\
-        $buffer \\
-        $file \\
-        > ${prefix}.${extension}
+        '{printf "%s\\t%d\\t%d\\t%2.3f\\n" , \$1,\$2,\$3,\$9}' \\
+        ${prefix}.txt \\
+        > ${prefix}.tmp
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sort: \$(echo \$(sort --version 2>&1) | sed 's/^.*(GNU coreutils) //; s/ Copyright.*\$//')
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.${extension}
+    touch  ${prefix}.txt
+    touch  ${prefix}.tmp
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sort: \$(sort --version | sed -e "s/sort v//g")
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 }

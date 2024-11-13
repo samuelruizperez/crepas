@@ -1,4 +1,4 @@
-#!/bin/R
+#!/usr/bin/env Rscript
 # Author: Nicolas Alcaraz <nicolas.alcaraz@cpr.ku.dk>
 # Script for plotting partition plots of SCARseq together with it's stranded Input
 # Also plots scatter-correlation plots against OK-seq if provided
@@ -6,16 +6,16 @@
 
 options(show.error.locations = TRUE)
 
-### Set user's local R library path to packages
-chooseCRANmirror(ind =  28)
-if (!dir.exists(Sys.getenv("R_LIBS_USER"))) {
-    dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)
-}
+# ### Set user's local R library path to packages
+# chooseCRANmirror(ind =  28)
+# if (!dir.exists(Sys.getenv("R_LIBS_USER"))) {
+#     dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)
+# }
 
-### Install required packages if missing
-if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager", lib = Sys.getenv("R_LIBS_USER"))
-}
+# ### Install required packages if missing
+# if (!require("BiocManager", quietly = TRUE)) {
+#     install.packages("BiocManager", lib = Sys.getenv("R_LIBS_USER"))
+# }
 
 required.libs <- c("GenomicAlignments","GenomicFeatures", "RColorBrewer",
                     "dplyr","ggplot2","ggrepel","ggpubr","ggpmisc","reshape2",

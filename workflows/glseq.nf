@@ -568,7 +568,9 @@ workflow GLSEQ {
 
     SCAR_SMOOTH_PARTITIONS (
         SCAR_CREATE_PARTITIONS.out.bigwig,
-        ch_chrom_sizes_endo
+        ch_chrom_sizes_endo,
+        params.blacklist,
+        params.initiation_zones
     )
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)

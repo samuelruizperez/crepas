@@ -7,12 +7,16 @@ include { NORMALIZE_STRANDS     } from '../../../modules/local/normalize_strands
 include { SUBSTRACT_INPUT       } from '../../../modules/local/substract_input/main'
 include { PARTITION_SMOOTH      } from '../../../modules/local/partition_smooth/main'
 include { FINAL_PARTITION_BEDGRAPH } from '../../../modules/local/final_partition_bedgraph/main'
+include { FILE_SORT                  } from '../../../modules/local/file_sort/main'
+include { FINAL_PARTITION_PLOT } from '../../../modules/local/final_partition_plot/main'
 
 workflow SCAR_SMOOTH_PARTITIONS {
 
     take:
-    ch_bigwig          // channel: [ val(meta), [ bigwig ] ]
-    ch_chrom_sizes     // channel: [ bed ]
+    ch_bigwig               // channel: [ val(meta), [ bigwig ] ]
+    ch_chrom_sizes          // channel: [ bed ]
+    ch_blacklist            // channel: [ bed ]
+    ch_initiation_zones     // channel: [ bed ]
 
     main:
 
@@ -242,7 +246,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
                 // to do it per id only
                 [ "${meta.id}.samples_windows.tab", tabs ]
         }
-        // readd meta information based on meta.id in the filename
+        // re-add meta information based on meta.id in the filename
         .map {
             tab ->
                 def id = tab.name.split("\\.")[0]
@@ -387,8 +391,16 @@ workflow SCAR_SMOOTH_PARTITIONS {
     SUBSTRACT_INPUT (
         ch_norm_s_i_cpm
     )
+    ch_substracted = SUBSTRACT_INPUT.out.tab
     ch_versions = ch_versions.mix(SUBSTRACT_INPUT.out.versions.first())
 
+    // TODO: REMOVE print channel to file for debugging
+    ch_substracted
+        .map {
+            meta, tab ->
+                "${meta}\t${tab}"
+        }
+        .collectFile( name: 'ch_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // concat normalized output and substracted output
     ch_normalized_strands
@@ -396,7 +408,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
             meta, tab, cpm ->
                 [ meta, tab ]
         }
-        .concat(SUBSTRACT_INPUT.out.tab)
+        .concat(ch_substracted)
         // copy meta and remove meta.strand from meta clone
         .map {
             meta, tab ->
@@ -432,32 +444,228 @@ workflow SCAR_SMOOTH_PARTITIONS {
         params.scar_dradius,
         params.scar_zradius
     )
+    ch_part_smooth = PARTITION_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
 
-    // per sample/input/minusinput, concat the following files:
-    // chromosome window beds,
-    // bigWigAverageOverBed F output,
-    // bigWigAverageOverBed R output,
-    // normalized (CPM) F output,
-    // normalized (CPM) R output,
-    // RFD output
 
-    // collect files here:
-
-    // ch_chroms
-    //     .concat()
-
-
-
-
-    // FINAL_PARTITION_BEDGRAPH (
-
-
+    ch_bwaob
+        .concat(ch_normalized_strands
+            .map {
+                meta, tab, cpm ->
+                    [ meta, tab ]
+            }
+        )
+        .concat(ch_substracted)
+        .concat(ch_part_smooth)
+        //.combine(ch_chroms.map { it[1] })
+        .branch { meta, tab ->
+            substracted:    meta.control && meta.minusinput
+            samples:        meta.control && !meta.minusinput
+            inputs:         !meta.control && !meta.minusinput
+        }
+        .set { ch_to_collect }
 
 
+    // TODO: REMOVE print channel to file for debugging
+    ch_to_collect.samples
+        .map {
+            meta, tab->
+                "${meta}\t${tab}"
+        }
+        .collectFile( name: 'ch_to_collect_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    // )
+    ch_to_collect.inputs
+        .map {
+            meta, tab ->
+                "${meta}\t${tab}"
+        }
+        .collectFile( name: 'ch_to_collect_inputs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
+    ch_to_collect.substracted
+        .map {
+            meta, tab ->
+                "${meta}\t${tab}"
+        }
+        .collectFile( name: 'ch_to_collect_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
+    ch_chroms
+        .map { it[1] }
+        .collect()
+        .map { chroms_list -> [chroms_list] }
+        .set { ch_chroms_list }
+
+    ch_to_collect
+        .samples
+        .map {
+            meta, tab ->
+                [ meta.id, meta, tab ]
+        }
+        .groupTuple()
+        .map {
+            id, meta, tab ->
+                [ id, meta[0], tab ]
+        }
+        .combine(ch_chroms_list)
+        .map {
+            id, meta, filelist, chroms_list ->
+                def meta_clone = meta.clone()
+                meta_clone.remove('strand')
+                meta_clone.remove('chr')
+                meta_clone.remove('cpm')
+                [ meta_clone, filelist + chroms_list ]
+        }
+        .set { ch_to_collect_samples2 }
+
+    ch_to_collect_samples2
+        .map {
+            meta, filelist ->
+                "${meta}\t${filelist}"
+        }
+        .collectFile( name: 'ch_to_collect_samples2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_to_collect
+        .inputs
+        .map {
+            meta, tab ->
+                [ meta.id, meta, tab ]
+        }
+        .groupTuple()
+        .map {
+            id, meta, tab ->
+                [ id, meta[0], tab ]
+        }
+        .combine(ch_chroms_list)
+        .map {
+            id, meta, filelist, chroms_list ->
+                def meta_clone = meta.clone()
+                meta_clone.remove('strand')
+                meta_clone.remove('chr')
+                meta_clone.remove('cpm')
+                [ meta_clone, filelist + chroms_list ]
+        }
+        .set { ch_to_collect_inputs2 }
+
+    ch_to_collect_inputs2
+        .map {
+            meta, filelist ->
+                "${meta}\t${filelist}"
+        }
+        .collectFile( name: 'ch_to_collect_inputs2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_to_collect
+        .substracted
+        .map {
+            meta, tab ->
+                def meta_clone = meta.clone()
+                meta_clone.id = meta_clone.id + "_minusinput"
+                [ meta_clone.id, meta_clone, tab ]
+        }
+        .groupTuple()
+        .map {
+            id, meta, tab ->
+                [ id, meta[0], tab ]
+        }
+        .combine(ch_chroms_list)
+        .map {
+            id, meta, filelist, chroms_list ->
+                def meta_clone = meta.clone()
+                meta_clone.remove('strand')
+                meta_clone.remove('chr')
+                meta_clone.remove('cpm')
+                [ meta_clone, filelist + chroms_list ]
+        }
+        .set { ch_to_collect_substracted2 }
+
+    ch_to_collect_substracted2
+        .map {
+            meta, filelist ->
+                "${meta}\t${filelist}"
+        }
+        .collectFile( name: 'ch_to_collect_substracted2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_to_collect_samples2
+        .concat(ch_to_collect_inputs2)
+        .concat(ch_to_collect_substracted2)
+        .set { ch_to_collect_all }
+
+    FINAL_PARTITION_BEDGRAPH (
+        ch_to_collect_all
+    )
+    ch_versions = ch_versions.mix(FINAL_PARTITION_BEDGRAPH.out.versions.first())
+
+    // TODO: maybe a whole module for this is overkill
+    FILE_SORT (
+        FINAL_PARTITION_BEDGRAPH.out.tmp,
+        'bdg'
+    )
+    ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+
+    FINAL_PARTITION_BEDGRAPH.out.txt
+        .map {
+            meta, txt ->
+                // remove "_minusinput" from the id
+                meta.minusinput ? [ meta.id.replaceAll("_minusinput", ""), meta, txt ] :
+                meta.control ? [ meta.control, meta, txt ] :
+                [ meta.id, meta, txt ]
+        }
+        .branch { id, meta, txt ->
+            control:    !meta.control && !meta.minusinput
+            samples:    meta.control && !meta.minusinput
+            minusinput: meta.minusinput
+        }
+        .set { ch_part_to_plot }
+
+    // TODO: REMOVE print channel to file for debugging
+    ch_part_to_plot.samples
+        .map {
+            id, meta, txt ->
+                "${id}\t${meta}\t${txt}"
+        }
+        .collectFile( name: 'ch_part_to_plot_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_part_to_plot.control
+        .map {
+            id, meta, txt ->
+                "${id}\t${meta}\t${txt}"
+        }
+        .collectFile( name: 'ch_part_to_plot_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_part_to_plot.minusinput
+        .map {
+            id, meta, txt ->
+                "${id}\t${meta}\t${txt}"
+        }
+        .collectFile( name: 'ch_part_to_plot_minusinput.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_part_to_plot.samples
+        .combine(ch_part_to_plot.control, by: 0)
+        .map {
+            id, meta1, txt1, meta2, txt2 ->
+                [ meta1.id, meta1, txt1, txt2 ]
+        }
+        .combine(ch_part_to_plot.minusinput, by: 0)
+        .map {
+            id, meta1, txt1, txt2, meta3, txt3 ->
+                [ meta1, txt1, txt2, txt3, [] ]
+        }
+        .set { ch_part_to_plot }
+
+    // TODO: REMOVE print channel to file for debugging
+    ch_part_to_plot
+        .map {
+            meta, txt1, txt2, txt3, ok ->
+                "${meta}\t${txt1}\t${txt2}\t${txt3}\t${ok}"
+        }
+        .collectFile( name: 'ch_part_to_plot2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    FINAL_PARTITION_PLOT (
+        ch_part_to_plot,
+        ch_blacklist,
+        ch_initiation_zones
+
+    )
+    ch_versions = ch_versions.mix(FINAL_PARTITION_PLOT.out.versions.first())
 
     emit:
     tab      = PARTITION_SMOOTH.out.rfd   // channel: [ val(meta), [ tab ] ]
