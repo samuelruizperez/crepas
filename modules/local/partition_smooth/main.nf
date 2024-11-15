@@ -14,7 +14,7 @@ process PARTITION_SMOOTH {
     val zradius
 
     output:
-    tuple val(meta), path("*.txt"), emit: rfd
+    tuple val(updatedMeta), path("*.txt"), emit: rfd
     path  "versions.yml"          , emit: versions
 
     when:
@@ -23,6 +23,7 @@ process PARTITION_SMOOTH {
     script: // This script is bundled with the pipeline, in bin
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    updatedMeta = meta + ['RFD':true]  // Add cpm to meta
 
     """
     partition_smooth.pl \\

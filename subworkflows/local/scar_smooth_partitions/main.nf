@@ -6,8 +6,10 @@ include { CPM_CALCULATION as CPM_CALCULATION_INPUTS  } from '../../../modules/lo
 include { NORMALIZE_STRANDS     } from '../../../modules/local/normalize_strands/main'
 include { SUBSTRACT_INPUT       } from '../../../modules/local/substract_input/main'
 include { PARTITION_SMOOTH      } from '../../../modules/local/partition_smooth/main'
+include { COLLECT_PARTITIONS_BY_CHROMOSOME } from '../../../modules/local/collect_partitions_by_chromosome/main'
 include { FINAL_PARTITION_BEDGRAPH } from '../../../modules/local/final_partition_bedgraph/main'
 include { FILE_SORT                  } from '../../../modules/local/file_sort/main'
+include { UCSC_BEDGRAPHTOBIGWIG      } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { FINAL_PARTITION_PLOT } from '../../../modules/local/final_partition_plot/main'
 
 workflow SCAR_SMOOTH_PARTITIONS {
@@ -448,151 +450,208 @@ workflow SCAR_SMOOTH_PARTITIONS {
     ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
 
 
-    ch_bwaob
-        .concat(ch_normalized_strands
-            .map {
-                meta, tab, cpm ->
-                    [ meta, tab ]
-            }
-        )
-        .concat(ch_substracted)
-        .concat(ch_part_smooth)
-        //.combine(ch_chroms.map { it[1] })
-        .branch { meta, tab ->
-            substracted:    meta.control && meta.minusinput
-            samples:        meta.control && !meta.minusinput
-            inputs:         !meta.control && !meta.minusinput
+    // TODO: REMOVE print channel to file for debugging
+    ch_part_smooth
+        .map {
+            meta, tab ->
+                "${meta}\t${tab}"
         }
-        .set { ch_to_collect }
+        .collectFile( name: 'ch_part_smooth.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
+    ch_bwaob
+        .concat(ch_normalized_strands.map { it -> [ it[0], it[1] ] }) // remove cpm
+        .concat(ch_part_smooth.filter { meta, tab -> !meta.minusinput }) // remove minusinput
+        .map { meta, tab -> [ meta.id, meta.chr, [meta, tab] ] }
+        .groupTuple( by: [0, 1] )
+        .map { id, chr, group ->
+            def sortedGroup = group
+                .sort { a, b ->
+                    // Sorting criteria:
+                    a[0].RFD <=> b[0].RFD ?:           // Sort by RFD (true vs false)
+                    a[0].cpm <=> b[0].cpm ?:          // Sort by cpm (true vs false)
+                    a[0].strand <=> b[0].strand    // Sort by strand (forward vs reverse)
+                }
+
+            def primaryMeta = sortedGroup[0][0]      // Take the first meta (after sorting)
+            def filesList = sortedGroup*.get(1)      // Extract list of files
+
+            [id, chr, [primaryMeta, filesList]]                 // Output the single meta and list of files
+        }
+        .map { id, chr, group -> [chr, id, group] }
+        .combine(ch_chroms.map { meta, bed -> [meta.chr, bed] }, by: 0) // add the chromosome bed files
+        // move bed inside of the group
+        .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
+        .set { ch_test1 }
 
     // TODO: REMOVE print channel to file for debugging
-    ch_to_collect.samples
+    ch_test1
         .map {
-            meta, tab->
-                "${meta}\t${tab}"
+            chr, id, list ->
+                "${chr}\t${id}\t${list}"
         }
-        .collectFile( name: 'ch_to_collect_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_test1.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    ch_to_collect.inputs
-        .map {
-            meta, tab ->
-                "${meta}\t${tab}"
+    ch_bwaob
+        .filter { meta, tab -> meta.control }
+        .concat(ch_substracted) //s remove cpm
+        .concat(ch_part_smooth.filter { meta, tab -> meta.minusinput }) // keep only minusinput
+        .map { meta, tab -> [ meta.id, meta.chr, [meta, tab] ] }
+        .groupTuple( by: [0, 1] )
+        .map { id, chr, group ->
+            def sortedGroup = group
+                .sort { a, b ->
+                    // Sorting criteria:
+                    a[0].RFD <=> b[0].RFD ?:           // Sort by RFD (true vs false)
+                    a[0].cpm <=> b[0].cpm ?:          // Sort by cpm (true vs false)
+                    a[0].strand <=> b[0].strand    // Sort by strand (forward vs reverse)
+                }
+
+            def primaryMeta = sortedGroup[0][0] + ['minusinput':true]      // Take the first meta (after sorting)
+            def filesList = sortedGroup*.get(1)      // Extract list of files
+
+            [id, chr, [primaryMeta, filesList]]                 // Output the single meta and list of files
         }
-        .collectFile( name: 'ch_to_collect_inputs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .map { id, chr, group -> [chr, id, group] }
+        .combine(ch_chroms.map { meta, bed -> [meta.chr, bed] }, by: 0) // add the chromosome bed files
+        // move bed inside of the group
+        .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
+        .set { ch_test2 }
 
-    ch_to_collect.substracted
+    ch_test2
         .map {
-            meta, tab ->
-                "${meta}\t${tab}"
+            chr, id, list ->
+                "${chr}\t${id}\t${list}"
         }
-        .collectFile( name: 'ch_to_collect_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_test2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
-    ch_chroms
-        .map { it[1] }
-        .collect()
-        .map { chroms_list -> [chroms_list] }
-        .set { ch_chroms_list }
+    ch_test1
+        .concat(ch_test2)
+        .map { chr, id, group -> [group[0], group[1]] }
+        .set { ch_test_all }
 
-    ch_to_collect
-        .samples
+    // TODO: REMOVE print channel to file for debugging
+    ch_test_all
         .map {
-            meta, tab ->
-                [ meta.id, meta, tab ]
+            group ->
+                "${group}"
         }
-        .groupTuple()
+        .collectFile( name: 'ch_test_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
+    // ch_bwaob
+    //     .concat(ch_normalized_strands
+    //         .map {
+    //             meta, tab, cpm ->
+    //                 [ meta, tab ]
+    //         }
+    //     )
+    //     .concat(ch_substracted)
+    //     .concat(ch_part_smooth)
+    //     //.combine(ch_chroms.map { it[1] })
+    //     .branch { meta, tab ->
+    //         substracted:    meta.control && meta.minusinput
+    //         samples:        meta.control && !meta.minusinput
+    //         inputs:         !meta.control && !meta.minusinput
+    //     }
+    //     .set { ch_to_collect }
+
+
+    // // TODO: REMOVE print channel to file for debugging
+    // ch_to_collect.samples
+    //     .map {
+    //         meta, tab->
+    //             "${meta}\t${tab}"
+    //     }
+    //     .collectFile( name: 'ch_to_collect_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    // ch_to_collect.inputs
+    //     .map {
+    //         meta, tab ->
+    //             "${meta}\t${tab}"
+    //     }
+    //     .collectFile( name: 'ch_to_collect_inputs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    // ch_to_collect.substracted
+    //     .map {
+    //         meta, tab ->
+    //             "${meta}\t${tab}"
+    //     }
+    //     .collectFile( name: 'ch_to_collect_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
+    // ch_chroms
+    //     .map { it[1] }
+    //     .collect()
+    //     .map { chroms_list -> [chroms_list] }
+    //     .set { ch_chroms_list }
+
+
+    COLLECT_PARTITIONS_BY_CHROMOSOME (
+        ch_test_all
+    )
+    ch_versions = ch_versions.mix(COLLECT_PARTITIONS_BY_CHROMOSOME.out.versions.first())
+
+    // TODO: REMOVE print channel to file for debugging
+    COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
         .map {
-            id, meta, tab ->
-                [ id, meta[0], tab ]
+            meta, txt ->
+                "${meta}\t${txt}"
         }
-        .combine(ch_chroms_list)
+        .collectFile( name: 'ch_collect_part_by_chrom_out.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_s_uniq_meta
+        .concat(ch_i_uniq_meta)
+        .unique { it -> it[0] }
+        // remove chr from meta information
         .map {
-            id, meta, filelist, chroms_list ->
+            id, meta ->
                 def meta_clone = meta.clone()
-                meta_clone.remove('strand')
                 meta_clone.remove('chr')
-                meta_clone.remove('cpm')
-                [ meta_clone, filelist + chroms_list ]
+                [ id, meta_clone ]
         }
-        .set { ch_to_collect_samples2 }
+        .set { ch_si_uniq_meta_mod }
 
-    ch_to_collect_samples2
-        .map {
-            meta, filelist ->
-                "${meta}\t${filelist}"
+    // collect all chromosomes by meta - meta.chr
+    COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
+        .collectFile(newLine: true, sort: false, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/collect") {
+            meta, txt ->
+                // to do it per id and minusinput:
+                [ "${meta.id}${meta.minusinput ? '.minusinput' : ''}.final.txt", txt ]
         }
-        .collectFile( name: 'ch_to_collect_samples2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        // re-add meta information based on meta.id in the filename
+        .map {
+            txt ->
+                def id = txt.name.split("\\.")[0]
+                [ id, txt ]
+        }
+        .combine(ch_si_uniq_meta_mod, by: 0)
+        // flip meta and tab to have meta first
+        .map {
+            id, txt, meta ->
+                [ meta, txt ]
+        }
+        .map {
+            meta, txt ->
+                def minusinput = txt.name.contains(".minusinput")
+                def meta_clone = meta + ['minusinput':minusinput ]
+                [ meta_clone, txt ]
+        }
+        .set { ch_collected }
 
-    ch_to_collect
-        .inputs
+    // TODO: REMOVE print channel to file for debugging
+    ch_collected
         .map {
-            meta, tab ->
-                [ meta.id, meta, tab ]
+            meta, txt ->
+                "${meta}\t${txt}"
         }
-        .groupTuple()
-        .map {
-            id, meta, tab ->
-                [ id, meta[0], tab ]
-        }
-        .combine(ch_chroms_list)
-        .map {
-            id, meta, filelist, chroms_list ->
-                def meta_clone = meta.clone()
-                meta_clone.remove('strand')
-                meta_clone.remove('chr')
-                meta_clone.remove('cpm')
-                [ meta_clone, filelist + chroms_list ]
-        }
-        .set { ch_to_collect_inputs2 }
-
-    ch_to_collect_inputs2
-        .map {
-            meta, filelist ->
-                "${meta}\t${filelist}"
-        }
-        .collectFile( name: 'ch_to_collect_inputs2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    ch_to_collect
-        .substracted
-        .map {
-            meta, tab ->
-                def meta_clone = meta.clone()
-                meta_clone.id = meta_clone.id + "_minusinput"
-                [ meta_clone.id, meta_clone, tab ]
-        }
-        .groupTuple()
-        .map {
-            id, meta, tab ->
-                [ id, meta[0], tab ]
-        }
-        .combine(ch_chroms_list)
-        .map {
-            id, meta, filelist, chroms_list ->
-                def meta_clone = meta.clone()
-                meta_clone.remove('strand')
-                meta_clone.remove('chr')
-                meta_clone.remove('cpm')
-                [ meta_clone, filelist + chroms_list ]
-        }
-        .set { ch_to_collect_substracted2 }
-
-    ch_to_collect_substracted2
-        .map {
-            meta, filelist ->
-                "${meta}\t${filelist}"
-        }
-        .collectFile( name: 'ch_to_collect_substracted2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    ch_to_collect_samples2
-        .concat(ch_to_collect_inputs2)
-        .concat(ch_to_collect_substracted2)
-        .set { ch_to_collect_all }
+        .collectFile( name: 'ch_collected.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     FINAL_PARTITION_BEDGRAPH (
-        ch_to_collect_all
+        ch_collected
     )
     ch_versions = ch_versions.mix(FINAL_PARTITION_BEDGRAPH.out.versions.first())
+
 
     // TODO: maybe a whole module for this is overkill
     FILE_SORT (
@@ -600,6 +659,13 @@ workflow SCAR_SMOOTH_PARTITIONS {
         'bdg'
     )
     ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+
+    UCSC_BEDGRAPHTOBIGWIG (
+        FILE_SORT.out.sorted,
+        ch_chrom_sizes.map { it[1] }
+    )
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
+
 
     FINAL_PARTITION_BEDGRAPH.out.txt
         .map {

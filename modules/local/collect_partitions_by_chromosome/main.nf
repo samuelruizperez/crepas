@@ -1,4 +1,4 @@
-process FINAL_PARTITION_BEDGRAPH {
+process COLLECT_PARTITIONS_BY_CHROMOSOME {
     tag "$meta.id"
     label 'process_single'
 
@@ -8,10 +8,9 @@ process FINAL_PARTITION_BEDGRAPH {
         'nf-core/ubuntu:22.04' }"
 
     input:
-    tuple val(meta), path(file)
+    tuple val(meta), path(files)
 
     output:
-    tuple val(meta), path("*.tmp"), emit: tmp
     tuple val(meta), path("*.txt"), emit: txt
     path  "versions.yml"                   , emit: versions
 
@@ -20,26 +19,17 @@ process FINAL_PARTITION_BEDGRAPH {
 
     script:
     def args  = task.ext.args ?: ''
-    def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    awk \\
+    paste \\
         $args \\
-        '\$8>0 || \$14>0' \\
-        $file \\
-        | cut -f -3,8,14,20,26,30- \\
-        > ${prefix}.txt
-
-    awk \\
-        $args2 \\
-        '{printf "%s\\t%d\\t%d\\t%2.3f\\n" , \$1,\$2,\$3,\$9}' \\
-        ${prefix}.txt \\
-        > ${prefix}.tmp
+        ${files.join(' ')} \\
+            > ${prefix}.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        paste: \$(echo \$(paste --version 2>&1) | sed 's/^.*(paste (GNU coreutils) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 
@@ -47,11 +37,10 @@ process FINAL_PARTITION_BEDGRAPH {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch  ${prefix}.txt
-    touch  ${prefix}.tmp
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+        paste: \$(echo \$(paste --version 2>&1) | sed 's/^.*(paste (GNU coreutils)) //; s/ Copyright.*\$//')
     END_VERSIONS
     """
 }
