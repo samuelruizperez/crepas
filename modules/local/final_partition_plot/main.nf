@@ -1,6 +1,6 @@
 process FINAL_PARTITION_PLOT {
     tag "$meta.id"
-    label 'process_high_memory'
+    label 'process_medium_memory'
 
     // (Bio)conda packages have intentionally not been pinned to a specific version
     // This was to avoid the pipeline failing due to package conflicts whilst creating the environment when using -profile conda
