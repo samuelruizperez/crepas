@@ -75,7 +75,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
 
-2. Start an tmux session:
+2. Start a *tmux* session:
 
 ```bash
 tmux new-session -s <session-name>
@@ -87,7 +87,7 @@ tmux new-session -s <session-name>
 srun -c 1 --mem=2gb --time=2-00:00:00 --pty bash
 ```
 
-4. Load the required modules:
+4. Load the required *modules*:
 
 ```bash
 module load openjdk/20.0.0 nextflow/23.10.1 singularity/3.8.0
@@ -101,7 +101,7 @@ nextflow run grothlab/glseq \
   --input <path-of-your-input-samplesheet-csv-file> \
   --outdir <path-of-output-directory>
 ```
-6. You can now detach from the tmux session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
 ```bash
 tmux attach-session -t <session-name>
