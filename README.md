@@ -42,20 +42,70 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
     - reads that arent in FR orientation ([`Pysam`](http://pysam.readthedocs.io/en/latest/installation.html); _paired-end only_)
     - reads where only one read of the pair fails the above criteria ([`Pysam`](http://pysam.readthedocs.io/en/latest/installation.html); _paired-end only_)
 8. Alignment-level QC and estimation of library complexity ([`picard`](https://broadinstitute.github.io/picard/), [`Preseq`](http://smithlabresearch.org/software/preseq/))
-10. Create normalised bigWig files scaled to 1 million mapped reads ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-11. Generate gene-body meta-profile from bigWig files ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html))
-12. Calculate genome-wide IP enrichment relative to control ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html))
-13. Calculate strand cross-correlation peak and ChIP-seq quality measures including NSC and RSC ([`phantompeakqualtools`](https://github.com/kundajelab/phantompeakqualtools))
+9. Create normalised bigWig files scaled to 1 million mapped reads ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
+10. Generate gene-body meta-profile from bigWig files ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html))
+11. Calculate genome-wide IP enrichment relative to control ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html))
+12. Calculate strand cross-correlation peak and ChIP-seq quality measures including NSC and RSC ([`phantompeakqualtools`](https://github.com/kundajelab/phantompeakqualtools))
 
-14. ChIP-seq downstream analysis:
+13. ChIP-seq downstream analysis:
 
-  14. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
-  15. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
-  16. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
-  17. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
-  18. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
-  19. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
-  20. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
+    1. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
+    2. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
+    3. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
+    4. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
+    5. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
+    6. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
+    7. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
+
+14. SCAR-seq downstream analysis:
+
+    1. Splitting BAM files by forward and reverse strands.
+    2. Computing BEDGRAPH summaries of feature coverage per strand ([`BEDTools`](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html))
+    3. Creating BigWig files from BEDGRAPH files ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
+    4. Splitting chromosome windows
+    5. Computing the average coverage per window ([`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/))
+    6. Normalizing per strand and chromosome with counts per million (CPM)
+    7. Calculating replication fork directionality (RFD) ([`partition_smooth.pl`]())
+    8. Generating partition files for samples, stranded inputs and input-corrected samples.
+    9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
+
+
+
+## Quick Start for DAN System users
+
+1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
+
+2. Start an tmux session:
+
+```bash
+tmux new-session -s <session-name>
+```
+
+3. Launch a minimal interactive *slurm* job session:
+
+```bash
+srun -c 1 --mem=2gb --time=2-00:00:00 --pty bash
+```
+
+4. Load the required modules:
+
+```bash
+module load openjdk/20.0.0 nextflow/23.10.1 singularity/3.8.0
+```
+
+5. Run the pipeline with the institution profile (`ku_sund_danhead`):
+
+```bash
+nextflow run grothlab/glseq \
+  -profile ku_sund_danhead \
+  --input <path-of-your-input-samplesheet-csv-file> \
+  --outdir <path-of-output-directory>
+```
+6. You can now detach from the tmux session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+
+```bash
+tmux attach-session -t <session-name>
+```
 
 ## Quick Start
 

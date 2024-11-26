@@ -48,7 +48,6 @@ workflow SCAR_CREATE_PARTITIONS {
         }
         .set { ch_bam_scale }
 
-    // TODO: input channels for genomecov
     BEDTOOLS_GENOMECOV (
         ch_bam_scale,
         ch_chrom_sizes,
@@ -86,6 +85,6 @@ workflow SCAR_CREATE_PARTITIONS {
     emit:
     bigwig      = UCSC_BEDGRAPHTOBIGWIG.out.bigwig   // channel: [ val(meta), [ bigwig ] ]
 
-    versions = ch_versions                         // channel: [ versions.yml ]
+    versions = ch_versions                           // channel: [ versions.yml ]
 }
 

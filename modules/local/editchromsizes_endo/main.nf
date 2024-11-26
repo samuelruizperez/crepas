@@ -10,6 +10,7 @@ process EDITCHROMSIZES_ENDO {
     input:
     tuple val(meta), path(sizes)
     val genome_string
+    //val remove_scaffolds
 
     output:
     tuple val(meta), path ("*.sizes"), emit: sizes
@@ -21,11 +22,12 @@ process EDITCHROMSIZES_ENDO {
     script:
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-
+    //def rm_command = remove_scaffolds ? " || \$1 ~ /\\./" : ''
+    //'!(\$1 ~ /_${genome_string}\$/$rm_command)' \\
     """
     awk \\
         $args \\
-        '\$1 !~ /${genome_string}\$/ { print \$0 }' \\
+        '!(\$1 ~ /_${genome_string}\$/)' \\
         $sizes \\
         > ${prefix}.endo.sizes
 

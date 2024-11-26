@@ -146,9 +146,22 @@ workflow PREPARE_GENOME {
     // Create endogenous genome chromosome sizes file
     //
 
-    EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome)
+    EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome ) //, params.chr_sizes_rm_scaffolds)
     ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
     ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
+
+    // get list of scaffolds in EDITCHROMSIZES_ENDO.out.sizes
+    // this are the ones that contain a dot in the first column of the tab-separated file
+    ch_scaffolds = Channel.empty()
+    EDITCHROMSIZES_ENDO.out.sizes
+        .map{
+            meta, bed ->
+                bed.splitCsv(header: false, sep: '\t').findAll{ it[0].contains('.') }
+        }
+        .collect{ it[0] }
+        .set { ch_scaffolds }
+
+
 
     //
     // Prepare genome intervals for filtering by removing regions in blacklist file
@@ -243,6 +256,7 @@ workflow PREPARE_GENOME {
     gene_bed      = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes   = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo = ch_chrom_sizes_endo //    channel: [ val(meta), [ genome_endo.sizes ]]
+    scaffolds  = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]

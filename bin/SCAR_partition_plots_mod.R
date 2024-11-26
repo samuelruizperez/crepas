@@ -101,29 +101,29 @@ plt.width = 19.3
 plt.height = 6.52
 part.files <- c()
 HAS.SCAR <- FALSE
-if (is.null(opt$scar_partition_file)) {
-} else if (!file.exists(opt$scar_partition_file)) {
+if (is.null(scar_partition_file)) {
+} else if (!file.exists(scar_partition_file)) {
   warning("Partition file not found")
 } else {
-  part.files <- c(part.files, "SCAR" = opt$scar_partition_file)
+  part.files <- c(part.files, "SCAR" = scar_partition_file)
   HAS.SCAR <- TRUE
 }
 
 HAS.SCARINPUT <- FALSE
-if (is.null(opt$scarminusinput_partition_file)) {
-} else if (!file.exists(opt$scarminusinput_partition_file)) {
+if (is.null(scarminusinput_partition_file)) {
+} else if (!file.exists(scarminusinput_partition_file)) {
   warning("SCAR input-correct file not found")
 } else {
-  part.files <- c(part.files, "SCAR_Input_Corrected" = opt$scarminusinput_partition_file)
+  part.files <- c(part.files, "SCAR_Input_Corrected" = scarminusinput_partition_file)
   HAS.SCARINPUT <- TRUE
 }
 
 HAS.INPUT <- FALSE
-if (is.null(opt$strandedinput_partition_file)) {
-} else if (!file.exists(opt$strandedinput_partition_file)) {
+if (is.null(strandedinput_partition_file)) {
+} else if (!file.exists(strandedinput_partition_file)) {
   warning("stranded input partition file not found")
 } else {
-  part.files <- c(part.files, "strandedInput" = opt$strandedinput_partition_file)
+  part.files <- c(part.files, "strandedInput" = strandedinput_partition_file)
   HAS.INPUT <- TRUE
 }
 
@@ -138,27 +138,27 @@ if (length(part.files) == 0) {
 }
 
 HAS.OKSEQ <- FALSE
-if (is.null(opt$okazaki_file)) {
+if (is.null(okazaki_file)) {
   HAS.OKSEQ <- FALSE
-} else if (!file.exists(opt$okazaki_file)) {
+} else if (!file.exists(okazaki_file)) {
   HAS.OKSEQ <- FALSE
 } else {
   HAS.OKSEQ <- TRUE
 }
 
 HAS.IZ <- FALSE
-if (is.null(opt$initiation_zones)) {
+if (is.null(initiation_zones)) {
   HAS.IZ <- FALSE
-} else if (!file.exists(opt$initiation_zones)) {
+} else if (!file.exists(initiation_zones)) {
   HAS.IZ <- FALSE
 } else {
   HAS.IZ <- TRUE
 }
 
 HAS.BLACKLIST <- FALSE
-if (is.null(opt$blacklist)) {
+if (is.null(blacklist)) {
   HAS.BLACKLIST <- FALSE
-} else if (!file.exists(opt$blacklist)) {
+} else if (!file.exists(blacklist)) {
   HAS.BLACKLIST <- FALSE
 } else {
   HAS.BLACKLIST <- TRUE
@@ -170,10 +170,10 @@ if (!HAS.OKSEQ) {
     stop("Please provide either valid Okazaki RFD file or Initiation Zone bed file")
   } else {
     print("Okazaki file not found, using provided Initiation Zones")
-    IZ.file <- opt$initiation_zones
+    IZ.file <- initiation_zones
   }
 } else {
-  OK.file <- opt$okazaki_file
+  OK.file <- okazaki_file
 }
 
 if (!HAS.BLACKLIST) {
@@ -181,18 +181,18 @@ if (!HAS.BLACKLIST) {
 }
 
 
-PREFIX <- opt$prefix
-CPM.cutoff <- opt$cpm_cutoff
-KB.RANGE <- opt$plot_range
+PREFIX <- prefix
+CPM.cutoff <- cpm_cutoff
+KB.RANGE <- plot_range
 IZ.LIMITS <- KB.RANGE * 1000
-plots.dir <- opt$outdir
+plots.dir <- outdir
 if (!dir.exists(plots.dir)) {
   dir.create(plots.dir, recursive = TRUE)
 }
-chrom.excl <- unique(unlist(strsplit(opt$exclude_chromosomes, ",")))
+chrom.excl <- unique(unlist(strsplit(exclude_chromosomes, ",")))
 
 
-print(paste("CPM cutoff:",opt$cpm_cutoff))
+print(paste("CPM cutoff:",cpm_cutoff))
 
 
 ## =================== Load SCAR partiion file =================================
@@ -211,7 +211,7 @@ cls <- c("seqnames","start","end", # Coordinates of bin
 
 blacklist.gr <- GRanges()
 if (HAS.BLACKLIST) {
-  blacklist.df <- read.csv(opt$blacklist, header = FALSE, sep = "\t")[,1:3]
+  blacklist.df <- read.csv(blacklist, header = FALSE, sep = "\t")[,1:3]
   colnames(blacklist.df) <- c("seqnames","start","end")
   blacklist.gr <- makeGRangesFromDataFrame(blacklist.df)
 }
@@ -260,8 +260,8 @@ line.colors <- c("SCAR_Input_Corrected" = "darkgreen",
                  "SCAR" = "darkblue",
                  "strandedInput" = "orange")
 line.colors <- line.colors[names(part.files)]
-sample.labels <-  c("SCAR_Input_Corrected" =  "SCAR (Input-corrected)",
-                    "SCAR" = "SCAR", "strandedInput" = "Stranded input")
+sample.labels <-  c("SCAR_Input_Corrected" =  "SCAR (Input corrected)",
+                    "SCAR" = "SCAR", "strandedInput" = "stranded Input")
 
 sample.labels <- sample.labels[names(part.files)]
 
@@ -317,7 +317,7 @@ for (pf in names(part.files)) {
     RFD.gr <- makeGRangesFromDataFrame(SCAR.df,
                                        keep.extra.columns = TRUE)
 
-    IZ.df <- read.csv(opt$initiation_zones, sep = "\t", header = FALSE)[,1:3]
+    IZ.df <- read.csv(initiation_zones, sep = "\t", header = FALSE)[,1:3]
     colnames(IZ.df) <- c("seqnames","start","end")
     print("loadin IZs")
     IZ.df <-  IZ.df[!IZ.df$seqnames %in% chrom.excl,]
@@ -345,12 +345,14 @@ for (pf in names(part.files)) {
 
   tmp.mean.df <- RFD.break.all.gr %>% as.data.frame() %>%
     dplyr::filter(F.cpm >= CPM.cutoff | R.cpm >= CPM.cutoff) %>%
-    dplyr::group_by(dist,sample, type) %>%  # rank, enh_active
-    # TODO: modified this so column RFD is numeric ("" are replaced with NA too)
+    # in column RFD, replace "" with NA
+    #dplyr::mutate(RFD = ifelse(RFD == "", NA, RFD)) %>%
+    #column RFD should be numeric
     dplyr::mutate(RFD = as.numeric(RFD)) %>%
-    dplyr::summarise(#RFD_sd = sd(RFD,na.rm = T),
-      RFD.raw = mean(RFD.raw, na.rm = T),
-      RFD = mean(RFD,na.rm = T)) %>% as.data.frame()
+    dplyr::group_by(dist,sample, type) %>%  # rank, enh_active
+    dplyr::summarise(RFD.raw = mean(RFD.raw, na.rm = T),
+                     RFD = mean(RFD, na.rm = T)) %>%
+    as.data.frame()
 
   RFD.mean.df <- rbind(RFD.mean.df, tmp.mean.df)
 
@@ -360,8 +362,6 @@ for (pf in names(part.files)) {
     RFD.cor.mat <- as.data.frame(RFD.gr) %>%
       filter((F.cpm + R.cpm) >= CPM.cutoff) %>%
       group_by(names, sample) %>%
-      # TODO: modified this so column RFD is numeric ("" are replaced with NA too)
-      dplyr::mutate(RFD = as.numeric(RFD)) %>%
       summarise(RFD = mean(RFD, na.rm = TRUE)) %>% as.data.frame()
 
     RFD.cor.df  <- reshape2::dcast(RFD.cor.mat, names ~ sample, value.var = "RFD", fun.aggregate = mean)

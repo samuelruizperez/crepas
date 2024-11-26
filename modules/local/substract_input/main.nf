@@ -30,7 +30,7 @@ process SUBSTRACT_INPUT {
         | awk \\
             $args2 \\
             -v c=$cpm \\
-            'BEGIN{OFS="\t"}{if ((\$4-\$10) > 1/c) print \$1, \$2, \$3, \$4-\$10, \$5, \$6; else print \$1, \$2, \$3, 1/c, \$5, \$6}' - \\
+            'BEGIN{OFS="\\t"}{if ((\$4-\$10) > 1/c) print \$1, \$2, \$3, \$4-\$10, \$5, \$6; else print \$1, \$2, \$3, 1/c, \$5, \$6}' - \\
             > ${prefix}.minusinput.tab
 
     cat <<-END_VERSIONS > versions.yml

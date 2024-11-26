@@ -26,7 +26,7 @@ process NORMALIZE_STRANDS {
     awk \\
         $args \\
         -v c=$cpm \\
-        'BEGIN{OFS="\t"}{print \$1, \$2, \$3, (\$4+1)/c, \$5, \$6}' \\
+        'BEGIN{OFS="\\t"}{print \$1, \$2, \$3, (\$4+1)/c, \$5, \$6}' \\
         $tab \\
         > ${prefix}.norm.tab
 

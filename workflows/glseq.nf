@@ -99,6 +99,7 @@ workflow GLSEQ {
     ch_gene_bed      // channel: path(gene.beds)
     ch_chrom_sizes   // channel: path(chrom.sizes)
     ch_chrom_sizes_endo // path(chrom.sizes.endo)
+    ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_bwa_index     // channel: path(bwa/index/)
     ch_bowtie2_index // channel: path(bowtie2/index)
@@ -570,7 +571,8 @@ workflow GLSEQ {
         SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
         params.blacklist,
-        params.initiation_zones
+        params.initiation_zones,
+        ch_scaffolds
     )
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
