@@ -134,9 +134,17 @@ tmux attach-session -t <session-name>
 
 See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
 
-## Documentation
+## Usage
 
-The grothlab/glseq pipeline comes with documentation about the pipeline:
+To run on your data, prepare a tab-separated samplesheet with your input data. Please follow the [documentation on samplesheets]() for more details. [Here is an example samplesheet for running the pipeline](https://github.com/grothlab/glseq/blob/dev/assets/samplesheet_template_scarseq.csv).
+
+Now, you can run the pipeline using:
+
+```bash
+nextflow run nf-core/chipseq --input samplesheet.csv --outdir <OUTDIR> --genome GRCh37 -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
+```
+
+See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
 
 
 ## Credits
@@ -155,14 +163,12 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 
 If you use grothlab/glseq for your analysis, please cite it using the following doi: #########
 
-This pipeline is based on nf-core/chipseq, if you use grothlab/glseq please cite nf-core/chipseq using the following doi: [10.5281/zenodo.3240506](https://doi.org/10.5281/zenodo.3240506)
-
-An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
-
-You can cite the `nf-core` publication as follows:
-
+This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
+ 
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
+ 
+In addition, an extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
