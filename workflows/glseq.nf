@@ -7,6 +7,7 @@
 include { IGV                                 } from '../modules/local/igv'
 include { MULTIQC                             } from '../modules/local/multiqc'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools'
+include { ALLO               } from '../modules/local/allo/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -18,7 +19,6 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_chip
 include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
-include { ALLO               } from '../subworkflows/local/allo/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
@@ -347,7 +347,7 @@ workflow GLSEQ {
     if (params.allocate_multimappers > 0) {
 
         SAMTOOLS_SORT (
-            ch_dedup_bam
+            ch_dedup_bam,
             ch_fasta.first()
         )
         ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
