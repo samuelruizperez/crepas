@@ -560,14 +560,9 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
-
-
-
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
-
-
     ch_dedup_bam.map {
             meta, bam ->
                 "${meta}\t${bam}"

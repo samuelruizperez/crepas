@@ -20,7 +20,7 @@ process NORMALIZE_STRANDS {
     script:
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    updatedMeta = meta + ['cpm':cpm]  // Add cpm to meta
+    updatedMeta = meta + ['cpm':cpm]
 
     """
     awk \\
