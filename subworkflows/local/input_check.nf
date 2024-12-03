@@ -24,13 +24,14 @@ workflow INPUT_CHECK {
 // Function to get list of [ meta, [ fastq_1, fastq_2, fastq_umi ] ]
 def create_fastq_channel(LinkedHashMap row, String seq_center) {
     def meta = [:]
-    meta.id         = row.sample
-    meta.single_end = row.single_end.toBoolean()
-    meta.sep_umi_fq = row.sep_umi_fq.toBoolean()
-    meta.exp_type   = row.exp_type
-    meta.strandedness = row.strandedness
-    meta.antibody   = row.antibody
-    meta.control    = row.control
+    meta.id                 = row.sample
+    meta.single_end         = row.single_end.toBoolean()
+    meta.sep_umi_fq         = row.sep_umi_fq.toBoolean()
+    meta.okseq_part_file    = row.okseq_part_file
+    meta.exp_type           = row.exp_type
+    meta.strandedness       = row.strandedness
+    meta.antibody           = row.antibody
+    meta.control            = row.control
 
     def read_group = "\'@RG\\tID:${meta.id}\\tSM:${meta.id - ~/_T\d+$/}\\tPL:ILLUMINA\\tLB:${meta.id}\\tPU:1\'"
     if (seq_center) {

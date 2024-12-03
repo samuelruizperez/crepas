@@ -52,7 +52,7 @@ def check_samplesheet(file_in, file_out):
 
         ## Check header
         MIN_COLS = 3
-        HEADER = ["sample", "fastq_1", "fastq_2", "fastq_umi", "replicate", "exp_type", "strandedness", "antibody", "control", "control_replicate"]
+        HEADER = ["sample", "fastq_1", "fastq_2", "fastq_umi", "okseq_part_file", "replicate", "exp_type", "strandedness", "antibody", "control", "control_replicate"]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(f"ERROR: Please check samplesheet header -> {','.join(header)} != {','.join(HEADER)}")
@@ -78,7 +78,7 @@ def check_samplesheet(file_in, file_out):
                 )
 
             ## Check sample name entries
-            sample, fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control, control_replicate = lspl[: len(HEADER)]
+            sample, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control, control_replicate = lspl[: len(HEADER)]
             if sample.find(" ") != -1:
                 print(f"WARNING: Spaces have been replaced by underscores for sample: {sample}")
                 sample = sample.replace(" ", "_")
@@ -144,11 +144,11 @@ def check_samplesheet(file_in, file_out):
                     )
 
             ## Auto-detect paired-end/single-end
-            sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, replicate, antibody, control]
+            sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control]
             if sample and fastq_1 and fastq_2:  ## Paired-end short reads
-                sample_info = ["0", fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control]
+                sample_info = ["0", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
             elif sample and fastq_1 and not fastq_2:  ## Single-end short reads
-                sample_info = ["1", fastq_1, fastq_2, fastq_umi, replicate, exp_type, strandedness, antibody, control]
+                sample_info = ["1", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
             else:
                 print_error("Invalid combination of columns provided!", "Line", line)
 
@@ -158,7 +158,7 @@ def check_samplesheet(file_in, file_out):
             else:
                 sample_info.insert(1, "0")
 
-            ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, replicate, antibody, control ]]}
+            ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control ]]}
             replicate = int(replicate)
             sample_info = sample_info + lspl[len(HEADER) :]
             if sample not in sample_mapping_dict:
@@ -185,6 +185,7 @@ def check_samplesheet(file_in, file_out):
                         "fastq_1",
                         "fastq_2",
                         "fastq_umi",
+                        "okseq_part_file",
                         "replicate",
                         "exp_type",
                         "strandedness",
@@ -240,12 +241,14 @@ def check_samplesheet(file_in, file_out):
                                 val[4],
                             )
                         # TODO: improve this maybe? prepend exp_type to control if not empty
+                        # val[7] must be changed if a column is added
                         if control:
-                            sample_mapping_dict[sample][replicate][idx][-1] = "{}_{}".format(val[6], val[-1])
+                            sample_mapping_dict[sample][replicate][idx][-1] = "{}_{}".format(val[7], val[-1])
 
                     ## Write to file
                     for idx in range(len(sample_mapping_dict[sample][replicate])):
                         fastq_files = sample_mapping_dict[sample][replicate][idx]
+                        exp_type = fastq_files[7]
                         sample_id = "{}_{}_REP{}_T{}".format(exp_type, sample, replicate, idx + 1)
                         if len(fastq_files) == 1:
                             fout.write(",".join([sample_id] + fastq_files) + ",\n")

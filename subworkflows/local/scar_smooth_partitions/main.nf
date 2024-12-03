@@ -714,7 +714,8 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .combine(ch_part_to_plot.minusinput, by: 0)
         .map {
             id, meta1, txt1, txt2, meta3, txt3 ->
-                [ meta1, txt1, txt2, txt3, [] ]
+                def okseq = meta1.okseq_part_file ? file(meta1.okseq_part_file) : null
+                [ meta1, txt1, txt2, txt3, okseq ]
         }
         .set { ch_part_to_plot }
 
