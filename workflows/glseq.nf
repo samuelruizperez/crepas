@@ -296,9 +296,9 @@ workflow GLSEQ {
         )
         ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
-        ch_dedup_bam = FILTER_BAM_BAMTOOLS.out.bam
-        ch_dedup_bai = FILTER_BAM_BAMTOOLS.out.index
-        ch_dedup_flagstat = FILTER_BAM_BAMTOOLS.out.flagstat
+        ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
+        ch_dedup_bai = BAM_MARKDUPLICATES_PICARD.out.index
+        ch_dedup_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
 
         //
         // MODULE: Preseq coverage analysis
