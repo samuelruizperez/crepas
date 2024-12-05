@@ -267,6 +267,7 @@ workflow PREPARE_GENOME {
     chrom_sizes_endo = ch_chrom_sizes_endo //    channel: [ val(meta), [ genome_endo.sizes ]]
     scaffolds  = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
+    blacklist     = ch_blacklist              //    channel: [  blacklist.bed ]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
