@@ -11,8 +11,8 @@ process FINAL_PARTITION_PLOT {
 
     input:
     tuple val(meta), path(partition), path(strandedinput), path(scarminusinput), path(okazaki)
-    path blacklist
-    path initiation_zones
+    tuple val(meta2), path(blacklist)
+    tuple val(meta3), path(initiation_zones)
     val scaffolds
 
     output:

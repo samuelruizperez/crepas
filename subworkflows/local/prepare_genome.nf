@@ -107,6 +107,10 @@ workflow PREPARE_GENOME {
         }
     }
 
+    ch_initiation_zones = Channel.empty()
+    if (params.initiation_zones) {
+        ch_initiation_zones = Channel.of( [ [id:'initiation_zones'], file(params.initiation_zones) ] )
+    }
     //
     // Uncompress gene BED annotation file or create from GTF if required
     //
@@ -268,6 +272,7 @@ workflow PREPARE_GENOME {
     scaffolds  = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist     = ch_blacklist              //    channel: [  blacklist.bed ]
+    initiation_zones = ch_initiation_zones    //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]

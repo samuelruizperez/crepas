@@ -17,8 +17,8 @@ workflow SCAR_SMOOTH_PARTITIONS {
     take:
     ch_bigwig               // channel: [ val(meta), [ bigwig ] ]
     ch_chrom_sizes          // channel: [ bed ]
-    ch_blacklist            // channel: [ bed ]
-    ch_initiation_zones     // channel: [ bed ]
+    ch_blacklist            // channel: [ val(meta), [ bed ] ]
+    ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
     ch_scaffolds            // channel: [scaffolds]
 
     main:

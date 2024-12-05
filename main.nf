@@ -87,6 +87,7 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.scaffolds,
         PREPARE_GENOME.out.filtered_bed,
         PREPARE_GENOME.out.blacklist,
+        PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
