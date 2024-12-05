@@ -573,6 +573,10 @@ workflow GLSEQ {
     ch_dedup_bam_ss = Channel.empty()
     ch_dedup_bam_ss = ch_dedup_bam.filter { it[0].exp_type == 'scarseq' }
 
+    // TODO: temporary fix
+    if (!ch_chrom_sizes_endo) {
+        ch_chrom_sizes_endo = ch_chrom_sizes
+    }
 
     SCAR_CREATE_PARTITIONS (
         ch_dedup_bam_ss,
