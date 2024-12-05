@@ -27,10 +27,10 @@ include { STAR_GENOMEGENERATE      } from '../../modules/nf-core/star/genomegene
 
 workflow PREPARE_GENOME {
     take:
-    genome             //  string: genome name
-    genomes            //     map: genome attributes
-    spikein_genome     //  string: spikein genome name
-    prepare_tool_index // string  : tool to prepare index for
+    genome             //    string: genome name
+    genomes            //    map: genome attributes
+    spikein_genome     //    string: spikein genome name
+    prepare_tool_index //    string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
@@ -146,14 +146,16 @@ workflow PREPARE_GENOME {
     // Create endogenous genome chromosome sizes file
     //
 
-    EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome ) //, params.chr_sizes_rm_scaffolds)
-    ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
-    ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
+    if (spikein_genome) {
+        EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome )
+        ch_chrom_sizes = EDITCHROMSIZES_ENDO.out.sizes
+        ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
+    }
 
     // get list of scaffolds in EDITCHROMSIZES_ENDO.out.sizes
     // this are the ones that contain a dot in the first column of the tab-separated file
     ch_scaffolds = Channel.empty()
-    EDITCHROMSIZES_ENDO.out.sizes
+    ch_chrom_sizes
         .map{
             meta, bed ->
                 bed.splitCsv(header: false, sep: '\t').findAll{ it[0].contains('.') }

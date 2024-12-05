@@ -84,13 +84,13 @@ tmux new-session -s <session-name>
 3. Launch a minimal interactive *slurm* job session:
 
 ```bash
-srun -c 1 --mem=2gb --time=2-00:00:00 --pty bash
+srun -c 1 --mem=1gb --time=3-00:00:00 --pty bash
 ```
 
 4. Load the required *modules*:
 
 ```bash
-module load openjdk/20.0.0 nextflow/23.10.1 singularity/3.8.0
+module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
 ```
 
 5. Run the pipeline with the institution profile (`ku_sund_danhead`):
@@ -164,11 +164,11 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 If you use grothlab/glseq for your analysis, please cite it using the following doi: #########
 
 This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
- 
+
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
- 
+
 In addition, an extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
