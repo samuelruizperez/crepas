@@ -156,7 +156,7 @@ workflow GLSEQ {
 
         )
         ch_genome_bam        = FASTQ_ALIGN_BWA.out.bam
-        ch_genome_bam_index  = FASTQ_ALIGN_BWA.out.bai
+        ch_genome_bam_index  = FASTQ_ALIGN_BWA.out.index
         ch_samtools_stats    = FASTQ_ALIGN_BWA.out.stats
         ch_samtools_flagstat = FASTQ_ALIGN_BWA.out.flagstat
         ch_samtools_idxstats = FASTQ_ALIGN_BWA.out.idxstats
@@ -176,7 +176,7 @@ workflow GLSEQ {
             params.sort_bam
         )
         ch_genome_bam        = FASTQ_ALIGN_BOWTIE2.out.bam
-        ch_genome_bam_index  = FASTQ_ALIGN_BOWTIE2.out.bai
+        ch_genome_bam_index  = FASTQ_ALIGN_BOWTIE2.out.index
         ch_samtools_stats    = FASTQ_ALIGN_BOWTIE2.out.stats
         ch_samtools_flagstat = FASTQ_ALIGN_BOWTIE2.out.flagstat
         ch_samtools_idxstats = FASTQ_ALIGN_BOWTIE2.out.idxstats
@@ -194,7 +194,7 @@ workflow GLSEQ {
         )
 
         ch_genome_bam        = ALIGN_CHROMAP.out.bam
-        ch_genome_bam_index  = FASTQ_ALIGN_CHROMAP.out.bai
+        ch_genome_bam_index  = FASTQ_ALIGN_CHROMAP.out.index
         ch_samtools_stats    = FASTQ_ALIGN_CHROMAP.out.stats
         ch_samtools_flagstat = FASTQ_ALIGN_CHROMAP.out.flagstat
         ch_samtools_idxstats = FASTQ_ALIGN_CHROMAP.out.idxstats
@@ -217,7 +217,7 @@ workflow GLSEQ {
 
         )
         ch_genome_bam        = FASTQ_ALIGN_STAR.out.bam
-        ch_genome_bam_index  = FASTQ_ALIGN_STAR.out.bai
+        ch_genome_bam_index  = FASTQ_ALIGN_STAR.out.index
         ch_transcriptome_bam = FASTQ_ALIGN_STAR.out.bam_transcript
         ch_samtools_stats    = FASTQ_ALIGN_STAR.out.stats
         ch_samtools_flagstat = FASTQ_ALIGN_STAR.out.flagstat
@@ -275,13 +275,13 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
         BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS (
-            PICARD_MERGESAMFILES.out.bam.join(SAMTOOLS_INDEX.out.bai, by: [0]),
+            PICARD_MERGESAMFILES.out.bam.join(SAMTOOLS_INDEX.out.index, by: [0]),
             params.get_dedup_stats
         )
         ch_versions = ch_versions.mix(BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.versions.first())
 
         ch_dedup_bam = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.bam
-        ch_dedup_bai = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.bai
+        ch_dedup_bai = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
         ch_dedup_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
 
     } else {
@@ -297,7 +297,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
         ch_dedup_bam = FILTER_BAM_BAMTOOLS.out.bam
-        ch_dedup_bai = FILTER_BAM_BAMTOOLS.out.bai
+        ch_dedup_bai = FILTER_BAM_BAMTOOLS.out.index
         ch_dedup_flagstat = FILTER_BAM_BAMTOOLS.out.flagstat
 
         //
@@ -323,7 +323,7 @@ workflow GLSEQ {
         ch_fasta.first()
     )
     ch_dedup_bam = BAM_FILTER_SAMBAMBA.out.bam
-    ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.bai
+    ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.index
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
@@ -339,7 +339,7 @@ workflow GLSEQ {
         )
 
         ch_dedup_bam = BAM_SPIKEIN_SPLIT.out.bam
-        ch_dedup_bai = BAM_SPIKEIN_SPLIT.out.bai
+        ch_dedup_bai = BAM_SPIKEIN_SPLIT.out.index
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
@@ -367,7 +367,7 @@ workflow GLSEQ {
     ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
-            //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.bai, by: [0]),
+            //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.index, by: [0]),
             ch_dedup_bam.join(ch_dedup_bai, by: [0]),
             ch_fasta.first(),
             ch_fai.first()

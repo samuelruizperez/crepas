@@ -32,7 +32,7 @@ workflow BAM_SPIKEIN_SPLIT {
     ch_bam = ch_bam_endo.concat(ch_bam_exo)
 
     SAMTOOLS_INDEX(ch_bam)
-    ch_bam_bai = ch_bam.join(SAMTOOLS_INDEX.out.bai, by: [0])
+    ch_bam_bai = ch_bam.join(SAMTOOLS_INDEX.out.index, by: [0])
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     SAMBAMBA_VIEW(ch_bam_bai, ch_bed)
@@ -50,8 +50,11 @@ workflow BAM_SPIKEIN_SPLIT {
     bam           = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it[0].genome == genome }            // channel: [ val(meta), [ bam ] ]
     exo_bam       = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ bam ] ]
 
-    bai           = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == genome }            // channel: [ val(meta), [ bai ] ]
-    exo_bai       = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ bai ] ]
+    //bai           = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == genome }            // channel: [ val(meta), [ bai ] ]
+    //exo_bai       = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ bai ] ]
+
+    index           = BAM_SORT_STATS_SAMTOOLS.out.index.filter { it[0].genome == genome }            // channel: [ val(meta), [ bai ] ]
+    exo_index       = BAM_SORT_STATS_SAMTOOLS.out.index.filter { it[0].genome == spikein_genome }
 
     stats         = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it[0].genome == genome }            // channel: [ val(meta), [ stats ] ]
     exo_stats     = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ stats ] ]
