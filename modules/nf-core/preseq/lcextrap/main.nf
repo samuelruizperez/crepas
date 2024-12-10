@@ -1,6 +1,6 @@
 process PRESEQ_LCEXTRAP {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_high_memory_long'
     label 'error_retry'
 
     conda "${moduleDir}/environment.yml"

@@ -27,7 +27,7 @@ process FINAL_PARTITION_PLOT {
     script:
     def args      = task.ext.args ?: ''
     def prefix    = task.ext.prefix ?: "${meta.id}"
-    def okazaki_arg   = okazaki.isEmpty() ? '' : "--okazaki_file $okazaki"
+    def okazaki_arg   = okazaki.empty() ? '' : "--okazaki_file $okazaki"
     // if --exclude_chromosomes is in args and remove_scaffolds is true, then append scaffolds to the comma-separated list of --exclude_chromosomes
     def exclude_chromosomes = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
     """

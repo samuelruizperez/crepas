@@ -94,12 +94,12 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set {ch_bw_combs}
 
-    ch_bw_combs
-        .map {
-            meta, bigwig ->
-                "${meta}\t${bigwig}"
-        }
-        .collectFile( name: 'ch_bw_combs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_bw_combs
+    //     .map {
+    //         meta, bigwig ->
+    //             "${meta}\t${bigwig}"
+    //     }
+    //     .collectFile( name: 'ch_bw_combs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // add bigwig meta information to the chromosome bed files
     ch_bigwig_chroms

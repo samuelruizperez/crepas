@@ -513,8 +513,8 @@ workflow GLSEQ {
     //
     BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
         ch_ip_control_bam_cs,
-        ch_fasta.map{ it[1] },
-        ch_gtf.map{ it[1] },
+        ch_fasta.map{ it[1] }.first(),
+        ch_gtf.map{ it[1] }.first(),
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
@@ -591,8 +591,8 @@ workflow GLSEQ {
     SCAR_SMOOTH_PARTITIONS (
         SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
-        ch_blacklist,
-        ch_initiation_zones,
+        ch_blacklist.first(),
+        ch_initiation_zones.first(),
         ch_scaffolds
     )
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
