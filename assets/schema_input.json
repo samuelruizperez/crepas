@@ -33,10 +33,33 @@
                     }
                 ]
             },
+            "fastq_umi": {
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for UMI reads cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "okseq_part_file": {
+                "type": "string",
+                "format": "file-path",
+                "errorMessage": "OK-seq part file or empty must be provided and cannot contain spaces"
+            },
             "replicate": {
                 "type": "integer",
                 "errorMessage": "Replicate id not an integer!",
                 "meta": ["replicate"]
+            },
+            "exp_type": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Experiment type must be provided and cannot contain spaces",
+                "meta": ["exp_type"]
+            },
+            "strandedness": {
+                "type": "string",
+                "pattern": "^(forward|reverse)$",
+                "errorMessage": "Strandedness must be one of empty, 'forward' or 'reverse'",
+                "meta": ["strandedness"]
             },
             "antibody": {
                 "type": "string",
@@ -59,6 +82,6 @@
                 "meta": ["control_replicate"]
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "fastq_1", "exp_type", "replicate"]
     }
 }
