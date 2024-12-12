@@ -4,6 +4,11 @@
 //
 
 include { MACS3_CALLPEAK           } from '../../../modules/nf-core/macs3/callpeak/main'
+include { MACS3_BDGCMP             } from '../../../modules/local/macs3/bdgcmp/main'
+include { BEDTOOLS_SLOP                  } from '../../../modules/nf-core/bedtools/slop/main'
+include { UCSC_BEDCLIP               } from '../../../modules/nf-core/ucsc/bedclip/main'
+include { FILE_SORT                  } from '../../../modules/local/file_sort/main'
+include { UCSC_BEDGRAPHTOBIGWIG      } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 
 include { FRIP_SCORE               } from '../../../modules/local/frip_score'
@@ -16,6 +21,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
     ch_fasta                          // channel: [ fasta ]
     ch_gtf                            // channel: [ gtf ]
+    ch_chrom_sizes
     macs_gsize                        // integer: value for --macs_gsize parameter
     annotate_peaks_suffix             //  string: suffix for input HOMER annotate peaks files to be trimmed off
     ch_peak_count_header_multiqc      // channel: [ header_file ]
@@ -49,6 +55,43 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
                 peaks.size() > 0
         }
         .set { ch_macs3_peaks }
+
+    // MACS3_CALLPEAK
+    //     .out
+    //     .pileup_bdg
+    //     .join(MACS3_CALLPEAK.out.lambda_bdg, by: [0])
+    //     .set { ch_bdgs }
+
+
+    // MACS3_BDGCMP (
+    //     ch_bdgs
+    // )
+    // ch_versions = ch_versions.mix(MACS3_BDGCMP.out.versions.first())
+
+    // BEDTOOLS_SLOP (
+    //     MACS3_BDGCMP.out.bdg,
+    //     ch_chrom_sizes
+    // )
+    // ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
+
+    // UCSC_BEDCLIP (
+    //     BEDTOOLS_SLOP.out.bed,
+    //     ch_chrom_sizes
+    // )
+    // ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
+
+    // // TODO: maybe a whole module for this is overkill
+    // FILE_SORT (
+    //     UCSC_BEDCLIP.out.bedgraph,
+    //     'clip'
+    // )
+    // ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+
+    // UCSC_BEDGRAPHTOBIGWIG (
+    //     FILE_SORT.out.sorted,
+    //     ch_chrom_sizes
+    // )
+    // ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
 
     // Create channels: [ meta, ip_bam, peaks ]
     ch_bam
@@ -136,7 +179,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     xls                          = MACS3_CALLPEAK.out.xls           // channel: [ val(meta), [ xls ] ]
     gapped_peaks                 = MACS3_CALLPEAK.out.gapped        // channel: [ val(meta), [ gapped_peak ] ]
     bed                          = MACS3_CALLPEAK.out.bed           // channel: [ val(meta), [ bed ] ]
-    bedgraph                     = MACS3_CALLPEAK.out.bdg           // channel: [ val(meta), [ bedgraph ] ]
+    pileup_bdg                   = MACS3_CALLPEAK.out.pileup_bdg           // channel: [ val(meta), [ bedgraph ] ]
+    lambda_bdg                   = MACS3_CALLPEAK.out.lambda_bdg           // channel: [ val(meta), [ bedgraph ] ]
 
     frip_txt                     = FRIP_SCORE.out.txt               // channel: [ val(meta), [ txt ] ]
 

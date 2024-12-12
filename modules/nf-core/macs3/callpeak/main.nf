@@ -19,7 +19,8 @@ process MACS3_CALLPEAK {
 
     tuple val(meta), path("*.gappedPeak"), optional:true, emit: gapped
     tuple val(meta), path("*.bed")       , optional:true, emit: bed
-    tuple val(meta), path("*.bdg")       , optional:true, emit: bdg
+    tuple val(meta), path("*_pileup.bdg")       , optional:true, emit: pileup_bdg
+    tuple val(meta), path("*_lambda.bdg") , optional:true, emit: lambda_bdg
 
     when:
     task.ext.when == null || task.ext.when

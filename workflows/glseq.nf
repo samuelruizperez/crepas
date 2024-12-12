@@ -515,6 +515,7 @@ workflow GLSEQ {
         ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
+        ch_chrom_sizes,
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
