@@ -74,36 +74,45 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
 
-2. Start a *tmux* session:
+2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
 ```bash
 tmux new-session -s <session-name>
 ```
 
-3. Launch a minimal interactive *slurm* job session:
+3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
 
 ```bash
 srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
 ```
 
-4. Load the required *modules*:
+4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
 ```bash
 module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
 ```
 
-5. Run the pipeline with the institution profile (`ku_sund_danhead`):
+5. Run the pipeline test with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
 ```bash
 nextflow run grothlab/glseq \
-  -profile ku_sund_danhead \
-  --input <path-of-your-input-samplesheet-csv-file> \
-  --outdir <path-of-output-directory>
+  -profile test,ku_sund_danhead \
+  --outdir <path_to_output_directory>
 ```
+
 6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
 ```bash
 tmux attach-session -t <session-name>
+```
+
+7. Run your own analysis:
+
+```bash
+nextflow run grothlab/glseq \
+  -profile ku_sund_danhead \
+  --input <path_to_your_input_samplesheet.csv> \
+  --outdir <path_to_output_directory>
 ```
 
 ## Quick start
