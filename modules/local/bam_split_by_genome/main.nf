@@ -35,7 +35,7 @@ process BAM_SPLIT_BY_GENOME {
     # reaheader if filter_out is set
     $reheader_command
 
-    samtools view -b ${prefix}.sam \\
+    samtools view -b ${prefix}.${keep_genome_string}.sam \\
         > ${prefix}.${keep_genome_string}.bam
 
     cat <<-END_VERSIONS > versions.yml
