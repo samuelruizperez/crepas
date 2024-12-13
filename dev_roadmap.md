@@ -8,3 +8,5 @@
 4. multimapper resolution and
 
 5. peak analysis for SCAR-seq
+
+. setting genome, fasta and gtf without index path uses the igenomes index (error)
