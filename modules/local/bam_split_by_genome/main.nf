@@ -26,7 +26,7 @@ process BAM_SPLIT_BY_GENOME {
     script:
     def prefix           = task.ext.prefix ?: "${meta.id}"
     def grep_command     = filter_out ? "grep -v" : "grep"
-    def reheader_command = filter_out ? "samtools reheader -c 'grep -v \"_${filter_genome_string}\" -e ^@CO -e ^@PG' ${prefix}.sam > ${prefix}.tmp.sam && mv ${prefix}.tmp.sam ${prefix}.sam" : ''
+    def reheader_command = filter_out ? "samtools reheader -c 'grep -v \"_${filter_genome_string}\" -e ^@CO -e ^@PG' ${prefix}.${keep_genome_string}.sam > ${prefix}.${keep_genome_string}.tmp.sam && mv ${prefix}.${keep_genome_string}.tmp.sam ${prefix}.${keep_genome_string}.sam" : ''
     """
     samtools view \\
         -h $bam | \\
