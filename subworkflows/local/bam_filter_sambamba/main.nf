@@ -15,6 +15,7 @@ workflow BAM_FILTER_SAMBAMBA {
     main:
     ch_versions = Channel.empty()
 
+    // TODO: this one might not be necessary
     SAMTOOLS_INDEX(ch_bam)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 

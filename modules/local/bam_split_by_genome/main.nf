@@ -12,7 +12,8 @@ process BAM_SPLIT_BY_GENOME {
 
     input:
     tuple val(meta), path(bam)
-    val genome_string
+    val filter_genome_string
+    val keep_genome_string
     val filter_out
 
     output:
@@ -27,17 +28,17 @@ process BAM_SPLIT_BY_GENOME {
     script:
     def prefix           = task.ext.prefix ?: "${meta.id}"
     def grep_command     = filter_out ? "grep -v" : "grep"
-    def reheader_command = filter_out ? "samtools reheader -c 'grep -v \"_${genome_string}\" -e ^@CO -e ^@PG' ${prefix}.sam > ${prefix}.tmp.sam && mv ${prefix}.tmp.sam ${prefix}.sam" : ''
+    def reheader_command = filter_out ? "samtools reheader -c 'grep -v \"_${filter_genome_string}\" -e ^@CO -e ^@PG' ${prefix}.sam > ${prefix}.tmp.sam && mv ${prefix}.tmp.sam ${prefix}.sam" : ''
     """
     samtools view \\
         -h $bam | \\
-            $grep_command "_${genome_string}" > ${prefix}.sam
+            $grep_command "_${filter_genome_string}" > ${prefix}.${keep_genome_string}.sam
 
     # reaheader if filter_out is set
     $reheader_command
 
     samtools view -b ${prefix}.sam \\
-        > ${prefix}.bam
+        > ${prefix}.${keep_genome_string}.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

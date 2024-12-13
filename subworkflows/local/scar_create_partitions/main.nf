@@ -54,11 +54,10 @@ workflow SCAR_CREATE_PARTITIONS {
         'bdg',
         false
     )
-    ch_genomecov = BEDTOOLS_GENOMECOV.out.genomecov
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
     BEDTOOLS_SLOP (
-        ch_genomecov,
+        BEDTOOLS_GENOMECOV.out.genomecov,
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())

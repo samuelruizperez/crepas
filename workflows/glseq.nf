@@ -59,7 +59,7 @@ include { FASTQ_ALIGN_CHROMAP          } from '../subworkflows/nf-core/fastq_ali
 include { FASTQ_ALIGN_STAR             } from '../subworkflows/nf-core/fastq_align_star'
 include { BAM_MARKDUPLICATES_PICARD } from '../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
-
+include { BAM_STATS_SAMTOOLS        } from '../subworkflows/nf-core/bam_stats_samtools'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -248,10 +248,23 @@ workflow GLSEQ {
         .set { ch_sort_bam }
 
     PICARD_MERGESAMFILES (
-        ch_sort_bam
+        ch_sort_bam,
     )
+    ch_merged_bam = PICARD_MERGESAMFILES.out.bam
     ch_versions = ch_versions.mix(PICARD_MERGESAMFILES.out.versions.first().ifEmpty(null))
 
+    SAMTOOLS_INDEX (
+        ch_merged_bam
+    )
+    ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.index, by: [0])
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
+
+    BAM_STATS_SAMTOOLS (
+        ch_merged_bam_bai,
+        ch_fasta.first()
+    )
+    ch_merged_stat = BAM_STATS_SAMTOOLS.out.stats
+    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
     if (params.with_umi) {
@@ -263,7 +276,7 @@ workflow GLSEQ {
         ch_preseq_multiqc = Channel.empty()
         if (!params.skip_preseq) {
             PRESEQ_LCEXTRAP (
-                PICARD_MERGESAMFILES.out.bam
+                ch_merged_bam
             )
             ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
             ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
@@ -271,19 +284,15 @@ workflow GLSEQ {
         //
         // SUBWORKFLOW: Deduplicate BAM files with UMI-tools
         //
-        SAMTOOLS_INDEX (
-            PICARD_MERGESAMFILES.out.bam
-        )
-        ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
-
         BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS (
-            PICARD_MERGESAMFILES.out.bam.join(SAMTOOLS_INDEX.out.index, by: [0]),
+            ch_merged_bam_bai,
             params.get_dedup_stats
         )
         ch_versions = ch_versions.mix(BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.versions.first())
 
         ch_dedup_bam = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.bam
         ch_dedup_bai = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
+        ch_dedup_stat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.stats
         ch_dedup_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
 
     } else {
@@ -292,7 +301,7 @@ workflow GLSEQ {
         //
         // TODO: using first() to convert the tuple to a value channel and make it consumable
         BAM_MARKDUPLICATES_PICARD (
-            PICARD_MERGESAMFILES.out.bam,
+            ch_merged_bam,
             ch_fasta.first(),
             ch_fai.first()
         )
@@ -300,6 +309,7 @@ workflow GLSEQ {
 
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_bai = BAM_MARKDUPLICATES_PICARD.out.index
+        ch_dedup_stat = BAM_MARKDUPLICATES_PICARD.out.stats
         ch_dedup_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
 
         //
@@ -324,24 +334,27 @@ workflow GLSEQ {
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
-    ch_dedup_bam = BAM_FILTER_SAMBAMBA.out.bam
-    ch_dedup_bai = BAM_FILTER_SAMBAMBA.out.index
+    ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
+    ch_filtered_index = BAM_FILTER_SAMBAMBA.out.index
+    ch_filtered_stat = BAM_FILTER_SAMBAMBA.out.stats
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
     // SUBWORKFLOW: Spike-in splitting
     //
+    ch_filtered2_stat = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
-            ch_dedup_bam,
+            ch_filtered_bam,
             ch_fasta.first(),
             ch_filtered_bed.first(),
             params.genome,
             params.spikein_genome
         )
 
-        ch_dedup_bam = BAM_SPIKEIN_SPLIT.out.bam
-        ch_dedup_bai = BAM_SPIKEIN_SPLIT.out.index
+        ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
+        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.index
+        ch_filtered2_stat = BAM_SPIKEIN_SPLIT.out.stats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
@@ -515,7 +528,7 @@ workflow GLSEQ {
         ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
-        ch_chrom_sizes,
+        ch_chrom_sizes_endo.map{ it[1] },
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
@@ -581,6 +594,7 @@ workflow GLSEQ {
         ch_chrom_sizes_endo = ch_chrom_sizes
     }
 
+    // TODO: windows are created even when not needed (no scarseq samples)
     SCAR_CREATE_PARTITIONS (
         ch_dedup_bam_ss,
         ch_chrom_sizes_endo.map{ it[1] }
@@ -598,6 +612,19 @@ workflow GLSEQ {
     )
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
+
+
+    // summary of samtools stats
+    //ch_samtools_stats this is by library so the meta wont match with the merged bams next
+    ch_merged_stat
+        .join(ch_dedup_stat, by: [0])
+        .join(ch_filtered_stat, by: [0])
+        .join(ch_filtered2_stat, by: [0])
+        .map {
+            meta, stats, dedup, filtered, filtered2 ->
+                "${meta}\t${stats}\t${dedup}\t${filtered}\t${filtered2}"
+        }
+        .collectFile( name: 'samtools_stats_final.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
     //

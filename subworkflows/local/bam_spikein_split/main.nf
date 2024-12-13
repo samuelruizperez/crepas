@@ -22,8 +22,8 @@ workflow BAM_SPIKEIN_SPLIT {
     ch_versions = Channel.empty()
 
     // split BAMs by spike-in genome
-    BAM_SPLIT_BY_GENOME_ENDO(ch_bam, spikein_genome, true)
-    BAM_SPLIT_BY_GENOME_EXO(ch_bam, spikein_genome, false)
+    BAM_SPLIT_BY_GENOME_ENDO(ch_bam, spikein_genome, genome, true)
+    BAM_SPLIT_BY_GENOME_EXO(ch_bam, spikein_genome, spikein_genome, false)
 
     // add genome as meta field
     ch_bam_endo = BAM_SPLIT_BY_GENOME_ENDO.out.bam.map { [ it[0] + [ genome: genome ], it[1] ] }

@@ -150,7 +150,7 @@ workflow PREPARE_GENOME {
     // Create endogenous genome chromosome sizes file
     //
 
-    ch_chrom_sizes_endo = Channel.empty()
+    ch_chrom_sizes_endo = ch_chrom_sizes
     if (spikein_genome) {
         EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome )
         ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
