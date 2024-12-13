@@ -342,6 +342,8 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Spike-in splitting
     //
+    // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
+    // BAM_SPLIT_BY_GENOME will fail
     ch_filtered2_stat = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (

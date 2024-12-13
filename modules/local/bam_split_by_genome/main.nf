@@ -23,8 +23,6 @@ process BAM_SPLIT_BY_GENOME {
     when:
     task.ext.when == null || task.ext.when
 
-//                     samtools sort -T ${prefix} --threads $task.cpus - | \\
-
     script:
     def prefix           = task.ext.prefix ?: "${meta.id}"
     def grep_command     = filter_out ? "grep -v" : "grep"
