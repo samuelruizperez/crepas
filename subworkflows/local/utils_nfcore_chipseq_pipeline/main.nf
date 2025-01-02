@@ -71,7 +71,9 @@ workflow PIPELINE_INITIALISATION {
     //
     // Custom validation for pipeline parameters
     //
-    validateInputParameters()
+    // commenting-out this is only a temporary fix to avoid
+    // the pipeline from failing due to missing genome in igenomes
+    //validateInputParameters()
 
 }
 

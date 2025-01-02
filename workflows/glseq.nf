@@ -337,6 +337,7 @@ workflow GLSEQ {
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.index
     ch_filtered_stat = BAM_FILTER_SAMBAMBA.out.stats
+    ch_filtered_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
@@ -345,6 +346,7 @@ workflow GLSEQ {
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
     ch_filtered2_stat = Channel.empty()
+    ch_filtered2_flagstat = ch_filtered_flagstat
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -357,6 +359,7 @@ workflow GLSEQ {
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
         ch_filtered_index = BAM_SPIKEIN_SPLIT.out.index
         ch_filtered2_stat = BAM_SPIKEIN_SPLIT.out.stats
+        ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
@@ -364,7 +367,7 @@ workflow GLSEQ {
     if (params.allocate_multimappers > 0) {
 
         SAMTOOLS_SORT (
-            ch_dedup_bam,
+            ch_filtered_bam,
             ch_fasta.first()
         )
         ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
@@ -372,7 +375,7 @@ workflow GLSEQ {
         ALLO (
             SAMTOOLS_SORT.out.bam
         )
-        ch_dedup_bam = ALLO.out.bam
+        ch_filtered_bam = ALLO.out.bam
         ch_versions = ch_versions.mix(ALLO.out.versions.first())
 
     }
@@ -385,7 +388,7 @@ workflow GLSEQ {
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
             //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.index, by: [0]),
-            ch_dedup_bam.join(ch_dedup_bai, by: [0]),
+            ch_filtered_bam.join(ch_filtered_index, by: [0]),
             ch_fasta.first(),
             ch_fai.first()
         )
@@ -402,7 +405,7 @@ workflow GLSEQ {
     ch_multiqc_phantompeakqualtools_correlation_multiqc = Channel.empty()
     if (!params.skip_spp) {
         PHANTOMPEAKQUALTOOLS (
-            ch_dedup_bam
+            ch_filtered_bam
         )
         ch_phantompeakqualtools_spp_multiqc           = PHANTOMPEAKQUALTOOLS.out.spp
         ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
@@ -425,8 +428,8 @@ workflow GLSEQ {
     // SUBWORKFLOW: Normalised bigWig coverage tracks
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
-        ch_dedup_bam.join(ch_dedup_flagstat, by: [0]),
-        ch_chrom_sizes.map{ it[1] }
+        ch_filtered_bam.join(ch_filtered2_flagstat, by: [0]),
+        ch_chrom_sizes_endo.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
@@ -463,7 +466,7 @@ workflow GLSEQ {
     //
     // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
     //
-    ch_dedup_bam.join(ch_dedup_bai, by: [0])
+    ch_filtered_bam.join(ch_filtered_index, by: [0])
         .set { ch_genome_bam_bai }
 
     ch_genome_bam_bai
@@ -523,6 +526,11 @@ workflow GLSEQ {
     ch_ip_control_bam_cs = Channel.empty()
     ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' }
 
+    // // TODO: temporary fix
+    // if (!ch_chrom_sizes_endo) {
+    //     ch_chrom_sizes_endo = ch_chrom_sizes
+    // }
+
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
     //
@@ -581,24 +589,21 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
-    ch_dedup_bam.map {
+    ch_filtered_bam.map {
             meta, bam ->
                 "${meta}\t${bam}"
         }
-        .collectFile( name: 'ch_dedup_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_filtered_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
-    ch_dedup_bam_ss = Channel.empty()
-    ch_dedup_bam_ss = ch_dedup_bam.filter { it[0].exp_type == 'scarseq' }
+    ch_filtered_bam_ss = Channel.empty()
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
-    // TODO: temporary fix
-    if (!ch_chrom_sizes_endo) {
-        ch_chrom_sizes_endo = ch_chrom_sizes
-    }
+
 
     // TODO: windows are created even when not needed (no scarseq samples)
     SCAR_CREATE_PARTITIONS (
-        ch_dedup_bam_ss,
+        ch_filtered_bam_ss,
         ch_chrom_sizes_endo.map{ it[1] }
     )
 

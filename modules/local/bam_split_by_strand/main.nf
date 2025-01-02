@@ -14,8 +14,8 @@ process BAM_SPLIT_BY_STRAND {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.F.bam"), emit: f_bam
-    tuple val(meta), path("*.R.bam"), emit: r_bam
+    tuple val(meta), path("*.forward.bam"), emit: f_bam
+    tuple val(meta), path("*.reverse.bam"), emit: r_bam
     path "versions.yml"             , emit: versions
 
     when:
@@ -23,8 +23,8 @@ process BAM_SPLIT_BY_STRAND {
 
     script:
     def prefix            = task.ext.prefix ?: "${meta.id}"
-    def strand_extension1 = meta.strandedness == 'reverse' ? 'R' : 'F'
-    def strand_extension2 = meta.strandedness == 'reverse' ? 'F' : 'R'
+    def strand_extension1 = meta.strandedness == 'reverse' ? 'reverse' : 'forward'
+    def strand_extension2 = meta.strandedness == 'reverse' ? 'forward' : 'reverse'
 
     """
     samtools view \\
