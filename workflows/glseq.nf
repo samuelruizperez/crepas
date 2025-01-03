@@ -345,7 +345,7 @@ workflow GLSEQ {
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    ch_filtered2_stat = Channel.empty()
+    // ch_filtered2_stat = Channel.empty()
     ch_filtered2_flagstat = ch_filtered_flagstat
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
@@ -627,12 +627,14 @@ workflow GLSEQ {
         .join(ch_dedup_stat, by: [0])
         .join(ch_filtered_stat, by: [0])
         .join(ch_filtered2_stat, by: [0])
+        .set { ch_samtools_stats_final }
+
+    ch_samtools_stats_final
         .map {
             meta, stats, dedup, filtered, filtered2 ->
                 "${meta}\t${stats}\t${dedup}\t${filtered}\t${filtered2}"
         }
-        .collectFile( name: 'samtools_stats_final.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
+        .collectFile( name: 'ch_samtools_stats_final.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // MODULE: Create IGV session

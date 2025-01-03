@@ -31,7 +31,7 @@ process FINAL_PARTITION_PLOT {
     def okazaki_arg   = okazaki.empty() ? '' : "--okazaki_file $okazaki"
     def iz_arg = initiation_zones ? '' : "--initiation_zones $initiation_zones"
     // if --exclude_chromosomes is in args and remove_scaffolds is true, then append scaffolds to the comma-separated list of --exclude_chromosomes
-    //def exclude_chromosomes = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
+    //def exclude_chr_arg = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
     """
     SCAR_partition_plots.R \\
         --scar_partition_file $partition \\

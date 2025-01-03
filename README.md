@@ -10,7 +10,7 @@
 
 ## Introduction
 
-**grothlab/glseq** is a bioinformatics analysis pipeline for the analysis of sequencing data (ChIP-seq, SCAR-seq, etc.).
+**grothlab/glseq** is a bioinformatics pipeline for the analysis of sequencing data (ChIP-seq, [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), etc.).
 
 <!-- On release, automated continuous integration tests run the pipeline on a [full-sized dataset](https://github.com/nf-core/test-datasets/tree/chipseq#full-test-dataset-origin) on the AWS cloud infrastructure. The dataset consists of FoxA1 (transcription factor) and EZH2 (histone,mark) IP experiments from _Franco et al. 2015_ ([GEO: GSE59530](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE59530), [PMID: 25752574](https://pubmed.ncbi.nlm.nih.gov/25752574/)) and _Popovic et al. 2014_ ([GEO: GSE57632](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57632), [PMID: 25188243](https://pubmed.ncbi.nlm.nih.gov/25188243/)), respectively. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from running the full-sized tests can be viewed on the [nf-core website](https://nf-co.re/chipseq/results). -->
 
@@ -226,19 +226,19 @@ The minimum reference genome requirements are a FASTA and a GTF file, all other 
 
 ## Credits
 
-The grothlab/glseq pipeline was written by Samuel Ruiz-Pérez at the Groth Lab.
+The [glseq](https://github.com/grothlab/glseq) pipeline was written by Samuel Ruiz-Pérez ([@samuelruizperez](https://github.com/samuelruizperez)) at the Groth Lab ([@grothlab](https://github.com/grothlab)).
 
-Several scripts in this pipeline are based on nf-core/chipseq scripts, which were originally written by Chuan Wang ([@chuan-wang](https://github.com/chuan-wang)) and Phil Ewels ([@ewels](https://github.com/ewels)), re-implemented by Harshil Patel ([@drpatelh](https://github.com/drpatelh)), and converted to Nextflow DSL2 by Jose Espinosa-Carrasco ([@JoseEspinosa](https://github.com/JoseEspinosa)). For more information regarding nf-core/chipseq, see [https://github.com/nf-core/chipseq?tab=readme-ov-file#credits](https://github.com/nf-core/chipseq?tab=readme-ov-file#credits)
+Several scripts in this pipeline are based on [nf-core/chipseq](https://github.com/nf-core/chipseq) scripts, which were originally written by Chuan Wang ([@chuan-wang](https://github.com/chuan-wang)) and Phil Ewels ([@ewels](https://github.com/ewels)), re-implemented by Harshil Patel ([@drpatelh](https://github.com/drpatelh)), and converted to Nextflow DSL2 by Jose Espinosa-Carrasco ([@JoseEspinosa](https://github.com/JoseEspinosa)). For more information regarding nf-core/chipseq, see [https://github.com/nf-core/chipseq?tab=readme-ov-file#credits](https://github.com/nf-core/chipseq?tab=readme-ov-file#credits)
 
 ## Contributions and Support
 
 If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
 
-For further information or help, don't hesitate to get in touch on the [Slack `#chipseq` channel](https://nfcore.slack.com/channels/chipseq) (you can join with [this invite](https://nf-co.re/join/slack)).
-
+<!-- TODO: -->
+For further information or help, don't hesitate to get in touch through #######
 ## Citations
 
-If you use grothlab/glseq for your analysis, please cite it using the following doi: #########
+If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it using the following DOI: #########
 
 This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 

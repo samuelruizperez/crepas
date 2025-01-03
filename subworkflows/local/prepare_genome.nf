@@ -154,7 +154,7 @@ workflow PREPARE_GENOME {
 
     ch_chrom_sizes_endo = ch_chrom_sizes
     if (spikein_genome) {
-        EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome )
+        EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome, genome )
         ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
         ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
     }
@@ -167,6 +167,7 @@ workflow PREPARE_GENOME {
             meta, bed ->
                 bed.splitCsv(header: false, sep: '\t').findAll{ it[0].contains('.') }
         }
+        .map { it[0] } // Extract the scaffold IDs
         .set { ch_scaffolds }
 
     // TODO: remove channel output to file for debugging

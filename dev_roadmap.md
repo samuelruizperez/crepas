@@ -1,6 +1,8 @@
 
 1. Handling of scaffolds for exclusion in partition plot generation
 
+2. add test
+
 2. ratio SCAR-seq input subtraction
 
 3. samtools stat summary table
