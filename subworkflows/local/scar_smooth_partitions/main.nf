@@ -191,12 +191,12 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
 
     ch_inputs
-        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}") {
+        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
             meta, tabs ->
                 // to do it per id and strand:
                 // [ "${meta.id}.${meta.strand}.inputs_windows.tab", tabs ]
                 // to do it per id only
-                [ "${meta.id}.inputs_windows.tab", tabs ]
+                [ "${meta.id}.bwaob.windows.tab", tabs ]
         }
         // readd meta information based on meta.id in the filename
         .map {
@@ -242,12 +242,12 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
 
     ch_samples
-        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}") {
+        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
             meta, tabs ->
                 // to do it per id and strand:
                 // [ "${meta.id}.${meta.strand}.samples_windows.tab", tabs ]
                 // to do it per id only
-                [ "${meta.id}.samples_windows.tab", tabs ]
+                [ "${meta.id}.bwaob.windows.tab", tabs ]
         }
         // re-add meta information based on meta.id in the filename
         .map {
@@ -684,26 +684,26 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .set { ch_part_to_plot }
 
     // TODO: REMOVE print channel to file for debugging
-    ch_part_to_plot.samples
-        .map {
-            id, meta, txt ->
-                "${id}\t${meta}\t${txt}"
-        }
-        .collectFile( name: 'ch_part_to_plot_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_part_to_plot.samples
+    //     .map {
+    //         id, meta, txt ->
+    //             "${id}\t${meta}\t${txt}"
+    //     }
+    //     .collectFile( name: 'ch_part_to_plot_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    ch_part_to_plot.control
-        .map {
-            id, meta, txt ->
-                "${id}\t${meta}\t${txt}"
-        }
-        .collectFile( name: 'ch_part_to_plot_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_part_to_plot.control
+    //     .map {
+    //         id, meta, txt ->
+    //             "${id}\t${meta}\t${txt}"
+    //     }
+    //     .collectFile( name: 'ch_part_to_plot_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    ch_part_to_plot.minusinput
-        .map {
-            id, meta, txt ->
-                "${id}\t${meta}\t${txt}"
-        }
-        .collectFile( name: 'ch_part_to_plot_minusinput.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_part_to_plot.minusinput
+    //     .map {
+    //         id, meta, txt ->
+    //             "${id}\t${meta}\t${txt}"
+    //     }
+    //     .collectFile( name: 'ch_part_to_plot_minusinput.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     ch_part_to_plot.samples
         .combine(ch_part_to_plot.control, by: 0)
@@ -720,19 +720,18 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .set { ch_part_to_plot }
 
     //TODO: REMOVE print channel to file for debugging
-    ch_part_to_plot
-        .map {
-            meta, txt1, txt2, txt3, ok ->
-                "${meta}\t${txt1}\t${txt2}\t${txt3}\t${ok}"
-        }
-        .collectFile( name: 'ch_part_to_plot2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_part_to_plot
+    //     .map {
+    //         meta, txt1, txt2, txt3, ok ->
+    //             "${meta}\t${txt1}\t${txt2}\t${txt3}\t${ok}"
+    //     }
+    //     .collectFile( name: 'ch_part_to_plot2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     FINAL_PARTITION_PLOT (
         ch_part_to_plot,
         ch_blacklist,
         ch_initiation_zones
         //ch_scaffolds
-
     )
     ch_versions = ch_versions.mix(FINAL_PARTITION_PLOT.out.versions.first())
 

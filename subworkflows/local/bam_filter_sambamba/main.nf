@@ -15,7 +15,6 @@ workflow BAM_FILTER_SAMBAMBA {
     main:
     ch_versions = Channel.empty()
 
-
     SAMBAMBA_VIEW(
         ch_bam_index,
         ch_bed

@@ -92,11 +92,11 @@ srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
 module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
 ```
 
-5. Run the pipeline test with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+5. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
 ```bash
 nextflow run grothlab/glseq \
-  -profile test,ku_sund_danhead \
+  -profile local_test_scarseq,ku_sund_danhead \
   --outdir <path_to_output_directory>
 ```
 
