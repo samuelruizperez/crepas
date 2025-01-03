@@ -266,21 +266,22 @@ workflow GLSEQ {
     ch_merged_stat = BAM_STATS_SAMTOOLS.out.stats
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
+    //
+    // MODULE: Preseq coverage analysis
+    //
+    // TODO: this is done on the bams with spike-in included
+    ch_preseq_multiqc = Channel.empty()
+    if (!params.skip_preseq) {
+        PRESEQ_LCEXTRAP (
+            ch_merged_bam
+        )
+        ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
+        ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
+    }
+    
     // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
     if (params.with_umi) {
 
-        //
-        // MODULE: Preseq coverage analysis
-        //
-        // TODO: this is done on the bams with spike-in included
-        ch_preseq_multiqc = Channel.empty()
-        if (!params.skip_preseq) {
-            PRESEQ_LCEXTRAP (
-                ch_merged_bam
-            )
-            ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
-            ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
-        }
         //
         // SUBWORKFLOW: Deduplicate BAM files with UMI-tools
         //
@@ -291,7 +292,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.versions.first())
 
         ch_dedup_bam = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.bam
-        ch_dedup_bai = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
+        ch_dedup_index = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
         ch_dedup_stat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.stats
         ch_dedup_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
 
@@ -308,7 +309,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
-        ch_dedup_bai = BAM_MARKDUPLICATES_PICARD.out.index
+        ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.index
         ch_dedup_stat = BAM_MARKDUPLICATES_PICARD.out.stats
         ch_dedup_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
 
@@ -330,7 +331,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Filter BAM file with Sambamba
     //
     BAM_FILTER_SAMBAMBA (
-        ch_dedup_bam,
+        ch_dedup_bam.join(ch_dedup_index, by: [0]),
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
