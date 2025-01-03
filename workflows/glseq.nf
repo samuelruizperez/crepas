@@ -614,8 +614,8 @@ workflow GLSEQ {
         SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
         ch_blacklist.first(),
-        ch_initiation_zones.first(),
-        ch_scaffolds
+        ch_initiation_zones.first()
+        //ch_scaffolds
     )
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)

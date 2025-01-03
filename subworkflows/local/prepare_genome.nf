@@ -94,10 +94,12 @@ workflow PREPARE_GENOME {
         ch_versions = ch_versions.mix(GFFREAD.out.versions)
     }
 
-    //
+    // Create dummy file 
+    // https://github.com/nf-core/sarek/blob/a7679b9b5c178351b1e96a3ffe7ee81ddf9aad06/main.nf#L201
+    ch_dummy_file = file("$baseDir/assets/dummy_file.txt", checkIfExists: true)
+
+    ch_blacklist = Channel.of( [ [id:'blacklist'], ch_dummy_file ] )
     // Uncompress blacklist file if required
-    //
-    ch_blacklist = Channel.empty()
     if (params.blacklist) {
         if (params.blacklist.endsWith('.gz')) {
             ch_blacklist = GUNZIP_BLACKLIST ( [ [id:'blacklist'], params.blacklist ] ).gunzip
@@ -107,14 +109,14 @@ workflow PREPARE_GENOME {
         }
     }
 
-    ch_initiation_zones = Channel.empty()
+    ch_initiation_zones = Channel.of( [ [id:'initiation_zones'], ch_dummy_file ] )
     if (params.initiation_zones) {
         ch_initiation_zones = Channel.of( [ [id:'initiation_zones'], file(params.initiation_zones) ] )
     }
+
     //
     // Uncompress gene BED annotation file or create from GTF if required
     //
-
     // If --gtf is supplied along with --genome
     // Make gene bed from supplied --gtf instead of using iGenomes one automatically
     def make_bed = false
@@ -165,7 +167,6 @@ workflow PREPARE_GENOME {
             meta, bed ->
                 bed.splitCsv(header: false, sep: '\t').findAll{ it[0].contains('.') }
         }
-        .collect{ it[0] }
         .set { ch_scaffolds }
 
     // TODO: remove channel output to file for debugging

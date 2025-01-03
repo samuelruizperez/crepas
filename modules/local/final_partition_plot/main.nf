@@ -13,7 +13,7 @@ process FINAL_PARTITION_PLOT {
     tuple val(meta), path(partition), path(strandedinput), path(scarminusinput), path(okazaki)
     tuple val(meta2), path(blacklist)
     tuple val(meta3), path(initiation_zones)
-    val scaffolds
+    //val scaffolds
 
     output:
     path "*_scatter_plots.pdf"                , optional:true, emit: scatter_pdf
@@ -27,17 +27,19 @@ process FINAL_PARTITION_PLOT {
     script:
     def args      = task.ext.args ?: ''
     def prefix    = task.ext.prefix ?: "${meta.id}"
+    def blacklist_arg = blacklist ? '' : "--blacklist $blacklist"
     def okazaki_arg   = okazaki.empty() ? '' : "--okazaki_file $okazaki"
+    def iz_arg = initiation_zones ? '' : "--initiation_zones $initiation_zones"
     // if --exclude_chromosomes is in args and remove_scaffolds is true, then append scaffolds to the comma-separated list of --exclude_chromosomes
-    def exclude_chromosomes = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
+    //def exclude_chromosomes = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
     """
     SCAR_partition_plots.R \\
         --scar_partition_file $partition \\
         --scarminusinput_partition_file $scarminusinput \\
         --strandedinput_partition_file $strandedinput \\
         $okazaki_arg \\
-        --initiation_zones $initiation_zones \\
-        --blacklist $blacklist \\
+        $iz_arg \\
+        $blacklist_arg \\
         --prefix $prefix \\
         --outdir ./ \\
         $args
