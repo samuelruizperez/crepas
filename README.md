@@ -77,7 +77,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
 ```bash
-tmux new-session -s <session-name>
+tmux new-session -s <session_name>
 ```
 
 3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
@@ -96,14 +96,14 @@ module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
 
 ```bash
 nextflow run grothlab/glseq \
-  -profile local_test_scarseq,ku_sund_danhead \
+  -profile ku_sund_danhead,local_test_scarseq \
   --outdir <path_to_output_directory>
 ```
 
 6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
 ```bash
-tmux attach-session -t <session-name>
+tmux attach-session -t <session_name>
 ```
 
 7. Run your own analysis:
