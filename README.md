@@ -91,14 +91,52 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
     ```bash
     module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
     ```
-5. Create output directory if it does not exist:
+
+<details>
+<summary><b>5. PROVISIONAL: Clone the pipeline repository:
+
+</b></summary>
+
+- Generate a Personal Access Token (PAT)
+
+    - Visit your GitHub and log in to your account.
+    - Click on the profile picture in the right-hand menu, then SETTINGS > DEVELOPER SETTINGS > Tokens (classic).
+    - Click on the “Generate new token" and “Generate new token (classic)" buttons.
+    - Provide a meaningful name to identify its purpose and select the required permissions based on your intended usage. For cloning glseq, the “repo” permissions are sufficient.
+    - Click on the “Generate Token” button to generate your PAT.
+    - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+
+        **Make note of the token because once you close the window you won’t be able to view the token again!**
+
+- Open your terminal and create or navigate to the directory where you want to clone the repository:
+
+    ```bash
+    mkdir -p <path_to_software_directory>
+    cd <path_to_software_directory>
+    ```
+
+- Clone the repository using the personal access token:
+
+    ```bash
+    git clone https://github.com/grothlab/glseq.git
+    ```
+   
+    ```bash
+    username : <your_username>
+    password : <your_generated_token>
+    ```
+
+</details>
+
+
+6. Create output directory if it does not exist:
 
     ```bash
     mkdir -p <path_to_output_directory>
     cd <path_to_output_directory>
     ```
 
-6. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
     ```bash
     nextflow run grothlab/glseq \
@@ -106,13 +144,13 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
       --outdir <path_to_output_directory>
     ```
 
-7. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
     ```bash
     tmux attach-session -t <session_name>
     ```
 
-8. Run your own analysis:
+9. Run your own analysis:
 
     ```bash
     nextflow run grothlab/glseq \
