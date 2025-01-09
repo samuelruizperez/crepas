@@ -348,6 +348,7 @@ workflow GLSEQ {
     // BAM_SPLIT_BY_GENOME will fail
     // ch_filtered2_stat = Channel.empty()
     ch_filtered2_flagstat = ch_filtered_flagstat
+    ch_filtered2_stat = ch_filtered_stat
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -600,9 +601,6 @@ workflow GLSEQ {
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
-
-
-    // TODO: windows are created even when not needed (no scarseq samples)
     SCAR_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo.map{ it[1] }
@@ -610,11 +608,11 @@ workflow GLSEQ {
 
     ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
 
-    // TODO: fix input when there's not blacklist
+    // TODO: windows are created and split even when not needed (no scarseq samples)
     SCAR_SMOOTH_PARTITIONS (
         SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
-        ch_blacklist.first(),
+        ch_blacklist.first(), // TODO: fix input when there's not blacklist
         ch_initiation_zones.first()
         //ch_scaffolds
     )

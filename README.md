@@ -76,44 +76,50 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
-```bash
-tmux new-session -s <session_name>
-```
+    ```bash
+    tmux new-session -s <session_name>
+    ```
 
 3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
 
-```bash
-srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
-```
+    ```bash
+    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
+    ```
 
 4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
-```bash
-module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
-```
+    ```bash
+    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+    ```
+5. Create output directory if it does not exist:
 
-5. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+    ```bash
+    mkdir -p <path_to_output_directory>
+    cd <path_to_output_directory>
+    ```
 
-```bash
-nextflow run grothlab/glseq \
-  -profile ku_sund_danhead,local_test_scarseq \
-  --outdir <path_to_output_directory>
-```
+6. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
-6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+    ```bash
+    nextflow run grothlab/glseq \
+      -profile ku_sund_danhead,local_test_scarseq \
+      --outdir <path_to_output_directory>
+    ```
 
-```bash
-tmux attach-session -t <session_name>
-```
+7. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
-7. Run your own analysis:
+    ```bash
+    tmux attach-session -t <session_name>
+    ```
 
-```bash
-nextflow run grothlab/glseq \
-  -profile ku_sund_danhead \
-  --input <path_to_your_input_samplesheet.csv> \
-  --outdir <path_to_output_directory>
-```
+8. Run your own analysis:
+
+    ```bash
+    nextflow run grothlab/glseq \
+      -profile ku_sund_danhead \
+      --input <path_to_your_input_samplesheet.csv> \
+      --outdir <path_to_output_directory>
+    ```
 
 ## Quick start
 
