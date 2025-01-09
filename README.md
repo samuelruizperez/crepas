@@ -139,7 +139,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
     ```bash
-    nextflow run grothlab/glseq \
+    nextflow run <path_to_software_directory>/glseq \
       -profile ku_sund_danhead,local_test_scarseq \
       --outdir <path_to_output_directory>
     ```
@@ -150,12 +150,17 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
     tmux attach-session -t <session_name>
     ```
 
-9. Run your own analysis:
+9. Run your own analysis, for example:
 
     ```bash
-    nextflow run grothlab/glseq \
+    nextflow run <path_to_software_directory>/glseq \
       -profile ku_sund_danhead \
       --input <path_to_your_input_samplesheet.csv> \
+      --with_umi \
+      --skip_umi_extract false \
+      --genome mm10 \
+      --spikein_genome dm6 \
+      ...
       --outdir <path_to_output_directory>
     ```
 
