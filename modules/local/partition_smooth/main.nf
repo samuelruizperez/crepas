@@ -1,6 +1,6 @@
 process PARTITION_SMOOTH {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low_memory'
 
     conda (params.enable_conda ? "conda-forge::perl=5.26.2" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

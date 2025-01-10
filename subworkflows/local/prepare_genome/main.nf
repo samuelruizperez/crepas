@@ -21,9 +21,9 @@ include { BWA_INDEX            } from '../../modules/nf-core/bwa/index/main'
 include { BOWTIE2_BUILD        } from '../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX        } from '../../modules/nf-core/chromap/index/main'
 
-include { GTF2BED                  } from '../../modules/local/gtf2bed'
-include { GENOME_BLACKLIST_REGIONS } from '../../modules/local/genome_blacklist_regions'
-include { STAR_GENOMEGENERATE      } from '../../modules/nf-core/star/genomegenerate'
+include { GTF2BED                  } from '../../modules/local/gtf2bed/main'
+include { GENOME_BLACKLIST_REGIONS } from '../../modules/local/genome_blacklist_regions/main'
+include { STAR_GENOMEGENERATE      } from '../../modules/nf-core/star/genomegenerate/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -238,7 +238,7 @@ workflow PREPARE_GENOME {
                 ch_chromap_index = UNTAR_CHROMAP_INDEX ( [ [:], params.chromap_index ] ).untar
                 ch_versions  = ch_versions.mix(UNTAR.out.versions)
             } else {
-                ch_chromap_index = file(params.chromap_index)
+                ch_chromap_index = Channel.of( [ [:], file(params.chromap_index) ] )
             }
         } else {
             ch_chromap_index = CHROMAP_INDEX ( ch_fasta ).index
