@@ -99,10 +99,10 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 - Generate a Personal Access Token (PAT)
 
-    - Visit your GitHub and log in to your account.
-    - Click on the profile picture in the right-hand menu, then SETTINGS > DEVELOPER SETTINGS > Tokens (classic).
+    - Visit [GitHub](https://github.com/) and log in to your account.
+    - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
     - Click on the “Generate new token" and “Generate new token (classic)" buttons.
-    - Provide a meaningful name to identify its purpose and select the required permissions based on your intended usage. For cloning glseq, the “repo” permissions are sufficient.
+    - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
     - Click on the “Generate Token” button to generate your PAT.
     - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
 

@@ -4,10 +4,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { IGV                                 } from '../modules/local/igv'
-include { MULTIQC                             } from '../modules/local/multiqc'
-include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools'
-include { ALLO               } from '../modules/local/allo/main'
+include { IGV                                 } from '../modules/local/igv/main'
+include { MULTIQC                             } from '../modules/local/multiqc/main'
+include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
+include { ALLO                                } from '../modules/local/allo/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -16,7 +16,7 @@ include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_chipseq_pipeline'
-include { INPUT_CHECK         } from '../subworkflows/local/input_check'
+include { INPUT_CHECK         } from '../subworkflows/local/input_check/main'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
@@ -192,10 +192,14 @@ workflow GLSEQ {
         FASTQ_ALIGN_CHROMAP (
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             ch_chromap_index.first(),
-            ch_fasta.map{ it[1] }
+            ch_fasta.first(),
+            [],
+            [],
+            [],
+            []
         )
 
-        ch_genome_bam        = ALIGN_CHROMAP.out.bam
+        ch_genome_bam        = FASTQ_ALIGN_CHROMAP.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_CHROMAP.out.index
         ch_samtools_stats    = FASTQ_ALIGN_CHROMAP.out.stats
         ch_samtools_flagstat = FASTQ_ALIGN_CHROMAP.out.flagstat
@@ -325,7 +329,7 @@ workflow GLSEQ {
             ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
             ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
         }
-}
+    }
 
     //
     // SUBWORKFLOW: Filter BAM file with Sambamba
@@ -591,13 +595,6 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
-    ch_filtered_bam.map {
-            meta, bam ->
-                "${meta}\t${bam}"
-        }
-        .collectFile( name: 'ch_filtered_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
@@ -605,7 +602,6 @@ workflow GLSEQ {
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo.map{ it[1] }
     )
-
     ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
 
     // TODO: windows are created and split even when not needed (no scarseq samples)
@@ -622,6 +618,36 @@ workflow GLSEQ {
 
     // summary of samtools stats
     //ch_samtools_stats this is by library so the meta wont match with the merged bams next
+
+
+    ch_merged_stat
+        .map {
+            meta, stats ->
+                "${meta}\t${stats}"
+        }
+        .collectFile( name: 'ch_merged_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
+    ch_dedup_stat
+        .map {
+            meta, stats ->
+                "${meta}\t${stats}"
+        }
+        .collectFile( name: 'ch_dedup_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
+    ch_filtered_stat
+        .map {
+            meta, stats ->
+                "${meta}\t${stats}"
+        }
+        .collectFile( name: 'ch_filtered_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_filtered2_stat
+        .map {
+            meta, stats ->
+                "${meta}\t${stats}"
+        }
+        .collectFile( name: 'ch_filtered2_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
     ch_merged_stat
         .join(ch_dedup_stat, by: [0])
         .join(ch_filtered_stat, by: [0])
@@ -634,6 +660,8 @@ workflow GLSEQ {
                 "${meta}\t${stats}\t${dedup}\t${filtered}\t${filtered2}"
         }
         .collectFile( name: 'ch_samtools_stats_final.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ///////
 
     //
     // MODULE: Create IGV session
