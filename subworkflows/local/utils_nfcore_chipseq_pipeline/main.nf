@@ -8,16 +8,16 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { UTILS_NFVALIDATION_PLUGIN } from '../../nf-core/utils_nfvalidation_plugin'
+include { UTILS_NFVALIDATION_PLUGIN } from '../../../subworkflows/nf-core/utils_nfvalidation_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-validation'
-include { UTILS_NEXTFLOW_PIPELINE   } from '../../nf-core/utils_nextflow_pipeline'
-include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
-include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
-include { dashedLine                } from '../../nf-core/utils_nfcore_pipeline'
-include { nfCoreLogo                } from '../../nf-core/utils_nfcore_pipeline'
-include { imNotification            } from '../../nf-core/utils_nfcore_pipeline'
-include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
-include { workflowCitation          } from '../../nf-core/utils_nfcore_pipeline'
+include { UTILS_NEXTFLOW_PIPELINE   } from '../../../subworkflows/nf-core/utils_nextflow_pipeline'
+include { completionEmail           } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { completionSummary         } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { dashedLine                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { nfCoreLogo                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { imNotification            } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { UTILS_NFCORE_PIPELINE     } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { workflowCitation          } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 /*
 ========================================================================================
