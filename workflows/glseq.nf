@@ -267,7 +267,6 @@ workflow GLSEQ {
         ch_merged_bam_bai,
         ch_fasta.first()
     )
-    ch_merged_stat = BAM_STATS_SAMTOOLS.out.stats
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     //
@@ -284,6 +283,9 @@ workflow GLSEQ {
     }
     
     // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
+    ch_dedup_stat = Channel.empty()
+    ch_dedup_flagstat = Channel.empty()
+    ch_dedup_idxstats = Channel.empty()
     if (params.with_umi) {
 
         //
@@ -299,6 +301,7 @@ workflow GLSEQ {
         ch_dedup_index = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
         ch_dedup_stat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.stats
         ch_dedup_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
+        ch_dedup_idxstats = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.idxstats
 
     } else {
         //
@@ -316,6 +319,7 @@ workflow GLSEQ {
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.index
         ch_dedup_stat = BAM_MARKDUPLICATES_PICARD.out.stats
         ch_dedup_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
+        ch_dedup_idxstats = BAM_MARKDUPLICATES_PICARD.out.idxstats
 
         //
         // MODULE: Preseq coverage analysis
@@ -343,6 +347,7 @@ workflow GLSEQ {
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.index
     ch_filtered_stat = BAM_FILTER_SAMBAMBA.out.stats
     ch_filtered_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
+    ch_filtered_idxstats = BAM_FILTER_SAMBAMBA.out.idxstats
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
@@ -351,8 +356,9 @@ workflow GLSEQ {
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
     // ch_filtered2_stat = Channel.empty()
-    ch_filtered2_flagstat = ch_filtered_flagstat
-    ch_filtered2_stat = ch_filtered_stat
+    ch_filtered2_flagstat = Channel.empty()
+    ch_filtered2_stat = Channel.empty()
+    ch_filtered2_idxstats = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -366,6 +372,7 @@ workflow GLSEQ {
         ch_filtered_index = BAM_SPIKEIN_SPLIT.out.index
         ch_filtered2_stat = BAM_SPIKEIN_SPLIT.out.stats
         ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
+        ch_filtered2_idxstats = BAM_SPIKEIN_SPLIT.out.idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
@@ -620,13 +627,6 @@ workflow GLSEQ {
     //ch_samtools_stats this is by library so the meta wont match with the merged bams next
 
 
-    ch_merged_stat
-        .map {
-            meta, stats ->
-                "${meta}\t${stats}"
-        }
-        .collectFile( name: 'ch_merged_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    
     ch_dedup_stat
         .map {
             meta, stats ->
@@ -648,8 +648,7 @@ workflow GLSEQ {
         }
         .collectFile( name: 'ch_filtered2_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
     
-    ch_merged_stat
-        .join(ch_dedup_stat, by: [0])
+    ch_dedup_stat
         .join(ch_filtered_stat, by: [0])
         .join(ch_filtered2_stat, by: [0])
         .set { ch_samtools_stats_final }
@@ -712,14 +711,22 @@ workflow GLSEQ {
             ch_samtools_flagstat.collect{it[1]}.ifEmpty([]),
             ch_samtools_idxstats.collect{it[1]}.ifEmpty([]),
 
-            // BAM_MARKDUPLICATES_PICARD.out.stats.collect{it[1]}.ifEmpty([]),
-            // BAM_MARKDUPLICATES_PICARD.out.flagstat.collect{it[1]}.ifEmpty([]),
-            // BAM_MARKDUPLICATES_PICARD.out.idxstats.collect{it[1]}.ifEmpty([]),
-            // BAM_MARKDUPLICATES_PICARD.out.metrics.collect{it[1]}.ifEmpty([]),
+            BAM_STATS_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
+            BAM_STATS_SAMTOOLS.out.flagstat.collect{it[1]}.ifEmpty([]),
+            BAM_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]),
 
-            BAM_FILTER_SAMBAMBA.out.stats.collect{it[1]}.ifEmpty([]),
-            BAM_FILTER_SAMBAMBA.out.flagstat.collect{it[1]}.ifEmpty([]),
-            BAM_FILTER_SAMBAMBA.out.idxstats.collect{it[1]}.ifEmpty([]),
+            ch_dedup_stat.collect{it[1]}.ifEmpty([]),
+            ch_dedup_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_dedup_idxstats.collect{it[1]}.ifEmpty([]),
+
+            ch_filtered_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_filtered_idxstats.collect{it[1]}.ifEmpty([]),
+
+            ch_filtered2_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered2_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_filtered2_idxstats.collect{it[1]}.ifEmpty([]),
+
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
 
             ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
