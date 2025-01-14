@@ -24,15 +24,23 @@ process MULTIQC {
     path ('alignment/library/*')
     path ('alignment/library/*')
 
-    // path ('alignment/mergedLibrary/unfiltered/*')
-    // path ('alignment/mergedLibrary/unfiltered/*')
-    // path ('alignment/mergedLibrary/unfiltered/*')
-    // path ('alignment/mergedLibrary/unfiltered/picard_metrics/*')
+    path ('alignment/mergedLibrary/*')
+    path ('alignment/mergedLibrary/*')
+    path ('alignment/mergedLibrary/*')
 
-    path ('alignment/mergedLibrary/filtered/*')
-    path ('alignment/mergedLibrary/filtered/*')
-    path ('alignment/mergedLibrary/filtered/*')
-    path ('alignment/mergedLibrary/filtered/picard_metrics/*')
+    path('alignment/mergedLibrary/dedup/*')
+    path('alignment/mergedLibrary/dedup/*')
+    path('alignment/mergedLibrary/dedup/*')
+
+    path ('alignment/mergedLibrary/bam_filter/*')
+    path ('alignment/mergedLibrary/bam_filter/*')
+    path ('alignment/mergedLibrary/bam_filter/*')
+
+    path ('alignment/mergedLibrary/spikein_split/*')
+    path ('alignment/mergedLibrary/spikein_split/*')
+    path ('alignment/mergedLibrary/spikein_split/*')
+
+    path ('alignment/mergedLibrary/picard_metrics/*')
 
     path ('preseq/*')
 
@@ -55,7 +63,7 @@ process MULTIQC {
     output:
     path "*multiqc_report.html", emit: report
     path "*_data"              , emit: data
-    path "*_plots"             , optional:true, emit: plots
+    path "*_plots"             , optional: true, emit: plots
     path "versions.yml"        , emit: versions
 
     when:
