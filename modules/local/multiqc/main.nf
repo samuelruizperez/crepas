@@ -28,9 +28,17 @@ process MULTIQC {
     path ('alignment/mergedLibrary/*')
     path ('alignment/mergedLibrary/*')
 
-    path('alignment/mergedLibrary/dedup/*')
-    path('alignment/mergedLibrary/dedup/*')
-    path('alignment/mergedLibrary/dedup/*')
+    path ('alignment/mergedLibrary/preseq/*')
+
+    path ('alignment/mergedLibrary/umi_dedup/*')
+    path ('alignment/mergedLibrary/umi_dedup/*')
+    path ('alignment/mergedLibrary/umi_dedup/*')
+    path ('alignment/mergedLibrary/umi_dedup/*')
+
+    path('alignment/mergedLibrary/picard_markduplicates/*')
+    path('alignment/mergedLibrary/picard_markduplicates/*')
+    path('alignment/mergedLibrary/picard_markduplicates/*')
+    path('alignment/mergedLibrary/picard_markduplicates/*')
 
     path ('alignment/mergedLibrary/bam_filter/*')
     path ('alignment/mergedLibrary/bam_filter/*')
@@ -41,8 +49,6 @@ process MULTIQC {
     path ('alignment/mergedLibrary/spikein_split/*')
 
     path ('alignment/mergedLibrary/picard_metrics/*')
-
-    path ('preseq/*')
 
     path ('deeptools/*')
     path ('deeptools/*')

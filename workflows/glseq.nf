@@ -282,10 +282,15 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
     }
     
+    ch_dedup_umi_stats = Channel.empty()
+    ch_dedup_umi_flagstat = Channel.empty()
+    ch_dedup_umi_idxstats = Channel.empty()
+    ch_dedup_umi_deduplog = Channel.empty()
+    ch_mk_stats = Channel.empty()
+    ch_mk_flagstat = Channel.empty()
+    ch_mk_idxstats = Channel.empty()
+    ch_mk_metrics = Channel.empty()
     // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
-    ch_dedup_stat = Channel.empty()
-    ch_dedup_flagstat = Channel.empty()
-    ch_dedup_idxstats = Channel.empty()
     if (params.with_umi) {
 
         //
@@ -295,13 +300,14 @@ workflow GLSEQ {
             ch_merged_bam_bai,
             params.get_dedup_stats
         )
-        ch_versions = ch_versions.mix(BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.versions.first())
-
         ch_dedup_bam = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.bam
         ch_dedup_index = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.index
-        ch_dedup_stat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.stats
-        ch_dedup_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
-        ch_dedup_idxstats = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.idxstats
+        ch_dedup_umi_stats = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.stats
+        ch_dedup_umi_flagstat = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.flagstat
+        ch_dedup_umi_idxstats = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.idxstats
+        ch_dedup_umi_deduplog = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.deduplog
+        
+        ch_versions = ch_versions.mix(BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS.out.versions.first())
 
     } else {
         //
@@ -313,13 +319,14 @@ workflow GLSEQ {
             ch_fasta.first(),
             ch_fai.first()
         )
-        ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
-
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.index
-        ch_dedup_stat = BAM_MARKDUPLICATES_PICARD.out.stats
-        ch_dedup_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
-        ch_dedup_idxstats = BAM_MARKDUPLICATES_PICARD.out.idxstats
+        ch_mk_stats = BAM_MARKDUPLICATES_PICARD.out.stats
+        ch_mk_flagstat = BAM_MARKDUPLICATES_PICARD.out.flagstat
+        ch_mk_idxstats = BAM_MARKDUPLICATES_PICARD.out.idxstats
+        ch_mk_metrics = BAM_MARKDUPLICATES_PICARD.out.metrics
+
+        ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
         //
         // MODULE: Preseq coverage analysis
@@ -328,7 +335,7 @@ workflow GLSEQ {
         ch_preseq_multiqc = Channel.empty()
         if (!params.skip_preseq) {
             PRESEQ_LCEXTRAP (
-                BAM_MARKDUPLICATES_PICARD.out.bam
+                ch_dedup_bam
             )
             ch_preseq_multiqc = PRESEQ_LCEXTRAP.out.lc_extrap
             ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
@@ -622,46 +629,6 @@ workflow GLSEQ {
     ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
 
-
-    // summary of samtools stats
-    //ch_samtools_stats this is by library so the meta wont match with the merged bams next
-
-
-    ch_dedup_stat
-        .map {
-            meta, stats ->
-                "${meta}\t${stats}"
-        }
-        .collectFile( name: 'ch_dedup_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    
-    ch_filtered_stat
-        .map {
-            meta, stats ->
-                "${meta}\t${stats}"
-        }
-        .collectFile( name: 'ch_filtered_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    ch_filtered2_stat
-        .map {
-            meta, stats ->
-                "${meta}\t${stats}"
-        }
-        .collectFile( name: 'ch_filtered2_stat.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    
-    ch_dedup_stat
-        .join(ch_filtered_stat, by: [0])
-        .join(ch_filtered2_stat, by: [0])
-        .set { ch_samtools_stats_final }
-
-    ch_samtools_stats_final
-        .map {
-            meta, stats, dedup, filtered, filtered2 ->
-                "${meta}\t${stats}\t${dedup}\t${filtered}\t${filtered2}"
-        }
-        .collectFile( name: 'ch_samtools_stats_final.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    ///////
-
     //
     // MODULE: Create IGV session
     //
@@ -682,7 +649,7 @@ workflow GLSEQ {
     // Collate and save software versions
     //
     softwareVersionsToYAML(ch_versions)
-        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'nf_core_chipseq_software_mqc_versions.yml', sort: true, newLine: true)
+        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'glseq_software_mqc_versions.yml', sort: true, newLine: true)
         .set { ch_collated_versions }
 
     //
@@ -715,9 +682,17 @@ workflow GLSEQ {
             BAM_STATS_SAMTOOLS.out.flagstat.collect{it[1]}.ifEmpty([]),
             BAM_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]),
 
-            ch_dedup_stat.collect{it[1]}.ifEmpty([]),
-            ch_dedup_flagstat.collect{it[1]}.ifEmpty([]),
-            ch_dedup_idxstats.collect{it[1]}.ifEmpty([]),
+            ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
+
+            ch_dedup_umi_stats.collect{it[1]}.ifEmpty([]),
+            ch_dedup_umi_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_dedup_umi_idxstats.collect{it[1]}.ifEmpty([]),
+            ch_dedup_umi_deduplog.collect{it[1]}.ifEmpty([]),
+
+            ch_mk_stats.collect{it[1]}.ifEmpty([]),
+            ch_mk_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_mk_idxstats.collect{it[1]}.ifEmpty([]),
+            ch_mk_metrics.collect{it[1]}.ifEmpty([]),
 
             ch_filtered_stat.collect{it[1]}.ifEmpty([]),
             ch_filtered_flagstat.collect{it[1]}.ifEmpty([]),
@@ -729,7 +704,6 @@ workflow GLSEQ {
 
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
 
-            ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
 
             ch_deeptoolsplotprofile_multiqc.collect{it[1]}.ifEmpty([]),
             ch_deeptoolsplotfingerprint_multiqc.collect{it[1]}.ifEmpty([]),
