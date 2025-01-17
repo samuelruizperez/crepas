@@ -3,8 +3,14 @@
 > [!WARNING]
 > Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq](https://github.com/grothlab/glseq)
 
+## Table of Contents
 
-<details>
+ 1. [Quick start for DAN System users](#quick-start-for-dan-system-users)
+ 2. [Samplesheet input](#samplesheet-input)
+ 3. [Reference genome files](#reference-genome-files)
+
+
+<details open>
 <summary><h2>Quick start for DAN System users</h2></summary>
 
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
