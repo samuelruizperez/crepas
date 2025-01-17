@@ -5,113 +5,20 @@
 
 ## Table of Contents
 
-1. [**Quick start for DAN System users**](#quick-start-for-dan-system-users)
-2. [Samplesheet input](#samplesheet-input)
-3. [Reference genome files](#reference-genome-files)
-4. [Running the pipeline](#running-the-pipeline)
+1. [Samplesheet input](#samplesheet-input)
+2. [Reference genome files](#reference-genome-files)
+3. [Running the pipeline](#running-the-pipeline)
     1. [Updating the pipeline](#updating-the-pipeline)
-
-
+5. [**Guide for DAN System users**](#guide-for-dan-system-users)
 
 ---
-
-<details open>
-<summary><h2>Quick start for DAN System users</h2></summary>
-
-1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
-
-2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
-
-    ```bash
-    tmux new-session -s <session_name>
-    ```
-
-3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
-
-    ```bash
-    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
-    ```
-
-4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
-
-    ```bash
-    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
-    ```
-
-5. Clone the pipeline repository:
-
-  - Generate a Personal Access Token (PAT)
-
-      - Visit [GitHub](https://github.com/) and log in to your account.
-      - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
-      - Click on the “Generate new token" and “Generate new token (classic)" buttons.
-      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
-      - Click on the “Generate Token” button to generate your PAT.
-      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
-
-          **Make note of the token because once you close the window you won’t be able to view the token again!**
-
-  - Open your terminal and create or navigate to the directory where you want to clone the repository:
-
-      ```bash
-      mkdir -p <path_to_software_directory>
-      cd <path_to_software_directory>
-      ```
-
-  - Clone the repository using the personal access token:
-
-      ```bash
-      git clone https://github.com/grothlab/glseq.git
-      ```
-    
-      ```bash
-      username : <your_username>
-      password : <your_generated_token>
-      ```
-    
-6. Create output directory if it does not exist:
-
-    ```bash
-    mkdir -p <path_to_output_directory>
-    cd <path_to_output_directory>
-    ```
-
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
-
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead,local_test_scarseq \
-      --outdir <path_to_output_directory>
-    ```
-
-8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
-
-    ```bash
-    tmux attach-session -t <session_name>
-    ```
-
-9. Run your own analysis, for example:
-
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead \
-      --input <path_to_your_input_samplesheet.csv> \
-      --with_umi \
-      --skip_umi_extract false \
-      --genome mm10 \
-      --spikein_genome dm6 \
-      ...
-      --outdir <path_to_output_directory>
-    ```
-
-</details>
 
 ## Samplesheet input
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated (`.csv`) file with with 11 columns and a header row as explained below.
 
 ```bash
---input '[path to samplesheet file]'
+--input <path_to_samplesheet_csv>
 ```
 
 | Column   | Description |
@@ -130,8 +37,6 @@ You will need to create a samplesheet with information about the samples you wou
 
 
 Example design files have bee_n provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
-
-> **NB:** The `group` and `replicate` columns were replaced with a single `sample` column as of v2.0 of the pipeline. The `sample` column is essentially a concatenation of the `group` and `replicate` columns. If all values of `sample` have the same number of underscores, fields defined by these underscore-separated names may be used in the PCA plots produced by the pipeline, to regain the ability to represent different groupings.
 
 ### Example 1: Multiple replicates
 
@@ -450,3 +355,92 @@ We recommend adding the following line to your environment to limit this (typica
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
+
+
+## Guide for DAN System users
+
+1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
+
+2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
+
+    ```bash
+    tmux new-session -s <session_name>
+    ```
+
+3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+    ```bash
+    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
+    ```
+
+4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+
+    ```bash
+    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+    ```
+
+5. Clone the pipeline repository:
+
+  - Generate a Personal Access Token (PAT)
+
+      - Visit [GitHub](https://github.com/) and log in to your account.
+      - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
+      - Click on the “Generate new token" and “Generate new token (classic)" buttons.
+      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
+      - Click on the “Generate Token” button to generate your PAT.
+      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+
+          **Make note of the token because once you close the window you won’t be able to view the token again!**
+
+  - Open your terminal and create or navigate to the directory where you want to clone the repository:
+
+      ```bash
+      mkdir -p <path_to_software_directory>
+      cd <path_to_software_directory>
+      ```
+
+  - Clone the repository using the personal access token:
+
+      ```bash
+      git clone https://github.com/grothlab/glseq.git
+      ```
+    
+      ```bash
+      username : <your_username>
+      password : <your_generated_token>
+      ```
+    
+6. Create an output directory for your run if it does not exist:
+
+    ```bash
+    mkdir -p <path_to_output_directory>
+    cd <path_to_output_directory>
+    ```
+
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+
+    ```bash
+    nextflow run <path_to_software_directory>/glseq \
+      -profile ku_sund_danhead,local_test_scarseq \
+      --outdir <path_to_output_directory>
+    ```
+
+8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+
+    ```bash
+    tmux attach-session -t <session_name>
+    ```
+
+9. Run your own analysis, for example:
+
+    ```bash
+    nextflow run <path_to_software_directory>/glseq \
+      -profile ku_sund_danhead \
+      --input <path_to_your_input_samplesheet.csv> \
+      --with_umi \
+      --skip_umi_extract false \
+      --genome mm10 \
+      --spikein_genome dm6 \
+      ...
+      --outdir <path_to_output_directory>
+    ```
