@@ -25,7 +25,7 @@ process FILE_SORT {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    LC_COLLATE=C sort \\
+    LC_COLLATE=C sort -T '.' \\
         $args \\
         $args2 \\
         --parallel=$task.cpus \\

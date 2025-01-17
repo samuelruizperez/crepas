@@ -32,20 +32,47 @@ module_order:
       name: "MERGED LIB: SAMTools (unfiltered)"
       info: "This section of the report shows SAMTools results after merging libraries and before filtering."
       path_filters:
-        - "./alignment/mergedLibrary/unfiltered/*.mLb.mkD.sorted.bam*"
-  - picard:
-      name: "MERGED LIB: Picard (unfiltered)"
-      info: "This section of the report shows picard results after merging libraries and before filtering."
-      path_filters:
-        - "./alignment/mergedLibrary/unfiltered/picard_metrics/*"
+        - "./alignment/mergedLibrary/*"
+  # - picard:
+  #     name: "MERGED LIB: Picard (unfiltered)"
+  #     info: "This section of the report shows picard results after merging libraries and before filtering."
+  #     path_filters:
+  #       - "./alignment/mergedLibrary/unfiltered/picard_metrics/*"
   - preseq:
       name: "MERGED LIB: Preseq (unfiltered)"
       info: "This section of the report shows Preseq results after merging libraries and before filtering."
+      path_filters:
+        - "./alignment/mergedLibrary/preseq/*"
+  - umitools/dedup:
+      name: "MERGED LIB: UMI-tools dedup"
+      info: "This section of the report shows UMI-tools dedup results after merging libraries."
+      path_filters:
+        - "./alignment/mergedLibrary/umi_dedup/*"
+  - samtools:
+      name: "MERGED LIB: SAMTools (deduplicated)"
+      info: "This section of the report shows SAMTools results after merging libraries and after UMI-tools dedup."
+      path_filters:
+        - "./alignment/mergedLibrary/umi_dedup/*"
+  - picard:
+      name: "MERGED LIB: Picard MarkDuplicates (unfiltered)"
+      info: "This section of the report shows Picard MarkDuplicates results after merging libraries and before filtering."
+      path_filters:
+        - "./alignment/mergedLibrary/picard_markduplicates/*"
+  - samtools:
+      name: "MERGED LIB: SAMTools (marked duplicates)"
+      info: "This section of the report shows SAMTools results after merging libraries and after marking duplicates."
+      path_filters:
+        - "./alignment/mergedLibrary/picard_markduplicates/*"
   - samtools:
       name: "MERGED LIB: SAMTools (filtered)"
-      info: "This section of the report shows SAMTools results after merging libraries and after filtering."
+      info: "This section of the report shows SAMTools results after merging libraries and after filtering with SAMBAMBA."
       path_filters:
-        - "./alignment/mergedLibrary/filtered/*.mLb.clN.sorted.bam*"
+        - "./alignment/mergedLibrary/bam_filter/*"
+  - samtools:
+      name: "MERGED LIB: SAMTools (spike-in)"
+      info: "This section of the report shows SAMTools results after merging libraries, filtering with SAMBAMBA, and splitting by spike-in."
+      path_filters:
+        - "./alignment/mergedLibrary/spikein_split/*"
   - picard:
       name: "MERGED LIB: Picard (filtered)"
       info: "This section of the report shows picard results after merging libraries and after filtering."
