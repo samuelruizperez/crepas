@@ -123,7 +123,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 ## Usage
 
 > [!IMPORTANT]  
-> See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
+> See [usage docs](https://github.com/grothlab/glseq/blob/dev/docs/usage.md) for all of the available options when running the pipeline.
 
 ## Credits
 
