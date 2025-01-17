@@ -47,28 +47,47 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 11. Calculate genome-wide IP enrichment relative to control ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html))
 12. Calculate strand cross-correlation peak and ChIP-seq quality measures including NSC and RSC ([`phantompeakqualtools`](https://github.com/kundajelab/phantompeakqualtools))
 
-13. ChIP-seq downstream analysis:
+<details>
+<summary><b>13. ChIP-seq downstream analysis</b></summary>
 
-    1. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
-    2. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
-    3. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
-    4. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
-    5. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
-    6. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
-    7. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
+1. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
 
-14. SCAR-seq downstream analysis:
+2. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
 
-    1. Splitting BAM files by forward and reverse strands.
-    2. Computing BEDGRAPH summaries of feature coverage per strand ([`BEDTools`](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html))
-    3. Creating BigWig files from BEDGRAPH files ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-    4. Splitting chromosome windows
-    5. Computing the average coverage per window ([`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-    6. Normalizing per strand and chromosome with counts per million (CPM)
-    7. Calculating replication fork directionality (RFD) ([`partition_smooth.pl`]())
-    8. Generating partition files for samples, stranded inputs and input-corrected samples.
-    9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
+3. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
 
+4. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
+
+5. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
+
+6. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
+
+7. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
+
+</details>
+
+<details>
+<summary><b>14. SCAR-seq downstream analysis</b></summary>
+
+1. Splitting BAM files by forward and reverse strands.
+
+2. Computing BEDGRAPH summaries of feature coverage per strand ([`BEDTools`](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html))
+
+3. Creating BigWig files from BEDGRAPH files ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
+
+4. Splitting chromosome windows
+
+5. Computing the average coverage per window ([`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/))
+
+6. Normalizing per strand and chromosome with counts per million (CPM)
+
+7. Calculating replication fork directionality (RFD) ([`partition_smooth.pl`]())
+
+8. Generating partition files for samples, stranded inputs and input-corrected samples.
+
+9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
+
+</details>
 
 ## Quick start
 
@@ -101,69 +120,10 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
       -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
-See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
-
 ## Usage
 
-### Samplesheet input
-
-
-
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated (`.csv`) file with with 11 columns and a header row as explained below.
-
-| Column   | Description |
-| -------- | ----------- |
-| `sample` |  This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. |
-| `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. |
-| `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. Leave empty for single-end data. |
-| `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
-| `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
-| `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries. Must start from `1..<number of replicates>`. |
-| `exp_type` | Either `chipseq` or `scarseq`. |
-| `strandedness` | Either `forward`, `reverse` or leave empty for unstranded (ChIP-seq). |
-| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when control is specified. |
-| `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. |
-| `control_replicate` | Integer representing replicate number for control sample. |
-
-<details open>
-<summary>
-<b>Here is an example samplesheet for running the pipeline:</b>
-
-**[samplesheet_template.csv](https://github.com/grothlab/glseq/blob/dev/assets/samplesheet_template_scarseq.csv):**
-
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-project1_scar_cond1_H3K9me3,/path/to/samples/project1_scar_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond1_strandedInput,1
-project1_scar_cond1_H4K20me0,/path/to/samples/project1_scar_cond1_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond1_strandedInput,1
-project1_scar_cond1_strandedInput,/path/to/samples/project1_scar_cond1_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond2_H3K9me3,/path/to/samples/project1_scar_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond2_strandedInput,1
-project1_scar_cond2_H4K20me0,/path/to/samples/project1_scar_cond2_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond2_strandedInput,1
-project1_scar_cond2_strandedInput,/path/to/samples/project1_scar_cond2_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond3_H3K9me3,/path/to/samples/project1_scar_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond3_strandedInput,1
-project1_scar_cond3_H4K20me0,/path/to/samples/project1_scar_cond3_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond3_strandedInput,1
-project1_scar_cond3_strandedInput,/path/to/samples/project1_scar_cond3_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond4_H3K9me3,/path/to/samples/project1_scar_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond4_strandedInput,1
-project1_scar_cond4_strandedInput,/path/to/samples/project1_scar_cond4_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond1_Input,1
-project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond1_Input,2
-project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond2_Input,1
-project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond2_Input,2
-project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond3_Input,1
-project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond3_Input,2
-project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond4_Input,1
-project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond4_Input,2
-project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-```
-</details>
-
-
+> [!IMPORTANT]  
+> See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
 
 ## Credits
 

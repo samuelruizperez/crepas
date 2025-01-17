@@ -1,14 +1,19 @@
 # grothlab/glseq: Usage
 
-> [!WARNING]
+> [!IMPORTANT]
 > Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq](https://github.com/grothlab/glseq)
 
 ## Table of Contents
 
- 1. [Quick start for DAN System users](#quick-start-for-dan-system-users)
- 2. [Samplesheet input](#samplesheet-input)
- 3. [Reference genome files](#reference-genome-files)
+1. [**Quick start for DAN System users**](#quick-start-for-dan-system-users)
+2. [Samplesheet input](#samplesheet-input)
+3. [Reference genome files](#reference-genome-files)
+4. [Running the pipeline](#running-the-pipeline)
+    1. [Updating the pipeline](#updating-the-pipeline)
 
+
+
+---
 
 <details open>
 <summary><h2>Quick start for DAN System users</h2></summary>
@@ -64,8 +69,6 @@
       password : <your_generated_token>
       ```
     
-      ```bash
-
 6. Create output directory if it does not exist:
 
     ```bash
@@ -195,6 +198,45 @@ NAIVE_INPUT,BLA203A48_S39_L001_R1_001.fastq.gz,,2,,,
 NAIVE_INPUT,BLA203A49_S1_L006_R1_001.fastq.gz,,3,,,
 ```
 
+<details open>
+<summary>
+<b>Here is an example samplesheet for running the pipeline:</b>
+
+**[samplesheet_template.csv](https://github.com/grothlab/glseq/blob/dev/assets/samplesheet_template_scarseq.csv):**
+
+```csv
+sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
+project1_scar_cond1_H3K9me3,/path/to/samples/project1_scar_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond1_strandedInput,1
+project1_scar_cond1_H4K20me0,/path/to/samples/project1_scar_cond1_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond1_strandedInput,1
+project1_scar_cond1_strandedInput,/path/to/samples/project1_scar_cond1_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
+project1_scar_cond2_H3K9me3,/path/to/samples/project1_scar_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond2_strandedInput,1
+project1_scar_cond2_H4K20me0,/path/to/samples/project1_scar_cond2_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond2_strandedInput,1
+project1_scar_cond2_strandedInput,/path/to/samples/project1_scar_cond2_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
+project1_scar_cond3_H3K9me3,/path/to/samples/project1_scar_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond3_strandedInput,1
+project1_scar_cond3_H4K20me0,/path/to/samples/project1_scar_cond3_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond3_strandedInput,1
+project1_scar_cond3_strandedInput,/path/to/samples/project1_scar_cond3_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
+project1_scar_cond4_H3K9me3,/path/to/samples/project1_scar_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond4_strandedInput,1
+project1_scar_cond4_strandedInput,/path/to/samples/project1_scar_cond4_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
+project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond1_Input,1
+project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond1_Input,2
+project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R2.fastq.gz,,1,chipseq,,,,
+project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R2.fastq.gz,,2,chipseq,,,,
+project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond2_Input,1
+project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond2_Input,2
+project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R2.fastq.gz,,1,chipseq,,,,
+project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R2.fastq.gz,,2,chipseq,,,,
+project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond3_Input,1
+project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond3_Input,2
+project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R2.fastq.gz,,1,chipseq,,,,
+project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R2.fastq.gz,,2,chipseq,,,,
+project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond4_Input,1
+project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond4_Input,2
+project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R2.fastq.gz,,1,chipseq,,,,
+project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R2.fastq.gz,,2,chipseq,,,,
+```
+</details>
+
+
 ## Reference genome files
 
 ### Genome index, FASTA, GTF/GFF and gene BED files
@@ -236,26 +278,20 @@ wget -L https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.b
 
 
 ### OK-seq partitions
-
+-
 ### Initiation zones
-
-## Reference genome files
-
-The minimum reference genome requirements are a FASTA and GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a custom config file.
-
-- If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
-- If `--gene_bed` is not provided then it will be generated from the GTF file.
-
-
-
-## Blacklist bed files
+-
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run grothlab/glseq --input samplesheet.csv --outdir <OUTDIR> --genome GRCh37 -profile docker
+nextflow run grothlab/glseq \
+  -profile docker \
+  --input samplesheet.csv \
+  --genome GRCh37 \
+  --outdir <OUTDIR>
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -292,7 +328,7 @@ input: 'data'
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
-### Updating the pipeline
+## Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
@@ -300,7 +336,7 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull grothlab/glseq
 ```
 
-### Reproducibility
+## Reproducibility
 
 It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
@@ -310,11 +346,13 @@ This version number will be logged in reports when you run the pipeline, so that
 
 To further assist in reproducbility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
 
-> 💡 If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
+> [!TIP]
+> If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
 
 ## Core Nextflow arguments
 
-> **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
+> [!NOTE]
+> These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
 
 ### `-profile`
 
