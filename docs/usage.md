@@ -1,18 +1,130 @@
 # grothlab/glseq: Usage
 
-## :warning: Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq](https://github.com/grothlab/glseq)
+> [!WARNING]
+> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq](https://github.com/grothlab/glseq)
 
-> _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
+
+<details>
+<summary><h2>Quick start for DAN System users</h2></summary>
+
+1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
+
+2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
+
+    ```bash
+    tmux new-session -s <session_name>
+    ```
+
+3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+    ```bash
+    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
+    ```
+
+4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+
+    ```bash
+    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+    ```
+
+5. Clone the pipeline repository:
+
+  - Generate a Personal Access Token (PAT)
+
+      - Visit [GitHub](https://github.com/) and log in to your account.
+      - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
+      - Click on the “Generate new token" and “Generate new token (classic)" buttons.
+      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
+      - Click on the “Generate Token” button to generate your PAT.
+      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+
+          **Make note of the token because once you close the window you won’t be able to view the token again!**
+
+  - Open your terminal and create or navigate to the directory where you want to clone the repository:
+
+      ```bash
+      mkdir -p <path_to_software_directory>
+      cd <path_to_software_directory>
+      ```
+
+  - Clone the repository using the personal access token:
+
+      ```bash
+      git clone https://github.com/grothlab/glseq.git
+      ```
+    
+      ```bash
+      username : <your_username>
+      password : <your_generated_token>
+      ```
+    
+      ```bash
+
+6. Create output directory if it does not exist:
+
+    ```bash
+    mkdir -p <path_to_output_directory>
+    cd <path_to_output_directory>
+    ```
+
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+
+    ```bash
+    nextflow run <path_to_software_directory>/glseq \
+      -profile ku_sund_danhead,local_test_scarseq \
+      --outdir <path_to_output_directory>
+    ```
+
+8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+
+    ```bash
+    tmux attach-session -t <session_name>
+    ```
+
+9. Run your own analysis, for example:
+
+    ```bash
+    nextflow run <path_to_software_directory>/glseq \
+      -profile ku_sund_danhead \
+      --input <path_to_your_input_samplesheet.csv> \
+      --with_umi \
+      --skip_umi_extract false \
+      --genome mm10 \
+      --spikein_genome dm6 \
+      ...
+      --outdir <path_to_output_directory>
+    ```
+
+</details>
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated (`.csv`) file with with 11 columns and a header row as explained below.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple replicates
+| Column   | Description |
+| -------- | ----------- |
+| `sample` |  This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. |
+| `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. |
+| `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. Leave empty for single-end data. |
+| `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
+| `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
+| `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries. Must start from `1..<number of replicates>`. |
+| `exp_type` | Either `chipseq` or `scarseq`. |
+| `strandedness` | Either `forward`, `reverse` or leave empty for unstranded (ChIP-seq). |
+| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when control is specified. |
+| `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. |
+| `control_replicate` | Integer representing replicate number for control sample. |
+
+
+Example design files have bee_n provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
+
+> **NB:** The `group` and `replicate` columns were replaced with a single `sample` column as of v2.0 of the pipeline. The `sample` column is essentially a concatenation of the `group` and `replicate` columns. If all values of `sample` have the same number of underscores, fields defined by these underscore-separated names may be used in the PCA plots produced by the pipeline, to regain the ability to represent different groupings.
+
+### Example 1: Multiple replicates
 
 The `sample` identifier should be identical when you have multiple replicates from the same experimental group, just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be 1.
 
@@ -30,7 +142,7 @@ WT_INPUT,BLA203A30_S21_L002_R1_001.fastq.gz,,2,,,
 WT_INPUT,BLA203A31_S21_L003_R1_001.fastq.gz,,3,,,
 ```
 
-### Multiple runs of the same library
+### Example 2: Multiple runs of the same library
 
 Both the `sample` and `replicate` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis. Below is an example where the samples called `WT_BCATENIN_IP` and `WT_INPUT` have been re-sequenced multiple times:
 
@@ -47,7 +159,7 @@ WT_INPUT,BLA203A30_S21_L002_R1_001.fastq.gz,,2,,,
 WT_INPUT,BLA203A31_S21_L003_R1_001.fastq.gz,,3,,,
 ```
 
-### Full design
+### Example 3: Full design
 
 The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 7 columns to match those defined in the table below.
 
@@ -77,30 +189,18 @@ NAIVE_INPUT,BLA203A48_S39_L001_R1_001.fastq.gz,,2,,,
 NAIVE_INPUT,BLA203A49_S1_L006_R1_001.fastq.gz,,3,,,
 ```
 
-| Column              | Description                                                                                                                                                                            |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`            | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1`           | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2`           | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `replicate`         | Integer representing replicate number. This will be identical for re-sequenced libraries. Must start from `1..<number of replicates>`.                                                 |
-| `antibody`          | Antibody name. This is required to segregate downstream analysis for different antibodies. Required when `control` is specified.                                                       |
-| `control`           | Sample name for control sample.                                                                                                                                                        |
-| `control_replicate` | Integer representing replicate number for control sample.                                                                                                                              |
-
-Example design files have bee_n provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
-
-> **NB:** The `group` and `replicate` columns were replaced with a single `sample` column as of v2.0 of the pipeline. The `sample` column is essentially a concatenation of the `group` and `replicate` columns. If all values of `sample` have the same number of underscores, fields defined by these underscore-separated names may be used in the PCA plots produced by the pipeline, to regain the ability to represent different groupings.
-
 ## Reference genome files
 
-The minimum reference genome requirements are a FASTA and GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a custom config file.
+### Genome index, FASTA, GTF/GFF and gene BED files
+
+The minimum reference genome requirements are a FASTA and a GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a [custom config file](https://nf-co.re/usage/configuration#custom-configuration-files).
 
 - If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
 - If `--gene_bed` is not provided then it will be generated from the GTF file.
 
 > **NB:** Compressed reference files are also supported by the pipeline i.e. standard files with the `.gz` extension and indices folders with the `tar.gz` extension.
 
-## Blacklist bed files
+### Genome blacklist regions
 
 The blacklist bed files where obtained using the commands below:
 
@@ -127,6 +227,22 @@ wget -L https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.b
 ```
 
 > **NB:** A detailed description of the different versions of the files can be found [here](https://sites.google.com/site/anshulkundaje/projects/blacklists). Also, to to see which blacklist bed files are assigned by default to the respective reference genome check the [igenomes.config](https://github.com/grothlab/glseq/blob/main/conf/igenomes.config).
+
+
+### OK-seq partitions
+
+### Initiation zones
+
+## Reference genome files
+
+The minimum reference genome requirements are a FASTA and GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a custom config file.
+
+- If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
+- If `--gene_bed` is not provided then it will be generated from the GTF file.
+
+
+
+## Blacklist bed files
 
 ## Running the pipeline
 

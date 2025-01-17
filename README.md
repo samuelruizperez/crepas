@@ -70,100 +70,6 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
     9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
 
 
-## Quick start for DAN System users
-
-1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
-
-2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
-
-    ```bash
-    tmux new-session -s <session_name>
-    ```
-
-3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
-
-    ```bash
-    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
-    ```
-
-4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
-
-    ```bash
-    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
-    ```
-
-<details>
-<summary><b>5. PROVISIONAL: Clone the pipeline repository:
-
-</b></summary>
-
-- Generate a Personal Access Token (PAT)
-
-    - Visit [GitHub](https://github.com/) and log in to your account.
-    - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
-    - Click on the “Generate new token" and “Generate new token (classic)" buttons.
-    - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
-    - Click on the “Generate Token” button to generate your PAT.
-    - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
-
-        **Make note of the token because once you close the window you won’t be able to view the token again!**
-
-- Open your terminal and create or navigate to the directory where you want to clone the repository:
-
-    ```bash
-    mkdir -p <path_to_software_directory>
-    cd <path_to_software_directory>
-    ```
-
-- Clone the repository using the personal access token:
-
-    ```bash
-    git clone https://github.com/grothlab/glseq.git
-    ```
-   
-    ```bash
-    username : <your_username>
-    password : <your_generated_token>
-    ```
-
-</details>
-
-
-6. Create output directory if it does not exist:
-
-    ```bash
-    mkdir -p <path_to_output_directory>
-    cd <path_to_output_directory>
-    ```
-
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
-
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead,local_test_scarseq \
-      --outdir <path_to_output_directory>
-    ```
-
-8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
-
-    ```bash
-    tmux attach-session -t <session_name>
-    ```
-
-9. Run your own analysis, for example:
-
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead \
-      --input <path_to_your_input_samplesheet.csv> \
-      --with_umi \
-      --skip_umi_extract false \
-      --genome mm10 \
-      --spikein_genome dm6 \
-      ...
-      --outdir <path_to_output_directory>
-    ```
-
 ## Quick start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=21.10.3`)
@@ -257,21 +163,7 @@ project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_r2_R1.fastq
 ```
 </details>
 
-### Reference genome files
 
-#### Genome index, FASTA, GTF/GFF and gene BED files
-
-The minimum reference genome requirements are a FASTA and a GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a [custom config file](https://nf-co.re/usage/configuration#custom-configuration-files).
-
-- If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
-- If `--gene_bed` is not provided then it will be generated from the GTF file.
-
-#### Genome blacklist regions
-
-
-#### OK-seq partitions
-
-#### Initiation zones
 
 ## Credits
 
