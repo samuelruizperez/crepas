@@ -47,122 +47,47 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 11. Calculate genome-wide IP enrichment relative to control ([`deepTools`](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html))
 12. Calculate strand cross-correlation peak and ChIP-seq quality measures including NSC and RSC ([`phantompeakqualtools`](https://github.com/kundajelab/phantompeakqualtools))
 
-13. ChIP-seq downstream analysis:
-
-    1. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
-    2. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
-    3. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
-    4. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
-    5. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
-    6. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
-    7. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
-
-14. SCAR-seq downstream analysis:
-
-    1. Splitting BAM files by forward and reverse strands.
-    2. Computing BEDGRAPH summaries of feature coverage per strand ([`BEDTools`](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html))
-    3. Creating BigWig files from BEDGRAPH files ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-    4. Splitting chromosome windows
-    5. Computing the average coverage per window ([`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/))
-    6. Normalizing per strand and chromosome with counts per million (CPM)
-    7. Calculating replication fork directionality (RFD) ([`partition_smooth.pl`]())
-    8. Generating partition files for samples, stranded inputs and input-corrected samples.
-    9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
-
-
-## Quick start for DAN System users
-
-1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
-
-2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
-
-    ```bash
-    tmux new-session -s <session_name>
-    ```
-
-3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
-
-    ```bash
-    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
-    ```
-
-4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
-
-    ```bash
-    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
-    ```
-
 <details>
-<summary><b>5. PROVISIONAL: Clone the pipeline repository:
+<summary><b>13. ChIP-seq downstream analysis</b></summary>
 
-</b></summary>
+1. Call broad/narrow peaks ([`MACS3`](https://github.com/macs3-project/MACS))
 
-- Generate a Personal Access Token (PAT)
+2. Annotate peaks relative to gene features ([`HOMER`](http://homer.ucsd.edu/homer/download.html))
 
-    - Visit [GitHub](https://github.com/) and log in to your account.
-    - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
-    - Click on the “Generate new token" and “Generate new token (classic)" buttons.
-    - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
-    - Click on the “Generate Token” button to generate your PAT.
-    - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+3. Create consensus peakset across all samples and create tabular file to aid in the filtering of the data ([`BEDTools`](https://github.com/arq5x/bedtools2/))
 
-        **Make note of the token because once you close the window you won’t be able to view the token again!**
+4. Count reads in consensus peaks ([`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
 
-- Open your terminal and create or navigate to the directory where you want to clone the repository:
+5. PCA and clustering ([`R`](https://www.r-project.org/), [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html))
 
-    ```bash
-    mkdir -p <path_to_software_directory>
-    cd <path_to_software_directory>
-    ```
+6. Create IGV session file containing bigWig tracks, peaks and differential sites for data visualisation ([`IGV`](https://software.broadinstitute.org/software/igv/)).
 
-- Clone the repository using the personal access token:
-
-    ```bash
-    git clone https://github.com/grothlab/glseq.git
-    ```
-   
-    ```bash
-    username : <your_username>
-    password : <your_generated_token>
-    ```
+7. Present QC for raw read, alignment, peak-calling and differential binding results ([`MultiQC`](http://multiqc.info/), [`R`](https://www.r-project.org/))
 
 </details>
 
+<details>
+<summary><b>14. SCAR-seq downstream analysis</b></summary>
 
-6. Create output directory if it does not exist:
+1. Splitting BAM files by forward and reverse strands.
 
-    ```bash
-    mkdir -p <path_to_output_directory>
-    cd <path_to_output_directory>
-    ```
+2. Computing BEDGRAPH summaries of feature coverage per strand ([`BEDTools`](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html))
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+3. Creating BigWig files from BEDGRAPH files ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/))
 
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead,local_test_scarseq \
-      --outdir <path_to_output_directory>
-    ```
+4. Splitting chromosome windows
 
-8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+5. Computing the average coverage per window ([`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/))
 
-    ```bash
-    tmux attach-session -t <session_name>
-    ```
+6. Normalizing per strand and chromosome with counts per million (CPM)
 
-9. Run your own analysis, for example:
+7. Calculating replication fork directionality (RFD) ([`partition_smooth.pl`]())
 
-    ```bash
-    nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead \
-      --input <path_to_your_input_samplesheet.csv> \
-      --with_umi \
-      --skip_umi_extract false \
-      --genome mm10 \
-      --spikein_genome dm6 \
-      ...
-      --outdir <path_to_output_directory>
-    ```
+8. Generating partition files for samples, stranded inputs and input-corrected samples.
+
+9. Plotting partition files and scatter-correlation plots against OK-seq if provided.
+
+</details>
 
 ## Quick start
 
@@ -195,83 +120,10 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
       -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
-See [usage docs](https://nf-co.re/chipseq/usage) for all of the available options when running the pipeline.
-
 ## Usage
 
-### Samplesheet input
-
-
-
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated (`.csv`) file with with 11 columns and a header row as explained below.
-
-| Column   | Description |
-| -------- | ----------- |
-| `sample` |  This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. |
-| `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. |
-| `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. Leave empty for single-end data. |
-| `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
-| `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
-| `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries. Must start from `1..<number of replicates>`. |
-| `exp_type` | Either `chipseq` or `scarseq`. |
-| `strandedness` | Either `forward`, `reverse` or leave empty for unstranded (ChIP-seq). |
-| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when control is specified. |
-| `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. |
-| `control_replicate` | Integer representing replicate number for control sample. |
-
-<details open>
-<summary>
-<b>Here is an example samplesheet for running the pipeline:</b>
-
-**[samplesheet_template.csv](https://github.com/grothlab/glseq/blob/dev/assets/samplesheet_template_scarseq.csv):**
-
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-project1_scar_cond1_H3K9me3,/path/to/samples/project1_scar_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond1_strandedInput,1
-project1_scar_cond1_H4K20me0,/path/to/samples/project1_scar_cond1_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond1_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond1_strandedInput,1
-project1_scar_cond1_strandedInput,/path/to/samples/project1_scar_cond1_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond1_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond2_H3K9me3,/path/to/samples/project1_scar_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond2_strandedInput,1
-project1_scar_cond2_H4K20me0,/path/to/samples/project1_scar_cond2_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond2_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond2_strandedInput,1
-project1_scar_cond2_strandedInput,/path/to/samples/project1_scar_cond2_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond2_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond3_H3K9me3,/path/to/samples/project1_scar_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond3_strandedInput,1
-project1_scar_cond3_H4K20me0,/path/to/samples/project1_scar_cond3_H4K20me0_R1.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R3.fastq.gz,/path/to/samples/project1_scar_cond3_H4K20me0_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H4K20me0,project1_scar_cond3_strandedInput,1
-project1_scar_cond3_strandedInput,/path/to/samples/project1_scar_cond3_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond3_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_scar_cond4_H3K9me3,/path/to/samples/project1_scar_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_scar_cond4_H3K9me3_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,H3K9me3,project1_scar_cond4_strandedInput,1
-project1_scar_cond4_strandedInput,/path/to/samples/project1_scar_cond4_strandedInput_R1.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R3.fastq.gz,/path/to/samples/project1_scar_cond4_strandedInput_R2.fastq.gz,/path/to/reference/OKseq_RFD_mESC_SRR7535256_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz,1,scarseq,reverse,,,
-project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond1_Input,1
-project1_chip_cond1_H3K9me3,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond1_Input,2
-project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond1_Input,/path/to/samples/project1_chip_cond1_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond1_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond2_Input,1
-project1_chip_cond2_H3K9me3,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond2_Input,2
-project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond2_Input,/path/to/samples/project1_chip_cond2_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond2_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond3_Input,1
-project1_chip_cond3_H3K9me3,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond3_Input,2
-project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond3_Input,/path/to/samples/project1_chip_cond3_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond3_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,project1_chip_cond4_Input,1
-project1_chip_cond4_H3K9me3,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_H3K9me3_r2_R2.fastq.gz,,2,chipseq,,H3K9me3,project1_chip_cond4_Input,2
-project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_R2.fastq.gz,,1,chipseq,,,,
-project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_r2_R1.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R3.fastq.gz,/path/to/samples/project1_chip_cond4_Input_r2_R2.fastq.gz,,2,chipseq,,,,
-```
-</details>
-
-### Reference genome files
-
-#### Genome index, FASTA, GTF/GFF and gene BED files
-
-The minimum reference genome requirements are a FASTA and a GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a [custom config file](https://nf-co.re/usage/configuration#custom-configuration-files).
-
-- If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
-- If `--gene_bed` is not provided then it will be generated from the GTF file.
-
-#### Genome blacklist regions
-
-
-#### OK-seq partitions
-
-#### Initiation zones
+> [!IMPORTANT]  
+> See [usage docs](https://github.com/grothlab/glseq/blob/dev/docs/usage.md) for all of the available options when running the pipeline.
 
 ## Credits
 
