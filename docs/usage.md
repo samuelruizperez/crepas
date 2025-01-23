@@ -389,17 +389,22 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 5. Clone the pipeline repository:
 
-  - Generate a Personal Access Token (PAT)
+  - Generate a Personal Access Token (PAT):
 
       - Visit [GitHub](https://github.com/) and log in to your account.
+
       - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
-      - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > [**Tokens (classic)**](https://github.com/settings/tokens).
-      - Click on the “Generate new token" and “Generate new token (classic)" buttons.
+
+      - Click on the profile picture in the right-hand menu, then ***Settings*** > ***Developer settings*** > [***Tokens (classic)***](https://github.com/settings/tokens).
+
+      - Click on the ***Generate new token*** and ***Generate new token (classic)*** buttons.
+
       - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
-      - Click on the “Generate Token” button to generate your PAT.
+
+      - Click on the ***Generate Token*** button to generate your PAT.
       - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
-          >[!WARNING]
-          > **Make note of the token because once you close the window you won’t be able to view the token again!**
+        >[!WARNING]
+        > Make note of the token because once you close the window you won’t be able to view the token again!
 
   - Open your terminal and create or navigate to the directory where you want to clone the repository:
 
