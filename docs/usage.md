@@ -1,15 +1,20 @@
 # grothlab/glseq: Usage
 
 > [!IMPORTANT]
-> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq](https://github.com/grothlab/glseq)
+> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/usage.md](https://github.com/grothlab/glseq/blob/dev/docs/usage.md)
 
 ## Table of Contents
 
 1. [Samplesheet input](#samplesheet-input)
 2. [Reference genome files](#reference-genome-files)
 3. [Running the pipeline](#running-the-pipeline)
-    1. [Updating the pipeline](#updating-the-pipeline)
-5. [**Guide for DAN System users**](#guide-for-dan-system-users)
+  1. [Updating the pipeline](#updating-the-pipeline)
+  2. [Reproducibility](#reproducibility)
+  3. [Core Nextflow arguments](#core-nextflow-arguments)
+  4. [Custom configuration](#custom-configuration)
+  5. [Running in the background](#running-in-the-background)
+  6. [Nextflow memory requirements](#nextflow-memory-requirements)
+4. [**Quick start guide for DAN System users**](#quick-start-guide-for-dan-system-users)
 
 ---
 
@@ -148,7 +153,7 @@ project1_chip_cond4_Input,/path/to/samples/project1_chip_cond4_Input_r2_R1.fastq
 
 The minimum reference genome requirements are a FASTA and a GTF file, all other files required to run the pipeline can be generated from these files. However, it is more storage and compute friendly if you are able to re-use reference genome files as efficiently as possible. It is recommended to use the `--save_reference` parameter if you are using the pipeline to build new indices (e.g. those unavailable on [AWS iGenomes](https://nf-co.re/usage/reference_genomes)) so that you can save them somewhere locally. The index building step can be quite a time-consuming process and it permits their reuse for future runs of the pipeline to save disk space. You can then either provide the appropriate reference genome files on the command-line via the appropriate parameters (e.g. `--bwa_index '/path/to/bwa/index/'`) or via a [custom config file](https://nf-co.re/usage/configuration#custom-configuration-files).
 
-- If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`.
+<!-- - If `--genome` is provided then the FASTA and GTF files (and existing indices) will be automatically obtained from AWS-iGenomes unless these have already been downloaded locally in the path specified by `--igenomes_base`. -->
 - If `--gene_bed` is not provided then it will be generated from the GTF file.
 
 > **NB:** Compressed reference files are also supported by the pipeline i.e. standard files with the `.gz` extension and indices folders with the `tar.gz` extension.
@@ -182,9 +187,10 @@ wget -L https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.b
 > **NB:** A detailed description of the different versions of the files can be found [here](https://sites.google.com/site/anshulkundaje/projects/blacklists). Also, to to see which blacklist bed files are assigned by default to the respective reference genome check the [igenomes.config](https://github.com/grothlab/glseq/blob/main/conf/igenomes.config).
 
 
-### OK-seq partitions
--
 ### Initiation zones
+-
+
+### OK-seq partitions
 -
 
 ## Running the pipeline
@@ -233,7 +239,7 @@ input: 'data'
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
-## Updating the pipeline
+### Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
@@ -241,7 +247,7 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull grothlab/glseq
 ```
 
-## Reproducibility
+### Reproducibility
 
 It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
@@ -254,12 +260,12 @@ To further assist in reproducbility, you can use share and re-use [parameter fil
 > [!TIP]
 > If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
 
-## Core Nextflow arguments
+### Core Nextflow arguments
 
 > [!NOTE]
 > These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
 
-### `-profile`
+#### `-profile`
 
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
@@ -292,37 +298,37 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.
 
-### `-resume`
+#### `-resume`
 
 Specify this when restarting a pipeline. Nextflow will use cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously. For input to be considered the same, not only the names must be identical but the files' contents as well. For more info about this parameter, see [this blog post](https://www.nextflow.io/blog/2019/demystifying-nextflow-resume.html).
 
 You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
 
-### `-c`
+#### `-c`
 
 Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
 
-## Custom configuration
+### Custom configuration
 
-### Resource requests
+#### Resource requests
 
 Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
 To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
 
-### Custom Containers
+#### Custom Containers
 
 In some cases you may wish to change which container or conda environment a step of the pipeline uses for a particular tool. By default nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However in some cases the pipeline specified version maybe out of date.
 
 To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/usage/configuration#updating-tool-versions) section of the nf-core website.
 
-### Custom Tool Arguments
+#### Custom Tool Arguments
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
 
 To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
 
-### nf-core/configs
+#### nf-core/configs
 
 In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter. You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
 
@@ -330,7 +336,7 @@ See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
 
-## Azure Resource Requests
+#### Azure Resource Requests
 
 To be used with the `azurebatch` profile by specifying the `-profile azurebatch`.
 We recommend providing a compute `params.vm_type` of `Standard_D16_v3` VMs by default but these options can be changed if required.
@@ -338,7 +344,7 @@ We recommend providing a compute `params.vm_type` of `Standard_D16_v3` VMs by de
 Note that the choice of VM size depends on your quota and the overall workload during the analysis.
 For a thorough list, please refer the [Azure Sizes for virtual machines in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes).
 
-## Running in the background
+### Running in the background
 
 Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
 
@@ -347,7 +353,7 @@ The Nextflow `-bg` flag launches Nextflow in the background, detached from your 
 Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
 Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
 
-## Nextflow memory requirements
+### Nextflow memory requirements
 
 In some cases, the Nextflow Java virtual machines can start to request a large amount of memory.
 We recommend adding the following line to your environment to limit this (typically in `~/.bashrc` or `~./bash_profile`):
@@ -357,7 +363,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 ```
 
 
-## Guide for DAN System users
+## Quick start guide for DAN System users
 
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
 
@@ -372,6 +378,8 @@ NXF_OPTS='-Xms1g -Xmx4g'
     ```bash
     srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
     ```
+    > [!NOTE]  
+    > Adjust `--time` as necessary, the command above keeps the slurm job active for six days.
 
 4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
@@ -381,16 +389,22 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 5. Clone the pipeline repository:
 
-  - Generate a Personal Access Token (PAT)
+  - Generate a Personal Access Token (PAT):
 
       - Visit [GitHub](https://github.com/) and log in to your account.
-      - Click on the profile picture in the right-hand menu, then **Settings** > **Developer settings** > **Tokens (classic)**.
-      - Click on the “Generate new token" and “Generate new token (classic)" buttons.
-      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
-      - Click on the “Generate Token” button to generate your PAT.
-      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
 
-          **Make note of the token because once you close the window you won’t be able to view the token again!**
+      - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
+
+      - Click on the profile picture in the right-hand menu, then ***Settings*** > ***Developer settings*** > [***Tokens (classic)***](https://github.com/settings/tokens).
+
+      - Click on the ***Generate new token*** and ***Generate new token (classic)*** buttons.
+
+      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
+
+      - Click on the ***Generate Token*** button to generate your PAT.
+      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+        >[!WARNING]
+        > Make note of the token because once you close the window you won’t be able to view the token again!
 
   - Open your terminal and create or navigate to the directory where you want to clone the repository:
 
@@ -444,3 +458,61 @@ NXF_OPTS='-Xms1g -Xmx4g'
       ...
       --outdir <path_to_output_directory>
     ```
+
+### Reference genome files
+
+Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)).
+
+#### Genome index, FASTA, GTF/GFF and gene BED files
+
+- Prebuilt indexes are inputted using the `--<aligner>_index` parameter, and can be found at:
+
+  ```
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/indices/<aligner>/
+  ```
+
+- The genome FASTA files are inputted using the `--fasta` parameter, and can be found at:
+
+  ```
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/genome/fasta/*.fa.gz
+  ```
+
+- The GTF/GFF files are inputted using the `--gtf` or `--gff` parameters, and can be found at:
+
+  ```
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/transcript_models/<gtf_or_gff>/*.<gtf_or_gff>.gz
+  ```
+
+- The gene BED files are inputted using the `--gene_bed` parameter, and can be found at:
+
+  ```
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/transcript_models/*.bed.gz
+  ```
+
+> [!TIP]
+> Make sure to always input the prebuilt index files (besides the FASTA and GTF files) if available to avoid building the index from scratch every time you run the pipeline:
+> ```bash
+> nextflow run grothlab/glseq \
+>   --bowtie2_index '/path/to/bwa/index/'
+>   --fasta '/path/to/fasta/'
+>   --gtf '/path/to/gtf/'
+>```
+
+
+#### Genome blacklist regions
+
+Blacklist bed files are inputted using the `--blacklist` parameter, and can be found at:
+
+```
+/maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/blacklists/bed/*.bed.gz
+```
+
+#### Initiation zones
+
+#### OK-seq partitions
+
+#### Example run using local genome files
+
+```bash
+
+```

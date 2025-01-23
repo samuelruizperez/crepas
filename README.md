@@ -129,7 +129,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 The [glseq](https://github.com/grothlab/glseq) pipeline was written by Samuel Ruiz-Pérez ([@samuelruizperez](https://github.com/samuelruizperez)) at the Groth Lab ([@grothlab](https://github.com/grothlab)).
 
-Several scripts in this pipeline are based on [nf-core/chipseq](https://github.com/nf-core/chipseq) scripts, which were originally written by Chuan Wang ([@chuan-wang](https://github.com/chuan-wang)) and Phil Ewels ([@ewels](https://github.com/ewels)), re-implemented by Harshil Patel ([@drpatelh](https://github.com/drpatelh)), and converted to Nextflow DSL2 by Jose Espinosa-Carrasco ([@JoseEspinosa](https://github.com/JoseEspinosa)). For more information regarding nf-core/chipseq, see [https://github.com/nf-core/chipseq?tab=readme-ov-file#credits](https://github.com/nf-core/chipseq?tab=readme-ov-file#credits)
+Several scripts in this pipeline are based on [nf-core/chipseq](https://github.com/nf-core/chipseq) scripts. For more information regarding nf-core/chipseq, see [https://github.com/nf-core/chipseq?tab=readme-ov-file#credits](https://github.com/nf-core/chipseq?tab=readme-ov-file#credits)
 
 ## Contributions and Support
 
