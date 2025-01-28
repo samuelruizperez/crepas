@@ -66,10 +66,6 @@ include { BAM_STATS_SAMTOOLS        } from '../subworkflows/nf-core/bam_stats_sa
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// JSON files required by BAMTools for alignment filtering
-ch_bamtools_filter_se_config = file(params.bamtools_filter_se_config)
-ch_bamtools_filter_pe_config = file(params.bamtools_filter_pe_config)
-
 // Header files for MultiQC
 ch_spp_nsc_header           = file("$projectDir/assets/multiqc/spp_nsc_header.txt", checkIfExists: true)
 ch_spp_rsc_header           = file("$projectDir/assets/multiqc/spp_rsc_header.txt", checkIfExists: true)
