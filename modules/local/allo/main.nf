@@ -5,24 +5,27 @@ process ALLO {
     // WARN: Version information not provided by tool on CLI. Please update version string below when bumping container versions.
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/allo:1.2.0--pyhdfd78af_0' :
-        'quay.io/biocontainers/allo:1.2.0--pyhdfd78af_0' }"
+        'oras://community.wave.seqera.io/library/allo_samtools:9c6e229f802e6c51' :
+        'community.wave.seqera.io/library/allo_samtools:0cfc6883c80e7505' }"
 
     input:
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bam")             , emit: bam
-    path  "versions.yml"                       , emit: versions
+    tuple val(meta), path("*.bam")      , emit: bam
+    tuple val(meta), path("*.sam")      , emit: sam
+    tuple val(meta), path("*.log")      , emit: log
+    path  "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def seq = meta.single_end ? '-seq "se"' : '-seq "pe"'
-    def random = meta.control ? '--random' : ''
+    def args    = task.ext.args ?: ''
+    def prefix  = task.ext.prefix ?: "${meta.id}"
+    def seq     = meta.single_end ? '-seq "se"' : '-seq "pe"'
+    def random  = meta.control ? '--random' : ''
+
     """
     allo \\
         $args \\
@@ -30,22 +33,30 @@ process ALLO {
         $seq \\
         $random \\
         -p $task.cpus \\
-        -o ${prefix}
+        -o ${prefix}.sam \\
+        2> >(tee ${prefix}.allo.log >&2)
+
+    samtools view \\
+        -bS ${prefix}.sam \\
+        > ${prefix}.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         allo: \$(echo \$(allo -v 2>&1))
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    touch  ${prefix}.sam
     touch  ${prefix}.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         allo: \$(echo \$(allo -v 2>&1))
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS
     """
 }

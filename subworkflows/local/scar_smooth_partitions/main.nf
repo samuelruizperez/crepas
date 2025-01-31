@@ -16,7 +16,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
     take:
     ch_bigwig               // channel: [ val(meta), [ bigwig ] ]
-    ch_chrom_sizes          // channel: [ bed ]
+    ch_chrom_sizes          // channel: [ val(meta), [ bed ] ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
     //ch_scaffolds            // channel: [scaffolds]
@@ -25,9 +25,17 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
     ch_versions = Channel.empty()
 
+    // TODO: too complicated: This prevents making windows when there are no scarseq samples
+    // https://github.com/nextflow-io/nextflow/issues/4953
+    ch_chrom_sizes = ch_bigwig.ifEmpty { Channel.empty() }.combine(Channel.empty()).map { it[0] }
+
+    ch_windows = Channel.empty()
+    ch_chroms = Channel.empty()
+    
     BEDTOOLS_MAKEWINDOWS (
-            ch_chrom_sizes
-        )
+        ch_chrom_sizes
+    )
+    ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
     ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
     // creating a channel with each chromosome to iterate over
@@ -41,18 +49,11 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_chroms }
 
-    // // print ch_chroms to file for debugging
-    // ch_chroms
-    //     .map {
-    //         chrom ->
-    //             "${chrom}"
-    //     }
-    //     .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // Split windows on chromosome
     BED_SPLIT_BY_CHROMOSOME (
         ch_chroms,
-        BEDTOOLS_MAKEWINDOWS.out.bed.first()
+        ch_windows.first()
     )
     ch_chroms   = BED_SPLIT_BY_CHROMOSOME.out.bed
     ch_versions = ch_versions.mix(BED_SPLIT_BY_CHROMOSOME.out.versions.first())
@@ -191,7 +192,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
 
     ch_inputs
-        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
+        .collectFile(newLine: false, sort: true) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
             meta, tabs ->
                 // to do it per id and strand:
                 // [ "${meta.id}.${meta.strand}.inputs_windows.tab", tabs ]
@@ -242,7 +243,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
 
     ch_samples
-        .collectFile(newLine: false, sort: true, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
+        .collectFile(newLine: false, sort: true) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
             meta, tabs ->
                 // to do it per id and strand:
                 // [ "${meta.id}.${meta.strand}.samples_windows.tab", tabs ]
@@ -615,7 +616,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
     // collect all chromosomes by meta - meta.chr
     COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
-        .collectFile(newLine: true, sort: false, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/collect") {
+        .collectFile(newLine: true, sort: false) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/collect") {
             meta, txt ->
                 // to do it per id and minusinput:
                 [ "${meta.id}${meta.minusinput ? '.minusinput' : ''}.final.txt", txt ]

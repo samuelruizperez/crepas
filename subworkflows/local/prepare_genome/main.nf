@@ -90,7 +90,7 @@ workflow PREPARE_GENOME {
         } else {
             ch_gff = Channel.of( [ [id:'gff'], file(params.gff) ] )
         }
-        ch_gtf      = GFFREAD ( ch_gff ).gtf.map{ [ [id:'gtf'], it[1] ] }
+        ch_gtf      = GFFREAD ( ch_gff, ch_fasta.map{ it[1] } ).gtf.map{ [ [id:'gtf'], it[1] ] }
         ch_versions = ch_versions.mix(GFFREAD.out.versions)
     }
 

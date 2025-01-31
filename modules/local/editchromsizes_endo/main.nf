@@ -1,5 +1,5 @@
 process EDITCHROMSIZES_ENDO {
-    tag "$meta.id"
+    tag "$sizes"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
