@@ -48,6 +48,10 @@ process MULTIQC {
     path ('alignment/mergedLibrary/spikein_split/*')
     path ('alignment/mergedLibrary/spikein_split/*')
 
+    path ('alignment/mergedLibrary/multimap/*')
+    path ('alignment/mergedLibrary/multimap/*')
+    path ('alignment/mergedLibrary/multimap/*')
+
     path ('alignment/mergedLibrary/picard_metrics/*')
 
     path ('deeptools/*')

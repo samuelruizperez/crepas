@@ -66,7 +66,7 @@ workflow GROTHLAB_GLSEQ {
         params.bwa_index,
         params.bowtie2_index,
         params.chromap_index,
-        params.star_index,
+        params.star_index
     )
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 

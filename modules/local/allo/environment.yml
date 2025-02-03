@@ -3,3 +3,4 @@ channels:
   - bioconda
 dependencies:
   - bioconda::allo=1.2.0
+  - bioconda::samtools=1.21

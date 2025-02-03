@@ -149,6 +149,14 @@ def validateInputParameters() {
     if (!params.read_length && !params.macs_gsize) {
         error ("Both '--read_length' and '--macs_gsize' not specified! Please specify either to infer MACS3 genome size for peak calling.")
     }
+
+    if (params.allocate_multimappers > 0 && (params.aligner != 'chromap' || params.aligner != 'bowtie2')) {
+        error("Allocating multimapping reads requires the aligner to be set to 'chromap' or 'bowtie2'.")
+    }
+
+    if (params.allocation_method == 'chromap' && params.aligner != 'chromap') {
+        error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap' as well.")
+    }
 }
 
 //

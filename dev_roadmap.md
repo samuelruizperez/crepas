@@ -12,3 +12,5 @@
 5. peak analysis for SCAR-seq
 
 . setting genome, fasta and gtf without index path uses the igenomes index (error)
+
+samtools collate after resume generates error in allo cause it inputs all the temp .bams

@@ -38,7 +38,7 @@ include { SCAR_SMOOTH_PARTITIONS } from '../subworkflows/local/scar_smooth_parti
 //
 
 include { SAMTOOLS_INDEX                } from '../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_SORT                 } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_COLLATE              } from '../modules/nf-core/samtools/collate/main'
 include { PICARD_MERGESAMFILES          } from '../modules/nf-core/picard/mergesamfiles/main'
 include { PICARD_COLLECTMULTIPLEMETRICS } from '../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP               } from '../modules/nf-core/preseq/lcextrap/main'
@@ -60,6 +60,7 @@ include { FASTQ_ALIGN_STAR             } from '../subworkflows/nf-core/fastq_ali
 include { BAM_MARKDUPLICATES_PICARD } from '../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
 include { BAM_STATS_SAMTOOLS        } from '../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_SORT_STATS_SAMTOOLS   } from '../subworkflows/nf-core/bam_sort_stats_samtools'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -380,20 +381,32 @@ workflow GLSEQ {
     }
 
     // MODULE: Multimapping read allocation
-    if (params.allocate_multimappers > 0) {
+    ch_allo_flagstat = Channel.empty()
+    ch_allo_stat = Channel.empty()
+    ch_allo_idxstats = Channel.empty()
+    if (params.allocate_n_multimappers > 0 && params.allocation_method == 'allo') {
 
-        SAMTOOLS_SORT (
+        SAMTOOLS_COLLATE (
             ch_filtered_bam,
             ch_fasta.first()
         )
-        ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
+        ch_versions = ch_versions.mix(SAMTOOLS_COLLATE.out.versions.first())
 
         ALLO (
-            SAMTOOLS_SORT.out.bam
+            SAMTOOLS_COLLATE.out.bam
         )
-        ch_filtered_bam = ALLO.out.bam
         ch_versions = ch_versions.mix(ALLO.out.versions.first())
 
+        BAM_SORT_STATS_SAMTOOLS (
+            ALLO.out.bam,
+            ch_fasta.first()
+        )
+        ch_filtered_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
+        ch_filtered_index = BAM_SORT_STATS_SAMTOOLS.out.index
+        ch_allo_flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat
+        ch_allo_stat = BAM_SORT_STATS_SAMTOOLS.out.stats
+        ch_allo_idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats
+        ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
     }
 
     //
@@ -540,12 +553,8 @@ workflow GLSEQ {
 
     // separate chipseq and scarseq samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' }
-
-    // // TODO: temporary fix
-    // if (!ch_chrom_sizes_endo) {
-    //     ch_chrom_sizes_endo = ch_chrom_sizes
-    // }
+    // these could be chipseq or chorseq
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' }
 
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
@@ -618,7 +627,7 @@ workflow GLSEQ {
     SCAR_SMOOTH_PARTITIONS (
         SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
-        ch_blacklist.first(), // TODO: fix input when there's not blacklist
+        ch_blacklist.first(),
         ch_initiation_zones.first()
         //ch_scaffolds
     )
@@ -697,6 +706,10 @@ workflow GLSEQ {
             ch_filtered2_stat.collect{it[1]}.ifEmpty([]),
             ch_filtered2_flagstat.collect{it[1]}.ifEmpty([]),
             ch_filtered2_idxstats.collect{it[1]}.ifEmpty([]),
+
+            ch_allo_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_allo_stat.collect{it[1]}.ifEmpty([]),
+            ch_allo_idxstats.collect{it[1]}.ifEmpty([]),
 
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
 

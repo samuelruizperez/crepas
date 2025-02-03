@@ -102,8 +102,8 @@ def check_samplesheet(file_in, file_out):
                 sys.exit(1)
 
             ## Check exp_type is either 'chipseq' or 'scarseq'
-            if exp_type not in ["chipseq", "scarseq"]:
-                print_error("Experiment type not 'chipseq' or 'scarseq'!", "Line", line)
+            if exp_type not in ["chipseq", "scarseq", "chorseq"]:
+                print_error("Experiment type not 'chipseq', 'scarseq', or 'chorseq'!", "Line", line)
                 sys.exit(1)
 
             # strandedness should only be specified for scarseq
