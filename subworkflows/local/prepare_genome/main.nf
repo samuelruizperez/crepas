@@ -264,6 +264,8 @@ workflow PREPARE_GENOME {
         }
     }
 
+    // 
+
     emit:
     fasta         = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
     fai           = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]

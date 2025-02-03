@@ -34,7 +34,7 @@ process ALLO {
         $random \\
         -p $task.cpus \\
         -o ${prefix}.sam \\
-        2> >(tee ${prefix}.allo.log >&2)
+        &> >(tee ${prefix}.allo.log >&2)
 
     samtools view \\
         -bS ${prefix}.sam \\

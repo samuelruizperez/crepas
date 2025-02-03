@@ -27,11 +27,11 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
     // TODO: too complicated: This prevents making windows when there are no scarseq samples
     // https://github.com/nextflow-io/nextflow/issues/4953
-    ch_chrom_sizes = ch_bigwig.ifEmpty { Channel.empty() }.combine(Channel.empty()).map { it[0] }
+
+    // combine ch_bigwig and ch_chrom_sizes
+    // branch and keep only 
 
     ch_windows = Channel.empty()
-    ch_chroms = Channel.empty()
-    
     BEDTOOLS_MAKEWINDOWS (
         ch_chrom_sizes
     )
@@ -39,6 +39,8 @@ workflow SCAR_SMOOTH_PARTITIONS {
     ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
     // creating a channel with each chromosome to iterate over
+    ch_chroms = Channel.empty()
+
     ch_chrom_sizes
         .map {
             meta, bed ->
