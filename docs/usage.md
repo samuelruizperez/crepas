@@ -28,20 +28,20 @@ You will need to create a samplesheet with information about the samples you wou
 
 | Column   | Description |
 | -------- | ----------- |
-| `sample` |  This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. |
+| `sample` |  Custom sample name. This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. Avoid including the experiment type in this identifier, since it will be parsed from the `exp_type` column and prepended to the sample name by default. |
 | `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. |
 | `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension “.fastq.gz” or “.fq.gz”. Leave empty for single-end data. |
 | `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
 | `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
 | `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries. Must start from `1..<number of replicates>`. |
-| `exp_type` | Either `chipseq` or `scarseq`. |
-| `strandedness` | Either `forward`, `reverse` or leave empty for unstranded (ChIP-seq). |
+| `exp_type` | One of `chipseq`, `scarseq`, `chorseq`. |
+| `strandedness` | Either `forward` or `reverse` (SCAR-seq) or leave empty for unstranded (ChIP-seq, ChOR-seq). |
 | `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when control is specified. |
 | `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. |
 | `control_replicate` | Integer representing replicate number for control sample. |
 
 
-Example design files have bee_n provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
+Example design files have been provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
 
 ### Example 1: Multiple replicates
 
@@ -378,8 +378,8 @@ NXF_OPTS='-Xms1g -Xmx4g'
     ```bash
     srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
     ```
-    > [!NOTE]  
-    > Adjust `--time` as necessary, the command above keeps the slurm job active for six days.
+> [!NOTE]  
+> Adjust `--time` as necessary, the command above keeps the slurm job active for six days (more than enough for most pipeline runs).
 
 4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
@@ -403,8 +403,9 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
       - Click on the ***Generate Token*** button to generate your PAT.
       - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
-        >[!WARNING]
-        > Make note of the token because once you close the window you won’t be able to view the token again!
+
+>[!WARNING]
+> Make note of the token because once you close the window you won’t be able to view the token again!
 
   - Open your terminal and create or navigate to the directory where you want to clone the repository:
 
@@ -424,20 +425,29 @@ NXF_OPTS='-Xms1g -Xmx4g'
       password : <your_generated_token>
       ```
     
-6. Create an output directory for your run if it does not exist:
+6. Create an output directory for your pipeline run if it does not exist:
 
     ```bash
     mkdir -p <path_to_output_directory>
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_chorseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \
       -profile ku_sund_danhead,local_test_scarseq \
       --outdir <path_to_output_directory>
     ```
+
+  > [!TIP]
+  > When using the `ku_sund_danhead` profile, the work directory will be automatically cleaned up after the pipeline finishes. Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later:
+  > ```bash
+  > nextflow run grothlab/glseq \
+  >   --bowtie2_index '/path/to/bwa/index/'
+  >   --fasta '/path/to/fasta/'
+  >   --gtf '/path/to/gtf/'
+  >```
 
 8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
@@ -468,25 +478,25 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
 - Prebuilt indexes are inputted using the `--<aligner>_index` parameter, and can be found at:
 
   ```
-  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/indices/<aligner>/
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/indices/<aligner>/
   ```
 
-- The genome FASTA files are inputted using the `--fasta` parameter, and can be found at:
+- Genome FASTA files are inputted using the `--fasta` parameter, and can be found at:
 
   ```
-  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/genome/fasta/*.fa.gz
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/genome/fasta/*.fa.gz
   ```
 
-- The GTF/GFF files are inputted using the `--gtf` or `--gff` parameters, and can be found at:
+- GTF/GFF files are inputted using the `--gtf` or `--gff` parameters, and can be found at:
 
   ```
-  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/transcript_models/<gtf_or_gff>/*.<gtf_or_gff>.gz
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/annotations/transcript_models/<gtf_or_gff>/*.<gtf_or_gff>.gz
   ```
 
-- The gene BED files are inputted using the `--gene_bed` parameter, and can be found at:
+- Gene BED files are inputted using the `--gene_bed` parameter, and can be found at:
 
   ```
-  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/transcript_models/*.bed.gz
+  /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/annotations/transcript_models/*.bed.gz
   ```
 
 > [!TIP]
@@ -501,15 +511,28 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
 
 #### Genome blacklist regions
 
-Blacklist bed files are inputted using the `--blacklist` parameter, and can be found at:
+Blacklist BED files are inputted using the `--blacklist` parameter, and can be found at:
 
 ```
-/maps/projects/dan1/data/Groth_group/shared/references/<organism>/<version>/annotations/blacklists/bed/*.bed.gz
+/maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/annotations/blacklists/bed/*.bed.gz
 ```
 
 #### Initiation zones
 
+Initiation zone BED files are inputted using the `--initiation_zones` parameter, and can be found at:
+
+```bash
+/maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/external_data/Replication/Okasaki_seq/bed_files/OKseq_Initiation_Zones_*.bed.gz
+```
+
 #### OK-seq partitions
+
+Okazaki fragment sequencing (OK-seq) partition BED files are inputted for each SCAR-seq sample through the [`okseq_part_file` column](#samplesheet-input) in the samplesheet, and can be found at:
+
+```bash
+/maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/external_data/Replication/Okasaki_seq/rfd_files/OKseq_RFD_*.bed.gz
+```
+
 
 #### Example run using local genome files
 

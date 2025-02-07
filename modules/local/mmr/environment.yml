@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - samuelruizperez
+dependencies:
+  - samuelruizperez::mmr=c5ce80a

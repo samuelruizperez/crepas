@@ -1,5 +1,5 @@
 //
-// Subworkflow with functionality specific to the nf-core/chipseq pipeline
+// Subworkflow with functionality specific to the grothlab/glseq pipeline
 //
 
 /*

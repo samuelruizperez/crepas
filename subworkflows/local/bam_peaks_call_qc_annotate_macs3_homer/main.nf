@@ -89,7 +89,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     // TODO: maybe a whole module for this is overkill
     FILE_SORT (
         UCSC_BEDCLIP.out.bedgraph,
-        'clip'
+        'sorted'
     )
     ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 

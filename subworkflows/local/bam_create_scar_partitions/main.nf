@@ -1,46 +1,126 @@
-include { BEDTOOLS_MAKEWINDOWS                       } from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BED_SPLIT_BY_CHROMOSOME                    } from '../../../modules/local/bed_split_by_chromosome/main'
-include { UCSC_BIGWIGAVERAGEOVERBED                  } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
-include { CPM_CALCULATION as CPM_CALCULATION_SAMPLES } from '../../../modules/local/cpm_calculation/main'
-include { CPM_CALCULATION as CPM_CALCULATION_INPUTS  } from '../../../modules/local/cpm_calculation/main'
-include { NORMALIZE_STRANDS                          } from '../../../modules/local/normalize_strands/main'
-include { SUBSTRACT_INPUT                            } from '../../../modules/local/substract_input/main'
-include { PARTITION_SMOOTH                           } from '../../../modules/local/partition_smooth/main'
-include { COLLECT_PARTITIONS_BY_CHROMOSOME           } from '../../../modules/local/collect_partitions_by_chromosome/main'
-include { FINAL_PARTITION_BEDGRAPH                   } from '../../../modules/local/final_partition_bedgraph/main'
-include { FILE_SORT                                  } from '../../../modules/local/file_sort/main'
-include { UCSC_BEDGRAPHTOBIGWIG                      } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { FINAL_PARTITION_PLOT                       } from '../../../modules/local/final_partition_plot/main'
+include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
+include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
+include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
+include { BEDTOOLS_SLOP                                             } from '../../../modules/nf-core/bedtools/slop/main'
+include { UCSC_BEDCLIP                                              } from '../../../modules/nf-core/ucsc/bedclip/main'
+include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BED_SPLIT_BY_CHROMOSOME                                   } from '../../../modules/local/bed_split_by_chromosome/main'
+include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
+include { CPM_CALCULATION as CPM_CALCULATION_SAMPLES                } from '../../../modules/local/cpm_calculation/main'
+include { CPM_CALCULATION as CPM_CALCULATION_INPUTS                 } from '../../../modules/local/cpm_calculation/main'
+include { NORMALIZE_STRANDS                                         } from '../../../modules/local/normalize_strands/main'
+include { SUBSTRACT_INPUT                                           } from '../../../modules/local/substract_input/main'
+include { PARTITION_SMOOTH                                          } from '../../../modules/local/partition_smooth/main'
+include { COLLECT_PARTITIONS_BY_CHROMOSOME                          } from '../../../modules/local/collect_partitions_by_chromosome/main'
+include { FINAL_PARTITION_BEDGRAPH                                  } from '../../../modules/local/final_partition_bedgraph/main'
+include { FILE_SORT as FILE_SORT_WINDOWS                            } from '../../../modules/local/file_sort/main'
+include { FILE_SORT as FILE_SORT_PARTITIONS                         } from '../../../modules/local/file_sort/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { FINAL_PARTITION_PLOT                                      } from '../../../modules/local/final_partition_plot/main'
 
-workflow SCAR_SMOOTH_PARTITIONS {
+
+workflow BAM_CREATE_SCAR_PARTITIONS {
 
     take:
-    ch_bigwig               // channel: [ val(meta), [ bigwig ] ]
-    ch_chrom_sizes          // channel: [ val(meta), [ bed ] ]
+    ch_bam                  // channel: [ val(meta), [ bam ] ]
+    ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
-    //ch_scaffolds            // channel: [scaffolds]
+    //ch_scaffolds          // channel: [scaffolds]
 
     main:
 
     ch_versions = Channel.empty()
 
-    // TODO: too complicated: This prevents making windows when there are no scarseq samples
-    // https://github.com/nextflow-io/nextflow/issues/4953
+    BAM_SPLIT_BY_STRAND ( ch_bam )
+    ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
 
-    // combine ch_bigwig and ch_chrom_sizes
-    // branch and keep only 
+    BAM_SPLIT_BY_STRAND
+        .out
+        .f_bam
+        .map {
+            meta, f_bam ->
+                [ meta + ['strand':'forward'], f_bam ]
+        }
+        .set { ch_f_bam }
+
+    BAM_SPLIT_BY_STRAND
+        .out
+        .r_bam
+        .map {
+            meta, r_bam ->
+                [ meta + ['strand':'reverse'], r_bam ]
+        }
+        .set { ch_r_bam }
+
+    ch_bam = ch_f_bam.mix(ch_r_bam)
+
+    // Adding val(scale) to the input of the GENOMECOV module
+    ch_bam
+        .map {
+            meta, bam ->
+                [ meta, bam, 1 ]
+        }
+        .set { ch_bam_scale }
+
+    BEDTOOLS_GENOMECOV (
+        ch_bam_scale,
+        ch_chrom_sizes.map { it[1] },
+        'bdg',
+        false
+    )
+    ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
+
+    BEDTOOLS_SLOP (
+        BEDTOOLS_GENOMECOV.out.genomecov,
+        ch_chrom_sizes.map { it[1] }
+    )
+    ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
+
+    UCSC_BEDCLIP (
+        BEDTOOLS_SLOP.out.bed,
+        ch_chrom_sizes.map { it[1] }
+    )
+    ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
+
+    // TODO: maybe a whole module for this is overkill
+    FILE_SORT_WINDOWS (
+        UCSC_BEDCLIP.out.bedgraph,
+        'sorted'
+    )
+    ch_versions = ch_versions.mix(FILE_SORT_WINDOWS.out.versions.first())
+
+    UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
+        FILE_SORT_WINDOWS.out.sorted,
+        ch_chrom_sizes.map { it[1] }
+    )
+    ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
+
+
+    // TODO: windows are created and split even when not needed (no scarseq samples)
+    // this is an ugly workaround
+    // https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140
+    // def make_windows = false
+    // //ch_chrom_sizes_endo_ss = ch_chrom_sizes_endo
+    // ch_bigwig.count().map { n ->
+    //     if (n > 0) {
+    //         make_windows = true
+    //     }
+    // }
 
     ch_windows = Channel.empty()
-    BEDTOOLS_MAKEWINDOWS (
-        ch_chrom_sizes
-    )
-    ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
+    //if (make_windows) {
+        BEDTOOLS_MAKEWINDOWS (
+            ch_chrom_sizes
+        )
+        ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
+        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
+    //}
 
     // creating a channel with each chromosome to iterate over
     ch_chroms = Channel.empty()
-
     ch_chrom_sizes
         .map {
             meta, bed ->
@@ -60,16 +140,8 @@ workflow SCAR_SMOOTH_PARTITIONS {
     ch_chroms   = BED_SPLIT_BY_CHROMOSOME.out.bed
     ch_versions = ch_versions.mix(BED_SPLIT_BY_CHROMOSOME.out.versions.first())
 
-    // ch_chroms
-    //     .map {
-    //         meta, bed ->
-    //             "${meta}\t${bed}"
-    //     }
-    //     .collectFile( name: 'ch_chroms2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
 
     // create channel by combining the bigwig files with the chromosomes (all chroms per bigwig)
-
     ch_bigwig
         .combine(ch_chroms) //.map { it[1] })
         // append the third element of the tuple to the end of the first element
@@ -78,16 +150,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
                 [ meta + chr_meta, bigWig, chr_bed ]
         }
         .set { ch_bigwig_chroms }
-
-
-    // // print ch_bigwig_chroms to file for debugging
-    // ch_bigwig_chroms
-    //     .map {
-    //         meta, bigwig, chrom ->
-    //             "${meta}\t${bigwig}\t${chrom}"
-    //     }
-    //     .collectFile( name: 'ch_bigwig_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
+    
     // here we have to separate the channel again because UCSC_BIGWIGAVERAGEOVERBED
     // expects a channel with bigwig files and a channel with chromosome beds
     ch_bigwig_chroms
@@ -97,13 +160,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set {ch_bw_combs}
 
-    // ch_bw_combs
-    //     .map {
-    //         meta, bigwig ->
-    //             "${meta}\t${bigwig}"
-    //     }
-    //     .collectFile( name: 'ch_bw_combs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
     // add bigwig meta information to the chromosome bed files
     ch_bigwig_chroms
         .map {
@@ -112,12 +168,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
             }
         .set { ch_chroms_combs }
 
-    // ch_chroms_combs
-    //     .map {
-    //         meta, chrom ->
-    //             "${meta}\t${chrom}"
-    //     }
-    //     .collectFile( name: 'ch_chroms_combs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // Aggregate counts in windows
     UCSC_BIGWIGAVERAGEOVERBED (
@@ -126,14 +176,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
     )
     ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
     ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
-
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_bwaob
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
     // separate samples and input controls
@@ -144,16 +186,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_inputs }
 
-
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_inputs
-    //     .map {
-    //         meta, chroms ->
-    //             "${meta}\t${chroms}"
-    //     }
-    //     .collectFile( name: 'ch_inputs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-
     ch_bwaob
         .map {
             meta, chroms ->
@@ -161,16 +193,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_samples }
 
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_samples
-    //     .map {
-    //         meta, chroms ->
-    //             "${meta}\t${chroms}"
-    //     }
-    //     .collectFile( name: 'ch_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
     // for each ch_samples.meta.id, concatenate the files (use collectFile)
-
     // remove strand information from the meta information
     ch_inputs
         .map {
@@ -183,14 +206,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .map { it[0] }
         .map { it -> [ it.id, it ] }
         .set { ch_i_uniq_meta }
-
-    //     // save to file for debugging
-    // ch_i_uniq_meta
-    //     .map {
-    //         meta ->
-    //             "${meta}"
-    //     }
-    //     .collectFile( name: 'ch_i_uniq_meta.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
     ch_inputs
@@ -215,13 +230,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_inputs_bed }
 
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_inputs_bed
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_inputs_bed.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     ch_samples
         .map {
@@ -235,13 +243,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .map { it -> [ it.id, it ] }
         .set { ch_s_uniq_meta }
 
-    // // save to file for debugging
-    // ch_s_uniq_meta
-    //     .map {
-    //         meta ->
-    //             "${meta}"
-    //     }
-    //     .collectFile( name: 'ch_s_uniq_meta.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
 
     ch_samples
@@ -265,15 +266,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
                 [ meta, tab ]
         }
         .set { ch_samples_bed }
-
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_samples_bed
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_samples_bed.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
+    
 
     // CPM calculation
     CPM_CALCULATION_SAMPLES (
@@ -319,29 +312,11 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_samples_inputs_cpm }
 
-
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_samples_inputs_cpm
-    //     .map {
-    //         meta, tab, cpm ->
-    //             "${meta}\t${tab}\t${cpm}"
-    //     }
-    //     .collectFile( name: 'ch_samples_inputs_cpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
     NORMALIZE_STRANDS (
         ch_samples_inputs_cpm,
     )
     ch_normalized_strands = NORMALIZE_STRANDS.out.tab
     ch_versions = ch_versions.mix(NORMALIZE_STRANDS.out.versions.first())
-
-
-    // TODO: REMOVE print channel to file for debugging
-    // ch_normalized_strands
-    //     .map {
-    //         meta, tab, cpm ->
-    //             "${meta}\t${tab}\t${cpm}"
-    //     }
-    //     .collectFile( name: 'ch_normalized_strands.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // for each of the chromosomes, and each of the strands, subtract the input from the sample
     //ch_norm_s_i_cpm = Channel.empty()
@@ -351,26 +326,10 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .filter { meta, tab, cpm -> meta.control } // this is the groovy way to check if meta.control is empty/not null
         .set { ch_samples }
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_samples
-    //     .map {
-    //         meta, tab, cpm ->
-    //             "${meta}\t${tab}\t${cpm}"
-    //     }
-    //     .collectFile( name: 'ch_samples2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-
     ch_normalized_strands
         .filter { meta, tab, cpm -> !meta.control }
         .set { ch_controls }
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_controls
-    //     .map {
-    //         meta, tab, cpm ->
-    //             "${meta}\t${tab}\t${cpm}"
-    //     }
-    //     .collectFile( name: 'ch_controls2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // Step 2: Combine samples and controls based on matching chromosome and strand
     ch_samples
@@ -385,14 +344,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_norm_s_i_cpm }
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_norm_s_i_cpm
-    //     .map {
-    //         meta, tab1, tab2, cpm ->
-    //             "${meta}\t${tab1}\t${tab2}\t${cpm}"
-    //     }
-    //     .collectFile( name: 'ch_norm_s_i_cpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
 
     SUBSTRACT_INPUT (
         ch_norm_s_i_cpm
@@ -400,13 +351,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
     ch_substracted = SUBSTRACT_INPUT.out.tab
     ch_versions = ch_versions.mix(SUBSTRACT_INPUT.out.versions.first())
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_substracted
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // concat normalized output and substracted output
     ch_normalized_strands
@@ -436,14 +380,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .set { ch_norm_and_subs }
 
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_norm_and_subs
-    //     .map {
-    //         meta, tab, tab2 ->
-    //             "${meta}\t${tab}\t${tab2}"
-    //     }
-    //     .collectFile( name: 'ch_norm_and_subs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
     PARTITION_SMOOTH (
         ch_norm_and_subs,
         params.scar_radius,
@@ -453,14 +389,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
     ch_part_smooth = PARTITION_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
 
-
-    // TODO: REMOVE print channel to file for debugging
-    // ch_part_smooth
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_part_smooth.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     ch_bwaob
         .concat(ch_normalized_strands.map { it -> [ it[0], it[1] ] }) // remove cpm
@@ -486,14 +414,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         // move bed inside of the group
         .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
         .set { ch_test1 }
-
-    // TODO: REMOVE print channel to file for debugging
-    // ch_test1
-    //     .map {
-    //         chr, id, list ->
-    //             "${chr}\t${id}\t${list}"
-    //     }
-    //     .collectFile( name: 'ch_test1.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     ch_bwaob
         .filter { meta, tab -> meta.control }
@@ -521,80 +441,19 @@ workflow SCAR_SMOOTH_PARTITIONS {
         .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
         .set { ch_test2 }
 
-    // ch_test2
-    //     .map {
-    //         chr, id, list ->
-    //             "${chr}\t${id}\t${list}"
-    //     }
-    //     .collectFile( name: 'ch_test2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
 
     ch_test1
         .concat(ch_test2)
         .map { chr, id, group -> [group[0], group[1]] }
         .set { ch_test_all }
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_test_all
-    //     .map {
-    //         group ->
-    //             "${group}"
-    //     }
-    //     .collectFile( name: 'ch_test_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-
-    // ch_bwaob
-    //     .concat(ch_normalized_strands
-    //         .map {
-    //             meta, tab, cpm ->
-    //                 [ meta, tab ]
-    //         }
-    //     )
-    //     .concat(ch_substracted)
-    //     .concat(ch_part_smooth)
-    //     //.combine(ch_chroms.map { it[1] })
-    //     .branch { meta, tab ->
-    //         substracted:    meta.control && meta.minusinput
-    //         samples:        meta.control && !meta.minusinput
-    //         inputs:         !meta.control && !meta.minusinput
-    //     }
-    //     .set { ch_to_collect }
-
-
-    // // TODO: REMOVE print channel to file for debugging
-    // ch_to_collect.samples
-    //     .map {
-    //         meta, tab->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_to_collect_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    // ch_to_collect.inputs
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_to_collect_inputs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    // ch_to_collect.substracted
-    //     .map {
-    //         meta, tab ->
-    //             "${meta}\t${tab}"
-    //     }
-    //     .collectFile( name: 'ch_to_collect_substracted.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-
-    // ch_chroms
-    //     .map { it[1] }
-    //     .collect()
-    //     .map { chroms_list -> [chroms_list] }
-    //     .set { ch_chroms_list }
 
 
     COLLECT_PARTITIONS_BY_CHROMOSOME (
         ch_test_all
     )
     ch_versions = ch_versions.mix(COLLECT_PARTITIONS_BY_CHROMOSOME.out.versions.first())
+
 
     // TODO: REMOVE print channel to file for debugging
     COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
@@ -643,13 +502,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_collected }
 
-    // TODO: REMOVE print channel to file for debugging
-    // ch_collected
-    //     .map {
-    //         meta, txt ->
-    //             "${meta}\t${txt}"
-    //     }
-    //     .collectFile( name: 'ch_collected.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     FINAL_PARTITION_BEDGRAPH (
         ch_collected
@@ -658,17 +510,17 @@ workflow SCAR_SMOOTH_PARTITIONS {
 
 
     // TODO: maybe a whole module for this is overkill
-    FILE_SORT (
+    FILE_SORT_PARTITIONS (
         FINAL_PARTITION_BEDGRAPH.out.tmp,
         'bdg'
     )
-    ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+    ch_versions = ch_versions.mix(FILE_SORT_PARTITIONS.out.versions.first())
 
-    UCSC_BEDGRAPHTOBIGWIG (
-        FILE_SORT.out.sorted,
+    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
+        FILE_SORT_PARTITIONS.out.sorted,
         ch_chrom_sizes.map { it[1] }
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
 
     FINAL_PARTITION_BEDGRAPH.out.txt
@@ -685,28 +537,7 @@ workflow SCAR_SMOOTH_PARTITIONS {
             minusinput: meta.minusinput
         }
         .set { ch_part_to_plot }
-
-    // TODO: REMOVE print channel to file for debugging
-    // ch_part_to_plot.samples
-    //     .map {
-    //         id, meta, txt ->
-    //             "${id}\t${meta}\t${txt}"
-    //     }
-    //     .collectFile( name: 'ch_part_to_plot_samples.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    // ch_part_to_plot.control
-    //     .map {
-    //         id, meta, txt ->
-    //             "${id}\t${meta}\t${txt}"
-    //     }
-    //     .collectFile( name: 'ch_part_to_plot_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
-    // ch_part_to_plot.minusinput
-    //     .map {
-    //         id, meta, txt ->
-    //             "${id}\t${meta}\t${txt}"
-    //     }
-    //     .collectFile( name: 'ch_part_to_plot_minusinput.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
 
     ch_part_to_plot.samples
         .combine(ch_part_to_plot.control, by: 0)
@@ -722,14 +553,6 @@ workflow SCAR_SMOOTH_PARTITIONS {
         }
         .set { ch_part_to_plot }
 
-    //TODO: REMOVE print channel to file for debugging
-    // ch_part_to_plot
-    //     .map {
-    //         meta, txt1, txt2, txt3, ok ->
-    //             "${meta}\t${txt1}\t${txt2}\t${txt3}\t${ok}"
-    //     }
-    //     .collectFile( name: 'ch_part_to_plot2.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
     FINAL_PARTITION_PLOT (
         ch_part_to_plot,
         ch_blacklist,
@@ -738,7 +561,9 @@ workflow SCAR_SMOOTH_PARTITIONS {
     )
     ch_versions = ch_versions.mix(FINAL_PARTITION_PLOT.out.versions.first())
 
+
     emit:
-    tab      = PARTITION_SMOOTH.out.rfd   // channel: [ val(meta), [ tab ] ]
-    versions = ch_versions                         // channel: [ versions.yml ]
+    tab      = PARTITION_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
+    versions = ch_versions                    // channel: [ versions.yml ]
 }
+

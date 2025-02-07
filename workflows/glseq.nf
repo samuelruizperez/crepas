@@ -7,7 +7,6 @@
 include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
-include { ALLO                                } from '../modules/local/allo/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -15,7 +14,7 @@ include { ALLO                                } from '../modules/local/allo/main
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_chipseq_pipeline'
+include { methodsDescriptionText } from '../subworkflows/local/utils_grothlab_glseq_pipeline'
 include { INPUT_CHECK         } from '../subworkflows/local/input_check/main'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
@@ -23,9 +22,8 @@ include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkfl
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
-
-include { SCAR_CREATE_PARTITIONS } from '../subworkflows/local/scar_create_partitions/main'
-include { SCAR_SMOOTH_PARTITIONS } from '../subworkflows/local/scar_smooth_partitions/main'
+include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
+include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -349,7 +347,7 @@ workflow GLSEQ {
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.index
-    ch_filtered_stat = BAM_FILTER_SAMBAMBA.out.stats
+    ch_filtered_stats = BAM_FILTER_SAMBAMBA.out.stats
     ch_filtered_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
     ch_filtered_idxstats = BAM_FILTER_SAMBAMBA.out.idxstats
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
@@ -359,9 +357,9 @@ workflow GLSEQ {
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    // ch_filtered2_stat = Channel.empty()
+    // ch_filtered2_stats = Channel.empty()
     ch_filtered2_flagstat = Channel.empty()
-    ch_filtered2_stat = Channel.empty()
+    ch_filtered2_stats = Channel.empty()
     ch_filtered2_idxstats = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
@@ -374,39 +372,31 @@ workflow GLSEQ {
 
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
         ch_filtered_index = BAM_SPIKEIN_SPLIT.out.index
-        ch_filtered2_stat = BAM_SPIKEIN_SPLIT.out.stats
+        ch_filtered2_stats = BAM_SPIKEIN_SPLIT.out.stats
         ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
         ch_filtered2_idxstats = BAM_SPIKEIN_SPLIT.out.idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
-    // MODULE: Multimapping read allocation
-    ch_allo_flagstat = Channel.empty()
-    ch_allo_stat = Channel.empty()
-    ch_allo_idxstats = Channel.empty()
-    if (params.allocate_n_multimappers > 0 && params.allocation_method == 'allo') {
+    //
+    // SUBWORKFLOW: Allocation of multimappers
+    //
+    ch_allocated_flagstat = Channel.empty()
+    ch_allocated_stats = Channel.empty()
+    ch_allocated_idxstats = Channel.empty()
+    if (params.allocate_n_multimappers > 0 && params.allocation_method != 'chromap') {
 
-        SAMTOOLS_COLLATE (
+        BAM_ALLOCATE_MULTIMAPPERS (
             ch_filtered_bam,
-            ch_fasta.first()
+            ch_fasta,
+            params.allocation_method
         )
-        ch_versions = ch_versions.mix(SAMTOOLS_COLLATE.out.versions.first())
-
-        ALLO (
-            SAMTOOLS_COLLATE.out.bam
-        )
-        ch_versions = ch_versions.mix(ALLO.out.versions.first())
-
-        BAM_SORT_STATS_SAMTOOLS (
-            ALLO.out.bam,
-            ch_fasta.first()
-        )
-        ch_filtered_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
-        ch_filtered_index = BAM_SORT_STATS_SAMTOOLS.out.index
-        ch_allo_flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat
-        ch_allo_stat = BAM_SORT_STATS_SAMTOOLS.out.stats
-        ch_allo_idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats
-        ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
+        ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS.out.bam
+        ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS.out.index
+        ch_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS.out.flagstat
+        ch_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS.out.stats
+        ch_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS.out.idxstats
+        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
     }
 
     //
@@ -526,23 +516,6 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
-    //
-    // MODULE: Calculute genome size with khmer
-    //
-    ch_macs_gsize                     = Channel.empty()
-    ch_custompeaks_frip_multiqc       = Channel.empty()
-    ch_custompeaks_count_multiqc      = Channel.empty()
-    ch_plothomerannotatepeaks_multiqc = Channel.empty()
-    ch_subreadfeaturecounts_multiqc   = Channel.empty()
-    ch_macs_gsize = params.macs_gsize
-    if (!params.macs_gsize) {
-        KHMER_UNIQUEKMERS (
-            ch_fasta.map{ it[1] },
-            params.read_length
-        )
-        ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it.text.trim() }
-    }
-
     // Create channels: [ meta, ip_bam, control_bam ]
     ch_ip_control_bam_bai
         .map {
@@ -555,6 +528,37 @@ workflow GLSEQ {
     ch_ip_control_bam_cs = Channel.empty()
     // these could be chipseq or chorseq
     ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' }
+
+    
+    //
+    // MODULE: Calculate genome size with khmer
+    //
+
+    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
+    ch_macs_gsize                     = Channel.empty()
+    // def need_macs_gsize = false
+    // ch_ip_control_bam_cs.count().map { n ->
+    //     if (n > 0) {
+    //         need_macs_gsize = true
+    //     }
+    // }
+    // if (need_macs_gsize) {
+    //     ch_macs_gsize = params.macs_gsize
+    // }
+    //
+
+    ch_custompeaks_frip_multiqc       = Channel.empty()
+    ch_custompeaks_count_multiqc      = Channel.empty()
+    ch_plothomerannotatepeaks_multiqc = Channel.empty()
+    ch_subreadfeaturecounts_multiqc   = Channel.empty()
+    if (!params.macs_gsize) { // && need_macs_gsize) {
+        KHMER_UNIQUEKMERS (
+            ch_fasta.map{ it[1] },
+            params.read_length
+        )
+        ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it.text.trim() }
+    }
 
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
@@ -611,28 +615,23 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
-    //
-    // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
-    //
+    
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
-    SCAR_CREATE_PARTITIONS (
+    //
+    // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
+    //
+    ch_scar_smooth = Channel.empty()
+    BAM_CREATE_SCAR_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_chrom_sizes_endo.map{ it[1] }
-    )
-    ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
-
-    // TODO: windows are created and split even when not needed (no scarseq samples)
-    SCAR_SMOOTH_PARTITIONS (
-        SCAR_CREATE_PARTITIONS.out.bigwig,
         ch_chrom_sizes_endo,
         ch_blacklist.first(),
         ch_initiation_zones.first()
         //ch_scaffolds
     )
-    ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
-    ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
+    ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
+    ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)
 
     //
     // MODULE: Create IGV session
@@ -640,6 +639,7 @@ workflow GLSEQ {
     if (!params.skip_igv) {
         IGV (
             params.aligner,
+            params.allocate_n_multimappers > 0 ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig.collect{it[1]}.ifEmpty([]),
@@ -699,17 +699,17 @@ workflow GLSEQ {
             ch_mk_idxstats.collect{it[1]}.ifEmpty([]),
             ch_mk_metrics.collect{it[1]}.ifEmpty([]),
 
-            ch_filtered_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered_stats.collect{it[1]}.ifEmpty([]),
             ch_filtered_flagstat.collect{it[1]}.ifEmpty([]),
             ch_filtered_idxstats.collect{it[1]}.ifEmpty([]),
 
-            ch_filtered2_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered2_stats.collect{it[1]}.ifEmpty([]),
             ch_filtered2_flagstat.collect{it[1]}.ifEmpty([]),
             ch_filtered2_idxstats.collect{it[1]}.ifEmpty([]),
 
-            ch_allo_flagstat.collect{it[1]}.ifEmpty([]),
-            ch_allo_stat.collect{it[1]}.ifEmpty([]),
-            ch_allo_idxstats.collect{it[1]}.ifEmpty([]),
+            ch_allocated_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_allocated_stats.collect{it[1]}.ifEmpty([]),
+            ch_allocated_idxstats.collect{it[1]}.ifEmpty([]),
 
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
 
