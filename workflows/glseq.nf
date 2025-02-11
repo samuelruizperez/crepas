@@ -120,7 +120,6 @@ workflow GLSEQ {
     // See the documentation https://nextflow-io.github.io/nf-validation/samplesheets/fromSamplesheet/
     // ! There is currently no tooling to help you write a sample sheet schema
 
-
     //
     // SUBWORKFLOW: Read QC and trim adapters
     //

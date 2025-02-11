@@ -426,7 +426,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_chorseq`, or `local_test_full`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \

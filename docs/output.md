@@ -48,7 +48,7 @@ The initial QC and alignments are performed at the library-level e.g. if the sam
 
 ### Raw read QC
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `fastqc/`
@@ -62,7 +62,7 @@ The initial QC and alignments are performed at the library-level e.g. if the sam
 
 ### UMI extraction/transfer
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `umitransfer/`: If UMIs are provided in a separate FastQ file, the UMI sequence will be transferred to the read name using [umi-transfer](https://github.com/SciLifeLab/umi-transfer).
@@ -79,7 +79,7 @@ Unique molecular identifiers (UMIs) are short sequences that are added to the 5'
 
 ### Adapter trimming
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `trimgalore/`
@@ -101,7 +101,7 @@ Unique molecular identifiers (UMIs) are short sequences that are added to the 5'
 
 The pipeline has been written in a way where all the files generated downstream of the alignment are placed in the same directory as specified by `--aligner` e.g. if `--aligner bwa` is specified then all the downstream results will be placed in the `bwa/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple aligners by simply re-running the pipeline with a different `--aligner` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between alignment algorithms if required. Thus, `<aligner>` in the directory structure below corresponds to the aligner set when running the pipeline.
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/library/`
@@ -121,7 +121,7 @@ Adapter-trimmed reads are mapped to the reference assembly using the aligner set
 
 The `--save_unaligned` parameter enables to obtain FastQ files containing unmapped reads (only available for STAR and Bowtie2).
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
     
 - `<aligner>/library/unmapped/`
@@ -131,7 +131,7 @@ The `--save_unaligned` parameter enables to obtain FastQ files containing unmapp
 
 #### STAR logs
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `star/library/log/`
@@ -147,19 +147,14 @@ The library-level alignments associated with the same sample are merged and subs
 
 ### Alignment merging
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/`
-  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates, and filtering based on various criteria. The file suffix for the final filtered files will be `*.mLb.clN.*`. If you specify the `--save_align_intermeds` parameter then two additional sets of files will be present. These represent the unfiltered alignments with duplicates marked (`*.mLb.mkD.*`), and in the case of paired-end datasets the filtered alignments before the removal of orphan read pairs (`*.mLb.flT.*`).
-  - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
-- `<aligner>/mergedLibrary/picard_metrics/`
-  - `*_metrics`: Alignment QC files from picard CollectMultipleMetrics.
-- `<aligner>/mergedLibrary/picard_metrics/pdf/`
-  - `*.pdf`: Alignment QC plot files from picard CollectMultipleMetrics.
 
+  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files. The file suffix for the final merged files will be `*.mLb.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted merged files will be present in the directory with the suffix `*.mLb.bam`.
 
-> **NB:** File names in the resulting directory (i.e. `<aligner>/mergedLibrary/`) will have the '`.mLb.`' suffix.
+  - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the merged alignment files.
 
 </details>
 
@@ -173,10 +168,11 @@ The library-level alignments associated with the same sample are merged and subs
 
 ### Preseq
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/preseq/`
+
   - `*.lc_extrap.txt`: Preseq expected future yield file.
 
 </details>
@@ -193,11 +189,13 @@ a
 
 ### Duplicate marking
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/picard_markduplicates/`
-  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates. 
+
+  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates.
+
   - `*.metrics.txt`: Metrics file from MarkDuplicates.
 
 </details>
@@ -209,24 +207,29 @@ For samples for which UMIs have not been provided, UMI-based deduplication is no
 
 ### Filtering
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/bam_filter/`
   - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after filtering. The file suffix for the final filtered files will be `*.flT1.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted filtered files will be present in the directory with the suffix `*.flT1.bam`.
+
   - `*.{bai,csi,crai}`: Index files for the filtered BAM files.
+
   - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
 
 </details>
 
 Alignments are then filtered using [SAMBAMBA](https://github.com/biod/sambamba) to remove:
+
   - Duplicates (if not already removed with UMI-based deduplication)
+
   - Improper pairs (in the case of paired-end samples)
+
   - Unmapped reads
   
 ### Splitting alignments by genome (spike-in normalization)
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/spikein_split/`
@@ -247,7 +250,7 @@ As with the choice of aligner, the pipeline has been written in a way where all 
 
 Thus, `<allocation_method>` in the directory structure below corresponds to the allocation method set when running the pipeline. If multimapper allocation is disabled (by leaving the parameter `--allocate_n_multimappers 0` as it is by default) then the `--allocation_method` parameter will be ignored and the downstream directories will be placed in the `<aligner>/mergedLibrary/` directory.
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/<allocation_method>/`
@@ -258,32 +261,36 @@ Thus, `<allocation_method>` in the directory structure below corresponds to the 
 
   - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the allocated alignment files.
 
+> [!NOTE]
+> These files will not be present if the `--allocation_method` is set to `'chromap'`, since Chromap's allocation algorithm is part of the alignment step. In such case, the BAM files with allocated multimappers will be found in the `<aligner>/mergedLibrary/` directory with the suffix `*.cm_allo.sorted.bam`, which means these will go through the same merging, deduplication, filtering and spike-in splitting steps described above.
+
 </details>
 
-### Normalised bigWig files
+### Collection of multiple metrics
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
-- `<aligner>/mergedLibrary/*/genomecov/`
-  - `*.bigWig`: Normalised bigWig files scaled to 1 million mapped reads.
+- `<aligner>/mergedLibrary/*/picard_metrics/`
+
+  - `*_metrics`: Alignment QC files from picard CollectMultipleMetrics.
+
+- `<aligner>/mergedLibrary/*/picard_metrics/pdf/`
+
+  - `*.pdf`: Alignment QC plot files from picard CollectMultipleMetrics.
 
 </details>
 
-The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in an indexed binary format useful for displaying dense, continuous data in Genome Browsers such as the [UCSC](https://genome.ucsc.edu/cgi-bin/hgTracks) and [IGV](http://software.broadinstitute.org/software/igv/). This mitigates the need to load the much larger BAM files for data visualisation purposes which will be slower and result in memory issues. The coverage values represented in the bigWig file can also be normalised in order to be able to compare the coverage across multiple samples - this is not possible with BAM files. The bigWig format is also supported by various bioinformatics software for downstream processing such as meta-profile plotting.
+### phantompeakqualtools
 
-### ChIP-seq QC metrics
-
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/phantompeakqualtools/`
+
   - `*.spp.out`, `*.spp.pdf`: phantompeakqualtools output files.
+
   - `*_mqc.tsv`: MultiQC custom content files.
-- `<aligner>/mergedLibrary/deepTools/plotFingerprint/`
-  - `*.plotFingerprint.pdf`, `*.plotFingerprint.qcmetrics.txt`, `*.plotFingerprint.raw.txt`: plotFingerprint output files.
-- `<aligner>/mergedLibrary/deepTools/plotProfile/`
-  - `*.computeMatrix.mat.gz`, `*.computeMatrix.vals.mat.tab`, `*.plotProfile.pdf`, `*.plotProfile.tab`, `*.plotHeatmap.pdf`, `*.plotHeatmap.mat.tab`: plotProfile output files.
 
 </details>
 
@@ -299,6 +306,33 @@ Relative strand correlation (RSC) is the ratio between the fragment-length peak 
 
 ![MultiQC - spp RSC plot](images/mqc_spp_rsc_plot.png)
 
+### Normalised bigWig files
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/*/genomecov/`
+  - `*.bigWig`: Normalised bigWig files scaled to 1 million mapped reads.
+
+</details>
+
+The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in an indexed binary format useful for displaying dense, continuous data in Genome Browsers such as the [UCSC](https://genome.ucsc.edu/cgi-bin/hgTracks) and [IGV](http://software.broadinstitute.org/software/igv/). This mitigates the need to load the much larger BAM files for data visualisation purposes which will be slower and result in memory issues. The coverage values represented in the bigWig file can also be normalised in order to be able to compare the coverage across multiple samples - this is not possible with BAM files. The bigWig format is also supported by various bioinformatics software for downstream processing such as meta-profile plotting.
+
+### deepTools
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/deepTools/plotFingerprint/`
+
+  - `*.plotFingerprint.pdf`, `*.plotFingerprint.qcmetrics.txt`, `*.plotFingerprint.raw.txt`: plotFingerprint output files.
+
+- `<aligner>/mergedLibrary/deepTools/plotProfile/`
+
+  - `*.computeMatrix.mat.gz`, `*.computeMatrix.vals.mat.tab`, `*.plotProfile.pdf`, `*.plotProfile.tab`, `*.plotHeatmap.pdf`, `*.plotHeatmap.mat.tab`: plotProfile output files.
+
+</details>
+
 [deepTools](https://deeptools.readthedocs.io/en/develop/content/list_of_tools.html) plotFingerprint is a useful QC for ChIP-seq data in order to see the relative enrichment of the IP samples with respect to the controls on a genome-wide basis. The results, however, are expected to look different for example when comparing narrow marks such as transcription factors and broader marks such as histone modifications (see [plotFingerprint docs](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html)).
 
 ![MultiQC - deepTools plotFingerprint plot](images/mqc_deeptools_plotFingerprint_plot.png)
@@ -307,9 +341,9 @@ The results from deepTools plotProfile gives you a quick visualisation for the g
 
 ![MultiQC - deepTools plotProfile plot](images/mqc_deeptools_plotProfile_plot.png)
 
-### Call peaks
+### Peak calling
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/`
@@ -338,7 +372,7 @@ Various QC plots per sample including number of peaks, fold-change distribution,
 
 ### Create and quantify consensus set of peaks
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/`
@@ -366,7 +400,7 @@ The [featureCounts](http://bioinf.wehi.edu.au/featureCounts/) tool is used to co
 
 ### Read counting and differential binding analysis
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/deseq2/`
@@ -397,7 +431,7 @@ For larger experiments, it is recommended to use the `vst` transformation instea
 
 ### Present QC for the raw read, alignment, peak and differential binding results
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `multiqc/<PEAK_TYPE>/`
@@ -415,7 +449,7 @@ The pipeline has special steps which also allow the software versions to be repo
 
 ### Create IGV session file
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `igv/<PEAK_TYPE>/`
@@ -434,22 +468,25 @@ Once installed, open IGV, go to `File > Open Session` and select the `igv_sessio
 
 ![IGV screenshot](images/igv_screenshot.png)
 
-> **NB:** If you are not using an in-built genome provided by IGV you will need to load the annotation yourself e.g. in .gtf and/or .bed format.
-
 ## Other results
 
 ### Reference genome files
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `genome/`
-  - A number of genome-specific files are generated by the pipeline in order to aid in the filtering of the data, and because they are required by standard tools such as BEDTools. These can be found in this directory along with the genome fasta file which is required by IGV. If using a genome from AWS iGenomes and if it exists a `README.txt` file containing information about the annotation version will also be saved in this directory.
+
+  A number of genome-specific files are generated by the pipeline in order to aid in the filtering of the data, and because they are required by standard tools such as BEDTools. These can be found in this directory along with the genome fasta file which is required by IGV.
+
 - `genome/index/`
 
   - `bwa/`: Directory containing BWA indices.
-  - `bowtie2/`: Directory containing BOWTIE2 indices.
+
+  - `bowtie2/`: Directory containing Bowtie2 indices.
+
   - `chromap/`: Directory containing Chromap indices.
+
   - `star/`: Directory containing STAR indices.
 
   - If the `--save_reference` parameter is provided then the alignment indices generated by the pipeline will be saved in this directory. This can be quite a time-consuming process so it permits their reuse for future runs of the pipeline or for other purposes.
@@ -460,7 +497,7 @@ Reference genome-specific files can be useful to keep for the downstream process
 
 ### Pipeline information
 
-<details markdown="1">
+<details markdown="1" open>
     <summary>Output files</summary>
 
 - `pipeline_info/`
