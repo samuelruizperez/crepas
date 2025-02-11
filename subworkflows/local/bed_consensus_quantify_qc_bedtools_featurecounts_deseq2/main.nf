@@ -27,25 +27,28 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_versions = Channel.empty()
 
     // Create channels: [ meta , [ peaks ] ]
-    // Where meta = [ id:antibody, multiple_groups:true/false, replicates_exist:true/false ]
+    // Where meta = [ id:antibody, exp_type, multiple_groups:true/false, replicates_exist:true/false ]
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.id - ~/_REP\d+$/, peak ]
+                [ meta.antibody, meta.exp_type, meta.id - ~/_REP\d+$/, peak ]
         }
         .groupTuple()
         .map {
-            antibody, groups, peaks ->
+            antibody, exp_type, groups, peaks ->
                 [
                     antibody,
+                    exp_type,
                     groups.groupBy().collectEntries { [(it.key) : it.value.size()] },
                     peaks
                 ]
         }
         .map {
-            antibody, groups, peaks ->
+            antibody, exp_type, groups, peaks ->
                 def meta_new = [:]
-                meta_new.id = antibody
+                meta_new.id = exp_type + '_' + antibody
+                meta_new.antibody = antibody
+                meta_new.exp_type = exp_type
                 meta_new.multiple_groups = groups.size() > 1
                 meta_new.replicates_exist = groups.max { it.value }.value > 1
                 [ meta_new, peaks ]

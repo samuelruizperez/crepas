@@ -19,7 +19,7 @@
                     "pattern": "^\\S+\\.csv$",
                     "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/chipseq/docs/usage#introduction).",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "fragment_size": {
@@ -225,16 +225,6 @@
                     "fa_icon": "fas fa-map-signs",
                     "enum": ["bwa", "bowtie2", "chromap", "star"]
                 },
-                "keep_dups": {
-                    "type": "boolean",
-                    "description": "Duplicate reads are not filtered from alignments.",
-                    "fa_icon": "fas fa-cart-arrow-down"
-                },
-                "keep_multi_map": {
-                    "type": "boolean",
-                    "description": "Reads mapping to multiple locations are not filtered from alignments.",
-                    "fa_icon": "fas fa-cart-arrow-down"
-                },
                 "bwa_min_score": {
                     "type": "integer",
                     "description": "Don\u2019t output BWA MEM alignments with score lower than this parameter.",
@@ -251,20 +241,6 @@
                     "fa_icon": "fas fa-save",
                     "description": "Where possible, save unaligned reads from either STAR, HISAT2 or Salmon to the results directory.",
                     "help_text": "This may either be in the form of FastQ or BAM files depending on the options available for that particular tool."
-                },
-                "bamtools_filter_pe_config": {
-                    "type": "string",
-                    "default": "/maps/projects/dan1/people/rlh546/projects/glseq/assets/bamtools_filter_pe.json",
-                    "hidden": true,
-                    "description": "BAMTools JSON file with custom filters for paired-end data.",
-                    "fa_icon": "fas fa-cog"
-                },
-                "bamtools_filter_se_config": {
-                    "type": "string",
-                    "default": "/maps/projects/dan1/people/rlh546/projects/glseq/assets/bamtools_filter_se.json",
-                    "hidden": true,
-                    "description": "BAMTools JSON file with custom filters for single-end data.",
-                    "fa_icon": "fas fa-cog"
                 }
             }
         },
@@ -579,29 +555,47 @@
     ],
     "properties": {
         "with_umi": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false,
+            "description": "Use this flag to enable UMI-based deduplication of all samples.",
+            "fa_icon": "fas fa-dna"
         },
         "skip_umi_extract": {
             "type": "boolean",
-            "default": true
+            "default": true,
+            "description": "Skip UMI extraction step.",
+            "help_text": "Use this flag to skip the UMI extraction/transfer step. This is useful if you have already extracted UMIs from your data but want to run the deduplication",
+            "fa_icon": "fas fa-dna"
         },
         "umi_discard_read": {
             "type": "integer",
-            "default": 0
+            "default": 0,
+            "description": "Discard R1 or R2 if required",
+            "fa_icon": "fas fa-dna"
         },
         "min_trimmed_reads": {
             "type": "integer",
-            "default": 1
+            "default": 1,
+            "description": "Minimum number of reads required after trimming.",
+            "fa_icon": "fas fa-cut"
         },
         "sort_bam": {
             "type": "boolean",
-            "default": true
+            "default": true,
+            "description": "Should the BAM files be sorted by coordinate? Only relevant if Bowtie2 or BWA are used as aligners.",
+            "fa_icon": "fas fa-sort-numeric-down"
         },
         "seq_platform": {
-            "type": "string"
+            "type": "string",
+            "default": null,
+            "description": "Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header.",
+            "help_text": "See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown."
         },
         "spikein_genome": {
-            "type": "string"
+            "type": "string",
+            "default": null,
+            "description": "Name of the spike-in genome if used in the experiment. The spike-in chromosome names in the `--fasta` and `<aligner>_index` files should have the format `<chromosome_name>_<spikein_genome>`, e.g. `chr1_dm6`.",
+            "fa_icon": "fas fa-dna"
         },
         "save_spikein_intermeds": {
             "type": "boolean"
@@ -612,13 +606,6 @@
         },
         "trim_minimum_length": {
             "type": "string"
-        },
-        "allocate_multimappers": {
-            "type": "integer",
-            "default": 0
-        },
-        "mixed_cnn": {
-            "type": "boolean"
         },
         "scar_slop": {
             "type": "integer",
@@ -659,9 +646,6 @@
         "save_scarseq_intermeds": {
             "type": "boolean"
         },
-        "initiation_zones": {
-            "type": "string"
-        },
         "multiqc_logo": {
             "type": "string"
         },
@@ -689,6 +673,25 @@
             "type": "boolean"
         },
         "validationShowHiddenParams": {
+            "type": "boolean"
+        },
+        "allocate_n_multimappers": {
+            "type": "integer",
+            "default": 0
+        },
+        "allocation_method": {
+            "type": "string",
+            "default": "allo"
+        },
+        "allo_mixed_cnn": {
+            "type": "boolean",
+            "default": true
+        },
+        "save_allocation_intermeds": {
+            "type": "boolean",
+            "default": true
+        },
+        "save_macs_pileup_intermeds": {
             "type": "boolean"
         }
     }

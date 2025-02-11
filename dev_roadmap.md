@@ -14,3 +14,7 @@ samtools collate after resume generates error in allo cause it inputs all the te
 Note:
 
 igv and multiqc directories are created per allocation_method and per peak type
+
+TODO: for ChOR-seq, what happens in MACS3 when the inputs have very variable number of reads due to issues with ligation/library construction.
+
+ADD HISAT2 to the pipeline

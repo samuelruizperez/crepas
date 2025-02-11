@@ -171,12 +171,12 @@ workflow PREPARE_GENOME {
         .set { ch_scaffolds }
 
     // TODO: remove channel output to file for debugging
-    ch_scaffolds
-        .map {
-            scaffolds ->
-                "${scaffolds}"
-        }
-        .collectFile( name: 'ch_scaffolds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_scaffolds
+    //     .map {
+    //         scaffolds ->
+    //             "${scaffolds}"
+    //     }
+    //     .collectFile( name: 'ch_scaffolds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // Prepare genome intervals for filtering by removing regions in blacklist file

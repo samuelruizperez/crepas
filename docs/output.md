@@ -1,4 +1,30 @@
-# nf-core/chipseq: Output
+# grothlab/glseq: Output
+
+> [!IMPORTANT]
+> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/output.md](https://github.com/grothlab/glseq/blob/dev/docs/output.md)
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Pipeline overview](#pipeline-overview)
+3. [Library-level analysis](#library-level-analysis)
+    - [Raw read QC](#raw-read-qc)
+    - [UMI extraction/transfer](#umi-extractiontransfer)
+    - [Adapter trimming](#adapter-trimming)
+    - [Alignment](#alignment)
+        - [Unmapped reads](#unmapped-reads)
+        - [STAR logs](#star-logs)
+4. [Merged library-level analysis](#merged-library-level-analysis)
+    - [Alignment merging](#alignment-merging)
+    - [Preseq](#preseq)
+    - [UMI-based alignment deduplication](#umi-based-alignment-deduplication)
+    - [Duplicate marking](#duplicate-marking)
+    - [Filtering](#filtering)
+    - [Splitting alignments by genome (spike-in normalization)](#splitting-alignments-by-genome-spike-in-normalization)
+    - [Allocation of multimapping reads](#allocation-of-multimapping-reads)
+    - [Normalised bigWig files](#normalised-bigwig-files)
+
+---
 
 ## Introduction
 
@@ -34,6 +60,23 @@ The initial QC and alignments are performed at the library-level e.g. if the sam
 
 [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
 
+### UMI extraction/transfer
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `umitransfer/`: If UMIs are provided in a separate FastQ file, the UMI sequence will be transferred to the read name using [umi-transfer](https://github.com/SciLifeLab/umi-transfer).
+  - `*umitransfer.fastq.gz`: FastQ files (single-end) containing the UMI sequence transferred to the read name.
+  - `*umitransfer_1.fastq.gz`, `*umitransfer_2.fastq.gz`: FastQ files (paired-end) containing the UMI sequence transferred to the read name.
+
+- `umitools_extract/`: If UMIs are provided in the read sequence, the UMI sequence will be extracted using [UMI-tools](https://github.com/CGATOxford/UMI-tools).
+  - `*umi_extract.fastq.gz`: FastQ files (single-end) containing the UMI sequence extracted from the read.
+  - `*umi_extract_1.fastq.gz`, `*umi_extract_2.fastq.gz`: FastQ files (paired-end) containing the UMI sequence extracted from the read.
+
+</details>
+
+Unique molecular identifiers (UMIs) are short sequences that are added to the 5' or 3' end of the read sequence. They are used to identify and remove PCR duplicates from the sequencing data. UMIs can be provided in a separate FastQ file or can be part of the read sequence in one of the main FastQ files. The pipeline supports both scenarios and will transfer ([umi-transfer](https://github.com/SciLifeLab/umi-transfer)) or extract ([UMI-tools](https://github.com/CGATOxford/UMI-tools)) the UMI sequence to the read name for further processing.
+
 ### Adapter trimming
 
 <details markdown="1">
@@ -56,25 +99,23 @@ The initial QC and alignments are performed at the library-level e.g. if the sam
 
 ### Alignment
 
-The pipeline has been written in a way where all the files generated downstream of the alignment are placed in the same directory as specified by `--aligner` e.g. if `--aligner bwa` is specified then all the downstream results will be placed in the `bwa/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple aligners by simply re-running the pipeline with a different `--aligner` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between alignment algorithms if required. Thus, `<ALIGNER>` in the directory structure below corresponds to the aligner set when running the pipeline.
+The pipeline has been written in a way where all the files generated downstream of the alignment are placed in the same directory as specified by `--aligner` e.g. if `--aligner bwa` is specified then all the downstream results will be placed in the `bwa/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple aligners by simply re-running the pipeline with a different `--aligner` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between alignment algorithms if required. Thus, `<aligner>` in the directory structure below corresponds to the aligner set when running the pipeline.
 
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/library/`
+- `<aligner>/library/`
   - `*.bam`: The files resulting from the alignment of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-- `<ALIGNER>/library/samtools_stats/`
-  - SAMtools `<SAMPLE>.sorted.bam.flagstat`, `<SAMPLE>.sorted.bam.idxstats` and `<SAMPLE>.sorted.bam.stats` files generated from the alignment files.
+  - `<sample>.sorted.bam.flagstat`, `<sample>.sorted.bam.idxstats` and `<sample>.sorted.bam.stats` are the SAMtools stat files generated from the alignment files.
 
-> **NB:** File names in the resulting directory (i.e. `<ALIGNER>/library/`) will have the '`.Lb.`' suffix.
+> [!NOTE]
+> File names in the resulting directory (i.e. `<aligner>/library/`) will have the '`.Lb.`' suffix.
 
 </details>
 
-Adapter-trimmed reads are mapped to the reference assembly using the aligner set by the `--aligner` parameter. Available aligners are [BWA](http://bio-bwa.sourceforge.net/bwa.shtml) (default), [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [Chromap](https://github.com/haowenz/chromap) and [STAR](https://github.com/alexdobin/STAR). A genome index is required to run any of this aligners so if this is not provided explicitly using the corresponding parameter (e.g. `--bwa_index`), then it will be created automatically from the genome fasta input. The index creation process can take a while for larger genomes so it is possible to use the `--save_reference` parameter to save the indices for future pipeline runs, reducing processing times.
+Adapter-trimmed reads are mapped to the reference assembly using the aligner set by the `--aligner` parameter. Available aligners are [BWA](http://bio-bwa.sourceforge.net/bwa.shtml), [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [Chromap](https://github.com/haowenz/chromap) (default) and [STAR](https://github.com/alexdobin/STAR). A genome index is required to run any of this aligners so if this is not provided explicitly using the corresponding parameter (e.g. `--bwa_index`), then it will be created automatically from the genome fasta input. The index creation process can take a while for larger genomes so it is possible to use the `--save_reference` parameter to save the indices for future pipeline runs, reducing processing times.
 
 ![MultiQC - SAMtools stats plot](images/mqc_samtools_stats_plot.png)
-
-> **NB:** Currently, paired-end files produced by `Chromap` are excluded from downstream analysis due to [this](https://github.com/nf-core/chipseq/issues/291) issue. Single-end files are processed normally.
 
 #### Unmapped reads
 
@@ -82,7 +123,8 @@ The `--save_unaligned` parameter enables to obtain FastQ files containing unmapp
 
 <details markdown="1">
     <summary>Output files</summary>
-- `<ALIGNER>/library/unmapped/`
+    
+- `<aligner>/library/unmapped/`
   - `*.fastq.gz`: If `--save_unaligned` is specified, FastQ files containing unmapped reads will be placed in this directory.
 
 </details>
@@ -103,45 +145,127 @@ The `--save_unaligned` parameter enables to obtain FastQ files containing unmapp
 
 The library-level alignments associated with the same sample are merged and subsequently used for the downstream analyses.
 
-### Alignment merging, duplicate marking, filtering and QC
+### Alignment merging
 
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/`
+- `<aligner>/mergedLibrary/`
   - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates, and filtering based on various criteria. The file suffix for the final filtered files will be `*.mLb.clN.*`. If you specify the `--save_align_intermeds` parameter then two additional sets of files will be present. These represent the unfiltered alignments with duplicates marked (`*.mLb.mkD.*`), and in the case of paired-end datasets the filtered alignments before the removal of orphan read pairs (`*.mLb.flT.*`).
-- `<ALIGNER>/mergedLibrary/samtools_stats/`
   - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
-- `<ALIGNER>/mergedLibrary/picard_metrics/`
+- `<aligner>/mergedLibrary/picard_metrics/`
   - `*_metrics`: Alignment QC files from picard CollectMultipleMetrics.
-  - `*.metrics.txt`: Metrics file from MarkDuplicates.
-- `<ALIGNER>/mergedLibrary/picard_metrics/pdf/`
+- `<aligner>/mergedLibrary/picard_metrics/pdf/`
   - `*.pdf`: Alignment QC plot files from picard CollectMultipleMetrics.
-- `<ALIGNER>/mergedLibrary/preseq/`
-  - `*.lc_extrap.txt`: Preseq expected future yield file.
 
-> **NB:** File names in the resulting directory (i.e. `<ALIGNER>/mergedLibrary/`) will have the '`.mLb.`' suffix.
+
+> **NB:** File names in the resulting directory (i.e. `<aligner>/mergedLibrary/`) will have the '`.mLb.`' suffix.
 
 </details>
 
-[Picard MergeSamFiles and MarkDuplicates](https://broadinstitute.github.io/picard/command-line-overview.html) are used in combination to merge the alignments, and for the marking of duplicates, respectively. If you only have one library for any given replicate then the merging step is not carried out because the library-level and merged library-level BAM files will be exactly the same.
+[Picard MergeSamFiles](https://broadinstitute.github.io/picard/command-line-overview.html) is used to merge the alignments. If you only have one library for any given replicate then the merging step is not carried out because the library-level and merged library-level BAM files will be exactly the same.
 
-![MultiQC - Picard deduplication stats plot](images/mqc_picard_deduplication_plot.png)
 
-Read duplicate marking is carried out using the Picard MarkDuplicates command. Duplicate reads are generally removed from the aligned reads to mitigate for fragments in the library that may have been sequenced more than once due to PCR biases. There is an option to keep duplicate reads with the `--keep_dups` parameter but its generally recommended to remove them to avoid the wrong interpretation of the results. A similar option has been provided to keep reads that are multi-mapped - `--keep_multi_map`. Other steps have been incorporated into the pipeline to filter the resulting alignments - see [`main README.md`](../README.md) for a more comprehensive listing, and the tools used at each step. A selection of alignment-based QC metrics generated by Picard CollectMultipleMetrics and MarkDuplicates will be included in the MultiQC report.
 
 ![MultiQC - Picard insert size plot](images/mqc_picard_insert_size_plot.png)
+
+
+
+### Preseq
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/preseq/`
+  - `*.lc_extrap.txt`: Preseq expected future yield file.
+
+</details>
 
 The [Preseq](http://smithlabresearch.org/software/preseq/) package is aimed at predicting and estimating the complexity of a genomic sequencing library, equivalent to predicting and estimating the number of redundant reads from a given sequencing depth and how many will be expected from additional sequencing using an initial sequencing experiment. The estimates can then be used to examine the utility of further sequencing, optimize the sequencing depth, or to screen multiple libraries to avoid low complexity samples. The dashed line shows a perfectly complex library where total reads = unique reads. Note that these are predictive numbers only, not absolute. The MultiQC plot can sometimes give extreme sequencing depth on the X axis - click and drag from the left side of the plot to zoom in on more realistic numbers.
 
 ![MultiQC - Preseq library complexity plot](images/mqc_preseq_plot.png)
+
+### UMI-based alignment deduplication
+
+a
+
+
+
+### Duplicate marking
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/picard_markduplicates/`
+  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates. 
+  - `*.metrics.txt`: Metrics file from MarkDuplicates.
+
+</details>
+
+For samples for which UMIs have not been provided, UMI-based deduplication is not possible. Thus, the pipeline will automatically use the [Picard MarkDuplicates](https://broadinstitute.github.io/picard/command-line-overview.html) tool to *mark* their duplicate alignments. These samples will then be specifically *filtered* for duplicates in the downstream [filtering step](#filtering) (in addition to the standard filtering criteria). The pipeline will also generate a MultiQC plot showing the percentage of duplicates in each sample.
+
+![MultiQC - Picard deduplication stats plot](images/mqc_picard_deduplication_plot.png)
+
+
+### Filtering
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/bam_filter/`
+  - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after filtering. The file suffix for the final filtered files will be `*.flT1.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted filtered files will be present in the directory with the suffix `*.flT1.bam`.
+  - `*.{bai,csi,crai}`: Index files for the filtered BAM files.
+  - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
+
+</details>
+
+Alignments are then filtered using [SAMBAMBA](https://github.com/biod/sambamba) to remove:
+  - Duplicates (if not already removed with UMI-based deduplication)
+  - Improper pairs (in the case of paired-end samples)
+  - Unmapped reads
+  
+### Splitting alignments by genome (spike-in normalization)
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/spikein_split/`
+
+  - `*.bam`: Merged library-level, coordinate sorted BAM files split by genome and refiltered. The file suffix for the final filtered files will be `*.<genome>.flT2.sorted.bam` and `*.<spikein_genome>.flT2.sorted.bam`, e.g. `*.mm10.flT2.sorted.bam` and `*.dm6.flT2.sorted.bam`. If you specify the `--save_spikein_intermeds` parameter then the unsorted files will be present in the directory with the suffix `*.flT2.bam`.
+  
+  - `*.{bai,csi,crai}`: Index files for the split and refiltered BAM files.
+  
+  - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the split and refiltered files.
+
+</details>
+
+### Allocation of multimapping reads
+
+Multimapping reads are reads that map to multiple locations in the genome. The `--allocation_method` parameter allows you to choose the method to use for allocating these reads. 
+
+As with the choice of aligner, the pipeline has been written in a way where all the files generated downstream of the allocation are placed in the same directory as specified by `--allocation_method` e.g. if `--allocation_method 'allo'` is specified then all the downstream results will be placed in the `<aligner>/mergedLibrary/allo/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple allocation methods by simply re-running the pipeline with a different `--allocation_method` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between allocation algorithms if required. 
+
+Thus, `<allocation_method>` in the directory structure below corresponds to the allocation method set when running the pipeline. If multimapper allocation is disabled (by leaving the parameter `--allocate_n_multimappers 0` as it is by default) then the `--allocation_method` parameter will be ignored and the downstream directories will be placed in the `<aligner>/mergedLibrary/` directory.
+
+<details markdown="1">
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<allocation_method>/`
+
+  - `*.bam`: Merged library-level, coordinate sorted BAM files after the allocation of multimapping reads. The file suffix for the final filtered files will be `*.<allocation_method>.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted files will be present in the directory with the suffix `*.<allocation_method>.sorted.bam`.
+
+  - `*.{bai,csi,crai}`: Index files for the allocated BAM files.
+
+  - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the allocated alignment files.
+
+</details>
 
 ### Normalised bigWig files
 
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/bigwig/`
+- `<aligner>/mergedLibrary/*/genomecov/`
   - `*.bigWig`: Normalised bigWig files scaled to 1 million mapped reads.
 
 </details>
@@ -153,12 +277,12 @@ The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in a
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/phantompeakqualtools/`
+- `<aligner>/mergedLibrary/phantompeakqualtools/`
   - `*.spp.out`, `*.spp.pdf`: phantompeakqualtools output files.
   - `*_mqc.tsv`: MultiQC custom content files.
-- `<ALIGNER>/mergedLibrary/deepTools/plotFingerprint/`
+- `<aligner>/mergedLibrary/deepTools/plotFingerprint/`
   - `*.plotFingerprint.pdf`, `*.plotFingerprint.qcmetrics.txt`, `*.plotFingerprint.raw.txt`: plotFingerprint output files.
-- `<ALIGNER>/mergedLibrary/deepTools/plotProfile/`
+- `<aligner>/mergedLibrary/deepTools/plotProfile/`
   - `*.computeMatrix.mat.gz`, `*.computeMatrix.vals.mat.tab`, `*.plotProfile.pdf`, `*.plotProfile.tab`, `*.plotHeatmap.pdf`, `*.plotHeatmap.mat.tab`: plotProfile output files.
 
 </details>
@@ -188,10 +312,10 @@ The results from deepTools plotProfile gives you a quick visualisation for the g
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/macs3/<PEAK_TYPE>/`
+- `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/`
   - `*.xls`, `*.broadPeak` or `*.narrowPeak`, `*.gappedPeak`, `*summits.bed`: MACS3 output files - the files generated will depend on whether MACS3 has been run in _narrowPeak_ or _broadPeak_ mode.
   - `*.annotatePeaks.txt`: HOMER peak-to-gene annotation file.
-- `<ALIGNER>/mergedLibrary/macs3/<PEAK_TYPE>/qc/`
+- `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/qc/`
   - `macs3_peak.plots.pdf`: QC plots for MACS3 peaks.
   - `macs3_annotatePeaks.plots.pdf`: QC plots for peak-to-gene feature annotation.
   - `*.FRiP_mqc.tsv`, `*.peak_count_mqc.tsv`, `annotatepeaks.summary_mqc.tsv`: MultiQC custom-content files for FRiP score, peak count and peak-to-gene ratios.
@@ -217,7 +341,7 @@ Various QC plots per sample including number of peaks, fold-change distribution,
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/`
+- `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/`
   - `*.bed`: Consensus peak-set across all samples in BED format.
   - `*.saf`: Consensus peak-set across all samples in SAF format. Required by featureCounts for read quantification.
   - `*.featureCounts.txt`: Read counts across all samples relative to consensus peak-set.
@@ -245,7 +369,7 @@ The [featureCounts](http://bioinf.wehi.edu.au/featureCounts/) tool is used to co
 <details markdown="1">
     <summary>Output files</summary>
 
-- `<ALIGNER>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/deseq2/`
+- `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/deseq2/`
   - `*.sample.dists.txt`: Spreadsheet containing sample-to-sample distance across each consensus peak.
   - `*.plots.pdf`: File containing PCA and hierarchical clustering plots.
   - `*.dds.RData`: File containing R `DESeqDataSet` object generated by DESeq2, with either
@@ -254,7 +378,7 @@ The [featureCounts](http://bioinf.wehi.edu.au/featureCounts/) tool is used to co
     `readRDS` to give user control of the eventual object name.
   - `*pca.vals.txt`: Matrix of values for the first 2 principal components.
   - `R_sessionInfo.log`: File containing information about R, the OS and attached or loaded packages.
-  - `<ALIGNER>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/sizeFactors/`
+  - `<aligner>/mergedLibrary/macs3/<PEAK_TYPE>/consensus/<ANTIBODY>/sizeFactors/`
   - `*.txt`, `*.RData`: Files containing DESeq2 sizeFactors per sample.
 
 </details>
