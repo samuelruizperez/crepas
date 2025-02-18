@@ -24,6 +24,7 @@ include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../sub
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -414,6 +415,23 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
 
+    
+    // SUBWORKFLOW: Shift ATAC-seq reads
+    ch_filtered_bam
+        .branch(
+            atacseq: { it[0].exp_type == 'atacseq' },
+            other: { it[0].exp_type != 'atacseq' }
+        )
+        .set { ch_filtered_bam }
+
+    BAM_SHIFT_READS (
+        ch_filtered_bam.atacseq.join(ch_filtered_index, by: [0]),
+        ch_fasta
+    )
+    ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
+    ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
+
+
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
     //
@@ -523,11 +541,16 @@ workflow GLSEQ {
         }
         .set { ch_ip_control_bam }
 
-    // separate chipseq and scarseq samples based on meta.exp_type
-    ch_ip_control_bam_cs = Channel.empty()
-    // these could be chipseq or chorseq
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' }
 
+    // separate samples based on meta.exp_type (atacseq samples were previously shifted)
+    ch_ip_control_bam_cs = Channel.empty()
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' || it[0].exp_type == 'atacseq' }
+
+    ch_filtered_bam_ss = Channel.empty()
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
+
+
+    
     
     //
     // MODULE: Calculate genome size with khmer
@@ -568,7 +591,7 @@ workflow GLSEQ {
         ch_gtf.map{ it[1] }.first(),
         ch_chrom_sizes_endo.map{ it[1] },
         ch_macs_gsize,
-        "_peaks.annotatePeaks.txt",
+        "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
         ch_frip_score_header,
         ch_peak_annotation_header,
@@ -613,10 +636,6 @@ workflow GLSEQ {
         ch_deseq2_clustering_multiqc     = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_dists_multiqc
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
-
-    
-    ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads

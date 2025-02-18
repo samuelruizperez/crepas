@@ -18,3 +18,8 @@ igv and multiqc directories are created per allocation_method and per peak type
 TODO: for ChOR-seq, what happens in MACS3 when the inputs have very variable number of reads due to issues with ligation/library construction.
 
 ADD HISAT2 to the pipeline
+
+
+- add consensus peak calling for ATAC-seq (see https://github.com/grothlab/glseq/blob/c753120ee33a5e0b5e8bb3dea319aa45eed34473/workflows/glseq.nf#L589)
+
+and https://github.com/nf-core/atacseq/blob/dev/subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2.nf

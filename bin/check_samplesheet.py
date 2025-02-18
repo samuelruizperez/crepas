@@ -102,8 +102,8 @@ def check_samplesheet(file_in, file_out):
                 sys.exit(1)
 
             ## Check exp_type is either 'chipseq' or 'scarseq'
-            if exp_type not in ["chipseq", "scarseq", "chorseq"]:
-                print_error("Experiment type not 'chipseq', 'scarseq', or 'chorseq'!", "Line", line)
+            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq"]:
+                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', or 'chorseq'!", "Line", line)
                 sys.exit(1)
 
             # strandedness should only be specified for scarseq
@@ -152,6 +152,10 @@ def check_samplesheet(file_in, file_out):
             else:
                 print_error("Invalid combination of columns provided!", "Line", line)
 
+            ## Check that all ATAC-seq samples are paired-end, otherwise the alignmentsieve step will fail
+            if exp_type == "atacseq" and sample_info[0] == "1":
+                print_error("ATAC-seq samples must be paired-end for the alignmentsieve step to work!", "Line", line)
+                
             ## Auto-detect UMI fastq file
             if sample and fastq_umi:
                 sample_info.insert(1, "1")
