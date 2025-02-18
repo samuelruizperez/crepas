@@ -8,13 +8,13 @@
 1. [Samplesheet input](#samplesheet-input)
 2. [Reference genome files](#reference-genome-files)
 3. [Running the pipeline](#running-the-pipeline)
-  1. [Parameters](#parameters)
-  2. [Updating the pipeline](#updating-the-pipeline)
-  3. [Reproducibility](#reproducibility)
-  4. [Core Nextflow arguments](#core-nextflow-arguments)
-  5. [Custom configuration](#custom-configuration)
-  6. [Running in the background](#running-in-the-background)
-  7. [Nextflow memory requirements](#nextflow-memory-requirements)
+    1. [Parameters](#parameters)
+    2. [Updating the pipeline](#updating-the-pipeline)
+    3. [Reproducibility](#reproducibility)
+    4. [Core Nextflow arguments](#core-nextflow-arguments)
+    5. [Custom configuration](#custom-configuration)
+    6. [Running in the background](#running-in-the-background)
+    7. [Nextflow memory requirements](#nextflow-memory-requirements)
 4. [**Quick start guide for DAN System users**](#quick-start-guide-for-dan-system-users)
 
 ---
@@ -242,7 +242,7 @@ Define where the pipeline should find input data and save output data.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).</small></details>| `string` |  |  |  |
+| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 11 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).</small></details>| `string` |  |  |  |
 | `fragment_size` | Estimated fragment size used to extend single-end reads. | `integer` | 150 |  |  |
 | `seq_platform` | Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header. <details><summary>Help</summary><small>See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown.</small></details>| `string` | None |  |  |
 | `seq_center` | Sequencing center information to be added to read group of BAM files. | `string` |  |  |  |
