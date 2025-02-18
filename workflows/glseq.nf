@@ -337,7 +337,7 @@ workflow GLSEQ {
     }
 
     //
-    // SUBWORKFLOW: Filter BAM file with Sambamba
+    // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
     BAM_FILTER_SAMBAMBA (
         ch_dedup_bam.join(ch_dedup_index, by: [0]),
