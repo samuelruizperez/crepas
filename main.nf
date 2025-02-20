@@ -20,6 +20,7 @@ params.bwa_index     = getGenomeAttribute('bwa')
 params.bowtie2_index = getGenomeAttribute('bowtie2')
 params.chromap_index = getGenomeAttribute('chromap')
 params.star_index    = getGenomeAttribute('star')
+params.hisat2_index  = getGenomeAttribute('hisat2')
 params.gtf           = getGenomeAttribute('gtf')
 params.gff           = getGenomeAttribute('gff')
 params.gene_bed      = getGenomeAttribute('gene_bed')
@@ -64,7 +65,9 @@ workflow GROTHLAB_GLSEQ {
         params.bwa_index,
         params.bowtie2_index,
         params.chromap_index,
-        params.star_index
+        params.star_index,
+        params.hisat2_index,
+        params.splicesites
     )
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
@@ -89,7 +92,9 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
-        PREPARE_GENOME.out.star_index
+        PREPARE_GENOME.out.star_index,
+        PREPARE_GENOME.out.hisat2_index,
+        PREPARE_GENOME.out.splicesites
     )
 
     emit:

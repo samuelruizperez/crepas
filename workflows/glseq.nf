@@ -52,14 +52,16 @@ include { KHMER_UNIQUEKMERS             } from '../modules/nf-core/khmer/uniquek
 //
 
 // include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
-include { FASTQ_ALIGN_BWA          } from '../subworkflows/nf-core/fastq_align_bwa'
-include { FASTQ_ALIGN_BOWTIE2          } from '../subworkflows/nf-core/fastq_align_bowtie2'
-include { FASTQ_ALIGN_CHROMAP          } from '../subworkflows/nf-core/fastq_align_chromap'
-include { FASTQ_ALIGN_STAR             } from '../subworkflows/nf-core/fastq_align_star'
-include { BAM_MARKDUPLICATES_PICARD } from '../subworkflows/nf-core/bam_markduplicates_picard'
+include { FASTQ_ALIGN_BWA                   } from '../subworkflows/nf-core/fastq_align_bwa'
+include { FASTQ_ALIGN_BOWTIE2               } from '../subworkflows/nf-core/fastq_align_bowtie2'
+include { FASTQ_ALIGN_CHROMAP               } from '../subworkflows/nf-core/fastq_align_chromap'
+include { FASTQ_ALIGN_STAR                  } from '../subworkflows/nf-core/fastq_align_star'
+include { FASTQ_ALIGN_HISAT2                } from '../subworkflows/nf-core/fastq_align_hisat2'                                                                                                                                                                            
+include { BAM_MARKDUPLICATES_PICARD         } from '../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
-include { BAM_STATS_SAMTOOLS        } from '../subworkflows/nf-core/bam_stats_samtools'
-include { BAM_SORT_STATS_SAMTOOLS   } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+include { BAM_STATS_SAMTOOLS                } from '../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_SORT_STATS_SAMTOOLS           } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -105,6 +107,8 @@ workflow GLSEQ {
     ch_bowtie2_index // channel: path(bowtie2/index)
     ch_chromap_index // channel: path(chromap.index)
     ch_star_index    // channel: path(star/index/)
+    ch_hisat2_index  // channel: path(hisat2/index)
+    ch_splicesites   // channel: path(splicesites)
 
     main:
     ch_multiqc_files = Channel.empty()
@@ -131,7 +135,10 @@ workflow GLSEQ {
         params.skip_umi_extract,
         params.skip_trimming,
         params.umi_discard_read,
-        params.min_trimmed_reads
+        params.min_trimmed_reads,
+        params.hardtrim5_length,
+        params.hardtrim3_length
+
     )
     ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.versions)
 
@@ -226,6 +233,21 @@ workflow GLSEQ {
         ch_star_multiqc      = FASTQ_ALIGN_STAR.out.log_final
 
         ch_versions = ch_versions.mix(FASTQ_ALIGN_STAR.out.versions)
+    }
+
+    if (params.aligner == 'hisat2') {
+        FASTQ_ALIGN_HISAT2 (
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
+            ch_hisat2_index.first(),
+            ch_splicesites.first(),
+            ch_fasta.first()
+        )
+        ch_genome_bam        = FASTQ_ALIGN_HISAT2.out.bam
+        ch_genome_bam_index  = FASTQ_ALIGN_HISAT2.out.index
+        ch_samtools_stats    = FASTQ_ALIGN_HISAT2.out.stats
+        ch_samtools_flagstat = FASTQ_ALIGN_HISAT2.out.flagstat
+        ch_samtools_idxstats = FASTQ_ALIGN_HISAT2.out.idxstats
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_HISAT2.out.versions)
     }
 
     //

@@ -146,8 +146,22 @@ def validateInputParameters() {
         macsGsizeWarn(log)
     }
 
+    if (params.hardtrim3_length && params.hardtrim5_length) {
+        error("Both '--hardtrim3_length' and '--hardtrim5_length' parameters have been provided. Please provide only one.")
+    }
+
     if (!params.read_length && !params.macs_gsize) {
         error ("Both '--read_length' and '--macs_gsize' not specified! Please specify either to infer MACS3 genome size for peak calling.")
+    }
+
+    // if --read_length and either hardtrim3_length or hardtrim5_length are provided, then check if they are equal
+    if (params.read_length && (params.hardtrim3_length || params.hardtrim5_length)) {
+        if (params.hardtrim3_length && params.hardtrim3_length != params.read_length) {
+            error("The '--read_length' and '--hardtrim3_length' parameters must be equal.")
+        }
+        if (params.hardtrim5_length && params.hardtrim5_length != params.read_length) {
+            error("The '--read_length' and '--hardtrim5_length' parameters must be equal.")
+        }
     }
 
     if (params.allocate_multimappers > 0 && (params.aligner != 'chromap' || params.aligner != 'bowtie2')) {
