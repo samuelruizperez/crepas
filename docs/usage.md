@@ -35,7 +35,7 @@ You will need to create a samplesheet with information about the samples you wou
 | `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
 | `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
 | `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries (technical replicates). Must start from `1..<number of replicates>`. |
-| `exp_type` | One of `chipseq`, `scarseq`, `chorseq`. |
+| `exp_type` | One of `chipseq`, `atacseq`, `scarseq`, `chorseq`. |
 | `strandedness` | Either `forward` or `reverse` (SCAR-seq) or leave empty for unstranded (ChIP-seq, ChOR-seq). |
 | `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when `control` is specified. |
 | `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. Required when `antibody` is specified. |
@@ -629,7 +629,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \

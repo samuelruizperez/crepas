@@ -23,3 +23,11 @@ ADD HISAT2 to the pipeline
 - add consensus peak calling for ATAC-seq (see https://github.com/grothlab/glseq/blob/c753120ee33a5e0b5e8bb3dea319aa45eed34473/workflows/glseq.nf#L589)
 
 and https://github.com/nf-core/atacseq/blob/dev/subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2.nf
+
+
+
+# FileAlreadyExistsException when using copyTo on a directory that already exists #3887
+
+Sometimes, running the pipeline several times with -resume will cause the pipeline to fail with a FileAlreadyExistsException when using copyTo on a directory that already exists. This is because the copyTo method does not overwrite existing directories. See: https://github.com/nextflow-io/nextflow/discussions/3887#discussioncomment-5667052
+
+```

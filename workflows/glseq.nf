@@ -418,10 +418,10 @@ workflow GLSEQ {
     
     // SUBWORKFLOW: Shift ATAC-seq reads
     ch_filtered_bam
-        .branch(
-            atacseq: { it[0].exp_type == 'atacseq' },
-            other: { it[0].exp_type != 'atacseq' }
-        )
+        .branch { meta, bam ->
+            atacseq: meta.exp_type == 'atacseq'
+            other: meta.exp_type != 'atacseq'
+        }
         .set { ch_filtered_bam }
 
     BAM_SHIFT_READS (
