@@ -5,8 +5,6 @@
 
 3. samtools stat summary table
 
-4. multimapper resolution and
-
 5. peak analysis for SCAR-seq
 
 samtools collate after resume generates error in allo cause it inputs all the temp .bams
@@ -30,4 +28,5 @@ and https://github.com/nf-core/atacseq/blob/dev/subworkflows/local/bed_consensus
 
 Sometimes, running the pipeline several times with -resume will cause the pipeline to fail with a FileAlreadyExistsException when using copyTo on a directory that already exists. This is because the copyTo method does not overwrite existing directories. See: https://github.com/nextflow-io/nextflow/discussions/3887#discussioncomment-5667052
 
-```
+
+# make BAM_CREATE_SCAR_PARTITIONS more readable

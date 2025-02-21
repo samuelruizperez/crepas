@@ -33,9 +33,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
 
     ch_versions = Channel.empty()
 
+    //
+    // MODULE: Split BAMs by strand (forward and reverse)
+    //
     BAM_SPLIT_BY_STRAND ( ch_bam )
     ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
 
+    // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
         .out
         .f_bam
@@ -56,7 +60,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
 
     ch_bam = ch_f_bam.mix(ch_r_bam)
 
-    // Adding val(scale) to the input of the GENOMECOV module
+    // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
     ch_bam
         .map {
             meta, bam ->
@@ -64,6 +68,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_bam_scale }
 
+    //
+    // MODULE: Calculate genome coverage
+    //
     BEDTOOLS_GENOMECOV (
         ch_bam_scale,
         ch_chrom_sizes.map { it[1] },
@@ -72,25 +79,36 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     )
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
+    //
+    // MODULE: Increase the size of each feature
+    //
     BEDTOOLS_SLOP (
         BEDTOOLS_GENOMECOV.out.genomecov,
         ch_chrom_sizes.map { it[1] }
     )
     ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
 
+    //
+    // MODULE: Remove records that are out of annotated chromosome ranges
+    //
     UCSC_BEDCLIP (
         BEDTOOLS_SLOP.out.bed,
         ch_chrom_sizes.map { it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
 
-    // TODO: maybe a whole module for this is overkill
+    //
+    // MODULE: Sort the bedgraph file
+    //
     FILE_SORT_WINDOWS (
         UCSC_BEDCLIP.out.bedgraph,
         'sorted'
     )
     ch_versions = ch_versions.mix(FILE_SORT_WINDOWS.out.versions.first())
 
+    //
+    // MODULE: Convert bedgraph to bigwig
+    //
     UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
         FILE_SORT_WINDOWS.out.sorted,
         ch_chrom_sizes.map { it[1] }
@@ -98,6 +116,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
+    //
+    // MODULE: Create chromosome windows
+    //
 
     // TODO: windows are created and split even when not needed (no scarseq samples)
     // this is an ugly workaround
@@ -119,7 +140,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
     //}
 
-    // creating a channel with each chromosome to iterate over
+    // Create a channel with each chromosome to iterate over
     ch_chroms = Channel.empty()
     ch_chrom_sizes
         .map {
@@ -132,7 +153,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_chroms }
 
 
-    // Split windows on chromosome
+    //
+    // MODULE: Split BED (windows) by chromosome
+    //
     BED_SPLIT_BY_CHROMOSOME (
         ch_chroms,
         ch_windows.first()
@@ -141,18 +164,18 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_versions = ch_versions.mix(BED_SPLIT_BY_CHROMOSOME.out.versions.first())
 
 
-    // create channel by combining the bigwig files with the chromosomes (all chroms per bigwig)
+    // Create channel by combining the bigwig files with the chromosomes (all chroms per bigwig)
     ch_bigwig
-        .combine(ch_chroms) //.map { it[1] })
-        // append the third element of the tuple to the end of the first element
+        .combine(ch_chroms)
+        // Append the chromosome meta information to the bigwig meta information
         .map {
             meta, bigWig, chr_meta, chr_bed ->
                 [ meta + chr_meta, bigWig, chr_bed ]
         }
         .set { ch_bigwig_chroms }
     
-    // here we have to separate the channel again because UCSC_BIGWIGAVERAGEOVERBED
-    // expects a channel with bigwig files and a channel with chromosome beds
+    // Separate the channel again because UCSC_BIGWIGAVERAGEOVERBED
+    // expects a channel of bigwig files and a channel of chromosome beds
     ch_bigwig_chroms
         .map {
             meta, bigwig, chrom ->
@@ -160,7 +183,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set {ch_bw_combs}
 
-    // add bigwig meta information to the chromosome bed files
+    // Add bigwig meta information to the chromosome bed files
     ch_bigwig_chroms
         .map {
             meta, bigwig, chrom ->
@@ -169,7 +192,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_chroms_combs }
 
 
-    // Aggregate counts in windows
+    //
+    // MODULE: Calculate average coverage over windows
+    //
     UCSC_BIGWIGAVERAGEOVERBED (
         ch_chroms_combs,
         ch_bw_combs.map{ it[1] }
@@ -178,7 +203,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
 
 
-    // separate samples and input controls
+    // Separate samples and input controls
     ch_bwaob
         .map {
             meta, chroms ->
@@ -268,7 +293,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_samples_bed }
     
 
-    // CPM calculation
+    //
+    // MODULE: Calculate CPM
+    //
     CPM_CALCULATION_SAMPLES (
         ch_samples_bed
     )
@@ -312,6 +339,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_samples_inputs_cpm }
 
+    //
+    // MODULE: Normalize strands
+    //
     NORMALIZE_STRANDS (
         ch_samples_inputs_cpm,
     )
@@ -345,6 +375,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_norm_s_i_cpm }
 
 
+    //
+    // MODULE: Substract input from sample
+    //
     SUBSTRACT_INPUT (
         ch_norm_s_i_cpm
     )
@@ -380,6 +413,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_norm_and_subs }
 
 
+    //
+    // MODULE: Smooth the partition
+    //
     PARTITION_SMOOTH (
         ch_norm_and_subs,
         params.scar_radius,
@@ -502,20 +538,26 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_collected }
 
-
+    //
+    // MODULE: Generate the final partition bedgraph
+    //
     FINAL_PARTITION_BEDGRAPH (
         ch_collected
     )
     ch_versions = ch_versions.mix(FINAL_PARTITION_BEDGRAPH.out.versions.first())
 
-
-    // TODO: maybe a whole module for this is overkill
+    //
+    // MODULE: Sort the final partition bedgraph
+    //
     FILE_SORT_PARTITIONS (
         FINAL_PARTITION_BEDGRAPH.out.tmp,
         'bdg'
     )
     ch_versions = ch_versions.mix(FILE_SORT_PARTITIONS.out.versions.first())
 
+    //
+    // MODULE: Convert the final partition bedgraph to bigwig
+    //
     UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
         FILE_SORT_PARTITIONS.out.sorted,
         ch_chrom_sizes.map { it[1] }
@@ -553,6 +595,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_part_to_plot }
 
+    //
+    // MODULE: Plot the final partition
+    //
     FINAL_PARTITION_PLOT (
         ch_part_to_plot,
         ch_blacklist,
