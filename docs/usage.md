@@ -668,7 +668,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 ### Reference genome files
 
-Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)).
+Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions, requests, or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)).
 
 #### Genome index, FASTA, GTF/GFF and gene BED files
 
@@ -700,9 +700,9 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
 > Make sure to always input the prebuilt index files (besides the FASTA and GTF files) if available to avoid building the index from scratch every time you run the pipeline:
 > ```bash
 > nextflow run grothlab/glseq \
->   --bowtie2_index '/path/to/bwa/index/'
->   --fasta '/path/to/fasta/'
->   --gtf '/path/to/gtf/'
+>   --bowtie2_index <path_to_index> \
+>   --fasta <path_to_fasta> \
+>   --gtf <path_to_gtf>
 >```
 
 
@@ -730,9 +730,14 @@ Okazaki fragment sequencing (OK-seq) partition BED files are inputted for each S
 /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/external_data/Replication/Okasaki_seq/rfd_files/OKseq_RFD_*.bed.gz
 ```
 
-
 #### Example run using local genome files
 
 ```bash
+
+nextflow run grothlab/glseq \
+  --bowtie2_index '/path/to/bwa/index/' \
+  --fasta '/path/to/fasta/' \
+  --gtf '/path/to/gtf/' \
+  --outdir '/path/to/output_directory/'
 
 ```
