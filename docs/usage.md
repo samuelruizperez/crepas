@@ -657,7 +657,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
     ```bash
     nextflow run <path_to_software_directory>/glseq \
       -profile ku_sund_danhead \
-      --input <path_to_your_input_samplesheet.csv> \
+      --input <path_to_your_input_samplesheet_csv_file> \
       --with_umi \
       --skip_umi_extract false \
       --genome mm10 \

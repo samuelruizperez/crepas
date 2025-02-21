@@ -31,24 +31,26 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.exp_type, meta.id - ~/_REP\d+$/, peak ]
+                [ meta.antibody, meta.exp_type, meta.genome, meta.id - ~/_REP\d+$/, peak ]
         }
-        .groupTuple(by: [0, 1])
+        .groupTuple(by: [0, 1, 2])
         .map {
-            antibody, exp_type, groups, peaks ->
+            antibody, exp_type, genome, groups, peaks ->
                 [
                     antibody,
                     exp_type,
+                    genome,
                     groups.groupBy().collectEntries { [(it.key) : it.value.size()] },
                     peaks
                 ]
         }
         .map {
-            antibody, exp_type, groups, peaks ->
+            antibody, exp_type, genome, groups, peaks ->
                 def meta_new = [:]
                 meta_new.id = exp_type + '_' + antibody
                 meta_new.antibody = antibody
                 meta_new.exp_type = exp_type
+                meta_new.genome = genome
                 meta_new.multiple_groups = groups.size() > 1
                 meta_new.replicates_exist = groups.max { it.value }.value > 1
                 [ meta_new, peaks ]

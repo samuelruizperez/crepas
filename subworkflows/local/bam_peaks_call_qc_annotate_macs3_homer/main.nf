@@ -160,14 +160,15 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             ch_macs3_peaks
                 .map {
                     meta, peaks ->
-                        [ meta.exp_type, peaks ]
+                        [ meta.exp_type, meta.genome, peaks ]
                 }
-                .groupTuple()
+                .groupTuple(by: [0, 1])
                 .map {
-                    exp_type, peaks ->
+                    exp_type, genome, peaks ->
                         def meta_new = [:]
                         meta_new.id = exp_type
                         meta_new.exp_type = exp_type
+                        meta_new.genome = genome
                         [ meta_new, peaks ]
                 }
                 .set { ch_macs3_peaks_grouped }
@@ -188,14 +189,15 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             HOMER_ANNOTATEPEAKS.out.txt
                 .map {
                     meta, anns ->
-                        [ meta.exp_type, anns ]
+                        [ meta.exp_type, meta.genome, anns ]
                 }
-                .groupTuple()
+                .groupTuple(by: [0, 1])
                 .map {
-                    exp_type, anns ->
+                    exp_type, genome, anns ->
                         def meta_new = [:]
                         meta_new.id = exp_type
                         meta_new.exp_type = exp_type
+                        meta_new.genome = genome
                         [ meta_new, anns ]
                 }
                 .set { ch_homer_annotatepeaks_grouped }

@@ -99,11 +99,11 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
     ```bash
     nextflow run grothlab/glseq \
-      -profile test,YOURPROFILE \
-      --outdir <path-of-output-directory>
+      -profile test,<your_profile> \
+      --outdir <path_to_output_directory>
     ```
 
-    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
+    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`<your_profile>` in the example command above). You can chain multiple config profiles in a comma-separated string.
 
     > - The pipeline comes with config profiles called `docker`, `singularity`, `podman`, `shifter`, `charliecloud` and `conda` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
     > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
@@ -114,8 +114,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
     ```bash
     nextflow run grothlab/glseq \
-      --input <path-of-your-input-samplesheet-csv-file> \
-      --outdir <path-of-output-directory> \
+      --input <path_to_your_input_samplesheet_csv_file> \
+      --outdir <path_to_output_directory> \
       --genome GRCh37 \
       -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
@@ -146,7 +146,7 @@ For further information or help, don't hesitate to get in touch through #######
 
 If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it using the following DOI: #########
 
-This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
+This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >

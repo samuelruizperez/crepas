@@ -25,17 +25,14 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     if (allocation_method == 'allo') {
-
         ALLO (
             SAMTOOLS_SORT.out.bam
         )
         ch_allocated_bam = ALLO.out.bam
         ch_versions = ch_versions.mix(ALLO.out.versions.first())
-
     }
    
     if (allocation_method == 'mmr') {
-
         MMR (
             SAMTOOLS_SORT.out.bam
         )
@@ -55,12 +52,11 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
     ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
     emit:
-    bam         = ch_allocated_bam     // channel: [ val(meta), [ bam ] ]
-    index       = ch_allocated_index   // channel: [ val(meta), [ index ] ]
+    bam         = ch_allocated_bam          // channel: [ val(meta), [ bam ] ]
+    index       = ch_allocated_index        // channel: [ val(meta), [ index ] ]
+    flagstat    = ch_allocated_flagstat     // channel: [ val(meta), [ flagstat ] ]
+    stats       = ch_allocated_stats        // channel: [ val(meta), [ stats ] ]
+    idxstats    = ch_allocated_idxstats     // channel: [ val(meta), [ idxstats ] ]
 
-    flagstat    = ch_allocated_flagstat    // channel: [ val(meta), [ flagstat ] ]
-    stats        = ch_allocated_stats        // channel: [ val(meta), [ stats ] ]
-    idxstats    = ch_allocated_idxstats    // channel: [ val(meta), [ idxstats ] ]
-
-    versions    = ch_versions          // channel: [ versions.yml ]
+    versions    = ch_versions               // channel: [ versions.yml ]
 }

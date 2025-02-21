@@ -164,7 +164,7 @@ def validateInputParameters() {
         }
     }
 
-    if (params.allocate_multimappers > 0 && (params.aligner != 'chromap' || params.aligner != 'bowtie2')) {
+    if (params.allocate_n_multimappers && (params.aligner != 'chromap' || params.aligner != 'bowtie2')) {
         error("Allocating multimapping reads requires the aligner to be set to 'chromap' or 'bowtie2'.")
     }
 
