@@ -3,10 +3,10 @@
  */
 process IGV {
 
-    conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
+    conda "conda-forge::python=3.8.3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python:3.8.3':
-        'quay.io/biocontainers/python:3.8.3' }"
+        'biocontainers/python:3.8.3' }"
 
     input:
     val aligner_dir
@@ -21,6 +21,7 @@ process IGV {
     output:
     path "*files.txt"  , emit: txt
     path "*.xml"       , emit: xml
+    path fasta         , emit: fasta
     path "versions.yml", emit: versions
 
     when:
@@ -34,9 +35,10 @@ process IGV {
     # Avoid error when consensus not produced
     find * -type l -name "*.bed" -exec echo -e ""{}"\\t0,0,178" \\; | { grep "^$consensus_dir" || test \$? = 1; } > consensus.igv.txt
 
-    touch replace_paths.txt
     if [ -d "mappings" ]; then
         cat mappings/* > replace_paths.txt
+    else
+        touch replace_paths.txt
     fi
 
     cat *.igv.txt > igv_files_orig.txt
