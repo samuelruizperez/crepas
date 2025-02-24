@@ -543,6 +543,15 @@ workflow GLSEQ {
         .map { it -> [ it[1] , it[2] + it[4], it[3] + it[5] ] }
         .set { ch_ip_control_bam_bai }
 
+
+    // TODO: REMOVE print channel to file for debugging
+    ch_ip_control_bam_bai
+        .map {
+            meta, bams, bais ->
+                "${meta}\t${bams}\t${bais}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
@@ -563,6 +572,13 @@ workflow GLSEQ {
         }
         .set { ch_ip_control_bam }
 
+    // TODO: REMOVE print channel to file for debugging
+    ch_ip_control_bam
+        .map {
+            meta, ip_bam, control_bam ->
+                "${meta}\t${ip_bam}\t${control_bam}"
+        }
+        .collectFile( name: 'ch_ip_control_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // separate samples based on meta.exp_type (atacseq samples were previously shifted)
     ch_ip_control_bam_cs = Channel.empty()

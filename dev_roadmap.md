@@ -22,6 +22,7 @@ ADD HISAT2 to the pipeline
 
 and https://github.com/nf-core/atacseq/blob/dev/subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2.nf
 
+- add peak calling when there are no controls
 
 
 # FileAlreadyExistsException when using copyTo on a directory that already exists #3887
