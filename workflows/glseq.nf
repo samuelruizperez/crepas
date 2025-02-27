@@ -25,6 +25,7 @@ include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../sub
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
+include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -284,6 +285,9 @@ workflow GLSEQ {
         ch_merged_bam_bai,
         ch_fasta.first()
     )
+    ch_merged_bam_stats = BAM_STATS_SAMTOOLS.out.stats
+    ch_merged_bam_flagstat = BAM_STATS_SAMTOOLS.out.flagstat
+    ch_merged_bam_idxstats = BAM_STATS_SAMTOOLS.out.idxstats
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     //
@@ -678,6 +682,26 @@ workflow GLSEQ {
     ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)
 
+
+    // Create channel containing all samtools_stats files
+    ch_samtools_stats
+        .mix(ch_merged_bam_stats)
+        .mix(ch_dedup_umi_stats)
+        .mix(ch_mk_stats)
+        .mix(ch_filtered_stats)
+        .mix(ch_filtered2_stats)
+        .mix(ch_allocated_stats)
+        .set { ch_samtools_stats_summary }
+
+    //
+    // SUBWORKFLOW: Create SAMtools summary table
+    //
+    SAMTOOLS_STATS_SUMMARY {
+        ch_samtools_stats_summary
+    }
+    ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
+        
+
     //
     // MODULE: Create IGV session
     //
@@ -728,9 +752,9 @@ workflow GLSEQ {
             ch_samtools_flagstat.collect{it[1]}.ifEmpty([]),
             ch_samtools_idxstats.collect{it[1]}.ifEmpty([]),
 
-            BAM_STATS_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            BAM_STATS_SAMTOOLS.out.flagstat.collect{it[1]}.ifEmpty([]),
-            BAM_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_stats.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_idxstats.collect{it[1]}.ifEmpty([]),
 
             ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
 
