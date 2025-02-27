@@ -162,6 +162,14 @@ def check_samplesheet(file_in, file_out):
             else:
                 sample_info.insert(1, "0")
 
+            ## TODO: check logic for control samples
+            ## if sample is contained in the controls, then append "1" to the end of the list
+            ## This will correspond to the is_control column in the output samplesheet
+            if sample in control:
+                sample_info.append("1")
+            else:
+                sample_info.append("0")
+
             ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control ]]}
             replicate = int(replicate)
             sample_info = sample_info + lspl[len(HEADER) :]
@@ -195,6 +203,7 @@ def check_samplesheet(file_in, file_out):
                         "strandedness",
                         "antibody",
                         "control",
+                        "is_control",
                     ]
                 )
                 + "\n"

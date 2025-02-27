@@ -261,7 +261,7 @@ workflow GLSEQ {
                 meta_clone.id = meta_clone.id.split('_')[0..-2].join('_')
                 [ meta_clone, bam ]
         }
-        .groupTuple(by: [0])
+        .groupTuple(by: 0)
         .map {
             it ->
                 [ it[0], it[1].flatten() ]
@@ -363,7 +363,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
     BAM_FILTER_SAMBAMBA (
-        ch_dedup_bam.join(ch_dedup_index, by: [0]),
+        ch_dedup_bam.join(ch_dedup_index, by: 0),
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
@@ -437,8 +437,9 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
 
-    
+    //
     // SUBWORKFLOW: Shift ATAC-seq reads
+    //
     ch_filtered_bam
         .branch { meta, bam ->
             atacseq: meta.exp_type == 'atacseq'
@@ -446,11 +447,19 @@ workflow GLSEQ {
         }
         .set { ch_filtered_bam }
 
+    ch_filtered_index
+        .branch { meta, index ->
+            atacseq: meta.exp_type == 'atacseq'
+            other: meta.exp_type != 'atacseq'
+        }
+        .set { ch_filtered_index }
+
     BAM_SHIFT_READS (
-        ch_filtered_bam.atacseq.join(ch_filtered_index, by: [0]),
+        ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
         ch_fasta
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
+    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
 
@@ -486,7 +495,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Normalised bigWig coverage tracks
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
-        ch_filtered_bam.join(ch_filtered2_flagstat, by: [0]),
+        ch_filtered_bam.join(ch_filtered2_flagstat, by: 0),
         ch_chrom_sizes_endo.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
@@ -524,33 +533,34 @@ workflow GLSEQ {
     //
     // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
     //
-    ch_filtered_bam.join(ch_filtered_index, by: [0])
+    ch_filtered_bam.join(ch_filtered_index, by: 0)
         .set { ch_genome_bam_bai }
 
     ch_genome_bam_bai
-        .map {
-            meta, bam, bai ->
-                meta.control ? null : [ meta.id, [ bam ] , [ bai ] ]
-        }
-        .set { ch_control_bam_bai }
+            .branch { meta, bam, bai ->
+                ips_with_control: meta.control
+                    return [ meta.control, meta, [ bam ], [ bai ] ]
+                ips_wo_control: !meta.control && !meta.is_control
+                    return [ meta.id, meta, [ bam ], [ bai ] ]
+                controls: !meta.control && meta.is_control
+                    return [ meta.id, [ bam ], [ bai ] ]
+            }
+            .set { ch_genome_bam_bai_b }
 
-    ch_genome_bam_bai
-        .map {
-            meta, bam, bai ->
-                meta.control ? [ meta.control, meta, [ bam ], [ bai ] ] : null
-        }
-        .combine(ch_control_bam_bai, by: 0)
-        .map { it -> [ it[1] , it[2] + it[4], it[3] + it[5] ] }
+    ch_genome_bam_bai_b.ips_with_control
+        .combine(ch_genome_bam_bai_b.controls, by: 0)
+        .mix(ch_genome_bam_bai_b.ips_wo_control)
+        .map { it -> [ it[1], it[2] + (it[4] ?: []), it[3] + (it[5] ?: []) ] }
         .set { ch_ip_control_bam_bai }
-
+    
 
     // TODO: REMOVE print channel to file for debugging
-    ch_ip_control_bam_bai
-        .map {
-            meta, bams, bais ->
-                "${meta}\t${bams}\t${bais}"
-        }
-        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_ip_control_bam_bai
+    //     .map {
+    //         meta, bams, bais ->
+    //             "${meta}\t${bams}\t${bais}"
+    //     }
+    //     .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
@@ -568,28 +578,26 @@ workflow GLSEQ {
     ch_ip_control_bam_bai
         .map {
             meta, bams, bais ->
-                [ meta , bams[0], bams[1] ]
+                [ meta , bams[0], (bams[1] ?: []) ]
         }
         .set { ch_ip_control_bam }
 
     // TODO: REMOVE print channel to file for debugging
-    ch_ip_control_bam
-        .map {
-            meta, ip_bam, control_bam ->
-                "${meta}\t${ip_bam}\t${control_bam}"
-        }
-        .collectFile( name: 'ch_ip_control_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_ip_control_bam
+    //     .map {
+    //         meta, ip_bam, control_bam ->
+    //             "${meta}\t${ip_bam}\t${control_bam}"
+    //     }
+    //     .collectFile( name: 'ch_ip_control_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     // separate samples based on meta.exp_type (atacseq samples were previously shifted)
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' || it[0].exp_type == 'atacseq' }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' }
 
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
 
 
-    
-    
     //
     // MODULE: Calculate genome size with khmer
     //

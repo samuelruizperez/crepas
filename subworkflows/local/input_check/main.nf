@@ -32,6 +32,7 @@ def create_fastq_channel(LinkedHashMap row, String seq_center) {
     meta.strandedness       = row.strandedness
     meta.antibody           = row.antibody
     meta.control            = row.control
+    meta.is_control         = row.is_control.toBoolean()
 
     def read_group = "\'@RG\\tID:${meta.id}\\tSM:${meta.id - ~/_T\d+$/}\\tPL:ILLUMINA\\tLB:${meta.id}\\tPU:1\'"
     if (seq_center) {
