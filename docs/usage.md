@@ -588,7 +588,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
   - Generate a Personal Access Token (PAT):
 
-      - Visit [GitHub](https://github.com/) and log in to your account.
+      - Go to [GitHub](https://github.com/) and log in to your account.
 
       - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
 
@@ -730,12 +730,83 @@ Okazaki fragment sequencing (OK-seq) partition BED files are inputted for each S
 
 #### Example run using local genome files
 
+On the command line:
+
 ```bash
+nextflow run /user/datadir/software/glseq \
+      -profile ku_sund_danhead_mod \
+      --input /user/datadir/projects/project1/project1_glseq_samplesheet.csv \
+      --outdir /user/datadir/projects/project1/output/ \
+      --work-dir /user/datadir/projects/project1/output/work/ \
+      -aligner bowtie2 \
+      --read_length 50 \
+      --with_umi \
+      --skip_umi_extract false \
+      --genome mm10 \
+      --spikein_genome dm6 \
+      --bowtie2_index /home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index \
+      --fasta /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz \
+      --gtf /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz \
+      --initiation_zones /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz \
+      --save_align_intermeds \
+      --save_spikein_intermeds
+```
 
-nextflow run grothlab/glseq \
-  --bowtie2_index '/path/to/bwa/index/' \
-  --fasta '/path/to/fasta/' \
-  --gtf '/path/to/gtf/' \
-  --outdir '/path/to/output_directory/'
+### Tips
 
+Parameters specified on the command line [can be also specified in a params file using the `-params-file` option](https://www.nextflow.io/docs/latest/cli.html#pipeline-parameters). This is useful for saving a set of parameters that you use frequently, or for sharing parameters with others.
+
+
+Parameters can be represented in YAML (`.yml`) format:
+
+```bash
+nextflow run /user/datadir/software/glseq \
+      -profile ku_sund_danhead_mod \
+      --params-file /user/datadir/projects/project1/project1_glseq_params.yml
+```
+
+```yaml title="project1_glseq_params.yml"
+input: /user/datadir/projects/project1/project1_glseq_samplesheet.csv
+outdir: /user/datadir/projects/project1/output/
+work_dir: /user/datadir/projects/project1/output/work/
+aligner: bowtie2
+read_length: 50
+with_umi: true
+skip_umi_extract: false
+genome: mm10
+spikein_genome: dm6
+bowtie2_index: /home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index
+fasta: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz
+gtf: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz
+initiation_zones: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz
+save_align_intermeds: true
+save_spikein_intermeds: true
+```
+
+Or in JSON (`.json`) format:
+
+```bash
+nextflow run /user/datadir/software/glseq \
+      -profile ku_sund_danhead_mod \
+      --params-file /user/datadir/projects/project1/project1_glseq_params.json
+```
+
+```json title="project1_glseq_params.json"
+{
+  "input": "/user/datadir/projects/project1/project1_glseq_samplesheet.csv",
+  "outdir": "/user/datadir/projects/project1/output/",
+  "work_dir": "/user/datadir/projects/project1/output/work/",
+  "aligner": "bowtie2",
+  "read_length": 50,
+  "with_umi": true,
+  "skip_umi_extract": false,
+  "genome": "mm10",
+  "spikein_genome": "dm6",
+  "bowtie2_index": "/home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index",
+  "fasta": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz",
+  "gtf": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz",
+  "initiation_zones": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz",
+  "save_align_intermeds": true,
+  "save_spikein_intermeds": true
+}
 ```
