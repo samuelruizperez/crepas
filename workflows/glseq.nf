@@ -387,6 +387,9 @@ workflow GLSEQ {
     ch_filtered2_flagstat = Channel.empty()
     ch_filtered2_stats = Channel.empty()
     ch_filtered2_idxstats = Channel.empty()
+    ch_filtered2_exo_flagstat = Channel.empty()
+    ch_filtered2_exo_stats = Channel.empty()
+    ch_filtered2_exo_idxstats = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -401,6 +404,10 @@ workflow GLSEQ {
         ch_filtered2_stats = BAM_SPIKEIN_SPLIT.out.stats
         ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
         ch_filtered2_idxstats = BAM_SPIKEIN_SPLIT.out.idxstats
+
+        ch_filtered2_exo_stats = BAM_SPIKEIN_SPLIT.out.exo_stats
+        ch_filtered2_exo_flagstat = BAM_SPIKEIN_SPLIT.out.exo_flagstat
+        ch_filtered2_exo_idxstats = BAM_SPIKEIN_SPLIT.out.exo_idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
@@ -500,7 +507,7 @@ workflow GLSEQ {
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
         ch_filtered_bam.join(ch_filtered2_flagstat, by: 0),
-        ch_chrom_sizes_endo.map{ it[1] }
+        ch_chrom_sizes_endo.map{ it[1] }.first()
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
@@ -620,7 +627,7 @@ workflow GLSEQ {
         ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
-        ch_chrom_sizes_endo.map{ it[1] },
+        ch_chrom_sizes_endo.map{ it[1] }.first(),
         ch_macs_gsize,
         "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
@@ -674,7 +681,7 @@ workflow GLSEQ {
     ch_scar_smooth = Channel.empty()
     BAM_CREATE_SCAR_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_chrom_sizes_endo,
+        ch_chrom_sizes_endo.first(),
         ch_blacklist.first(),
         ch_initiation_zones.first()
         //ch_scaffolds
@@ -690,6 +697,7 @@ workflow GLSEQ {
         .mix(ch_mk_stats)
         .mix(ch_filtered_stats)
         .mix(ch_filtered2_stats)
+        .mix(ch_filtered2_exo_stats)
         .mix(ch_allocated_stats)
         .set { ch_samtools_stats_summary }
 

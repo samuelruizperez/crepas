@@ -31,3 +31,5 @@ Sometimes, running the pipeline several times with -resume will cause the pipeli
 
 
 # make BAM_CREATE_SCAR_PARTITIONS more readable
+
+# update nf-validation to nf-schema

@@ -2,9 +2,7 @@ process FINAL_PARTITION_PLOT {
     tag "$meta.id"
     label 'process_medium_memory'
 
-    // (Bio)conda packages have intentionally not been pinned to a specific version
-    // This was to avoid the pipeline failing due to package conflicts whilst creating the environment when using -profile conda
-    conda (params.enable_conda ? "conda-forge::r-base bioconda::bioconductor-deseq2 bioconda::bioconductor-biocparallel bioconda::bioconductor-tximport bioconda::bioconductor-complexheatmap conda-forge::r-optparse conda-forge::r-ggplot2 conda-forge::r-rcolorbrewer conda-forge::r-pheatmap" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-dplyr_pruned:aad6cf5716386302' :
         'community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-dplyr_pruned:ff63fd989740e4c5' }"

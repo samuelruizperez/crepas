@@ -629,22 +629,20 @@ NXF_OPTS='-Xms1g -Xmx4g'
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead_mod`](https://github.com/grothlab/glseq/blob/main/conf/ku_sund_danhead_mod.config)):
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead,local_test_scarseq \
+      -profile ku_sund_danhead_mod,local_test_scarseq \
       --outdir <path_to_output_directory>
     ```
 
   > [!TIP]
-  > When using the `ku_sund_danhead` profile, the work directory will be automatically cleaned up after the pipeline finishes. Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later:
-  > ```bash
-  > nextflow run grothlab/glseq \
-  >   --bowtie2_index '/path/to/bwa/index/'
-  >   --fasta '/path/to/fasta/'
-  >   --gtf '/path/to/gtf/'
-  >```
+  >  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
+
+  > [!NOTE]
+  > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](https://github.com/grothlab/glseq/blob/main/conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
+  
 
 8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
@@ -656,7 +654,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \
-      -profile ku_sund_danhead \
+      -profile ku_sund_danhead_mod \
       --input <path_to_your_input_samplesheet_csv_file> \
       --with_umi \
       --skip_umi_extract false \

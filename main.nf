@@ -15,17 +15,19 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-params.fasta         = getGenomeAttribute('fasta')
-params.bwa_index     = getGenomeAttribute('bwa')
-params.bowtie2_index = getGenomeAttribute('bowtie2')
-params.chromap_index = getGenomeAttribute('chromap')
-params.star_index    = getGenomeAttribute('star')
-params.hisat2_index  = getGenomeAttribute('hisat2')
-params.gtf           = getGenomeAttribute('gtf')
-params.gff           = getGenomeAttribute('gff')
-params.gene_bed      = getGenomeAttribute('gene_bed')
-params.blacklist     = getGenomeAttribute('blacklist')
-params.macs_gsize    = getMacsGsize(params)
+params.fasta            = getGenomeAttribute('fasta')
+params.bwa_index        = getGenomeAttribute('bwa')
+params.bowtie2_index    = getGenomeAttribute('bowtie2')
+params.chromap_index    = getGenomeAttribute('chromap')
+params.star_index       = getGenomeAttribute('star')
+params.hisat2_index     = getGenomeAttribute('hisat2')
+params.gtf              = getGenomeAttribute('gtf')
+params.gff              = getGenomeAttribute('gff')
+params.gene_bed         = getGenomeAttribute('gene_bed')
+params.blacklist        = getGenomeAttribute('blacklist')
+params.splicesites      = getGenomeAttribute('splicesites')
+params.initiation_zones = getGenomeAttribute('initiation_zones')
+params.macs_gsize       = getMacsGsize(params)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

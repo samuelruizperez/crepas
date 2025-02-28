@@ -1,11 +1,7 @@
 process MULTIQC {
     label 'process_medium'
 
-    // conda "bioconda::multiqc=1.23"
-    // container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    //     'https://depot.galaxyproject.org/singularity/multiqc:1.23--pyhdfd78af_0' :
-    //     'biocontainers/multiqc:1.23--pyhdfd78af_0' }"
-    conda "bioconda::multiqc=1.13a"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/multiqc:1.13a--pyhdfd78af_1':
         'quay.io/biocontainers/multiqc:1.13a--pyhdfd78af_1' }"
