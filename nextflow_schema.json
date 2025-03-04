@@ -269,10 +269,10 @@
             "description": "Options to adjust hard trimming criteria.",
             "properties": {
                 "hardtrim5_length": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "hardtrim3_length": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "save_htrimmed": {
                     "type": "boolean",

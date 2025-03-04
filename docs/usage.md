@@ -44,9 +44,33 @@ You will need to create a samplesheet with information about the samples you wou
 
 Example design files have been provided with the pipeline for [paired-end](../assets/samplesheet_pe.csv) and [single-end](../assets/samplesheet_se.csv) data.
 
+
+
 ### Example 1: Multiple replicates
 
-```console
+| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_Rep1_H3K9me3_S1_R1_001.fastq.gz | condition_1_Rep1_H3K9me3_S1_R3_001.fastq.gz | condition_1_Rep1_H3K9me3_S1_R2_001.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_Rep2_H3K9me3_S3_R1_001.fastq.gz | condition_1_Rep2_H3K9me3_S3_R3_001.fastq.gz | condition_1_Rep2_H3K9me3_S3_R2_001.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_Rep1_H3K27ac_S7_R1_001.fastq.gz | condition_1_Rep1_H3K27ac_S7_R3_001.fastq.gz | condition_1_Rep1_H3K27ac_S7_R2_001.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_Rep2_H3K27ac_S9_R1_001.fastq.gz | condition_1_Rep2_H3K27ac_S9_R3_001.fastq.gz | condition_1_Rep2_H3K27ac_S9_R2_001.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_Rep1_INPUT_S13_R1_001.fastq.gz | condition_1_Rep1_INPUT_S13_R3_001.fastq.gz | condition_1_Rep1_INPUT_S13_R2_001.fastq.gz | | 1 | chipseq | | | | |
+condition_1_INPUT | condition_1_Rep2_INPUT_S15_R1_001.fastq.gz | condition_1_Rep2_INPUT_S15_R3_001.fastq.gz | condition_1_Rep2_INPUT_S15_R2_001.fastq.gz | | 2 | chipseq | | | | |
+
+
+```csv
+sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
+condition_1_H3K9me3,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R2_001.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
+condition_1_H3K9me3,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R2_001.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
+condition_1_H3K27ac,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R2_001.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
+condition_1_H3K27ac,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R2_001.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
+condition_1_INPUT,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R2_001.fastq.gz,,1,chipseq,,,,
+condition_1_INPUT,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R2_001.fastq.gz,,2,chipseq,,,,
+```
+
+
+
+```csv
 group,fastq_1,fastq_2,replicate,antibody,control,control_replicate
 WT_BCATENIN_IP,BLA203A1_S27_L006_R1_001.fastq.gz,,1,BCATENIN,WT_INPUT,1
 WT_BCATENIN_IP,BLA203A25_S16_L002_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
