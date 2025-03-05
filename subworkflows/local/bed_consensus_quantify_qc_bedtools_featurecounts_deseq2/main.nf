@@ -26,6 +26,15 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
 
     ch_versions = Channel.empty()
 
+    //TODO: print to fiule for debugging
+    ch_peaks
+        .map {
+            meta, peaks ->
+                "${meta}\t${peaks}"
+        }
+        .collectFile( name: 'ch_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
     // Create channels: [ meta , [ peaks ] ]
     // Where meta = [ id:antibody, exp_type, multiple_groups:true/false, replicates_exist:true/false ]
     ch_peaks
@@ -57,6 +66,15 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                 [ meta_new, peaks ]
         }
         .set { ch_antibody_peaks }
+
+
+    //TODO: print to fiule for debugging
+    ch_antibody_peaks
+        .map {
+            meta, peaks ->
+                "${meta}\t${peaks}"
+        }
+        .collectFile( name: 'antibody_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // Generate consensus peaks across samples

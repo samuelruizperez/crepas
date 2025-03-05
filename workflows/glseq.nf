@@ -562,6 +562,14 @@ workflow GLSEQ {
         .map { it -> [ it[1], it[2] + (it[4] ?: []), it[3] + (it[5] ?: []) ] }
         .set { ch_ip_control_bam_bai }
     
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_bai
+        .map {
+            meta, bams, bais ->
+                "${meta}\t${bams}\t${bais}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
@@ -585,6 +593,14 @@ workflow GLSEQ {
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
     ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_cs
+        .map {
+            meta, ip_bam, control_bam ->
+                "${meta.id}\t${ip_bam}\t${control_bam}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }

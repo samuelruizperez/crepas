@@ -46,7 +46,7 @@ def check_samplesheet(file_in, file_out):
     For an example see:
     https://raw.githubusercontent.com/nf-core/test-datasets/chipseq/samplesheet/v2.1/samplesheet_test.csv
     """
-
+    file_out_tmp = file_out + ".tmp"
     sample_mapping_dict = {}
     with open(file_in, "r", encoding="utf-8-sig") as fin:
 
@@ -162,14 +162,6 @@ def check_samplesheet(file_in, file_out):
             else:
                 sample_info.insert(1, "0")
 
-            ## TODO: check logic for control samples
-            ## if sample is contained in the controls, then append "1" to the end of the list
-            ## This will correspond to the is_control column in the output samplesheet
-            if sample in control:
-                sample_info.append("1")
-            else:
-                sample_info.append("0")
-
             ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control ]]}
             replicate = int(replicate)
             sample_info = sample_info + lspl[len(HEADER) :]
@@ -185,9 +177,9 @@ def check_samplesheet(file_in, file_out):
 
     ## Write validated samplesheet with appropriate columns
     if len(sample_mapping_dict) > 0:
-        out_dir = os.path.dirname(file_out)
+        out_dir = os.path.dirname(file_out_tmp)
         make_dir(out_dir)
-        with open(file_out, "w") as fout:
+        with open(file_out_tmp, "w") as fout:
             fout.write(
                 ",".join(
                     [
@@ -203,7 +195,6 @@ def check_samplesheet(file_in, file_out):
                         "strandedness",
                         "antibody",
                         "control",
-                        "is_control",
                     ]
                 )
                 + "\n"
@@ -271,6 +262,25 @@ def check_samplesheet(file_in, file_out):
     else:
         print_error(f"No entries to process!", "Samplesheet: {file_in}")
 
+    ########### TODO: TEMPORARY FIX TO TRACK CONTROL SAMPLES
+    with open(file_out_tmp, "r", encoding="utf-8-sig") as fin:
+        lines = fin.readlines()
+
+    headers = lines[0].strip().split(",")
+    rows = [x.strip().split(",") for x in lines[1:]]
+    control_index, sample_index = headers.index("control"), headers.index("sample")
+    control_samples = {x[control_index] for x in rows}
+
+    headers.append("is_control")
+
+    with open(file_out, "w") as fout:
+        fout.write(",".join(headers) + "\n")
+        for row in rows:
+            # sample_mod is row[sample_index] with trailing "_T<digit>" removed
+            sample_mod = row[sample_index].rsplit("_T", 1)[0]
+            row.append("1" if sample_mod in control_samples else "0")
+            fout.write(",".join(row) + "\n")
+    ########### TODO: TEMPORARY FIX TO TRACK CONTROL SAMPLES
 
 def main(args=None):
     args = parse_args(args)
