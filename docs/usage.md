@@ -46,38 +46,40 @@ Example design files have been provided with the pipeline for [paired-end](../as
 
 
 
-### Example 1: Multiple replicates
+### Example 1: Multiple biological replicates
+
+This is an example of a samplesheet for a ChIP-seq experiment with one condition and two biological replicates for each antibody.
 
 | sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_Rep1_H3K9me3_S1_R1_001.fastq.gz | condition_1_Rep1_H3K9me3_S1_R3_001.fastq.gz | condition_1_Rep1_H3K9me3_S1_R2_001.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_Rep2_H3K9me3_S3_R1_001.fastq.gz | condition_1_Rep2_H3K9me3_S3_R3_001.fastq.gz | condition_1_Rep2_H3K9me3_S3_R2_001.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_Rep1_H3K27ac_S7_R1_001.fastq.gz | condition_1_Rep1_H3K27ac_S7_R3_001.fastq.gz | condition_1_Rep1_H3K27ac_S7_R2_001.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_Rep2_H3K27ac_S9_R1_001.fastq.gz | condition_1_Rep2_H3K27ac_S9_R3_001.fastq.gz | condition_1_Rep2_H3K27ac_S9_R2_001.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_Rep1_INPUT_S13_R1_001.fastq.gz | condition_1_Rep1_INPUT_S13_R3_001.fastq.gz | condition_1_Rep1_INPUT_S13_R2_001.fastq.gz | | 1 | chipseq | | | | |
-condition_1_INPUT | condition_1_Rep2_INPUT_S15_R1_001.fastq.gz | condition_1_Rep2_INPUT_S15_R3_001.fastq.gz | condition_1_Rep2_INPUT_S15_R2_001.fastq.gz | | 2 | chipseq | | | | |
+| condition_1_H3K9me3 | condition_1_Rep1_H3K9me3_R1.fastq.gz | condition_1_Rep1_H3K9me3_R3.fastq.gz | condition_1_Rep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_Rep2_H3K9me3_R1.fastq.gz | condition_1_Rep2_H3K9me3_R3.fastq.gz | condition_1_Rep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_Rep1_H3K27ac_R1.fastq.gz | condition_1_Rep1_H3K27ac_R3.fastq.gz | condition_1_Rep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_Rep2_H3K27ac_R1.fastq.gz | condition_1_Rep2_H3K27ac_R3.fastq.gz | condition_1_Rep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_Rep1_INPUT_R1.fastq.gz | condition_1_Rep1_INPUT_R3.fastq.gz | condition_1_Rep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
+condition_1_INPUT | condition_1_Rep2_INPUT_R1.fastq.gz | condition_1_Rep2_INPUT_R3.fastq.gz | condition_1_Rep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-condition_1_H3K9me3,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K9me3_S1_R2_001.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K9me3_S3_R2_001.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_H3K27ac_S7_R2_001.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_H3K27ac_S9_R2_001.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep1_INPUT_S13_R2_001.fastq.gz,,1,chipseq,,,,
-condition_1_INPUT,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R1_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R3_001.fastq.gz,/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/chipseq/condition_1_Rep2_INPUT_S15_R2_001.fastq.gz,,2,chipseq,,,,
+condition_1_H3K9me3,condition_1_Rep1_H3K9me3_R1.fastq.gz,condition_1_Rep1_H3K9me3_R3.fastq.gz,condition_1_Rep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
+condition_1_H3K9me3,condition_1_Rep2_H3K9me3_R1.fastq.gz,condition_1_Rep2_H3K9me3_R3.fastq.gz,condition_1_Rep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
+condition_1_H3K27ac,condition_1_Rep1_H3K27ac_R1.fastq.gz,condition_1_Rep1_H3K27ac_R3.fastq.gz,condition_1_Rep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
+condition_1_H3K27ac,condition_1_Rep2_H3K27ac_R1.fastq.gz,condition_1_Rep2_H3K27ac_R3.fastq.gz,condition_1_Rep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
+condition_1_INPUT,condition_1_Rep1_INPUT_R1.fastq.gz,condition_1_Rep1_INPUT_R3.fastq.gz,condition_1_Rep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
+condition_1_INPUT,condition_1_Rep2_INPUT_R1.fastq.gz,condition_1_Rep2_INPUT_R3.fastq.gz,condition_1_Rep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
 ```
 
 
 
 ```csv
 group,fastq_1,fastq_2,replicate,antibody,control,control_replicate
-WT_BCATENIN_IP,BLA203A1_S27_L006_R1_001.fastq.gz,,1,BCATENIN,WT_INPUT,1
-WT_BCATENIN_IP,BLA203A25_S16_L002_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A49_S40_L001_R1_001.fastq.gz,,3,BCATENIN,WT_INPUT,3
-WT_INPUT,BLA203A6_S32_L006_R1_001.fastq.gz,,1,,,
-WT_INPUT,BLA203A30_S21_L002_R1_001.fastq.gz,,2,,,
-WT_INPUT,BLA203A31_S21_L003_R1_001.fastq.gz,,3,,,
+WT_BCATENIN_IP,BLA203A1_S27_L006_R1.fastq.gz,,1,BCATENIN,WT_INPUT,1
+WT_BCATENIN_IP,BLA203A256_L002_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A49_S40_L001_R1.fastq.gz,,3,BCATENIN,WT_INPUT,3
+WT_INPUT,BLA203A62_L006_R1.fastq.gz,,1,,,
+WT_INPUT,BLA203A30_S21_L002_R1.fastq.gz,,2,,,
+WT_INPUT,BLA203A31_S21_L003_R1.fastq.gz,,3,,,
 ```
 
 ### Example 2: Multiple runs of the same library
@@ -86,15 +88,15 @@ Both the `sample` and `replicate` identifiers have to be the same when you have 
 
 ```console
 sample,fastq_1,fastq_2,replicate,antibody,control,control_replicate
-WT_BCATENIN_IP,BLA203A1_S27_L006_R1_001.fastq.gz,,1,BCATENIN,WT_INPUT,1
-WT_BCATENIN_IP,BLA203A25_S16_L001_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A25_S16_L002_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A25_S16_L003_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A49_S40_L001_R1_001.fastq.gz,,3,BCATENIN,WT_INPUT,3
-WT_INPUT,BLA203A6_S32_L006_R1_001.fastq.gz,,1,,,
-WT_INPUT,BLA203A30_S21_L001_R1_001.fastq.gz,,2,,,
-WT_INPUT,BLA203A30_S21_L002_R1_001.fastq.gz,,2,,,
-WT_INPUT,BLA203A31_S21_L003_R1_001.fastq.gz,,3,,,
+WT_BCATENIN_IP,BLA203A1_S27_L006_R1.fastq.gz,,1,BCATENIN,WT_INPUT,1
+WT_BCATENIN_IP,BLA203A256_L001_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A256_L002_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A256_L003_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A49_S40_L001_R1.fastq.gz,,3,BCATENIN,WT_INPUT,3
+WT_INPUT,BLA203A62_L006_R1.fastq.gz,,1,,,
+WT_INPUT,BLA203A30_S21_L001_R1.fastq.gz,,2,,,
+WT_INPUT,BLA203A30_S21_L002_R1.fastq.gz,,2,,,
+WT_INPUT,BLA203A31_S21_L003_R1.fastq.gz,,3,,,
 ```
 
 ### Example 3: Full design
@@ -105,26 +107,26 @@ A final design file may look something like the one below. This is for two antib
 
 ```console
 sample,fastq_1,fastq_2,replicate,antibody,control,control_replicate
-WT_BCATENIN_IP,BLA203A1_S27_L006_R1_001.fastq.gz,,1,BCATENIN,WT_INPUT,1
-WT_BCATENIN_IP,BLA203A25_S16_L001_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A25_S16_L002_R1_001.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A49_S40_L001_R1_001.fastq.gz,,3,BCATENIN,WT_INPUT,3
-NAIVE_BCATENIN_IP,BLA203A7_S60_L001_R1_001.fastq.gz,,1,BCATENIN,NAIVE_INPUT,1
-NAIVE_BCATENIN_IP,BLA203A43_S34_L001_R1_001.fastq.gz,,2,BCATENIN,NAIVE_INPUT,2
-NAIVE_BCATENIN_IP,BLA203A43_S34_L002_R1_001.fastq.gz,,2,BCATENIN,NAIVE_INPUT,2
-NAIVE_BCATENIN_IP,BLA203A64_S55_L001_R1_001.fastq.gz,,3,BCATENIN,NAIVE_INPUT,3
-WT_TCF4_IP,BLA203A3_S29_L006_R1_001.fastq.gz,,1,TCF4,WT_INPUT,1
-WT_TCF4_IP,BLA203A27_S18_L001_R1_001.fastq.gz,,2,TCF4,WT_INPUT,2
-WT_TCF4_IP,BLA203A51_S42_L001_R1_001.fastq.gz,,3,TCF4,WT_INPUT,3
-NAIVE_TCF4_IP,BLA203A9_S62_L001_R1_001.fastq.gz,,1,TCF4,NAIVE_INPUT,1
-NAIVE_TCF4_IP,BLA203A45_S36_L001_R1_001.fastq.gz,,2,TCF4,NAIVE_INPUT,2
-NAIVE_TCF4_IP,BLA203A66_S57_L001_R1_001.fastq.gz,,3,TCF4,NAIVE_INPUT,3
-WT_INPUT,BLA203A6_S32_L006_R1_001.fastq.gz,,1,,,
-WT_INPUT,BLA203A30_S21_L001_R1_001.fastq.gz,,2,,,
-WT_INPUT,BLA203A31_S21_L003_R1_001.fastq.gz,,3,,,
-NAIVE_INPUT,BLA203A12_S3_L001_R1_001.fastq.gz,,1,,,
-NAIVE_INPUT,BLA203A48_S39_L001_R1_001.fastq.gz,,2,,,
-NAIVE_INPUT,BLA203A49_S1_L006_R1_001.fastq.gz,,3,,,
+WT_BCATENIN_IP,BLA203A1_S27_L006_R1.fastq.gz,,1,BCATENIN,WT_INPUT,1
+WT_BCATENIN_IP,BLA203A256_L001_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A256_L002_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
+WT_BCATENIN_IP,BLA203A49_S40_L001_R1.fastq.gz,,3,BCATENIN,WT_INPUT,3
+NAIVE_BCATENIN_IP,BLA203A7_S60_L001_R1.fastq.gz,,1,BCATENIN,NAIVE_INPUT,1
+NAIVE_BCATENIN_IP,BLA203A434_L001_R1.fastq.gz,,2,BCATENIN,NAIVE_INPUT,2
+NAIVE_BCATENIN_IP,BLA203A434_L002_R1.fastq.gz,,2,BCATENIN,NAIVE_INPUT,2
+NAIVE_BCATENIN_IP,BLA203A64_S55_L001_R1.fastq.gz,,3,BCATENIN,NAIVE_INPUT,3
+WT_TCF4_IP,BLA203A3_S29_L006_R1.fastq.gz,,1,TCF4,WT_INPUT,1
+WT_TCF4_IP,BLA203A278_L001_R1.fastq.gz,,2,TCF4,WT_INPUT,2
+WT_TCF4_IP,BLA203A51_S42_L001_R1.fastq.gz,,3,TCF4,WT_INPUT,3
+NAIVE_TCF4_IP,BLA203A9_S62_L001_R1.fastq.gz,,1,TCF4,NAIVE_INPUT,1
+NAIVE_TCF4_IP,BLA203A456_L001_R1.fastq.gz,,2,TCF4,NAIVE_INPUT,2
+NAIVE_TCF4_IP,BLA203A66_S57_L001_R1.fastq.gz,,3,TCF4,NAIVE_INPUT,3
+WT_INPUT,BLA203A62_L006_R1.fastq.gz,,1,,,
+WT_INPUT,BLA203A30_S21_L001_R1.fastq.gz,,2,,,
+WT_INPUT,BLA203A31_S21_L003_R1.fastq.gz,,3,,,
+NAIVE_INPUT,BLA203A12_L001_R1.fastq.gz,,1,,,
+NAIVE_INPUT,BLA203A489_L001_R1.fastq.gz,,2,,,
+NAIVE_INPUT,BLA203A49_L006_R1.fastq.gz,,3,,,
 ```
 
 <details open>

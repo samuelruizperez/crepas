@@ -519,7 +519,7 @@ workflow GLSEQ {
         //
         DEEPTOOLS_COMPUTEMATRIX (
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig,
-            ch_gene_bed.map{ it[1] }
+            ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
 
@@ -628,7 +628,7 @@ workflow GLSEQ {
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
         ch_chrom_sizes_endo.map{ it[1] }.first(),
-        ch_macs_gsize,
+        ch_macs_gsize.first(),
         "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
         ch_frip_score_header,
