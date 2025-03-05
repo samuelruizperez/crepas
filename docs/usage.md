@@ -52,39 +52,48 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 
 | sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_Rep1_H3K9me3_R1.fastq.gz | condition_1_Rep1_H3K9me3_R3.fastq.gz | condition_1_Rep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_Rep2_H3K9me3_R1.fastq.gz | condition_1_Rep2_H3K9me3_R3.fastq.gz | condition_1_Rep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_Rep1_H3K27ac_R1.fastq.gz | condition_1_Rep1_H3K27ac_R3.fastq.gz | condition_1_Rep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_Rep2_H3K27ac_R1.fastq.gz | condition_1_Rep2_H3K27ac_R3.fastq.gz | condition_1_Rep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_Rep1_INPUT_R1.fastq.gz | condition_1_Rep1_INPUT_R3.fastq.gz | condition_1_Rep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
-condition_1_INPUT | condition_1_Rep2_INPUT_R1.fastq.gz | condition_1_Rep2_INPUT_R3.fastq.gz | condition_1_Rep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
+| condition_1_H3K9me3 | condition_1_bRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_INPUT_R1.fastq.gz | condition_1_bRep1_INPUT_R3.fastq.gz | condition_1_bRep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
+condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-condition_1_H3K9me3,condition_1_Rep1_H3K9me3_R1.fastq.gz,condition_1_Rep1_H3K9me3_R3.fastq.gz,condition_1_Rep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_Rep2_H3K9me3_R1.fastq.gz,condition_1_Rep2_H3K9me3_R3.fastq.gz,condition_1_Rep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_Rep1_H3K27ac_R1.fastq.gz,condition_1_Rep1_H3K27ac_R3.fastq.gz,condition_1_Rep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_Rep2_H3K27ac_R1.fastq.gz,condition_1_Rep2_H3K27ac_R3.fastq.gz,condition_1_Rep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,condition_1_Rep1_INPUT_R1.fastq.gz,condition_1_Rep1_INPUT_R3.fastq.gz,condition_1_Rep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
-condition_1_INPUT,condition_1_Rep2_INPUT_R1.fastq.gz,condition_1_Rep2_INPUT_R3.fastq.gz,condition_1_Rep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
+condition_1_H3K9me3,condition_1_bRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
+condition_1_H3K9me3,condition_1_bRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
+condition_1_H3K27ac,condition_1_bRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
+condition_1_H3K27ac,condition_1_bRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
+condition_1_INPUT,condition_1_bRep1_INPUT_R1.fastq.gz,condition_1_bRep1_INPUT_R3.fastq.gz,condition_1_bRep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
+condition_1_INPUT,condition_1_bRep2_INPUT_R1.fastq.gz,condition_1_bRep2_INPUT_R3.fastq.gz,condition_1_bRep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
 ```
 
+### Example 2: Multiple runs of the same library (technical replicates)
 
+Both the `sample` and `replicate` identifiers have to be the same when you have sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis.
+
+This is an example of a samplesheet for a ChIP-seq experiment with one condition, two biological replicates for each antibody, and two technical replicates for each biological replicate.
+
+| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_tRep1_INPUT_R1.fastq.gz | condition_1_bRep1_tRep1_INPUT_R3.fastq.gz | condition_1_bRep1_tRep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
+| condition_1_INPUT | condition_1_bRep1_tRep2_INPUT_R1.fastq.gz | condition_1_bRep1_tRep2_INPUT_R3.fastq.gz | condition_1_bRep1_tRep2_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep1_INPUT_R1.fastq.gz | condition_1_bRep2_tRep1_INPUT_R3.fastq.gz | condition_1_bRep2_tRep1_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 ```csv
-group,fastq_1,fastq_2,replicate,antibody,control,control_replicate
-WT_BCATENIN_IP,BLA203A1_S27_L006_R1.fastq.gz,,1,BCATENIN,WT_INPUT,1
-WT_BCATENIN_IP,BLA203A256_L002_R1.fastq.gz,,2,BCATENIN,WT_INPUT,2
-WT_BCATENIN_IP,BLA203A49_S40_L001_R1.fastq.gz,,3,BCATENIN,WT_INPUT,3
-WT_INPUT,BLA203A62_L006_R1.fastq.gz,,1,,,
-WT_INPUT,BLA203A30_S21_L002_R1.fastq.gz,,2,,,
-WT_INPUT,BLA203A31_S21_L003_R1.fastq.gz,,3,,,
-```
 
-### Example 2: Multiple runs of the same library
 
-Both the `sample` and `replicate` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis. Below is an example where the samples called `WT_BCATENIN_IP` and `WT_INPUT` have been re-sequenced multiple times:
 
 ```console
 sample,fastq_1,fastq_2,replicate,antibody,control,control_replicate
@@ -599,10 +608,10 @@ NXF_OPTS='-Xms1g -Xmx4g'
 3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
 
     ```bash
-    srun -c 1 --mem=1gb --time=6-00:00:00 --pty bash
+    srun -c 1 --mem=2gb --time=2-00:00:00 --pty bash
     ```
 > [!NOTE]  
-> Adjust `--time` as necessary, the command above keeps the slurm job active for six days (more than enough for most pipeline runs).
+> Adjust `--time` as necessary, the command above keeps the slurm job active for two days (more than enough for most pipeline runs).
 
 4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
