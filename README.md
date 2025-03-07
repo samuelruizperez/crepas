@@ -144,7 +144,9 @@ If you would like to contribute to this pipeline, please see the [contributing g
 For further information or help, don't hesitate to get in touch through #######
 ## Citations
 
-If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it using the following DOI: #########
+If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it as below:
+
+> Ruiz-Pérez, S. (2025). grothlab/glseq (Version 0.0.1) [Computer software]. https://github.com/grothlab/glseq
 
 This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 

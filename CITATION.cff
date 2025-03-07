@@ -4,7 +4,13 @@ authors:
 - family-names: "Ruiz-Pérez"
   given-names: "Samuel"
   orcid: "https://orcid.org/0000-0002-5577-8341"
-title: "grothlab/glseq"
+- family-names: "Alcaraz"
+  given-names: "Nicolás"
+  orcid: "https://orcid.org/0000-0003-0839-8423"
+- family-names: "Groth"
+  given-names: "Anja"
+  orcid: "https://orcid.org/0000-0003-0577-1771"
+title: "grothlab/glseq: A bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq)"
 version: 0.0.1
 # doi: 10.5281/zenodo.1234
 date-released: 2025-02-03
