@@ -56,7 +56,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](https://github.com/grothlab/glseq/blob/main/assets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](assets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
@@ -90,7 +90,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 | condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](https://github.com/grothlab/glseq/blob/main/assets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](assets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
@@ -154,7 +154,7 @@ cd v3.0
 wget -L https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.bed.gz && gunzip ENCFF356LFX.bed.gz && mv ENCFF356LFX.bed hg38-blacklist.v3.bed
 ```
 
-> **NB:** A detailed description of the different versions of the files can be found [here](https://sites.google.com/site/anshulkundaje/projects/blacklists). Also, to to see which blacklist bed files are assigned by default to the respective reference genome check the [igenomes.config](https://github.com/grothlab/glseq/blob/main/conf/igenomes.config).
+> **NB:** A detailed description of the different versions of the files can be found [here](https://sites.google.com/site/anshulkundaje/projects/blacklists). Also, to to see which blacklist bed files are assigned by default to the respective reference genome check the [igenomes.config](conf/igenomes.config).
 
 
 ### Initiation zones
@@ -217,7 +217,7 @@ Define where the pipeline should find input data and save output data.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 11 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).</small></details>| `string` |  |  |  |
+| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 11 columns, and a header row. See [usage docs](docs/usage.md).</small></details>| `string` |  |  |  |
 | `fragment_size` | Estimated fragment size used to extend single-end reads. | `integer` | 150 |  |  |
 | `seq_platform` | Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header. <details><summary>Help</summary><small>See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown.</small></details>| `string` | None |  |  |
 | `seq_center` | Sequencing center information to be added to read group of BAM files. | `string` |  |  |  |
@@ -604,7 +604,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead_mod`](https://github.com/grothlab/glseq/blob/main/conf/ku_sund_danhead_mod.config)):
+7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead_mod`](conf/ku_sund_danhead_mod.config)):
 
     ```bash
     nextflow run <path_to_software_directory>/glseq \
@@ -616,7 +616,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
   >  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
 
   > [!NOTE]
-  > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](https://github.com/grothlab/glseq/blob/main/conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
+  > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
   
 
 8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
