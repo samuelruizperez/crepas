@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use [grothlab/glseq](https://github.com/grothlab/glseq) in your work, please cite it as below."
+authors:
+- family-names: "Ruiz-Pérez"
+  given-names: "Samuel"
+  orcid: "https://orcid.org/0000-0002-5577-8341"
+title: "grothlab/glseq"
+version: 0.0.1
+# doi: 10.5281/zenodo.1234
+date-released: 2025-02-03
+url: "https://github.com/grothlab/glseq"
