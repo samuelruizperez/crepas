@@ -56,7 +56,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](assets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](../assets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
@@ -90,7 +90,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 | condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](assets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](../assets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
@@ -217,7 +217,7 @@ Define where the pipeline should find input data and save output data.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 11 columns, and a header row. See [usage docs](docs/usage.md).</small></details>| `string` |  |  |  |
+| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 11 columns, and a header row. See [usage docs](usage.md).</small></details>| `string` |  |  |  |
 | `fragment_size` | Estimated fragment size used to extend single-end reads. | `integer` | 150 |  |  |
 | `seq_platform` | Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header. <details><summary>Help</summary><small>See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown.</small></details>| `string` | None |  |  |
 | `seq_center` | Sequencing center information to be added to read group of BAM files. | `string` |  |  |  |
