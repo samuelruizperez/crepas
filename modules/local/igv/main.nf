@@ -27,11 +27,16 @@ process IGV {
     when:
     task.ext.when == null || task.ext.when
 
-    script: // scripts are bundled with the pipeline in nf-core/chipseq/bin/
+    script: // scripts are bundled with the pipeline in grothlab/glseq/bin/
     def consensus_dir = "${aligner_dir}/mergedLibrary/${allocation_method_dir}/chipseq/macs3/${peak_dir}/consensus/*"
     """
     find * -type l -name "*.bigWig" -exec echo -e ""{}"\\t0,0,178" \\; > bigwig.igv.txt
     find * -type l -name "*Peak" -exec echo -e ""{}"\\t0,0,178" \\; > peaks.igv.txt
+    
+    # This is so that the filename matches, due to the modification in modules.config
+    # in the first column of each line in peaks.igv.txt, replace the last occurrence of _peaks.broadPeak with .peaks.broadPeak
+    sed -i 's/_peaks.broadPeak/.peaks.broadPeak/' peaks.igv.txt
+
     # Avoid error when consensus not produced
     find * -type l -name "*.bed" -exec echo -e ""{}"\\t0,0,178" \\; | { grep "^$consensus_dir" || test \$? = 1; } > consensus.igv.txt
 

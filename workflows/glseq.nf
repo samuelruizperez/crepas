@@ -26,6 +26,7 @@ include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_sc
 include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
+include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -539,6 +540,17 @@ workflow GLSEQ {
             DEEPTOOLS_COMPUTEMATRIX.out.matrix
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
+    }
+
+    if (!params.skip_count_reads_in_bins) {
+        //
+        // SUBWORKFLOW: Count reads in bins across samples with featureCounts
+        //
+        COUNT_READS_IN_BINS (
+            ch_filtered_bam,
+            ch_chrom_sizes_endo
+        )
+        ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
     }
 
     //

@@ -483,6 +483,12 @@
                     "description": "Skip deepTools plotProfile.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "skip_count_reads_in_bins": {
+                    "type": "boolean",
+                    "description": "Skip counting reads in bins.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": false
+                },
                 "skip_plot_fingerprint": {
                     "type": "boolean",
                     "description": "Skip deepTools plotFingerprint.",
