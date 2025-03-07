@@ -56,7 +56,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here]() or copy and save the cell below:
+> You can download this example samplesheet [here](https://github.com/grothlab/glseq/blob/main/assets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
@@ -90,7 +90,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 | condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here]() or copy and save the cell below:
+> You can download this example samplesheet [here](https://github.com/grothlab/glseq/blob/main/assets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
 
 ```csv
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
