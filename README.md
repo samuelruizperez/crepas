@@ -142,11 +142,12 @@ If you would like to contribute to this pipeline, please see the [contributing g
 
 <!-- TODO: -->
 For further information or help, don't hesitate to get in touch through #######
+
 ## Citations
 
 If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it as below:
 
-> Ruiz-Pérez, S. (2025). grothlab/glseq (Version 0.0.1) [Computer software]. https://github.com/grothlab/glseq
+> Ruiz-Pérez, S., Alcaraz, N., & Groth, A. (2025). grothlab/glseq: A bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq) (Version 0.0.1) [Computer software]. https://github.com/grothlab/glseq
 
 This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
