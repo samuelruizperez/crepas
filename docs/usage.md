@@ -549,7 +549,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
 
     ```bash
-    srun -c 1 --mem=2gb --time=2-00:00:00 --pty bash
+    srun -c 1 --mem=3gb --time=2-00:00:00 --pty bash
     ```
 > [!NOTE]  
 > Adjust `--time` as necessary, the command above keeps the slurm job active for two days (more than enough for most pipeline runs).
@@ -730,6 +730,8 @@ nextflow run /user/datadir/software/glseq \
 
 ### Tips
 
+#### Inputting parameters
+
 Parameters specified on the command line [can be also specified in a params file using the `-params-file` option](https://www.nextflow.io/docs/latest/cli.html#pipeline-parameters). This is useful for saving a set of parameters that you use frequently, or for sharing parameters with others.
 
 
@@ -786,3 +788,11 @@ nextflow run /user/datadir/software/glseq \
   "save_spikein_intermeds": true
 }
 ```
+
+#### Opening the output IGV session
+
+The pipeline generates an IGV session file that can be opened in IGV to visualize the coverage and peak calling results. The session file is located in the `igv` directory of the output directory. This session can be opened on the DAN System or locally on your computer.
+
+##### DAN System
+
+Make sure you have X11 forwarding enabled in your SSH client. 

@@ -744,7 +744,7 @@ workflow GLSEQ {
     if (!params.skip_igv) {
         IGV (
             params.aligner,
-            params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method : '',
+            params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig.collect{it[1]}.ifEmpty([]),
