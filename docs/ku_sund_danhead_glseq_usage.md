@@ -1,7 +1,7 @@
 # grothlab/glseq: Usage guide for DAN System users
 
 > [!IMPORTANT]
-> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/ku_dan_glseq_usage.md](https://github.com/grothlab/glseq/blob/dev/docs/ku_dan_glseq_usage.md)
+> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md](https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md)
 
 > [!IMPORTANT]
 > This is a guide tailored for users of the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/). For general usage instructions, please refer to the main [usage documentation](https://github.com/grothlab/glseq/blob/dev/docs/usage.md).
