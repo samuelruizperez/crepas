@@ -789,10 +789,64 @@ nextflow run /user/datadir/software/glseq \
 }
 ```
 
-#### Opening the output IGV session
+#### Opening the outputted IGV session
 
 The pipeline generates an IGV session file that can be opened in IGV to visualize the coverage and peak calling results. The session file is located in the `igv` directory of the output directory. This session can be opened on the DAN System or locally on your computer.
 
-##### DAN System
+##### Opening on a local macOS computer through the DAN System 
 
-Make sure you have X11 forwarding enabled in your SSH client. 
+1. Download and install [XQuartz](https://www.xquartz.org/) on your local macOS computer.
+
+2. Open the terminal and connect to the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/).
+
+> [!NOTE]
+> If you use Visual Studio Code to connect to DAN GPU instead of connecting through the terminal:
+> - Make sure to install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
+> - From the Application Menu, click ***View*** > ***Command Palette...*** 
+> - Type and click `>Remote-SSH: Open SSH Configuration File...`
+> - Select your configuration file at `/Users/<your_username>/.ssh/config` and add the following:
+>
+>   ```bash
+>     Host dangpu
+>       Hostname dangpu01fl.unicph.domain
+>       User <your_username>
+>       Port 22
+>       ForwardAgent yes
+>       ForwardX11 yes
+>       ForwardX11Trusted yes
+>   ```
+> - Save the file, restart Visual Studio Code, and reconnect to DAN GPU.
+
+3. If you have not already, launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+    ```bash
+    srun -c 1 --mem=8gb --time=1-00:00:00 --pty bash
+    ```
+
+4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+
+    ```bash
+    module load IGV
+    ```
+
+5. Run IGV:
+
+    ```bash
+    igv.sh
+    ```
+
+6. The IGV window should open through XQuartz on your local computer. Go to the `File` menu and select `Open Session...` to open the IGV session file located in the `igv/` directory of the pipeline output directory.
+
+##### Opening on a local computer
+
+1. Download and install [IGV](https://software.broadinstitute.org/software/igv/download) on your local computer.
+
+2. On the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/), navigate to the pipeline output directory and download the following files to your local computer:
+
+    - The coverage bigWig files located in `<path_to_output_directory>/<aligner>/mergedLibrary/*/genomecov/*.bigWig`.
+    - The consensus peaks BED files located in `<path_to_output_directory>/<aligner>/mergedLibrary/*/macs3/<peak_type>/consensus/<antibody>/*consensus_peaks.bed`.
+    - The genome FASTA and FASTA index (`.fai`) files located in `<path_to_output_directory>/genome/`.
+
+3. Open IGV on your local computer:
+- Go to the `Genomes` menu and select `Load Genome from File...` to load the genome FASTA file.
+- Go to the `File` menu and select `Load from File...` to load the coverage bigWig files and consensus peaks BED files.
