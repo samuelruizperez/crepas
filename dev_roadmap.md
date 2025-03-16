@@ -33,3 +33,8 @@ Sometimes, running the pipeline several times with -resume will cause the pipeli
 # make BAM_CREATE_SCAR_PARTITIONS more readable
 
 # update nf-validation to nf-schema
+
+
+# for chorseq peak calling, check that https://www.nature.com/articles/s41596-021-00585-3#Sec60 is followed correctly, step 163 says to use the BAMs from step 162, which are not BAMs, but bedgraphs
+
+# make sure only unique reads are kept in bams for chorseq rrpm calculation

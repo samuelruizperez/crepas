@@ -1,6 +1,6 @@
 process ALLO {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     // WARN: Version information not provided by tool on CLI. Please update version string below when bumping container versions.
     conda "${moduleDir}/environment.yml"

@@ -8,13 +8,13 @@
 
 ## Table of Contents
 
-1. [Quick start guide](#quick-start-guide)
+1. [First time running the pipeline](#first-time-running-the-pipeline)
 2. [Reference genome files](#reference-genome-files)
 3. [Tips](#tips)
     - [Inputting parameters](#inputting-parameters)
     - [Opening the outputted IGV session](#opening-the-outputted-igv-session)
 
-## Quick start guide
+## First time running the pipeline
 
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
 
@@ -38,44 +38,51 @@
     module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
     ```
 
-5. Clone the pipeline repository:
+5. Generate a Personal Access Token (PAT):
 
-  - Generate a Personal Access Token (PAT):
+    - Go to [GitHub](https://github.com/) and log in to your account.
 
-      - Go to [GitHub](https://github.com/) and log in to your account.
+    - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
 
-      - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
+    - Click on your profile picture in the right-hand menu, then ***Settings*** > ***Developer settings*** > ***Personal access tokens*** > [***Fine-grained tokens***](https://github.com/settings/personal-access-tokens).
 
-      - Click on the profile picture in the right-hand menu, then ***Settings*** > ***Developer settings*** > [***Tokens (classic)***](https://github.com/settings/tokens).
+    - Click on the [***Generate new token***](https://github.com/settings/personal-access-tokens/new) button on the upper right.
 
-      - Click on the ***Generate new token*** and ***Generate new token (classic)*** buttons.
+    - Under ***Token name***, provide a meaningful name to identify its purpose (e.g. `glseq_pat`).
 
-      - Provide a meaningful name to identify its purpose (e.g. `glseq_pat`) and select the required permissions: for cloning glseq, the “repo” permissions are sufficient.
+    - Under ***Resource owner***, select the `grothlab` organization.
 
-      - Click on the ***Generate Token*** button to generate your PAT.
-      - Copy the generated token to your clipboard. Remember that PATs are sensitive and should be treated like passwords.
+    - Under ***Repository access***, click on ***Only select repositories***, search for the `grothlab/glseq` repository, and select it.
+
+    - Under ***Permissions***, click on ***Repository permissions***. 
+    
+      - Look for the ***Contents*** section and give it `Read-only` access.
+      - Look for the ***Metadata*** section and give it `Read-only` access.
+
+    - Go to the bottom of the page and click on the ***Generate Token*** button to generate your PAT.
 
 >[!WARNING]
-> Make note of the token because once you close the window you won’t be able to view the token again!
+> Copy or make note of your token because once you close the window you won’t be able to view the token again!
+>
+> Remember that PATs are sensitive and should be treated like passwords. Do not share them with anyone or store them in a public repository.
 
-  - Open your terminal and create or navigate to the directory where you want to clone the repository:
+6. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page). Replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT generated in the previous step:
 
-      ```bash
-      mkdir -p <path_to_software_directory>
-      cd <path_to_software_directory>
-      ```
+    ```bash
+    rm -f $NXF_HOME/scm
 
-  - Clone the repository using the personal access token:
+    tee -a $NXF_HOME/scm <<EOF
+    providers {
+        github {
+            user = '<your_github_username>'
+            password = '<your_github_token>'
+        }
+    }
+    EOF
+    ```
+> [!NOTE]
+> The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information.
 
-      ```bash
-      git clone https://github.com/grothlab/glseq.git
-      ```
-    
-      ```bash
-      username : <your_username>
-      password : <your_generated_token>
-      ```
-    
 6. Create an output directory for your pipeline run if it does not exist:
 
     ```bash
@@ -86,7 +93,7 @@
 7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
 
     ```bash
-    nextflow run <path_to_software_directory>/glseq \
+    nextflow run grothlab/glseq \
       -profile ku_sund_danhead_mod,local_test_scarseq \
       --outdir <path_to_output_directory>
     ```
@@ -107,7 +114,7 @@
 9. Run your own analysis, for example:
 
     ```bash
-    nextflow run <path_to_software_directory>/glseq \
+    nextflow run grothlab/glseq \
       -profile ku_sund_danhead_mod \
       --input <path_to_your_input_samplesheet_csv_file> \
       --with_umi \

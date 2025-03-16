@@ -5,6 +5,11 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "bedtools/bamtobed": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
                     "bedtools/genomecov": {
                         "branch": "master",
                         "git_sha": "bfa8975eefb8df3e480a44ac9e594f23f52b2963",
@@ -61,6 +66,11 @@
                         "installed_by": ["modules"]
                     },
                     "deeptools/alignmentsieve": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
+                    "deeptools/bamcoverage": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]

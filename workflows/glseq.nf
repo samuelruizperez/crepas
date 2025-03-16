@@ -27,6 +27,7 @@ include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_m
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
 include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
+include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,6 +389,8 @@ workflow GLSEQ {
     ch_filtered2_flagstat = Channel.empty()
     ch_filtered2_stats = Channel.empty()
     ch_filtered2_idxstats = Channel.empty()
+    ch_filtered_exo_bam = Channel.empty()
+    ch_filtered_exo_index = Channel.empty()
     ch_filtered2_exo_flagstat = Channel.empty()
     ch_filtered2_exo_stats = Channel.empty()
     ch_filtered2_exo_idxstats = Channel.empty()
@@ -406,11 +409,22 @@ workflow GLSEQ {
         ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
         ch_filtered2_idxstats = BAM_SPIKEIN_SPLIT.out.idxstats
 
+        ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
+        ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_index
         ch_filtered2_exo_stats = BAM_SPIKEIN_SPLIT.out.exo_stats
         ch_filtered2_exo_flagstat = BAM_SPIKEIN_SPLIT.out.exo_flagstat
         ch_filtered2_exo_idxstats = BAM_SPIKEIN_SPLIT.out.exo_idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
+
+
+    ch_filtered_exo_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_exo_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
 
     //
     // SUBWORKFLOW: Allocation of multimappers
@@ -552,6 +566,35 @@ workflow GLSEQ {
         )
         ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
     }
+
+
+    // Extract only ChOR-seq samples
+    ch_filtered_bam
+        .join(ch_filtered_index, by: [0])
+        .mix(ch_filtered_exo_bam.join(ch_filtered_exo_index, by: [0]))
+        .filter { it[0].exp_type == 'chorseq' }
+        .set { ch_filtered_bam_bai_chor }
+
+    ch_filtered_bam_bai_chor
+        .map {
+            meta, bam, bai ->
+                "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile( name: 'ch_filtered_bam_bai_chor.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
+
+    //
+    // SUBWORKFLOW: CHOR-seq analysis: compute reference-adjusted reads per million (RRPM)
+    //
+    ch_chor_rrpm = Channel.empty()
+    BAM_CHORSEQ_RRPM (
+        ch_filtered_bam_bai_chor,
+        ch_chrom_sizes_endo,
+        params.genome,
+        params.spikein_genome
+    )
+    ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
+    ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
 
     //
     // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]

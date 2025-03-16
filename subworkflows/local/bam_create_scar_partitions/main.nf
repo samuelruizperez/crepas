@@ -75,7 +75,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         ch_bam_scale,
         ch_chrom_sizes.map { it[1] },
         'bdg',
-        false
+        true
     )
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
@@ -304,7 +304,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_cpm_samples = CPM_CALCULATION_SAMPLES.out.cpm
         .map {
             meta, cpm ->
-                [ meta.id, cpm.splitCsv(header:false)[0][0] ] // TODO: check if flatten is correct
+                [ meta.id, cpm.splitCsv(header:false)[0][0] ]
         }
 
     CPM_CALCULATION_INPUTS (
