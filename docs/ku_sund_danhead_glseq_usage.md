@@ -14,35 +14,23 @@
     - [Inputting parameters](#inputting-parameters)
     - [Opening the outputted IGV session](#opening-the-outputted-igv-session)
 
-## First time running the pipeline
+## Before running the pipeline for the first time
 
-1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System.
+1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System. Login to the DAN System.
 
-2. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
-
-    ```bash
-    tmux new-session -s <session_name>
-    ```
-
-3. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+2. If it is the first time you are logging in to the DAN System, run the following command:
 
     ```bash
-    srun -c 1 --mem=3gb --time=2-00:00:00 --pty bash
+    /projects/dan1/apps/etc/init_dangpu_env.sh
     ```
-> [!NOTE]  
-> Adjust `--time` as necessary, the command above keeps the slurm job active for two days (more than enough for most pipeline runs).
+  
+    Then, start a new bash session or simply logout and login back again.
 
-4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
-
-    ```bash
-    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
-    ```
-
-5. Generate a Personal Access Token (PAT):
+3. Generate a Personal Access Token (PAT):
 
     - Go to [GitHub](https://github.com/) and log in to your account.
 
-    - Make sure you are part of the [Groth Lab organization](https://github.com/grothlab). If not, please contact Nicolás Alcaraz ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)) to request access.
+    - Make sure you are part of the [Groth Lab GitHub organization](https://github.com/grothlab). If not, please contact Samuel Ruiz-Pérez ([samper@cancer.dk](samper@cancer.dk)) to request access.
 
     - Click on your profile picture in the right-hand menu, then ***Settings*** > ***Developer settings*** > ***Personal access tokens*** > [***Fine-grained tokens***](https://github.com/settings/personal-access-tokens).
 
@@ -62,11 +50,11 @@
     - Go to the bottom of the page and click on the ***Generate Token*** button to generate your PAT.
 
 >[!WARNING]
-> Copy or make note of your token because once you close the window you won’t be able to view the token again!
+> Copy or make note of your token because once you close the window you will not be able to view the token again!
 >
 > Remember that PATs are sensitive and should be treated like passwords. Do not share them with anyone or store them in a public repository.
 
-6. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page). Replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT generated in the previous step:
+4. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page) by running the following code. Just replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT generated in the previous step:
 
     ```bash
     rm -f $NXF_HOME/scm
@@ -80,50 +68,80 @@
     }
     EOF
     ```
+
 > [!NOTE]
 > The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information.
 
-6. Create an output directory for your pipeline run if it does not exist:
+## Running the pipeline
+
+1. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
+
+    ```bash
+    tmux new-session -s <session_name>
+    ```
+
+2. Launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+    ```bash
+    srun -c 1 --mem=3gb --time=2-00:00:00 --pty bash
+    ```
+> [!NOTE]  
+> Adjust `--time` as necessary, the command above keeps the slurm job active for two days (more than enough for most pipeline runs).
+
+3. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+
+    ```bash
+    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+    ```
+
+4. Create an output directory for your pipeline run if it does not exist:
 
     ```bash
     mkdir -p <path_to_output_directory>
     cd <path_to_output_directory>
     ```
 
-7. Run a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`) with the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+5. Now you can run your own own analysis under the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) :
 
     ```bash
     nextflow run grothlab/glseq \
-      -profile ku_sund_danhead_mod,local_test_scarseq \
-      --outdir <path_to_output_directory>
-    ```
-
-  > [!TIP]
-  >  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
-
-  > [!NOTE]
-  > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
-  
-
-8. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
-
-    ```bash
-    tmux attach-session -t <session_name>
-    ```
-
-9. Run your own analysis, for example:
-
-    ```bash
-    nextflow run grothlab/glseq \
+      -r main \
       -profile ku_sund_danhead_mod \
-      --input <path_to_your_input_samplesheet_csv_file> \
+      --input <path_to_input_samplesheet_csv> \
       --with_umi \
       --skip_umi_extract false \
       --genome mm10 \
       --spikein_genome dm6 \
       ...
-      --outdir <path_to_output_directory>
+      --outdir <path_to_output_directory> \
+      --work-dir <path_to_output_directory>/work/
     ```
+
+> [!TIP]
+>  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
+
+> [!NOTE]
+> The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
+
+
+
+6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+
+    ```bash
+    tmux attach-session -t <session_name>
+    ```
+
+### Running a pipeline test
+
+You can test the correct functioning of any pipeline version by running a pipeline test (`local_test_scarseq`, `local_test_chipseq`, `local_test_atacseq` or `local_test_chorseq`), also under the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r main \
+    -profile ku_sund_danhead_mod,local_test_scarseq \
+    --outdir <path_to_output_directory> \
+    --work-dir <path_to_output_directory>/work/
+  ```
 
 ## Reference genome files
 
@@ -159,6 +177,9 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
 > Make sure to always input the prebuilt index files (besides the FASTA and GTF files) if available to avoid building the index from scratch every time you run the pipeline:
 > ```bash
 > nextflow run grothlab/glseq \
+>    -r main \
+>    -profile ku_sund_danhead_mod \
+>    --input <path_to_input_samplesheet_csv> \
 >   --bowtie2_index <path_to_index> \
 >   --fasta <path_to_fasta> \
 >   --gtf <path_to_gtf>
@@ -195,6 +216,7 @@ On the command line:
 
 ```bash
 nextflow run /user/datadir/software/glseq \
+      -r main \
       -profile ku_sund_danhead_mod \
       --input /user/datadir/projects/project1/project1_glseq_samplesheet.csv \
       --outdir /user/datadir/projects/project1/output/ \
