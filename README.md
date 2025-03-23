@@ -123,15 +123,15 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 ## Usage
 
 > [!IMPORTANT]
-> See the [usage docs](https://github.com/grothlab/glseq/blob/dev/docs/usage.md) for an overview of how the pipeline works, how to run it and a description of all of the different command-line flags and parameters.
+> See the [usage docs](./docs/usage.md) for an overview of how the pipeline works, how to run it and a description of all of the different command-line flags and parameters.
 
 > [!NOTE]
-> See the [usage guide for DAN System users](ku_sund_danhead_glseq_usage.md) for special instructions on how to run the pipeline on the DAN System.
+> See the [usage guide for DAN System users](./docs/ku_sund_danhead_glseq_usage.md) for special instructions on how to run the pipeline on the DAN System.
 
 ## Output
 
 > [!IMPORTANT]
-> See the [output docs](https://github.com/grothlab/glseq/blob/dev/docs/output.md) for an overview of the different results produced by the pipeline and how to interpret them.
+> See the [output docs](./docs/output.md) for an overview of the different results produced by the pipeline and how to interpret them.
 
 ## Credits
 
