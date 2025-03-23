@@ -7,7 +7,6 @@
 include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
-include { ALLO                                } from '../modules/local/allo/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -15,7 +14,7 @@ include { ALLO                                } from '../modules/local/allo/main
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_chipseq_pipeline'
+include { methodsDescriptionText } from '../subworkflows/local/utils_grothlab_glseq_pipeline'
 include { INPUT_CHECK         } from '../subworkflows/local/input_check/main'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
@@ -23,9 +22,12 @@ include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkfl
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
-
-include { SCAR_CREATE_PARTITIONS } from '../subworkflows/local/scar_create_partitions/main'
-include { SCAR_SMOOTH_PARTITIONS } from '../subworkflows/local/scar_smooth_partitions/main'
+include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
+include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
+include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
+include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
+include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,14 +55,16 @@ include { KHMER_UNIQUEKMERS             } from '../modules/nf-core/khmer/uniquek
 //
 
 // include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
-include { FASTQ_ALIGN_BWA          } from '../subworkflows/nf-core/fastq_align_bwa'
-include { FASTQ_ALIGN_BOWTIE2          } from '../subworkflows/nf-core/fastq_align_bowtie2'
-include { FASTQ_ALIGN_CHROMAP          } from '../subworkflows/nf-core/fastq_align_chromap'
-include { FASTQ_ALIGN_STAR             } from '../subworkflows/nf-core/fastq_align_star'
-include { BAM_MARKDUPLICATES_PICARD } from '../subworkflows/nf-core/bam_markduplicates_picard'
+include { FASTQ_ALIGN_BWA                   } from '../subworkflows/nf-core/fastq_align_bwa'
+include { FASTQ_ALIGN_BOWTIE2               } from '../subworkflows/nf-core/fastq_align_bowtie2'
+include { FASTQ_ALIGN_CHROMAP               } from '../subworkflows/nf-core/fastq_align_chromap'
+include { FASTQ_ALIGN_STAR                  } from '../subworkflows/nf-core/fastq_align_star'
+include { FASTQ_ALIGN_HISAT2                } from '../subworkflows/nf-core/fastq_align_hisat2'                                                                                                                                                                            
+include { BAM_MARKDUPLICATES_PICARD         } from '../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
-include { BAM_STATS_SAMTOOLS        } from '../subworkflows/nf-core/bam_stats_samtools'
-include { BAM_SORT_STATS_SAMTOOLS   } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+include { BAM_STATS_SAMTOOLS                } from '../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_SORT_STATS_SAMTOOLS           } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -106,6 +110,8 @@ workflow GLSEQ {
     ch_bowtie2_index // channel: path(bowtie2/index)
     ch_chromap_index // channel: path(chromap.index)
     ch_star_index    // channel: path(star/index/)
+    ch_hisat2_index  // channel: path(hisat2/index)
+    ch_splicesites   // channel: path(splicesites)
 
     main:
     ch_multiqc_files = Channel.empty()
@@ -122,7 +128,6 @@ workflow GLSEQ {
     // See the documentation https://nextflow-io.github.io/nf-validation/samplesheets/fromSamplesheet/
     // ! There is currently no tooling to help you write a sample sheet schema
 
-
     //
     // SUBWORKFLOW: Read QC and trim adapters
     //
@@ -133,7 +138,10 @@ workflow GLSEQ {
         params.skip_umi_extract,
         params.skip_trimming,
         params.umi_discard_read,
-        params.min_trimmed_reads
+        params.min_trimmed_reads,
+        params.hardtrim5_length,
+        params.hardtrim3_length
+
     )
     ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.versions)
 
@@ -230,6 +238,21 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(FASTQ_ALIGN_STAR.out.versions)
     }
 
+    if (params.aligner == 'hisat2') {
+        FASTQ_ALIGN_HISAT2 (
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
+            ch_hisat2_index.first(),
+            ch_splicesites.first(),
+            ch_fasta.first()
+        )
+        ch_genome_bam        = FASTQ_ALIGN_HISAT2.out.bam
+        ch_genome_bam_index  = FASTQ_ALIGN_HISAT2.out.index
+        ch_samtools_stats    = FASTQ_ALIGN_HISAT2.out.stats
+        ch_samtools_flagstat = FASTQ_ALIGN_HISAT2.out.flagstat
+        ch_samtools_idxstats = FASTQ_ALIGN_HISAT2.out.idxstats
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_HISAT2.out.versions)
+    }
+
     //
     // MODULE: Merge resequenced BAM files
     //
@@ -241,7 +264,7 @@ workflow GLSEQ {
                 meta_clone.id = meta_clone.id.split('_')[0..-2].join('_')
                 [ meta_clone, bam ]
         }
-        .groupTuple(by: [0])
+        .groupTuple(by: 0)
         .map {
             it ->
                 [ it[0], it[1].flatten() ]
@@ -264,6 +287,9 @@ workflow GLSEQ {
         ch_merged_bam_bai,
         ch_fasta.first()
     )
+    ch_merged_bam_stats = BAM_STATS_SAMTOOLS.out.stats
+    ch_merged_bam_flagstat = BAM_STATS_SAMTOOLS.out.flagstat
+    ch_merged_bam_idxstats = BAM_STATS_SAMTOOLS.out.idxstats
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     //
@@ -340,16 +366,16 @@ workflow GLSEQ {
     }
 
     //
-    // SUBWORKFLOW: Filter BAM file with Sambamba
+    // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
     BAM_FILTER_SAMBAMBA (
-        ch_dedup_bam.join(ch_dedup_index, by: [0]),
+        ch_dedup_bam.join(ch_dedup_index, by: 0),
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.index
-    ch_filtered_stat = BAM_FILTER_SAMBAMBA.out.stats
+    ch_filtered_stats = BAM_FILTER_SAMBAMBA.out.stats
     ch_filtered_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
     ch_filtered_idxstats = BAM_FILTER_SAMBAMBA.out.idxstats
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
@@ -359,10 +385,15 @@ workflow GLSEQ {
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    // ch_filtered2_stat = Channel.empty()
+    // ch_filtered2_stats = Channel.empty()
     ch_filtered2_flagstat = Channel.empty()
-    ch_filtered2_stat = Channel.empty()
+    ch_filtered2_stats = Channel.empty()
     ch_filtered2_idxstats = Channel.empty()
+    ch_filtered_exo_bam = Channel.empty()
+    ch_filtered_exo_index = Channel.empty()
+    ch_filtered2_exo_flagstat = Channel.empty()
+    ch_filtered2_exo_stats = Channel.empty()
+    ch_filtered2_exo_idxstats = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -374,39 +405,46 @@ workflow GLSEQ {
 
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
         ch_filtered_index = BAM_SPIKEIN_SPLIT.out.index
-        ch_filtered2_stat = BAM_SPIKEIN_SPLIT.out.stats
+        ch_filtered2_stats = BAM_SPIKEIN_SPLIT.out.stats
         ch_filtered2_flagstat = BAM_SPIKEIN_SPLIT.out.flagstat
         ch_filtered2_idxstats = BAM_SPIKEIN_SPLIT.out.idxstats
+
+        ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
+        ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_index
+        ch_filtered2_exo_stats = BAM_SPIKEIN_SPLIT.out.exo_stats
+        ch_filtered2_exo_flagstat = BAM_SPIKEIN_SPLIT.out.exo_flagstat
+        ch_filtered2_exo_idxstats = BAM_SPIKEIN_SPLIT.out.exo_idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     }
 
-    // MODULE: Multimapping read allocation
-    ch_allo_flagstat = Channel.empty()
-    ch_allo_stat = Channel.empty()
-    ch_allo_idxstats = Channel.empty()
-    if (params.allocate_n_multimappers > 0 && params.allocation_method == 'allo') {
 
-        SAMTOOLS_COLLATE (
+    ch_filtered_exo_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_exo_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
+
+    //
+    // SUBWORKFLOW: Allocation of multimappers
+    //
+    ch_allocated_flagstat = Channel.empty()
+    ch_allocated_stats = Channel.empty()
+    ch_allocated_idxstats = Channel.empty()
+    if (params.allocate_n_multimappers && params.allocation_method != 'chromap') {
+
+        BAM_ALLOCATE_MULTIMAPPERS (
             ch_filtered_bam,
-            ch_fasta.first()
+            ch_fasta,
+            params.allocation_method
         )
-        ch_versions = ch_versions.mix(SAMTOOLS_COLLATE.out.versions.first())
-
-        ALLO (
-            SAMTOOLS_COLLATE.out.bam
-        )
-        ch_versions = ch_versions.mix(ALLO.out.versions.first())
-
-        BAM_SORT_STATS_SAMTOOLS (
-            ALLO.out.bam,
-            ch_fasta.first()
-        )
-        ch_filtered_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
-        ch_filtered_index = BAM_SORT_STATS_SAMTOOLS.out.index
-        ch_allo_flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat
-        ch_allo_stat = BAM_SORT_STATS_SAMTOOLS.out.stats
-        ch_allo_idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats
-        ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
+        ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS.out.bam
+        ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS.out.index
+        ch_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS.out.flagstat
+        ch_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS.out.stats
+        ch_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS.out.idxstats
+        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
     }
 
     //
@@ -424,6 +462,32 @@ workflow GLSEQ {
         ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
+
+    //
+    // SUBWORKFLOW: Shift ATAC-seq reads
+    //
+    ch_filtered_bam
+        .branch { meta, bam ->
+            atacseq: meta.exp_type == 'atacseq'
+            other: meta.exp_type != 'atacseq'
+        }
+        .set { ch_filtered_bam }
+
+    ch_filtered_index
+        .branch { meta, index ->
+            atacseq: meta.exp_type == 'atacseq'
+            other: meta.exp_type != 'atacseq'
+        }
+        .set { ch_filtered_index }
+
+    BAM_SHIFT_READS (
+        ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
+        ch_fasta
+    )
+    ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
+    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
+    ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
+
 
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
@@ -457,8 +521,8 @@ workflow GLSEQ {
     // SUBWORKFLOW: Normalised bigWig coverage tracks
     //
     BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
-        ch_filtered_bam.join(ch_filtered2_flagstat, by: [0]),
-        ch_chrom_sizes_endo.map{ it[1] }
+        ch_filtered_bam.join(ch_filtered2_flagstat, by: 0),
+        ch_chrom_sizes_endo.map{ it[1] }.first()
     )
     ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
@@ -470,7 +534,7 @@ workflow GLSEQ {
         //
         DEEPTOOLS_COMPUTEMATRIX (
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig,
-            ch_gene_bed.map{ it[1] }
+            ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
 
@@ -492,28 +556,75 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
     }
 
+    if (!params.skip_count_reads_in_bins) {
+        //
+        // SUBWORKFLOW: Count reads in bins across samples with featureCounts
+        //
+        COUNT_READS_IN_BINS (
+            ch_filtered_bam,
+            ch_chrom_sizes_endo
+        )
+        ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
+    }
+
+
+    // Extract only ChOR-seq samples
+    ch_filtered_bam
+        .join(ch_filtered_index, by: [0])
+        .mix(ch_filtered_exo_bam.join(ch_filtered_exo_index, by: [0]))
+        .filter { it[0].exp_type == 'chorseq' }
+        .set { ch_filtered_bam_bai_chor }
+
+    ch_filtered_bam_bai_chor
+        .map {
+            meta, bam, bai ->
+                "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile( name: 'ch_filtered_bam_bai_chor.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
+
+    //
+    // SUBWORKFLOW: CHOR-seq analysis: compute reference-adjusted reads per million (RRPM)
+    //
+    ch_chor_rrpm = Channel.empty()
+    BAM_CHORSEQ_RRPM (
+        ch_filtered_bam_bai_chor,
+        ch_chrom_sizes_endo,
+        params.genome,
+        params.spikein_genome
+    )
+    ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
+    ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
+
     //
     // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
     //
-    ch_filtered_bam.join(ch_filtered_index, by: [0])
+    ch_filtered_bam
+        .join(ch_filtered_index, by: 0)
+        .branch { meta, bam, bai ->
+            ips_with_control: meta.control
+                return [ meta.control, meta, [ bam ], [ bai ] ]
+            ips_wo_control: !meta.control && !meta.is_control
+                return [ meta.id, meta, [ bam ], [ bai ] ]
+            controls: !meta.control && meta.is_control
+                return [ meta.id, [ bam ], [ bai ] ]
+        }
         .set { ch_genome_bam_bai }
 
-    ch_genome_bam_bai
-        .map {
-            meta, bam, bai ->
-                meta.control ? null : [ meta.id, [ bam ] , [ bai ] ]
-        }
-        .set { ch_control_bam_bai }
-
-    ch_genome_bam_bai
-        .map {
-            meta, bam, bai ->
-                meta.control ? [ meta.control, meta, [ bam ], [ bai ] ] : null
-        }
-        .combine(ch_control_bam_bai, by: 0)
-        .map { it -> [ it[1] , it[2] + it[4], it[3] + it[5] ] }
+    ch_genome_bam_bai.ips_with_control
+        .combine(ch_genome_bam_bai.controls, by: 0)
+        .mix(ch_genome_bam_bai.ips_wo_control)
+        .map { it -> [ it[1], it[2] + (it[4] ?: []), it[3] + (it[5] ?: []) ] }
         .set { ch_ip_control_bam_bai }
-
+    
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_bai
+        .map {
+            meta, bams, bais ->
+                "${meta}\t${bams}\t${bais}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
@@ -526,35 +637,59 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
+    // Create channels: [ meta, ip_bam, control_bam ]
+    ch_ip_control_bam_bai
+        .map {
+            meta, bams, bais ->
+                [ meta , bams[0], (bams[1] ?: []) ]
+        }
+        .set { ch_ip_control_bam }
+
+    // separate samples based on meta.exp_type
+    ch_ip_control_bam_cs = Channel.empty()
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_cs
+        .map {
+            meta, ip_bam, control_bam ->
+                "${meta.id}\t${ip_bam}\t${control_bam}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    ch_filtered_bam_ss = Channel.empty()
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
+
+
     //
-    // MODULE: Calculute genome size with khmer
+    // MODULE: Calculate genome size with khmer
     //
+
+    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_macs_gsize                     = Channel.empty()
+    // def need_macs_gsize = false
+    // ch_ip_control_bam_cs.count().map { n ->
+    //     if (n > 0) {
+    //         need_macs_gsize = true
+    //     }
+    // }
+    // if (need_macs_gsize) {
+    //     ch_macs_gsize = params.macs_gsize
+    // }
+    //
+
     ch_custompeaks_frip_multiqc       = Channel.empty()
     ch_custompeaks_count_multiqc      = Channel.empty()
     ch_plothomerannotatepeaks_multiqc = Channel.empty()
     ch_subreadfeaturecounts_multiqc   = Channel.empty()
-    ch_macs_gsize = params.macs_gsize
-    if (!params.macs_gsize) {
+    if (!params.macs_gsize) { // && need_macs_gsize) {
         KHMER_UNIQUEKMERS (
             ch_fasta.map{ it[1] },
             params.read_length
         )
         ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it.text.trim() }
     }
-
-    // Create channels: [ meta, ip_bam, control_bam ]
-    ch_ip_control_bam_bai
-        .map {
-            meta, bams, bais ->
-                [ meta , bams[0], bams[1] ]
-        }
-        .set { ch_ip_control_bam }
-
-    // separate chipseq and scarseq samples based on meta.exp_type
-    ch_ip_control_bam_cs = Channel.empty()
-    // these could be chipseq or chorseq
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type == 'chipseq' || it[0].exp_type == 'chorseq' }
 
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
@@ -563,9 +698,9 @@ workflow GLSEQ {
         ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
-        ch_chrom_sizes_endo.map{ it[1] },
-        ch_macs_gsize,
-        "_peaks.annotatePeaks.txt",
+        ch_chrom_sizes_endo.map{ it[1] }.first(),
+        ch_macs_gsize.first(),
+        "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
         ch_frip_score_header,
         ch_peak_annotation_header,
@@ -614,25 +749,37 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
-    ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
-
-    SCAR_CREATE_PARTITIONS (
+    ch_scar_smooth = Channel.empty()
+    BAM_CREATE_SCAR_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_chrom_sizes_endo.map{ it[1] }
-    )
-    ch_versions = ch_versions.mix(SCAR_CREATE_PARTITIONS.out.versions)
-
-    // TODO: windows are created and split even when not needed (no scarseq samples)
-    SCAR_SMOOTH_PARTITIONS (
-        SCAR_CREATE_PARTITIONS.out.bigwig,
-        ch_chrom_sizes_endo,
+        ch_chrom_sizes_endo.first(),
         ch_blacklist.first(),
         ch_initiation_zones.first()
         //ch_scaffolds
     )
-    ch_scar_smooth = SCAR_SMOOTH_PARTITIONS.out.tab
-    ch_versions = ch_versions.mix(SCAR_SMOOTH_PARTITIONS.out.versions)
+    ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
+    ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)
+
+
+    // Create channel containing all samtools_stats files
+    ch_samtools_stats
+        .mix(ch_merged_bam_stats)
+        .mix(ch_dedup_umi_stats)
+        .mix(ch_mk_stats)
+        .mix(ch_filtered_stats)
+        .mix(ch_filtered2_stats)
+        .mix(ch_filtered2_exo_stats)
+        .mix(ch_allocated_stats)
+        .set { ch_samtools_stats_summary }
+
+    //
+    // SUBWORKFLOW: Create SAMtools summary table
+    //
+    SAMTOOLS_STATS_SUMMARY {
+        ch_samtools_stats_summary
+    }
+    ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
+        
 
     //
     // MODULE: Create IGV session
@@ -640,6 +787,7 @@ workflow GLSEQ {
     if (!params.skip_igv) {
         IGV (
             params.aligner,
+            params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.bigwig.collect{it[1]}.ifEmpty([]),
@@ -683,9 +831,9 @@ workflow GLSEQ {
             ch_samtools_flagstat.collect{it[1]}.ifEmpty([]),
             ch_samtools_idxstats.collect{it[1]}.ifEmpty([]),
 
-            BAM_STATS_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            BAM_STATS_SAMTOOLS.out.flagstat.collect{it[1]}.ifEmpty([]),
-            BAM_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_stats.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_merged_bam_idxstats.collect{it[1]}.ifEmpty([]),
 
             ch_preseq_multiqc.collect{it[1]}.ifEmpty([]),
 
@@ -699,17 +847,17 @@ workflow GLSEQ {
             ch_mk_idxstats.collect{it[1]}.ifEmpty([]),
             ch_mk_metrics.collect{it[1]}.ifEmpty([]),
 
-            ch_filtered_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered_stats.collect{it[1]}.ifEmpty([]),
             ch_filtered_flagstat.collect{it[1]}.ifEmpty([]),
             ch_filtered_idxstats.collect{it[1]}.ifEmpty([]),
 
-            ch_filtered2_stat.collect{it[1]}.ifEmpty([]),
+            ch_filtered2_stats.collect{it[1]}.ifEmpty([]),
             ch_filtered2_flagstat.collect{it[1]}.ifEmpty([]),
             ch_filtered2_idxstats.collect{it[1]}.ifEmpty([]),
 
-            ch_allo_flagstat.collect{it[1]}.ifEmpty([]),
-            ch_allo_stat.collect{it[1]}.ifEmpty([]),
-            ch_allo_idxstats.collect{it[1]}.ifEmpty([]),
+            ch_allocated_flagstat.collect{it[1]}.ifEmpty([]),
+            ch_allocated_stats.collect{it[1]}.ifEmpty([]),
+            ch_allocated_idxstats.collect{it[1]}.ifEmpty([]),
 
             ch_picardcollectmultiplemetrics_multiqc.collect{it[1]}.ifEmpty([]),
 

@@ -15,16 +15,19 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-params.fasta         = getGenomeAttribute('fasta')
-params.bwa_index     = getGenomeAttribute('bwa')
-params.bowtie2_index = getGenomeAttribute('bowtie2')
-params.chromap_index = getGenomeAttribute('chromap')
-params.star_index    = getGenomeAttribute('star')
-params.gtf           = getGenomeAttribute('gtf')
-params.gff           = getGenomeAttribute('gff')
-params.gene_bed      = getGenomeAttribute('gene_bed')
-params.blacklist     = getGenomeAttribute('blacklist')
-params.macs_gsize    = getMacsGsize(params)
+params.fasta            = getGenomeAttribute('fasta')
+params.bwa_index        = getGenomeAttribute('bwa')
+params.bowtie2_index    = getGenomeAttribute('bowtie2')
+params.chromap_index    = getGenomeAttribute('chromap')
+params.star_index       = getGenomeAttribute('star')
+params.hisat2_index     = getGenomeAttribute('hisat2')
+params.gtf              = getGenomeAttribute('gtf')
+params.gff              = getGenomeAttribute('gff')
+params.gene_bed         = getGenomeAttribute('gene_bed')
+params.blacklist        = getGenomeAttribute('blacklist')
+params.splicesites      = getGenomeAttribute('splicesites')
+params.initiation_zones = getGenomeAttribute('initiation_zones')
+params.macs_gsize       = getMacsGsize(params)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,10 +36,8 @@ params.macs_gsize    = getMacsGsize(params)
 */
 include { GLSEQ                 } from './workflows/glseq'
 include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome/main'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_chipseq_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_chipseq_pipeline'
-// include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_chipseq_pipeline'
-// include { getMacsGsize            } from './subworkflows/local/utils_nfcore_chipseq_pipeline'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_glseq_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_glseq_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +67,9 @@ workflow GROTHLAB_GLSEQ {
         params.bwa_index,
         params.bowtie2_index,
         params.chromap_index,
-        params.star_index
+        params.star_index,
+        params.hisat2_index,
+        params.splicesites
     )
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
@@ -91,7 +94,9 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
-        PREPARE_GENOME.out.star_index
+        PREPARE_GENOME.out.star_index,
+        PREPARE_GENOME.out.hisat2_index,
+        PREPARE_GENOME.out.splicesites
     )
 
     emit:

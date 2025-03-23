@@ -7,7 +7,7 @@ import argparse
 
 
 def parse_args(args=None):
-    Description = "Reformat nf-core/chipseq samplesheet file and check its contents."
+    Description = "Reformat grothlab/glseq samplesheet file and check its contents."
     Epilog = "Example usage: python check_samplesheet.py <FILE_IN> <FILE_OUT>"
 
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
@@ -38,15 +38,17 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,fastq_1,fastq_2,replicate,antibody,control,control_replicate
-    SPT5_T0,SRR1822153_1.fastq.gz,SRR1822153_2.fastq.gz,1,SPT5,SPT5_INPUT,1
-    SPT5_T0,SRR1822154_1.fastq.gz,SRR1822154_2.fastq.gz,2,SPT5,SPT5_INPUT,2
-    SPT5_INPUT,SRR5204809_Spt5-ChIP_Input1_SacCer_ChIP-Seq_ss100k_R1.fastq.gz,SRR5204809_Spt5-ChIP_Input1_SacCer_ChIP-Seq_ss100k_R2.fastq.gz,1,,,
-    SPT5_INPUT,SRR5204810_Spt5-ChIP_Input2_SacCer_ChIP-Seq_ss100k_R1.fastq.gz,SRR5204810_Spt5-ChIP_Input2_SacCer_ChIP-Seq_ss100k_R2.fastq.gz,2,,,
+    sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
+    condition_1_H3K9me3,condition_1_bRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
+    condition_1_H3K9me3,condition_1_bRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
+    condition_1_H3K27ac,condition_1_bRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
+    condition_1_H3K27ac,condition_1_bRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
+    condition_1_INPUT,condition_1_bRep1_INPUT_R1.fastq.gz,condition_1_bRep1_INPUT_R3.fastq.gz,condition_1_bRep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
+    condition_1_INPUT,condition_1_bRep2_INPUT_R1.fastq.gz,condition_1_bRep2_INPUT_R3.fastq.gz,condition_1_bRep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
     For an example see:
-    https://raw.githubusercontent.com/nf-core/test-datasets/chipseq/samplesheet/v2.1/samplesheet_test.csv
+    https://github.com/grothlab/glseq/blob/main/assets/samplesheets/ex1_multiBioRep_samplesheet.csv
     """
-
+    file_out_tmp = file_out + ".tmp"
     sample_mapping_dict = {}
     with open(file_in, "r", encoding="utf-8-sig") as fin:
 
@@ -102,8 +104,8 @@ def check_samplesheet(file_in, file_out):
                 sys.exit(1)
 
             ## Check exp_type is either 'chipseq' or 'scarseq'
-            if exp_type not in ["chipseq", "scarseq", "chorseq"]:
-                print_error("Experiment type not 'chipseq', 'scarseq', or 'chorseq'!", "Line", line)
+            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq"]:
+                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', or 'chorseq'!", "Line", line)
                 sys.exit(1)
 
             # strandedness should only be specified for scarseq
@@ -152,6 +154,10 @@ def check_samplesheet(file_in, file_out):
             else:
                 print_error("Invalid combination of columns provided!", "Line", line)
 
+            ## Check that all ATAC-seq samples are paired-end, otherwise the alignmentsieve step will fail
+            if exp_type == "atacseq" and sample_info[0] == "1":
+                print_error("ATAC-seq samples must be paired-end for the alignmentsieve step to work!", "Line", line)
+                
             ## Auto-detect UMI fastq file
             if sample and fastq_umi:
                 sample_info.insert(1, "1")
@@ -173,9 +179,9 @@ def check_samplesheet(file_in, file_out):
 
     ## Write validated samplesheet with appropriate columns
     if len(sample_mapping_dict) > 0:
-        out_dir = os.path.dirname(file_out)
+        out_dir = os.path.dirname(file_out_tmp)
         make_dir(out_dir)
-        with open(file_out, "w") as fout:
+        with open(file_out_tmp, "w") as fout:
             fout.write(
                 ",".join(
                     [
@@ -258,6 +264,25 @@ def check_samplesheet(file_in, file_out):
     else:
         print_error(f"No entries to process!", "Samplesheet: {file_in}")
 
+    ########### TODO: TEMPORARY FIX TO TRACK CONTROL SAMPLES
+    with open(file_out_tmp, "r", encoding="utf-8-sig") as fin:
+        lines = fin.readlines()
+
+    headers = lines[0].strip().split(",")
+    rows = [x.strip().split(",") for x in lines[1:]]
+    control_index, sample_index = headers.index("control"), headers.index("sample")
+    control_samples = {x[control_index] for x in rows}
+
+    headers.append("is_control")
+
+    with open(file_out, "w") as fout:
+        fout.write(",".join(headers) + "\n")
+        for row in rows:
+            # sample_mod is row[sample_index] with trailing "_T<digit>" removed
+            sample_mod = row[sample_index].rsplit("_T", 1)[0]
+            row.append("1" if sample_mod in control_samples else "0")
+            fout.write(",".join(row) + "\n")
+    ########### TODO: TEMPORARY FIX TO TRACK CONTROL SAMPLES
 
 def main(args=None):
     args = parse_args(args)

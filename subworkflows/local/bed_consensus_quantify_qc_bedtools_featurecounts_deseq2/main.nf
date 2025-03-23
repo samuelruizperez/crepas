@@ -26,31 +26,55 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
 
     ch_versions = Channel.empty()
 
+    //TODO: print to fiule for debugging
+    ch_peaks
+        .map {
+            meta, peaks ->
+                "${meta}\t${peaks}"
+        }
+        .collectFile( name: 'ch_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+
     // Create channels: [ meta , [ peaks ] ]
-    // Where meta = [ id:antibody, multiple_groups:true/false, replicates_exist:true/false ]
+    // Where meta = [ id:antibody, exp_type, multiple_groups:true/false, replicates_exist:true/false ]
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.id - ~/_REP\d+$/, peak ]
+                [ meta.antibody, meta.exp_type, meta.genome, meta.id - ~/_REP\d+$/, peak ]
         }
-        .groupTuple()
+        .groupTuple(by: [0, 1, 2])
         .map {
-            antibody, groups, peaks ->
+            antibody, exp_type, genome, groups, peaks ->
                 [
                     antibody,
+                    exp_type,
+                    genome,
                     groups.groupBy().collectEntries { [(it.key) : it.value.size()] },
                     peaks
                 ]
         }
         .map {
-            antibody, groups, peaks ->
+            antibody, exp_type, genome, groups, peaks ->
                 def meta_new = [:]
-                meta_new.id = antibody
+                // if exp_type is atacseq, then id = exp_type, else id = exp_type + antibody
+                meta_new.id = exp_type == 'atacseq' ? exp_type : exp_type + '_' + antibody
+                meta_new.antibody = antibody
+                meta_new.exp_type = exp_type
+                meta_new.genome = genome
                 meta_new.multiple_groups = groups.size() > 1
                 meta_new.replicates_exist = groups.max { it.value }.value > 1
                 [ meta_new, peaks ]
         }
         .set { ch_antibody_peaks }
+
+
+    //TODO: print to fiule for debugging
+    ch_antibody_peaks
+        .map {
+            meta, peaks ->
+                "${meta}\t${peaks}"
+        }
+        .collectFile( name: 'antibody_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // Generate consensus peaks across samples

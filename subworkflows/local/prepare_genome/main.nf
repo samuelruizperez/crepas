@@ -12,18 +12,22 @@ include {
 include {
     UNTAR as UNTAR_BWA_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
-    UNTAR as UNTAR_STAR_INDEX    } from '../../../modules/nf-core/untar/main'
+    UNTAR as UNTAR_STAR_INDEX
+    UNTAR as UNTAR_CHROMAP_INDEX
+    UNTAR as UNTAR_HISAT2_INDEX  } from '../../../modules/nf-core/untar/main'
 
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
-include { EDITCHROMSIZES_ENDO  } from '../../../modules/local/editchromsizes_endo/main'
 include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
 include { BOWTIE2_BUILD        } from '../../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/main'
+include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
+include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
+include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
 
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_BLACKLIST_REGIONS } from '../../../modules/local/genome_blacklist_regions/main'
-include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
+include { EDITCHROMSIZES_ENDO  } from '../../../modules/local/editchromsizes_endo/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -40,6 +44,9 @@ workflow PREPARE_GENOME {
     bowtie2_index      //    file: /path/to/bowtie2/index/
     chromap_index      //    file: /path/to/chromap/index/
     star_index         //    file: /path/to/star/index/
+    hisat2_index       //    file: /path/to/hisat2/index/
+    splicesites        //    file: /path/to/splicesites.txt
+
 
     main:
 
@@ -171,12 +178,12 @@ workflow PREPARE_GENOME {
         .set { ch_scaffolds }
 
     // TODO: remove channel output to file for debugging
-    ch_scaffolds
-        .map {
-            scaffolds ->
-                "${scaffolds}"
-        }
-        .collectFile( name: 'ch_scaffolds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_scaffolds
+    //     .map {
+    //         scaffolds ->
+    //             "${scaffolds}"
+    //     }
+    //     .collectFile( name: 'ch_scaffolds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // Prepare genome intervals for filtering by removing regions in blacklist file
@@ -264,7 +271,30 @@ workflow PREPARE_GENOME {
         }
     }
 
-    // 
+    //
+    // Uncompress HISAT2 index or generate from scratch if required
+    //
+    ch_splicesites  = Channel.empty()
+    ch_hisat2_index = Channel.empty()
+    if (prepare_tool_index == 'hisat2') {
+        if (!splicesites) {
+            ch_splicesites = HISAT2_EXTRACTSPLICESITES ( ch_gtf.map { [ [:], it ] } ).txt.map { it[1] }
+            ch_versions    = ch_versions.mix(HISAT2_EXTRACTSPLICESITES.out.versions)
+        } else {
+            ch_splicesites = Channel.value(file(splicesites))
+        }
+        if (hisat2_index) {
+            if (hisat2_index.endsWith('.tar.gz')) {
+                ch_hisat2_index = UNTAR_HISAT2_INDEX ( [ [:], hisat2_index ] ).untar.map { it[1] }
+                ch_versions     = ch_versions.mix(UNTAR_HISAT2_INDEX.out.versions)
+            } else {
+                ch_hisat2_index = Channel.value(file(hisat2_index))
+            }
+        } else {
+            ch_hisat2_index = HISAT2_BUILD ( ch_fasta.map { [ [:], it ] }, ch_gtf.map { [ [:], it ] }, ch_splicesites.map { [ [:], it ] } ).index.map { it[1] }
+            ch_versions     = ch_versions.mix(HISAT2_BUILD.out.versions)
+        }
+    } 
 
     emit:
     fasta         = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
@@ -281,5 +311,7 @@ workflow PREPARE_GENOME {
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
     star_index    = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
+    hisat2_index  = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
+    splicesites   = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
     versions      = ch_versions.ifEmpty(null) //    channel: [ versions.yml ]
 }

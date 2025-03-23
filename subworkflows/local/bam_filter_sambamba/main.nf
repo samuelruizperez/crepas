@@ -20,7 +20,10 @@ workflow BAM_FILTER_SAMBAMBA {
         ch_bed
     )
 
-    BAM_SORT_STATS_SAMTOOLS(SAMBAMBA_VIEW.out.bam, ch_fasta)
+    BAM_SORT_STATS_SAMTOOLS(
+        SAMBAMBA_VIEW.out.bam,
+        ch_fasta
+    )
 
     ch_versions = ch_versions.mix(SAMBAMBA_VIEW.out.versions,
                     BAM_SORT_STATS_SAMTOOLS.out.versions)

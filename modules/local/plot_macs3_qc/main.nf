@@ -1,18 +1,19 @@
 process PLOT_MACS3_QC {
+    tag "$meta.id"
     label 'process_medium'
 
-    conda "conda-forge::r-base=4.0.3 conda-forge::r-reshape2=1.4.4 conda-forge::r-optparse=1.6.6 conda-forge::r-ggplot2=3.3.3 conda-forge::r-scales=1.1.1 conda-forge::r-viridis=0.5.1 conda-forge::r-tidyverse=1.3.0 bioconda::bioconductor-biostrings=2.58.0 bioconda::bioconductor-complexheatmap=2.6.2"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-ad9dd5f398966bf899ae05f8e7c54d0fb10cdfa7:05678da05b8e5a7a5130e90a9f9a6c585b965afa-0':
-        'biocontainers/mulled-v2-ad9dd5f398966bf899ae05f8e7c54d0fb10cdfa7:05678da05b8e5a7a5130e90a9f9a6c585b965afa-0' }"
+        'oras://community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:9dfe088cdf18888b':
+        'community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:d2dbf7b09452d5e3' }"
 
     input:
-    path peaks
+    tuple val(meta), path(peaks)
     val is_narrow_peak
 
     output:
-    path '*.txt'       , emit: txt
-    path '*.pdf'       , emit: pdf
+    tuple val(meta), path("*.txt")       , emit: txt
+    tuple val(meta), path("*.pdf")       , emit: pdf
     path "versions.yml", emit: versions
 
     when:
@@ -21,10 +22,12 @@ process PLOT_MACS3_QC {
     script: // This script is bundled with the pipeline, in nf-core/chipseq/bin/
     def args      = task.ext.args ?: ''
     def peak_type = is_narrow_peak ? 'narrowPeak' : 'broadPeak'
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     plot_macs3_qc.r \\
         -i ${peaks.join(',')} \\
         -s ${peaks.join(',').replaceAll("_peaks.${peak_type}","")} \\
+        -p $prefix \\
         $args
 
     cat <<-END_VERSIONS > versions.yml

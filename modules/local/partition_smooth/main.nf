@@ -2,7 +2,7 @@ process PARTITION_SMOOTH {
     tag "$meta.id"
     label 'process_low_memory'
 
-    conda (params.enable_conda ? "conda-forge::perl=5.26.2" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/perl:5.26.2':
         'quay.io/biocontainers/perl:5.26.2' }"

@@ -1,13 +1,14 @@
 process PLOT_HOMER_ANNOTATEPEAKS {
+    tag "$meta.id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "conda-forge::r-base=4.0.3 conda-forge::r-reshape2=1.4.4 conda-forge::r-optparse=1.6.6 conda-forge::r-ggplot2=3.3.3 conda-forge::r-scales=1.1.1 conda-forge::r-viridis=0.5.1 conda-forge::r-tidyverse=1.3.0 bioconda::bioconductor-biostrings=2.58.0 bioconda::bioconductor-complexheatmap=2.6.2" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-ad9dd5f398966bf899ae05f8e7c54d0fb10cdfa7:05678da05b8e5a7a5130e90a9f9a6c585b965afa-0':
-        'quay.io/biocontainers/mulled-v2-ad9dd5f398966bf899ae05f8e7c54d0fb10cdfa7:05678da05b8e5a7a5130e90a9f9a6c585b965afa-0' }"
+        'oras://community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:9dfe088cdf18888b':
+        'community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:d2dbf7b09452d5e3' }"
 
     input:
-    path annos
+    tuple val(meta), path(annos)
     path mqc_header
     val suffix
 
@@ -22,7 +23,7 @@ process PLOT_HOMER_ANNOTATEPEAKS {
 
     script: // This script is bundled with the pipeline, in nf-core/chipseq/bin/
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "annotatepeaks"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     plot_homer_annotatepeaks.r \\
         -i ${annos.join(',')} \\

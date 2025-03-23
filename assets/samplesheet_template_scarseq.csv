@@ -1,4 +1,0 @@
-sample,fastq_1,fastq_2,fastq_umi,replicate,exp_type,strandedness,antibody,control,control_replicate
-581_DMSO_H3K36me3,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H3K36me3_T0_r1_t2_R1.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H3K36me3_T0_r1_t2_R3.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H3K36me3_T0_r1_t2_R2.fastq.gz,1,scarseq,reverse,H3K36me3,581_DMSO_strandedInput,1
-581_DMSO_H4K20me2,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H4K20me2_T0_r1_t2_R1.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H4K20me2_T0_r1_t2_R3.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_H4K20me2_T0_r1_t2_R2.fastq.gz,1,scarseq,reverse,H4K20me2,581_DMSO_strandedInput,1
-581_DMSO_strandedInput,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_strandedInput_T0_r1_t2_R1.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_strandedInput_T0_r1_t2_R3.fastq.gz,/path/to/SCAR_seq/SAMPLES/LKO_xSCAR_581_DMSO_strandedInput_T0_r1_t2_R2.fastq.gz,1,scarseq,reverse,,,

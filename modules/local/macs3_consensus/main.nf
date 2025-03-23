@@ -5,10 +5,10 @@ process MACS3_CONSENSUS {
     tag "$meta.id"
     label 'process_long'
 
-    conda "conda-forge::biopython conda-forge::r-optparse=1.7.1 conda-forge::r-upsetr=1.4.0 bioconda::bedtools=2.30.0"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-2f48cc59b03027e31ead6d383fe1b8057785dd24:5d182f583f4696f4c4d9f3be93052811b383341f-0':
-        'quay.io/biocontainers/mulled-v2-2f48cc59b03027e31ead6d383fe1b8057785dd24:5d182f583f4696f4c4d9f3be93052811b383341f-0' }"
+        'oras://community.wave.seqera.io/library/bedtools_biopython_r-optparse_r-upsetr:eb93fd19a8e7d9ea':
+        'community.wave.seqera.io/library/bedtools_biopython_r-optparse_r-upsetr:71c4f71726f54101' }"
 
     input:
     tuple val(meta), path(peaks)

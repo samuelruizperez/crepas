@@ -2,10 +2,11 @@
 // Read QC, UMI extraction and trimming
 //
 
-include { FASTQC           } from '../../../modules/nf-core/fastqc/main'
-include { UMITOOLS_EXTRACT } from '../../../modules/nf-core/umitools/extract/main'
-include { UMITRANSFER      } from '../../../modules/local/umitransfer/main'
-include { TRIMGALORE       } from '../../../modules/nf-core/trimgalore/main'
+include { FASTQC                            } from '../../../modules/nf-core/fastqc/main'
+include { UMITOOLS_EXTRACT                  } from '../../../modules/nf-core/umitools/extract/main'
+include { UMITRANSFER                       } from '../../../modules/local/umitransfer/main'
+include { TRIMGALORE as TRIMGALORE          } from '../../../modules/nf-core/trimgalore/main'
+include { TRIMGALORE as TRIMGALORE_HARDTRIM } from '../../../modules/nf-core/trimgalore/main'
 
 //
 // Function that parses TrimGalore log output file to get total number of reads after trimming
@@ -31,6 +32,9 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     skip_trimming     // boolean: true/false
     umi_discard_read  // integer: 0, 1 or 2
     min_trimmed_reads // integer: > 0
+    hardtrim3_length  // integer: > 0
+    hardtrim5_length  // integer: > 0
+
 
     main:
     ch_versions = Channel.empty()
@@ -129,10 +133,22 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
         ch_num_trimmed_reads
             .map { meta, reads, num_reads -> [ meta, num_reads ] }
             .set { trim_read_count }
+
+        htrim_reads = trim_reads
+        if (hardtrim3_length || hardtrim5_length) {
+            TRIMGALORE_HARDTRIM (trim_reads)
+            htrim_reads     = TRIMGALORE_HARDTRIM.out.reads
+            htrim_unpaired  = TRIMGALORE_HARDTRIM.out.unpaired
+            htrim_html      = TRIMGALORE_HARDTRIM.out.html
+            htrim_zip       = TRIMGALORE_HARDTRIM.out.zip
+            htrim_log       = TRIMGALORE_HARDTRIM.out.log
+            ch_versions     = ch_versions.mix(TRIMGALORE_HARDTRIM.out.versions.first())
+        }
+
     }
 
     emit:
-    reads = trim_reads // channel: [ val(meta), [ reads ] ]
+    reads = htrim_reads // channel: [ val(meta), [ reads ] ]
 
     fastqc_html        // channel: [ val(meta), [ html ] ]
     fastqc_zip         // channel: [ val(meta), [ zip ] ]

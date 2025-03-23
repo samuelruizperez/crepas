@@ -29,7 +29,7 @@ process UMITRANSFER {
             --in2 ${reads[0]} \\
             --umi ${reads[1]} \\
             --threads $task.cpus \\
-            --out ${prefix}.umi_extract.fastq.gz \\
+            --out ${prefix}.umitransfer.fastq.gz \\
             --out2 '/dev/null' \\
             --gzip \\
             $args \\
@@ -48,11 +48,11 @@ process UMITRANSFER {
             --in2 ${reads[1]} \\
             --umi ${reads[2]} \\
             --threads $task.cpus \\
-            --out ${prefix}.umi_extract_1.fastq.gz \\
-            --out2 ${prefix}.umi_extract_2.fastq.gz \\
+            --out ${prefix}.umitransfer_1.fastq.gz \\
+            --out2 ${prefix}.umitransfer_2.fastq.gz \\
             --gzip \\
             $args \\
-            > ${prefix}.umi_extract.log
+            > ${prefix}.umitransfer.log
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -64,13 +64,13 @@ process UMITRANSFER {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     if (meta.single_end) {
-        output_command = "echo '' | gzip > ${prefix}.umi_extract.fastq.gz"
+        output_command = "echo '' | gzip > ${prefix}.umitransfer.fastq.gz"
     } else {
-        output_command = "echo '' | gzip > ${prefix}.umi_extract_1.fastq.gz ;"
-        output_command += "echo '' | gzip > ${prefix}.umi_extract_2.fastq.gz"
+        output_command = "echo '' | gzip > ${prefix}.umitransfer_1.fastq.gz ;"
+        output_command += "echo '' | gzip > ${prefix}.umitransfer_2.fastq.gz"
     }
     """
-    touch ${prefix}.umi_extract.log
+    touch ${prefix}.umitransfer.log
     ${output_command}
 
     cat <<-END_VERSIONS > versions.yml

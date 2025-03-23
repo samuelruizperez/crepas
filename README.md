@@ -10,7 +10,7 @@
 
 ## Introduction
 
-**grothlab/glseq** is a bioinformatics pipeline for the analysis of sequencing data (ChIP-seq, [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), etc.).
+**grothlab/glseq** is a bioinformatics pipeline for the analysis of chromatin sequencing data ([ChIP-seq](https://doi.org/10.1038/nmeth1068), [ATAC-seq](https://doi.org/10.1002/0471142727.mb2129s109), [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), etc.).
 
 <!-- On release, automated continuous integration tests run the pipeline on a [full-sized dataset](https://github.com/nf-core/test-datasets/tree/chipseq#full-test-dataset-origin) on the AWS cloud infrastructure. The dataset consists of FoxA1 (transcription factor) and EZH2 (histone,mark) IP experiments from _Franco et al. 2015_ ([GEO: GSE59530](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE59530), [PMID: 25752574](https://pubmed.ncbi.nlm.nih.gov/25752574/)) and _Popovic et al. 2014_ ([GEO: GSE57632](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57632), [PMID: 25188243](https://pubmed.ncbi.nlm.nih.gov/25188243/)), respectively. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from running the full-sized tests can be viewed on the [nf-core website](https://nf-co.re/chipseq/results). -->
 
@@ -99,11 +99,11 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
     ```bash
     nextflow run grothlab/glseq \
-      -profile test,YOURPROFILE \
-      --outdir <path-of-output-directory>
+      -profile test,<your_profile> \
+      --outdir <path_to_output_directory>
     ```
 
-    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
+    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`<your_profile>` in the example command above). You can chain multiple config profiles in a comma-separated string.
 
     > - The pipeline comes with config profiles called `docker`, `singularity`, `podman`, `shifter`, `charliecloud` and `conda` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
     > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
@@ -114,16 +114,24 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
     ```bash
     nextflow run grothlab/glseq \
-      --input <path-of-your-input-samplesheet-csv-file> \
-      --outdir <path-of-output-directory> \
+      --input <path_to_your_input_samplesheet_csv_file> \
+      --outdir <path_to_output_directory> \
       --genome GRCh37 \
       -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
 ## Usage
 
-> [!IMPORTANT]  
-> See [usage docs](https://github.com/grothlab/glseq/blob/dev/docs/usage.md) for all of the available options when running the pipeline.
+> [!IMPORTANT]
+> See the [usage docs](./docs/usage.md) for an overview of how the pipeline works, how to run it and a description of all of the different command-line flags and parameters.
+
+> [!NOTE]
+> See the [usage guide for DAN System users](./docs/ku_sund_danhead_glseq_usage.md) for special instructions on how to run the pipeline on the DAN System.
+
+## Output
+
+> [!IMPORTANT]
+> See the [output docs](./docs/output.md) for an overview of the different results produced by the pipeline and how to interpret them.
 
 ## Credits
 
@@ -137,11 +145,14 @@ If you would like to contribute to this pipeline, please see the [contributing g
 
 <!-- TODO: -->
 For further information or help, don't hesitate to get in touch through #######
+
 ## Citations
 
-If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it using the following DOI: #########
+If you use [grothlab/glseq](https://github.com/grothlab/glseq) for your analysis, please cite it as below:
 
-This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
+> Ruiz-Pérez, S., Alcaraz, N., & Groth, A. (2025). grothlab/glseq: A bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq) (Version 0.0.1) [Computer software]. https://github.com/grothlab/glseq
+
+This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >

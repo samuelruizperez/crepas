@@ -89,7 +89,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     // TODO: maybe a whole module for this is overkill
     FILE_SORT (
         UCSC_BEDCLIP.out.bedgraph,
-        'clip'
+        'sorted'
     )
     ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 
@@ -154,22 +154,58 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
 
         if (!skip_peak_qc) {
+
+            // Create channels: [ meta, [ peaks ] ]
+            // Where meta = [ id:exp_type, exp_type:exp_type ]
+            ch_macs3_peaks
+                .map {
+                    meta, peaks ->
+                        [ meta.exp_type, meta.genome, peaks ]
+                }
+                .groupTuple(by: [0, 1])
+                .map {
+                    exp_type, genome, peaks ->
+                        def meta_new = [:]
+                        meta_new.id = exp_type
+                        meta_new.exp_type = exp_type
+                        meta_new.genome = genome
+                        [ meta_new, peaks ]
+                }
+                .set { ch_macs3_peaks_grouped }
+            
             //
             // MACS3 QC plots with R
             //
             PLOT_MACS3_QC (
-                ch_macs3_peaks.collect{it[1]},
+                ch_macs3_peaks_grouped,
                 is_narrow_peak
             )
             ch_plot_macs3_qc_txt = PLOT_MACS3_QC.out.txt
             ch_plot_macs3_qc_pdf = PLOT_MACS3_QC.out.pdf
             ch_versions = ch_versions.mix(PLOT_MACS3_QC.out.versions)
 
+            // Create channels: [ meta, [ anns ] ]
+            // Where meta = [ id:exp_type, exp_type:exp_type ]
+            HOMER_ANNOTATEPEAKS.out.txt
+                .map {
+                    meta, anns ->
+                        [ meta.exp_type, meta.genome, anns ]
+                }
+                .groupTuple(by: [0, 1])
+                .map {
+                    exp_type, genome, anns ->
+                        def meta_new = [:]
+                        meta_new.id = exp_type
+                        meta_new.exp_type = exp_type
+                        meta_new.genome = genome
+                        [ meta_new, anns ]
+                }
+                .set { ch_homer_annotatepeaks_grouped }
             //
             // Peak annotation QC plots with R
             //
             PLOT_HOMER_ANNOTATEPEAKS (
-                HOMER_ANNOTATEPEAKS.out.txt.collect{it[1]},
+                ch_homer_annotatepeaks_grouped,
                 ch_peak_annotation_header_multiqc,
                 annotate_peaks_suffix
             )

@@ -29,7 +29,7 @@ workflow BAM_SPIKEIN_SPLIT {
     ch_bam_endo = BAM_SPLIT_BY_GENOME_ENDO.out.bam.map { [ it[0] + [ genome: genome ], it[1] ] }
     ch_bam_exo = BAM_SPLIT_BY_GENOME_EXO.out.bam.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
 
-    ch_bam = ch_bam_endo.concat(ch_bam_exo)
+    ch_bam = ch_bam_endo.mix(ch_bam_exo)
 
     SAMTOOLS_INDEX(ch_bam)
     ch_bam_bai = ch_bam.join(SAMTOOLS_INDEX.out.index, by: [0])

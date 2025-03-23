@@ -3,39 +3,47 @@
  */
 process IGV {
 
-    conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python:3.8.3':
-        'quay.io/biocontainers/python:3.8.3' }"
+        'biocontainers/python:3.8.3' }"
 
     input:
     val aligner_dir
+    val allocation_method_dir
     val peak_dir
     path fasta
-    path ("${aligner_dir}/mergedLibrary/bigwig/*")
-    path ("${aligner_dir}/mergedLibrary/macs3/${peak_dir}/*")
-    path ("${aligner_dir}/mergedLibrary/macs3/${peak_dir}/consensus/*")
+    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}genomecov/*")
+    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/*")
+    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/consensus/*")
     path ("mappings/*")
 
     output:
     path "*files.txt"  , emit: txt
     path "*.xml"       , emit: xml
+    path fasta         , emit: fasta
     path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
-    script: // scripts are bundled with the pipeline in nf-core/chipseq/bin/
-    def consensus_dir = "${aligner_dir}/mergedLibrary/macs3/${peak_dir}/consensus/*"
+    script: // scripts are bundled with the pipeline in grothlab/glseq/bin/
+    def consensus_dir = "${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/consensus/"
     """
     find * -type l -name "*.bigWig" -exec echo -e ""{}"\\t0,0,178" \\; > bigwig.igv.txt
     find * -type l -name "*Peak" -exec echo -e ""{}"\\t0,0,178" \\; > peaks.igv.txt
+    
+    # This is so that the filename matches, due to the modification in modules.config
+    # in the first column of each line in peaks.igv.txt, replace the last occurrence of _peaks.broadPeak with .peaks.broadPeak
+    sed -i 's/_peaks.broadPeak/.peaks.broadPeak/' peaks.igv.txt
+
     # Avoid error when consensus not produced
     find * -type l -name "*.bed" -exec echo -e ""{}"\\t0,0,178" \\; | { grep "^$consensus_dir" || test \$? = 1; } > consensus.igv.txt
 
-    touch replace_paths.txt
     if [ -d "mappings" ]; then
         cat mappings/* > replace_paths.txt
+    else
+        touch replace_paths.txt
     fi
 
     cat *.igv.txt > igv_files_orig.txt
