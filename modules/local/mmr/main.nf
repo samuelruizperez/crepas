@@ -1,6 +1,6 @@
 process MMR {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     // NOTE: there is no version information provided by the tool on the CLI
     conda "${moduleDir}/environment.yml"
