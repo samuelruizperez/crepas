@@ -18,6 +18,9 @@
 
 ## Before running the pipeline for the first time
 
+> [!NOTE]
+> This section is only required before running the pipeline for the first time. If you have already run the pipeline before, you can skip this section and go directly to [Running the pipeline](#running-the-pipeline).
+
 1. Read the [DAN System User Guide](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/) to understand how to use the DAN System. Login to the DAN System.
 
 2. If it is the first time you are logging in to the DAN System, run the following command:
@@ -56,7 +59,7 @@
 >
 > Remember that PATs are sensitive and should be treated like passwords. Do not share them with anyone or store them in a public repository.
 
-4. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page) by running the following code. Just replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT generated in the previous step:
+4. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page) by running the following code. Just replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT you copied in the previous step:
 
     ```bash
     # This line removes any existing SCM file
@@ -72,8 +75,25 @@
     EOF
     ```
 
-> [!NOTE]
-> The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information.
+    You can verify that the SCM file was created correctly by running:
+
+    ```bash
+    cat $NXF_HOME/scm
+    ```
+
+    <details><summary>The output should look like this:</summary>
+
+    ```bash
+    providers {
+        github {
+            user = '<your_github_username>'
+            password = '<your_github_token>'
+        }
+    }
+    ```
+
+<!-- > [!NOTE]
+> The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information. -->
 
 ## Running the pipeline
 
@@ -104,7 +124,7 @@
     cd <path_to_output_directory>
     ```
 
-5. Now you can run your own own analysis under the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) :
+5. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) :
 
     ```bash
     nextflow run grothlab/glseq \
@@ -123,8 +143,8 @@
 > [!TIP]
 >  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
 
-> [!NOTE]
-> The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline.
+<!-- > [!NOTE]
+> The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline. -->
 
 
 
@@ -136,7 +156,7 @@
 
 ### Running a pipeline test
 
-You can test the correct functioning of any pipeline version by running one of the following pipeline tests, also under the institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+You can test the correct functioning of any pipeline version by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
 
   - `local_test_scarseq`
   - `local_test_chipseq`
@@ -261,6 +281,7 @@ nextflow run /user/datadir/software/glseq \
       -profile ku_sund_danhead_mod \
       --params-file /user/datadir/projects/project1/project1_glseq_params.yml
 ```
+<p class="codeblock-label">project1_glseq_params.yml</p>
 
 ```yaml title="project1_glseq_params.yml"
 input: /user/datadir/projects/project1/project1_glseq_samplesheet.csv
