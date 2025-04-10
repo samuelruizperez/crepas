@@ -117,14 +117,14 @@
     module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
     ```
 
-4. Create an output directory for your pipeline run if it does not exist:
+4. Create an output directory for your pipeline run if it does not exist and move into it:
 
     ```bash
     mkdir -p <path_to_output_directory>
     cd <path_to_output_directory>
     ```
 
-5. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) :
+5. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)). For example:
 
     ```bash
     nextflow run grothlab/glseq \
@@ -141,12 +141,10 @@
     ```
 
 > [!TIP]
->  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/$::env(USER)/nxf/work` by default.
+>  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
 
 <!-- > [!NOTE]
 > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline. -->
-
-
 
 6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
@@ -259,7 +257,7 @@ nextflow run /user/datadir/software/glseq \
       --skip_umi_extract false \
       --genome mm10 \
       --spikein_genome dm6 \
-      --bowtie2_index /home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index \
+      --bowtie2_index /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index \
       --fasta /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz \
       --gtf /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz \
       --initiation_zones /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz \
@@ -281,7 +279,7 @@ nextflow run /user/datadir/software/glseq \
       -profile ku_sund_danhead_mod \
       --params-file /user/datadir/projects/project1/project1_glseq_params.yml
 ```
-<p class="codeblock-label">project1_glseq_params.yml</p>
+`project1_glseq_params.yml` would look like this:
 
 ```yaml title="project1_glseq_params.yml"
 input: /user/datadir/projects/project1/project1_glseq_samplesheet.csv
@@ -293,7 +291,7 @@ with_umi: true
 skip_umi_extract: false
 genome: mm10
 spikein_genome: dm6
-bowtie2_index: /home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index
+bowtie2_index: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index
 fasta: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz
 gtf: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz
 initiation_zones: /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz
@@ -308,6 +306,7 @@ nextflow run /user/datadir/software/glseq \
       -profile ku_sund_danhead_mod \
       --params-file /user/datadir/projects/project1/project1_glseq_params.json
 ```
+`project1_glseq_params.json` would look like this:
 
 ```json title="project1_glseq_params.json"
 {
@@ -320,7 +319,7 @@ nextflow run /user/datadir/software/glseq \
   "skip_umi_extract": false,
   "genome": "mm10",
   "spikein_genome": "dm6",
-  "bowtie2_index": "/home/rlh546/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index",
+  "bowtie2_index": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/indices/bowtie2_2.5.4_index",
   "fasta": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/spiked/GRCm38_dm6/genome/fasta/GRCm38_dm6.primary_assembly.genome.fa.gz",
   "gtf": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/transcript_models/gtf/gencode.vM25.primary_assembly.annotation.gtf.gz",
   "initiation_zones": "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz",
