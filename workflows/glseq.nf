@@ -21,6 +21,7 @@ include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/ma
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
@@ -76,8 +77,11 @@ ch_spp_nsc_header           = file("$projectDir/assets/multiqc/spp_nsc_header.tx
 ch_spp_rsc_header           = file("$projectDir/assets/multiqc/spp_rsc_header.txt", checkIfExists: true)
 ch_spp_correlation_header   = file("$projectDir/assets/multiqc/spp_correlation_header.txt", checkIfExists: true)
 ch_peak_count_header        = file("$projectDir/assets/multiqc/peak_count_header.txt", checkIfExists: true)
+ch_gr_peak_count_header     = file("$projectDir/assets/multiqc/gr_peak_count_header.txt", checkIfExists: true)
 ch_frip_score_header        = file("$projectDir/assets/multiqc/frip_score_header.txt", checkIfExists: true)
+ch_gr_frip_score_header     = file("$projectDir/assets/multiqc/gr_frip_score_header.txt", checkIfExists: true)
 ch_peak_annotation_header   = file("$projectDir/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
+ch_gr_peak_annotation_header = file("$projectDir/assets/multiqc/gr_peak_annotation_header.txt", checkIfExists: true)
 ch_deseq2_pca_header        = Channel.value(file("$projectDir/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
 ch_deseq2_clustering_header = Channel.value(file("$projectDir/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
@@ -745,6 +749,50 @@ workflow GLSEQ {
         ch_deseq2_clustering_multiqc     = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_dists_multiqc
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
+
+    // Create channel: [ meta, [ip_bams_merged_reps], [control_bams_merged_reps] ]
+    ch_ip_control_bam
+        .map {
+            meta, ip_bam, control_bam ->
+                def meta_clone = meta.clone()
+                meta_clone.id = meta_clone.id - ~/_REP\d+$/
+                meta_clone.control = meta_clone.control - ~/_REP\d+$/
+                [ meta_clone.id, meta_clone, [ ip_bam ], [ control_bam ] ]
+        }
+        .groupTuple(by: 0)
+        .map {
+            metas, ip_bams, control_bams ->
+                def meta_clone = metas[0].clone()
+                [ meta_clone, ip_bams.flatten(), control_bams.flatten() ]
+        }
+        .set { ch_ip_control_bam_merged_reps }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_merged_reps
+        .map {
+            meta, ip_bams, control_bams ->
+                "${meta}\t${ip_bams}\t${control_bams}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    //
+    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
+    //
+    BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
+        ch_ip_control_bam_merged_reps,
+        ch_fasta.map{ it[1] }.first(),
+        ch_gtf.map{ it[1] }.first(),
+        ch_blacklist.map{ it[1] }.first(),
+        ".annotatePeaks.txt",
+        ch_gr_peak_count_header,
+        ch_gr_frip_score_header,
+        ch_gr_peak_annotation_header,
+        params.narrow_peak,
+        params.skip_peak_annotation,
+        params.skip_peak_qc
+    )
+    ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
+
 
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
