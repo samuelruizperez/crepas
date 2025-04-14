@@ -103,15 +103,18 @@ workflow BAM_DOWNSAMPLE {
         // Merge back the downsampled ChIPs and inputs
         ch_bam_bai_ips_ds
             .mix(ch_bam_bai_controls_ds)
-            .set { ch_bam_bai_ds }
+            .map { meta, bam, bai ->
+                    [ meta, bam ]
+            }
+            .set { ch_bam_ds }
 
         // TODO: Remove this: Print channel for debugging
-        ch_bam_bai_ds
+        ch_bam_ds
             .map {
-                meta, bam, bai ->
-                    "${meta}\t${bam}\t${bai}"
+                meta, bam ->
+                    "${meta}\t${bam}"
             }
-            .collectFile( name: 'ch_bam_bai_ds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+            .collectFile( name: 'ch_bam_ds.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     }
 
@@ -119,7 +122,7 @@ workflow BAM_DOWNSAMPLE {
     // MODULE: Downsample BAMs
     //
     PICARD_DOWNSAMPLESAM (
-        ch_bam_bai_ds,
+        ch_bam_ds,
         ch_fasta,
         ch_fai
     )
