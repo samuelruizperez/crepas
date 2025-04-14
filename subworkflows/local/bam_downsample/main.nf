@@ -123,7 +123,7 @@ workflow BAM_DOWNSAMPLE {
         ch_fasta,
         ch_fai
     )
-    ch_versions = PICARD_DOWNSAMPLESAM.versions
+    ch_versions = ch_versions.mix(PICARD_DOWNSAMPLESAM.out.versions)
 
     //
     // MODULE: Index BAMs
