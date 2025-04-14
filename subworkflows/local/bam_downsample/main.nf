@@ -1,4 +1,4 @@
-include { BAM_STATS_SAMTOOLS_INITIAL as BAM_STATS_SAMTOOLS_INITIAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_INITIAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BAM_FLAGSTAT_MAPPED } from '../../../modules/local/bam_flagstat_mapped/main'
 include { PICARD_DOWNSAMPLESAM } from '../../../modules/local/picard/downsamplesam/main'
 include { SAMTOOLS_INDEX } from '../../../modules/nf-core/samtools/index/main'
