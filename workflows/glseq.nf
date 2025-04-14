@@ -28,6 +28,7 @@ include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_rea
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
 include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
 include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
+include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,7 +489,6 @@ workflow GLSEQ {
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
-
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
     //
@@ -596,6 +596,27 @@ workflow GLSEQ {
     ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
     ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
 
+    ch_ds_stats = Channel.empty()
+    ch_ds_flagstat = Channel.empty()
+    ch_ds_idxstats = Channel.empty()
+    if (params.bam_downsampling_method) {
+        //
+        // SUBWORKFLOW: Downsample IP and control BAM files
+        //
+        BAM_DOWNSAMPLE (
+            ch_filtered_bam.join(ch_filtered_index, by: [0]),
+            ch_fasta.first(),
+            ch_fai.first(),
+            params.bam_downsampling_method
+        )
+        ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
+        ch_filtered_index = BAM_DOWNSAMPLE.out.index
+        ch_ds_stats = BAM_DOWNSAMPLE.out.stats
+        ch_ds_flagstat = BAM_DOWNSAMPLE.out.flagstat
+        ch_ds_idxstats = BAM_DOWNSAMPLE.out.idxstats
+        ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
+    }
+    
     //
     // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
     //
@@ -645,6 +666,7 @@ workflow GLSEQ {
         }
         .set { ch_ip_control_bam }
 
+    
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
     ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' }
