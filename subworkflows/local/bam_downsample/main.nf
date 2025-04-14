@@ -87,6 +87,7 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai_b
             .controls
             .min { it[0].total_mapped_reads }
+            .map { meta, bam, bai -> meta.total_mapped_reads }
             .set { ch_min_controls }
 
         // Get the downsample proportion for each input based on the minimum
@@ -103,7 +104,8 @@ workflow BAM_DOWNSAMPLE {
         // Merge back the downsampled ChIPs and inputs
         ch_bam_bai_ips_ds
             .mix(ch_bam_bai_controls_ds)
-            .map { meta, bam, bai ->
+            .map { 
+                meta, bam, bai ->
                     [ meta, bam ]
             }
             .set { ch_bam_ds }
