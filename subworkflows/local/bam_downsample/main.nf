@@ -128,29 +128,31 @@ workflow BAM_DOWNSAMPLE {
         ch_fasta,
         ch_fai
     )
+    ch_ds_bam = PICARD_DOWNSAMPLESAM.out.bam
     ch_versions = ch_versions.mix(PICARD_DOWNSAMPLESAM.out.versions)
 
     //
     // MODULE: Index BAMs
     //
     SAMTOOLS_INDEX (
-        PICARD_DOWNSAMPLESAM.out.bam
+        ch_ds_bam
     )
+    ch_ds_index = SAMTOOLS_INDEX.out.index
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
     // SUBWORKFLOW: Run SAMtools stats, flagstat and idxstats
     //
     BAM_STATS_SAMTOOLS_FINAL (
-        PICARD_DOWNSAMPLESAM.out.bam,
+        ch_ds_bam.join(ch_ds_index, by: [0]),
         ch_fasta
     )
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS_FINAL.out.versions)
 
 
     emit:
-    bam      = PICARD_DOWNSAMPLESAM.out.bam   // channel: [ val(meta), [ bam ] ]
-    index    = SAMTOOLS_INDEX.out.index           // channel: [ val(meta), [ index ] ]
+    bam      = ch_ds_bam   // channel: [ val(meta), [ bam ] ]
+    index    = ch_ds_index           // channel: [ val(meta), [ index ] ]
     stats    = BAM_STATS_SAMTOOLS_FINAL.out.stats // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_STATS_SAMTOOLS_FINAL.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS_FINAL.out.idxstats // channel: [ val(meta), [ idxstats ] ]
