@@ -38,3 +38,9 @@ Sometimes, running the pipeline several times with -resume will cause the pipeli
 # for chorseq peak calling, check that https://www.nature.com/articles/s41596-021-00585-3#Sec60 is followed correctly, step 163 says to use the BAMs from step 162, which are not BAMs, but bedgraphs
 
 # make sure only unique reads are kept in bams for chorseq rrpm calculation
+
+
+# max_time etc. paramteres in output -params-file does not match schema pattern
+
+--max_time: string [{days=3, hours=72, seconds=259200, millis=259200000, durationInMillis=259200000, minutes=4320}] does not match pattern ^(\d+\.?\s*(s|m|h|d|day)\s*)+$ ({days=3, hours=72, seconds=259200, millis=259200000, durationInMillis=259200000, minutes=4320})
+* --max_memory: string [{mega=65536, kilo=67108864, giga=64, bytes=68719476736}] does not match pattern ^\d+(\.\d+)?\.?\s*(K|M|G|T)?B$ ({mega=65536, kilo=67108864, giga=64, bytes=68719476736})
