@@ -792,6 +792,7 @@ workflow GLSEQ {
         .mix(ch_filtered2_stats)
         .mix(ch_filtered2_exo_stats)
         .mix(ch_allocated_stats)
+        .mix(ch_ds_stats)
         .set { ch_samtools_stats_summary }
 
     //
