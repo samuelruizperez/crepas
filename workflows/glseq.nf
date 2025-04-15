@@ -814,11 +814,11 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Create SAMtools summary table
     //
-    SAMTOOLS_STATS_SUMMARY {
+    SAMTOOLS_STATS_SUMMARY (
         ch_samtools_stats_summary,
         params.genome,
         params.spikein_genome
-    }
+    )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
     //
