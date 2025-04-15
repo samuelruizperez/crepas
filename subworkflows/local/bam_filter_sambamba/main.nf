@@ -15,12 +15,12 @@ workflow BAM_FILTER_SAMBAMBA {
     main:
     ch_versions = Channel.empty()
 
-    SAMBAMBA_VIEW(
+    SAMBAMBA_VIEW (
         ch_bam_index,
         ch_bed
     )
 
-    BAM_SORT_STATS_SAMTOOLS(
+    BAM_SORT_STATS_SAMTOOLS (
         SAMBAMBA_VIEW.out.bam,
         ch_fasta
     )
