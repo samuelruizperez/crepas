@@ -50,3 +50,5 @@ should be done
 separately for each experiment (chipseq, scarseq, etc.) and not for all experiments together
 
 # remove redundant samtools stats before downsampling
+
+# add https://github.com/LHentges/LanceOtron
