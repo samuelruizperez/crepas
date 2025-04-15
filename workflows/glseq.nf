@@ -17,6 +17,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_grothlab_glseq_pipeline'
 include { INPUT_CHECK         } from '../subworkflows/local/input_check/main'
 include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
+include { BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FINAL } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
@@ -448,6 +449,21 @@ workflow GLSEQ {
     }
 
     //
+    // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
+    //
+    BAM_FILTER_SAMBAMBA_FINAL (
+        ch_filtered_bam.join(ch_filtered_index, by: 0),
+        ch_filtered_bed.first(),
+        ch_fasta.first()
+    )
+    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FINAL.out.bam
+    ch_filtered_index = BAM_FILTER_SAMBAMBA_FINAL.out.index
+    ch_filtered3_stats = BAM_FILTER_SAMBAMBA_FINAL.out.stats
+    ch_filtered3_flagstat = BAM_FILTER_SAMBAMBA_FINAL.out.flagstat
+    ch_filtered3_idxstats = BAM_FILTER_SAMBAMBA_FINAL.out.idxstats
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FINAL.out.versions)
+    
+    //
     // MODULE: Picard post alignment QC
     //
     // TODO: using first() to convert the tuple to a value channel and make it consumable
@@ -791,6 +807,7 @@ workflow GLSEQ {
         .mix(ch_filtered2_stats)
         .mix(ch_filtered2_exo_stats)
         .mix(ch_allocated_stats)
+        .mix(ch_filtered3_stats)
         .mix(ch_ds_stats)
         .set { ch_samtools_stats_summary }
 
