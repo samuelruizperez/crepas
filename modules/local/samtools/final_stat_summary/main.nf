@@ -1,5 +1,5 @@
 process FINAL_STAT_SUMMARY {
-    tag "$meta.id"
+    tag "$archive"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
@@ -21,7 +21,7 @@ process FINAL_STAT_SUMMARY {
 
     script:
     def args      = task.ext.args ?: ''
-    def prefix    = task.ext.prefix ?: "${meta.id}"
+    def prefix    = task.ext.prefix ?: 'final_samtools_stats_summary'
     def exo = exogenous_genome_name ? "--exogenous_genome_name $exogenous_genome_name" : ''
     """
     process_stats_summary.R \\
