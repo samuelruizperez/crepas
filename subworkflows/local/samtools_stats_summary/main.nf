@@ -31,7 +31,7 @@ workflow SAMTOOLS_STATS_SUMMARY {
     FINAL_STAT_SUMMARY (
         SAMTOOLS_STATS_CAT.out.cat,
         genome,
-        spikein_genome,
+        spikein_genome
     )
     ch_versions = ch_versions.mix(FINAL_STAT_SUMMARY.out.versions.first())
 
