@@ -48,3 +48,5 @@ Sometimes, running the pipeline several times with -resume will cause the pipeli
 # downsampling by min in type (chip or input) 
 should be done
 separately for each experiment (chipseq, scarseq, etc.) and not for all experiments together
+
+# remove redundant samtools stats before downsampling

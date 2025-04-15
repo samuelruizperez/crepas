@@ -386,7 +386,6 @@ workflow GLSEQ {
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    // ch_filtered2_stats = Channel.empty()
     ch_filtered2_flagstat = Channel.empty()
     ch_filtered2_stats = Channel.empty()
     ch_filtered2_idxstats = Channel.empty()
