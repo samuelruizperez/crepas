@@ -8,7 +8,7 @@ process FINAL_STAT_SUMMARY {
         'community.wave.seqera.io/library/r-argparse_r-dplyr_r-forcats_r-ggplot2_pruned:0969cc079210fc80' }"
 
     input:
-    tuple val(meta), path(table)
+    path(table)
     val endogenous_genome_name
     val exogenous_genome_name
 
