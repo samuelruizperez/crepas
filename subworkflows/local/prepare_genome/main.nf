@@ -73,12 +73,12 @@ workflow PREPARE_GENOME {
 
 
     // Make fasta file available if reference saved or IGV is run
-    if (params.save_reference || !params.skip_igv) {
-        file("${params.outdir}/genome/").mkdirs()
-        // copy fasta file (second element of tuple) to output directory
-        ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
-        //ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
-    }
+    // if (params.save_reference || !params.skip_igv) {
+    //     file("${params.outdir}/genome/").mkdirs()
+    //     // copy fasta file (second element of tuple) to output directory
+    //     ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+    //     //ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+    // }
 
     //
     // Uncompress GTF annotation file or create from GFF3 if required
