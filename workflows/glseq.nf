@@ -736,6 +736,7 @@ workflow GLSEQ {
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
         ch_chrom_sizes_endo.map{ it[1] }.first(),
+        ch_blacklist.map{ it[1] }.first(),
         ch_macs_gsize.first(),
         "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
@@ -743,7 +744,8 @@ workflow GLSEQ {
         ch_peak_annotation_header,
         params.narrow_peak,
         params.skip_peak_annotation,
-        params.skip_peak_qc
+        params.skip_peak_qc,
+        params.skip_edd
     )
     ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
 
