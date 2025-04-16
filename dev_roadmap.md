@@ -52,3 +52,5 @@ separately for each experiment (chipseq, scarseq, etc.) and not for all experime
 # remove redundant samtools stats before downsampling
 
 # add https://github.com/LHentges/LanceOtron
+
+# add flt3 of spike in bams before spike-in normalization
