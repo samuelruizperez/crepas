@@ -735,8 +735,8 @@ workflow GLSEQ {
         ch_ip_control_bam_cs,
         ch_fasta.map{ it[1] }.first(),
         ch_gtf.map{ it[1] }.first(),
-        ch_chrom_sizes_endo.map{ it[1] }.first(),
-        ch_blacklist.map{ it[1] }.first(),
+        ch_chrom_sizes_endo.first(),
+        ch_blacklist.first(),
         ch_macs_gsize.first(),
         "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,

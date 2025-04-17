@@ -87,7 +87,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
     BEDTOOLS_SLOP (
         MACS3_BDGCMP.out.bdg,
-        ch_chrom_sizes
+        ch_chrom_sizes.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
 
@@ -98,7 +98,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
     UCSC_BEDCLIP (
         AWK_FIX_MACS3_BDGCMP.out.bed,
-        ch_chrom_sizes
+        ch_chrom_sizes.map{ it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
 
@@ -111,7 +111,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
     UCSC_BEDGRAPHTOBIGWIG (
         FILE_SORT.out.sorted,
-        ch_chrom_sizes
+        ch_chrom_sizes.map{ it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
 
