@@ -101,6 +101,8 @@
     javax.imageio.IIOException: Can't create cache file!
 
     Caused by: java.nio.file.FileSystemException: /tmp/*.tmp: No space left on device
+
+    Fontconfig error: No writable cache directories
     ```
 
     To prevent these, one can set the `SINGULARITY_TMPDIR` environment variable to a temporary directory in the `/scratch` space. This is necessary because a default location for Singularity temporary files has not been set in the DAN System. This might be fixed in the future.
@@ -110,6 +112,8 @@
     ```bash
     echo >> ~/.bashrc
     echo 'export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"' >> ~/.bashrc
+    echo 'export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity-images"' >> ~/.bashrc
+    echo 'export SINGULARITY_LOCALCACHEDIR="/projects/dan1/people/${USER}/cache/singularity-images"' >> ~/.bashrc
     echo 'mkdir -p $SINGULARITY_TMPDIR' >> ~/.bashrc
     ```
 
