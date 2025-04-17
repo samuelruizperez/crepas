@@ -95,6 +95,30 @@
 <!-- > [!NOTE]
 > The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information. -->
 
+5. **[Temporary fix]** The following issues involving the `SINGULARITY_TMPDIR` environment variable may occur when running the pipeline:
+
+    ```
+    javax.imageio.IIOException: Can't create cache file!
+
+    Caused by: java.nio.file.FileSystemException: /tmp/*.tmp: No space left on device
+    ```
+
+    To prevent these, one can set the `SINGULARITY_TMPDIR` environment variable to a temporary directory in the `/scratch` space. This is necessary because a default location for Singularity temporary files has not been set in the DAN System. This might be fixed in the future.
+
+    Run the following commands to set `SINGULARITY_TMPDIR`:
+
+    ```bash
+    echo >> ~/.bashrc
+    echo 'export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"' >> ~/.bashrc
+    echo 'mkdir -p $SINGULARITY_TMPDIR' >> ~/.bashrc
+    ```
+
+    Then, close and reopen the terminal or run the following command to apply the changes:
+
+    ```bash
+    source ~/.bashrc
+    ```
+
 ## Running the pipeline
 
 1. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
