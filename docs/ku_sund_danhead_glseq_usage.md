@@ -75,6 +75,9 @@
     EOF
     ```
 
+    <!-- > [!NOTE]
+    > The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information. -->
+
     You can verify that the SCM file was created correctly by running:
 
     ```bash
@@ -91,9 +94,9 @@
         }
     }
     ```
+    </details>
 
-<!-- > [!NOTE]
-> The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information. -->
+---
 
 > [!WARNING]
 > **[Temporary fix]** The following issues involving the `SINGULARITY_TMPDIR` environment variable may occur when running the pipeline:
