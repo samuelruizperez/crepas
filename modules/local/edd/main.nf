@@ -30,11 +30,11 @@ process EDD {
     edd \\
         $args \\
         --nprocs $task.cpus \\
-        --ip_bam $ip_bam \\
-        --input_bam $input_bam \\
-        --chrom_sizes $chrom_sizes \\
-        --unalignable_regions $unalignable_regions \\
-        --output_dir ./${prefix}/
+        $chrom_sizes \\
+        $unalignable_regions \\
+        $ip_bam \\
+        $input_bam \\
+        ./${prefix}/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
