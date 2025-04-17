@@ -5,8 +5,8 @@ process EDD {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/pip_edd_pysam:6ffdd76909e836fe':
-        'community.wave.seqera.io/library/pip_edd_pysam:819e763498511ae9' }"
+        'oras://community.wave.seqera.io/library/edd_pysam:6b99baa1f11ca523':
+        'community.wave.seqera.io/library/edd_pysam:8777754cfb33a49f' }"
 
     input:
     tuple val(meta), path(ip_bam), path(input_bam)
