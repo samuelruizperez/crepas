@@ -112,9 +112,10 @@
     ```bash
     echo >> ~/.bashrc
     echo 'export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"' >> ~/.bashrc
-    echo 'export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity-images"' >> ~/.bashrc
-    echo 'export SINGULARITY_LOCALCACHEDIR="/projects/dan1/people/${USER}/cache/singularity-images"' >> ~/.bashrc
+    echo 'export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity"' >> ~/.bashrc
+    echo 'export NXF_SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity/cache/nxf"' >> ~/.bashrc
     echo 'mkdir -p $SINGULARITY_TMPDIR' >> ~/.bashrc
+    echo 'mkdir -p $NXF_SINGULARITY_CACHEDIR' >> ~/.bashrc
     ```
 
     Then, close and reopen the terminal or run the following command to apply the changes:
