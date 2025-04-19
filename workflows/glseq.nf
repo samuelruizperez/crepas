@@ -20,7 +20,7 @@ include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/
 include { BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FINAL } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
-include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
+// include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
@@ -28,8 +28,9 @@ include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_m
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
-include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
-include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
+// include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
+// include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
+include { BAM_NORMALIZED_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalized_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
 include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_FINAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BAM_FLAGSTAT_MAPPED } from '../../../modules/local/bam_flagstat_mapped/main'
@@ -602,7 +603,10 @@ workflow GLSEQ {
         ch_filtered_bam_bai,
         ch_chrom_sizes,
         params.genome,
-        params.spikein_genome
+        params.spikein_genome,
+        params.skip_srpm,
+        params.skip_cisrpm,
+        params.skip_cisrpmsoi
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -644,45 +648,48 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
     }
 
-    if (!params.skip_count_reads_in_bins) {
-        //
-        // SUBWORKFLOW: Count reads in bins across samples with featureCounts
-        //
-        COUNT_READS_IN_BINS (
-            ch_filtered_bam,
-            ch_chrom_sizes_endo
-        )
-        ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
-    }
+    // if (!params.skip_count_reads_in_bins) {
+    //     //
+    //     // SUBWORKFLOW: Count reads in bins across samples with featureCounts
+    //     //
+    //     COUNT_READS_IN_BINS (
+    //         ch_filtered_bam,
+    //         ch_chrom_sizes_endo
+    //     )
+    //     ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
+    // }
 
 
     // Extract only ChOR-seq samples
-    ch_filtered_bam
-        .join(ch_filtered_index, by: [0])
-        .mix(ch_filtered_exo_bam.join(ch_filtered_exo_index, by: [0]))
-        .filter { it[0].exp_type == 'chorseq' }
-        .set { ch_filtered_bam_bai_chor }
+    // ch_filtered_bam
+    //     .join(ch_filtered_index, by: [0])
+    //     .mix(ch_filtered_exo_bam.join(ch_filtered_exo_index, by: [0]))
+    //     .filter { it[0].exp_type == 'chorseq' }
+    //     .set { ch_filtered_bam_bai_chor }
 
-    ch_filtered_bam_bai_chor
-        .map {
-            meta, bam, bai ->
-                "${meta}\t${bam}\t${bai}"
-        }
-        .collectFile( name: 'ch_filtered_bam_bai_chor.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+    // ch_filtered_bam_bai_chor
+    //     .map {
+    //         meta, bam, bai ->
+    //             "${meta}\t${bam}\t${bai}"
+    //     }
+    //     .collectFile( name: 'ch_filtered_bam_bai_chor.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
     
 
     //
     // SUBWORKFLOW: CHOR-seq analysis: compute reference-adjusted reads per million (RRPM)
     //
-    ch_chor_rrpm = Channel.empty()
-    BAM_CHORSEQ_RRPM (
-        ch_filtered_bam_bai_chor,
-        ch_chrom_sizes_endo,
-        params.genome,
-        params.spikein_genome
-    )
-    ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
-    ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
+    // ch_chor_rrpm = Channel.empty()
+    // BAM_CHORSEQ_RRPM (
+    //     ch_filtered_bam_bai_chor,
+    //     ch_chrom_sizes_endo,
+    //     params.genome,
+    //     params.spikein_genome
+    // )
+    // ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
+    // ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
+
+    // Here we remove the exogenous samples from the filtered_bam_bai channel
+    ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
 
     ch_ds_stats = Channel.empty()
     ch_ds_flagstat = Channel.empty()
