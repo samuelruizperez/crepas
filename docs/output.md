@@ -266,6 +266,10 @@ Thus, `<allocation_method>` in the directory structure below corresponds to the 
 
 </details>
 
+### Final filtering of BAM files
+
+a
+
 ### Collection of multiple metrics
 
 <details markdown="1" open>
@@ -280,6 +284,10 @@ Thus, `<allocation_method>` in the directory structure below corresponds to the 
   - `*.pdf`: Alignment QC plot files from picard CollectMultipleMetrics.
 
 </details>
+
+### Read shifting (ATAC-seq)
+
+a
 
 ### phantompeakqualtools
 
@@ -308,6 +316,18 @@ Relative strand correlation (RSC) is the ratio between the fragment-length peak 
 
 ### Normalised bigWig files
 
+
+The following normalization methods are available in the pipeline:
+
+| Method   | Description | Formula | Output | References |
+| -------- | ----------- | -------- | ------ | ---------- |
+| Raw     | No normalization |  | `*.bigWig` |  |
+| RPM     | **R**eads **P**er **M**illion mapped reads | $$\alpha \times \frac{10^6}{\text{total mapped reads}}$$ | <ul><li>$$\text{endogenous ChIP } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous ChIP } \alpha_{\text{RPM}}$$ </li><li>$$\text{endogenous input } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous input } \alpha_{\text{RPM}}$$</li></ul> | |
+| SRPM    | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | <ul><li>For the ChIP: $$\alpha \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ </li><li>For the input: $$\alpha \times \frac{10^6}{\text{total mapped exogenous input reads in}}$$</li></ul>  | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul> | [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
+| CISRPM   | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | <ul><li>For the ChIP: $$\alpha \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous ChIP reads}}$$ </li><li>For the input: $$\alpha \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}} $$ </li></ul> | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul> | [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007) |
+| CISRPM-SOI | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput | Per bin: $$\frac{\alpha_{\text{CISRPM ChIP}}}{\alpha_{\text{CISRPM input}}}$$ | $$\alpha_{\text{CISRPM-SOI}}$$ | Qian Du |
+
+<!-- 
 <details markdown="1" open>
     <summary>Output files</summary>
 
@@ -316,7 +336,7 @@ Relative strand correlation (RSC) is the ratio between the fragment-length peak 
 
 </details>
 
-The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in an indexed binary format useful for displaying dense, continuous data in Genome Browsers such as the [UCSC](https://genome.ucsc.edu/cgi-bin/hgTracks) and [IGV](http://software.broadinstitute.org/software/igv/). This mitigates the need to load the much larger BAM files for data visualisation purposes which will be slower and result in memory issues. The coverage values represented in the bigWig file can also be normalised in order to be able to compare the coverage across multiple samples - this is not possible with BAM files. The bigWig format is also supported by various bioinformatics software for downstream processing such as meta-profile plotting.
+The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in an indexed binary format useful for displaying dense, continuous data in Genome Browsers such as the [UCSC](https://genome.ucsc.edu/cgi-bin/hgTracks) and [IGV](http://software.broadinstitute.org/software/igv/). This mitigates the need to load the much larger BAM files for data visualisation purposes which will be slower and result in memory issues. The coverage values represented in the bigWig file can also be normalised in order to be able to compare the coverage across multiple samples - this is not possible with BAM files. The bigWig format is also supported by various bioinformatics software for downstream processing such as meta-profile plotting. -->
 
 ### deepTools
 
