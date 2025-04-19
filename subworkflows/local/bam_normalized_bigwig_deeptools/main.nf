@@ -1,5 +1,3 @@
-
-include { BAM_FLAGSTAT_MAPPED   } from '../../../modules/local/bam_flagstat_mapped/main'
 include { DEEPTOOLS_BAMCOVERAGE } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { FILE_SORT } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
