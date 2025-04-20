@@ -25,7 +25,7 @@ include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkfl
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
-include { BAM_ALLOCATE_MULTIMAPPERS } from '../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
@@ -430,17 +430,17 @@ workflow GLSEQ {
     ch_allocated_idxstats = Channel.empty()
     if (params.allocate_n_multimappers && params.allocation_method != 'chromap') {
 
-        BAM_ALLOCATE_MULTIMAPPERS (
+        BAM_ALLOCATE_MULTIMAPPERS_ENDO (
             ch_filtered_bam,
             ch_fasta,
             params.allocation_method
         )
-        ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS.out.bam
-        ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS.out.index
-        ch_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS.out.flagstat
-        ch_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS.out.stats
-        ch_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS.out.idxstats
-        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
+        ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bam
+        ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.index
+        ch_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.flagstat
+        ch_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats
+        ch_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats
+        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.versions)
     }
 
     ch_exo_allocated_flagstat = Channel.empty()
