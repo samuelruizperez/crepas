@@ -130,7 +130,6 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .set { ch_bam_bai_control_cisrpm }
 
         ch_bam_bai_cisrpm = ch_bam_bai_ip_cisrpm.mix(ch_bam_bai_control_cisrpm)
-
     }
 
     ch_bam_bai_raw
