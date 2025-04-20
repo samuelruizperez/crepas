@@ -32,7 +32,6 @@ include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/loca
 // include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
 include { BAM_NORMALIZED_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalized_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
-include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_FINAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BAM_FLAGSTAT_MAPPED } from '../../../modules/local/bam_flagstat_mapped/main'
 
 /*
@@ -70,6 +69,7 @@ include { BAM_MARKDUPLICATES_PICARD         } from '../subworkflows/nf-core/bam_
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
 include { BAM_STATS_SAMTOOLS                } from '../subworkflows/nf-core/bam_stats_samtools'
 include { BAM_SORT_STATS_SAMTOOLS           } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_FINAL } from '../subworkflows/nf-core/bam_stats_samtools/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
