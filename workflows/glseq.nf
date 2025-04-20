@@ -7,6 +7,7 @@
 include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
+include { BAM_FLAGSTAT_MAPPED } from '../modules/local/bam_flagstat_mapped/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -32,7 +33,6 @@ include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/loca
 // include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
 include { BAM_NORMALIZED_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalized_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
-include { BAM_FLAGSTAT_MAPPED } from '../../../modules/local/bam_flagstat_mapped/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
