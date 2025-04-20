@@ -85,7 +85,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .set { ch_bam_bai_genome_type }
 
         // Combine the endo and exo BAMs (ChIPs)
-        ch_bam_bai
+        ch_bam_bai_genome_type
             .endo_ip
             .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
             .map { 
@@ -95,7 +95,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .set { ch_bam_bai_genome_ip }
 
         // Combine the endo and exo BAMs (inputs)
-        ch_bam_bai
+        ch_bam_bai_genome_type
             .endo_control
             .combine(ch_bam_bai_genome_type.exo_control, by: 0)
             .map { control_id, endo_control_meta, endo_control_bam, endo_control_bai, exo_control_meta, exo_control_bam, exo_control_bai ->
