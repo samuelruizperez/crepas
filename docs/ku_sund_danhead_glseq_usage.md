@@ -133,6 +133,11 @@
 >    echo 'mkdir -p $NXF_HOME' >> ~/.bashrc
 >    echo 'mkdir -p $NXF_SINGULARITY_CACHEDIR' >> ~/.bashrc
 >    echo 'mkdir -p $NXF_SINGULARITY_LIBRARYDIR' >> ~/.bashrc
+>
+>    echo >> ~/.bashrc
+>    echo '### Matplotlib env vars' >> ~/.bashrc
+>    echo 'export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib' >> ~/.bashrc
+>    echo 'mkdir -p $MPLCONFIGDIR' >> ~/.bashrc
 >    ```
 >
 >    Then, close and reopen the terminal or run the following command to apply the changes:

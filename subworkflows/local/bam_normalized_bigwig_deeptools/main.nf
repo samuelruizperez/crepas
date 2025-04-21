@@ -109,7 +109,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .map { 
                 id, endo_ip_meta, endo_ip_bam, endo_ip_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai, endo_control_meta, endo_control_bam, endo_control_bai, exo_control_meta, exo_control_bam, exo_control_bai ->
                     def meta_clone = endo_ip_meta.clone()
-                    meta_clone.norm_factor_val = (1e6 / exo_ip_meta.total_mapped_reads) * (exo_control_meta.total_mapped_reads / endo_control_meta.total_mapped_reads)
+                    meta_clone.norm_factor_val = (1e6 / exo_ip_meta.total_mapped_reads) * (exo_control_meta.total_mapped_reads / endo_ip_meta.total_mapped_reads)
                     meta_clone.norm_factor_type = 'cisrpm'
                     [ meta_clone, endo_ip_bam, endo_ip_bai ]
             }
