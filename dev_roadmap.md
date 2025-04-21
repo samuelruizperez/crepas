@@ -54,3 +54,5 @@ separately for each experiment (chipseq, scarseq, etc.) and not for all experime
 # add https://github.com/LHentges/LanceOtron
 
 # add flt3 of spike in bams before spike-in normalization
+
+# what happens with process_stats_summary.R if there is a dot in either the genome or the spikein_genome name?
