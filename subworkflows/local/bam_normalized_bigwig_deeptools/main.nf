@@ -190,7 +190,9 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .ips_with_control
             .combine(ch_bdg_ip_control_cisrpm.controls, by: 0)
             .map { control_id, ip_meta, ip_bedgraph, control_meta, control_bedgraph ->
-                [ ip_meta, ip_bedgraph, control_bedgraph ]
+                def meta_clone = ip_meta.clone()
+                meta_clone.signal_over_input = true
+                [ meta_clone, ip_bedgraph, control_bedgraph ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
