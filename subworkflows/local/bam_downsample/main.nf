@@ -1,8 +1,6 @@
-include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_INITIAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
-include { BAM_FLAGSTAT_MAPPED } from '../../../modules/local/bam_flagstat_mapped/main'
 include { PICARD_DOWNSAMPLESAM } from '../../../modules/local/picard/downsamplesam/main'
 include { SAMTOOLS_INDEX } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_FINAL } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow BAM_DOWNSAMPLE {
 
@@ -15,45 +13,6 @@ workflow BAM_DOWNSAMPLE {
     main:
 
     ch_versions = Channel.empty()
-
-    BAM_STATS_SAMTOOLS_INITIAL (
-        ch_bam_bai,
-        ch_fasta
-    )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS_INITIAL.out.versions)
-
-    //
-    // MODULE: Add total_mapped_reads to each bam meta
-    //
-    BAM_FLAGSTAT_MAPPED (
-        BAM_STATS_SAMTOOLS_INITIAL.out.flagstat
-    )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED.out.versions)
-
-    //
-    // MODULE: Extract total_mapped_reads from flagstat
-    //
-    BAM_FLAGSTAT_MAPPED.out.txt
-        .map {
-            meta, total ->
-                [ meta.id, total.splitCsv(header:false)[0][0] ]
-        }
-        .set { ch_total }
-
-    // Add the total_mapped_reads to the bam meta
-    ch_bam_bai
-        .map {
-            meta, bam, bai ->
-                [ meta.id, meta, bam, bai ]
-        }
-        .combine(ch_total, by: 0)
-        .map {
-            id, meta, bam, bai, total ->
-                meta_clone = meta.clone()
-                meta_clone.total_mapped_reads = total.toDouble()
-                [ meta_clone, bam, bai ]
-        }
-        .set { ch_bam_bai }
 
     if (downsampling_method == 'min_by_type') {
 
@@ -143,19 +102,19 @@ workflow BAM_DOWNSAMPLE {
     //
     // SUBWORKFLOW: Run SAMtools stats, flagstat and idxstats
     //
-    BAM_STATS_SAMTOOLS_FINAL (
+    BAM_STATS_SAMTOOLS (
         ch_ds_bam.join(ch_ds_index, by: [0]),
         ch_fasta
     )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS_FINAL.out.versions)
+    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
 
     emit:
     bam      = ch_ds_bam   // channel: [ val(meta), [ bam ] ]
     index    = ch_ds_index           // channel: [ val(meta), [ index ] ]
-    stats    = BAM_STATS_SAMTOOLS_FINAL.out.stats // channel: [ val(meta), [ stats ] ]
-    flagstat = BAM_STATS_SAMTOOLS_FINAL.out.flagstat // channel: [ val(meta), [ flagstat ] ]
-    idxstats = BAM_STATS_SAMTOOLS_FINAL.out.idxstats // channel: [ val(meta), [ idxstats ] ]
+    stats    = BAM_STATS_SAMTOOLS.out.stats // channel: [ val(meta), [ stats ] ]
+    flagstat = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
+    idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
 
     versions = ch_versions                    // channel: [ versions.yml ]
 }

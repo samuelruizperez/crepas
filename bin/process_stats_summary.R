@@ -62,7 +62,26 @@ tmp <- summary_table %>%
                   ID = gsub("\\.sorted\\.bam$", "", ID),
                   ID = gsub("\\.sorted$", "", ID),
                   # The following is to avoid endo and exogenous files merging together
-                  ID = gsub("\\.flT2$", "_flT2", ID),
+                  ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
+                              gsub("\\.flT2$", paste0(".", opt$endogenous_genome_name, "_flT2"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
+                              gsub("\\.flT2$", paste0(".", opt$exogenous_genome_name, "_flT2"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
+                              gsub("\\.allo$", paste0(".", opt$endogenous_genome_name, "_allo"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
+                              gsub("\\.allo$", paste0(".", opt$exogenous_genome_name, "_allo"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
+                              gsub("\\.flT3$", paste0(".", opt$endogenous_genome_name, "_flT3"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
+                              gsub("\\.flT3$", paste0(".", opt$exogenous_genome_name, "_flT3"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
+                              gsub("\\..shifted$", paste0(".", opt$endogenous_genome_name, "_shifted"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID), 
+                              gsub("\\..shifted$", paste0(".", opt$exogenous_genome_name, "_shifted"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
+                              gsub("\\.dSp$", paste0(".", opt$endogenous_genome_name, "_dSp"), ID), ID),
+                  ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
+                              gsub("\\.dSp$", paste0(".", opt$exogenous_genome_name, "_dSp"), ID), ID),
                   # split ID by ".", processing_step is the last element
                   processing_step = gsub(".*\\.", "", ID),
                   processing_step = fct_relevel(processing_step, rev(unique(processing_step))),
@@ -87,16 +106,17 @@ tmp <- summary_table %>%
 
 actual_flt2_rts_colname <- paste0(opt$endogenous_genome_name, "_flT2_raw_total_sequences")
 actual_flt2_mmr_colname <- paste0(opt$endogenous_genome_name, "_flT2_multimapping_reads")
+actual_flt3_rts_colname <- paste0(opt$endogenous_genome_name, "_flT3_raw_total_sequences")
 
 # add new flT1_multimapping_reads or flT2_multimapping_reads column
 if (any(grepl(actual_flt2_rts_colname, colnames(tmp)))) {
   tmp <- tmp %>%
-    mutate(!!sym(actual_flt2_mmr_colname) := !!sym(actual_flt2_rts_colname) - flT3_raw_total_sequences) %>%
+    mutate(!!sym(actual_flt2_mmr_colname) := !!sym(actual_flt2_rts_colname) - !!sym(actual_flt3_rts_colname)) %>%
     # move flT2_multimapping_reads after last column with flT2 in the name
     relocate(!!sym(actual_flt2_mmr_colname), .after = tail(grep("flT2", colnames(tmp)), n = 1))
 } else if (any(grepl("flT1_raw_total_sequences", colnames(tmp)))) {
   tmp <- tmp %>%
-    mutate(flT1_multimapping_reads = flT1_raw_total_sequences - flT3_raw_total_sequences) %>%
+    mutate(flT1_multimapping_reads = flT1_raw_total_sequences - !!sym(actual_flt3_rts_colname)) %>%
     # move flT1_multimapping_reads after last column with flT1 in the name
     relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(tmp)), n = 1))
 } else {
