@@ -1,5 +1,6 @@
 include { DEEPTOOLS_BAMCOVERAGE } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { FILE_SORT } from '../../../modules/local/file_sort/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT } from '../../../modules/local/bigwig_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 
 workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
@@ -163,13 +164,53 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
        DEEPTOOLS_BAMCOVERAGE.out.bedgraph,
         'bedgraph'
     )
+    ch_bdg = FILE_SORT.out.sorted
     ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+
+
+    // Create channel: [ val(meta), [ ip_bedgraph ], [ control_bedgraph ] ]
+    ch_bdg_ip_control_cisrpm = Channel.empty()
+    if (!skip_cisrpmsoi) {
+        ch_bdg
+            .filter { meta, bedgraph ->
+                meta.norm_factor_type == 'cisrpm'
+            }
+            .branch { meta, bedgraph ->
+                ips_with_control: meta.control
+                    return [ meta.control, meta, bedgraph ]
+                // Cannot calculate CISRPM-SOI for ChIPs without inputs
+                // ips_without_control: !meta.control && !meta.is_control
+                //     return [ meta, bedgraph ]
+                controls: !meta.control && meta.is_control
+                    return [ meta.id, meta, bedgraph ]
+            }
+            .set { ch_bdg_ip_control_cisrpm }
+
+        ch_bdg_ip_control_cisrpm
+            .ips_with_control
+            .combine(ch_bdg_ip_control_cisrpm.controls, by: 0)
+            .map { control_id, ip_meta, ip_bedgraph, control_meta, control_bedgraph ->
+                [ ip_meta, ip_bedgraph, control_bedgraph ]
+            }
+            .set { ch_bdg_ip_control_cisrpm }
+
+        //
+        // MODULE: Calculate CIRSPM signal over input (ChIP over input)
+        //
+        BEDGRAPH_SIGNAL_OVER_INPUT (
+            ch_bdg_ip_control_cisrpm
+        )
+        ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
+
+        ch_bdg = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg)
+
+    }
 
     //
     // MODULE: Convert bedgraph to bigwig
     //
     UCSC_BEDGRAPHTOBIGWIG (
-        FILE_SORT.out.sorted,
+        ch_bdg,
         ch_chrom_sizes.map { it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())

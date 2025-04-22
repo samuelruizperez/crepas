@@ -316,7 +316,6 @@ Relative strand correlation (RSC) is the ratio between the fragment-length peak 
 
 ### Normalised bigWig files
 
-
 The following normalization methods are available in the pipeline:
 
 | Method   | Description | Formula | Output | References |
@@ -325,7 +324,21 @@ The following normalization methods are available in the pipeline:
 | RPM     | **R**eads **P**er **M**illion mapped reads | $$\alpha \times \frac{10^6}{\text{total mapped reads}}$$ | <ul><li>$$\text{endogenous ChIP } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous ChIP } \alpha_{\text{RPM}}$$ </li><li>$$\text{endogenous input } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous input } \alpha_{\text{RPM}}$$</li></ul> | |
 | SRPM    | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the ChIP: $$\alpha \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ <br> For the input: $$\alpha \times \frac{10^6}{\text{total mapped exogenous input reads}}$$  | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul> | [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
 | CISRPM   | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the ChIP: $$\alpha \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ <br> For the input: $$\alpha \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}} $$ | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul> | [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007) |
-| CISRPM-SOI | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput | Per bin: $$\frac{\alpha_{\text{CISRPM ChIP}}}{\alpha_{\text{CISRPM input}}}$$ | $$\alpha_{\text{CISRPM-SOI}}$$ | Qian Du |
+| CISRPM-SOI | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput | Per bin: <br> $$\frac{\alpha_{\text{CISRPM ChIP}}}{\alpha_{\text{CISRPM input}}}$$ | $$\alpha_{\text{CISRPM-SOI}}$$ | Qian Du |
+
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/*/<exp_type>/coverage`
+
+  - `*.raw.<bin_size>.bigWig`: Raw bigWig files.
+  - `*.rpm.<bin_size>.bigWig`: RPM bigWig files.
+  - `*.srpm.<bin_size>.bigWig`: SRPM bigWig files.
+  - `*.cisrpm.<bin_size>.bigWig`: CISRPM bigWig files.
+  - `*.cisrpm.soi.<bin_size>.bigWig`: CISRPM-SOI bigWig files.
+
+</details>
 
 <!-- 
 <details markdown="1" open>
