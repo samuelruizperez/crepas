@@ -689,6 +689,8 @@ workflow GLSEQ {
     // ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
 
     // Here we remove the exogenous samples from the filtered_bam_bai channel
+    ch_filtered_bam = ch_filtered_bam.filter { it[0].genome == params.genome }
+    ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }
     ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
 
     ch_ds_stats = Channel.empty()
