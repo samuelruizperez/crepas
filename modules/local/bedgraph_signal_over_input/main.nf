@@ -29,12 +29,12 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
         | awk \\
             $args2 \\
             '{
-                if ($8 == 0) {
+                if (\$8 == 0) {
                     ratio = 0
                 } else {
-                    ratio = $4 / $8
+                    ratio = \$4 / \$8
                 }
-            print $1, $2, $3, ratio
+            print \$1, \$2, \$3, ratio
             }' \\
     > ${prefix}.bedgraph
 
