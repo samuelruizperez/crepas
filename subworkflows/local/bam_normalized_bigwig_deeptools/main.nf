@@ -1,6 +1,6 @@
 include { DEEPTOOLS_BAMCOVERAGE } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { FILE_SORT } from '../../../modules/local/file_sort/main'
-include { BEDGRAPH_SIGNAL_OVER_INPUT } from '../../../modules/local/bigwig_signal_over_input/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT } from '../../../modules/local/bedgraph_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 
 workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
