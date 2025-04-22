@@ -19,6 +19,7 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
 
     script:
     def args  = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
