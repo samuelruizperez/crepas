@@ -36,7 +36,7 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
                     ratio = \$4 / \$8
                 }
             print \$1, \$2, \$3, ratio
-            }' \\
+            }' OFS="\\t" \\
     > ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
