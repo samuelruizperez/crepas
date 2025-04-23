@@ -19,24 +19,17 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
 
     script:
     def args  = task.ext.args ?: ''
-    def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    paste \\
+    awk \\
         $args \\
-        $ip_bedgraph \\
+        'NR==FNR {key=\$1 FS \$2 FS \$3; value[key]=\$4; next} 
+            {key=\$1 FS \$2 FS \$3; chip=\$4; input=(key in value ? value[key] : 0); 
+            ratio=(input == 0 ? 0 : chip / input); 
+            print \$1, \$2, \$3, ratio}' OFS="\\t" \\
         $control_bedgraph \\
-        | awk \\
-            $args2 \\
-            '{
-                if (\$8 == 0) {
-                    ratio = 0
-                } else {
-                    ratio = \$4 / \$8
-                }
-            print \$1, \$2, \$3, ratio
-            }' OFS="\\t" \\
+        $ip_bedgraph \\
     > ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
