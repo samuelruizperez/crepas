@@ -28,10 +28,15 @@
     ```bash
     /projects/dan1/apps/etc/init_dangpu_env.sh
     ```
-  
+3. Source your `.bashrc` file to load the environment variables:
+
+    ```bash
+    source ~/.bashrc
+    ```
+
     Then, start a new bash session or simply logout and login back again.
 
-3. Generate a Personal Access Token (PAT):
+4. Generate a Personal Access Token (PAT):
 
     - Go to [GitHub](https://github.com/) and log in to your account.
 
@@ -59,7 +64,7 @@
 >
 > Remember that PATs are sensitive and should be treated like passwords. Do not share them with anyone or store them in a public repository.
 
-4. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page) by running the following code. Just replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT you copied in the previous step:
+5. Create a [source code management (SCM) file](https://www.nextflow.io/docs/latest/git.html#git-page) by running the following code. Just replace `<your_github_username>` with your GitHub username and `<your_github_token>` with the PAT you copied in the previous step:
 
     ```bash
     # This line removes any existing SCM file
@@ -180,20 +185,26 @@
 > [!NOTE]  
 > Adjust `--time` as necessary, the command above keeps the slurm job active for two days (enough for most pipeline runs).
 
-3. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+3. Source your `.bashrc` file to load the environment variables:
+
+    ```bash
+    source ~/.bashrc
+    ```
+
+4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
     ```bash
     module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
     ```
 
-4. Create an output directory for your pipeline run if it does not exist and move into it:
+5. Create an output directory for your pipeline run if it does not exist and move into it:
 
     ```bash
     mkdir -p <path_to_output_directory>
     cd <path_to_output_directory>
     ```
 
-5. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)). For example:
+6. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)). For example:
 
     ```bash
     nextflow run grothlab/glseq \
@@ -215,7 +226,7 @@
 <!-- > [!NOTE]
 > The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline. -->
 
-6. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
+7. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
     ```bash
     tmux attach-session -t <session_name>
@@ -230,7 +241,7 @@ You can test the correct functioning of any pipeline version by running one of t
   - `local_test_atacseq`
   - `local_test_chorseq`
 
-If you have not already, remember to start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, load the required ***modules***, and create an ***output directory*** for the test run as described in the previous steps.
+If you have not already, remember to start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, source your `.bashrc` file to load the environment variables, and load the required ***modules***, and create an ***output directory*** for the test run as described in the previous steps.
 
 Now you can run a test by executing a command like the following:
 
