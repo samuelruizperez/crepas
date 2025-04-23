@@ -111,35 +111,53 @@
 >
 >    To prevent these, one can set the `SINGULARITY_TMPDIR` environment variable to a temporary directory in the `/scratch` space. This is necessary because a default location for Singularity temporary files has not been set in the DAN System. This might be fixed in the future.
 >
->    Run the following commands to set `SINGULARITY_TMPDIR`:
+>    Open your `~/.bashrc` file in a text editor (e.g. `nano ~/.bashrc`) and add the following lines at the end of the file:
 >
 >    ```bash
->    echo >> ~/.bashrc
->    echo '### Singularity env vars' >> ~/.bashrc
->    echo 'export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"' >> ~/.bashrc
->    echo 'export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity"' >> ~/.bashrc
->    echo 'mkdir -p $SINGULARITY_TMPDIR' >> ~/.bashrc
->    echo 'mkdir -p $SINGULARITY_CACHEDIR' >> ~/.bashrc
->    
->    echo >> ~/.bashrc
->    echo '### Nextflow env vars' >> ~/.bashrc
->    echo 'export NXF_OPTS="-Xms1g -Xmx4g"' >> ~/.bashrc
->    echo 'export NXF_HOME=/projects/dan1/people/${USER}/cache/nxf-home' >> ~/.bashrc
->    echo 'export NXF_SINGULARITY_CACHEDIR=/projects/dan1/people/${USER}/cache/nxf-singularity' >> ~/.bashrc
->    echo 'export NXF_SINGULARITY_LIBRARYDIR=/projects/dan1/people/${USER}/cache/singularity/cache/' >> ~/.bashrc
->    echo 'export NXF_REFGENIE_PATH=/maps/projects/dan1/apps/etc/refgenie_nfcore/nf-core/refgenie_genomes.config' >> ~/.bashrc 
->    echo 'export NXF_TEMP=/scratch/temp/${USER}/nxf' >> ~/.bashrc
->    echo 'export NXF_WORK=/scratch/temp/${USER}/nxf/work' >> ~/.bashrc
->    echo 'mkdir -p $NXF_HOME' >> ~/.bashrc
->    echo 'mkdir -p $NXF_SINGULARITY_CACHEDIR' >> ~/.bashrc
->    echo 'mkdir -p $NXF_SINGULARITY_LIBRARYDIR' >> ~/.bashrc
+> ### Singularity env vars
+> export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"
+> export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity"
+> mkdir -p $SINGULARITY_TMPDIR
+> mkdir -p $SINGULARITY_CACHEDIR
+> 
 >
->    echo >> ~/.bashrc
->    echo '### Matplotlib env vars' >> ~/.bashrc
->    echo 'export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib' >> ~/.bashrc
->    echo 'mkdir -p $MPLCONFIGDIR' >> ~/.bashrc
->    ```
+> ### Nextflow env vars
+> export NXF_OPTS="-Xms1g -Xmx4g"
+> export NXF_HOME=/projects/dan1/people/${USER}/cache/nxf-home
+> export NXF_SINGULARITY_CACHEDIR=/projects/dan1/people/${USER}/cache/nxf-singularity
+> export NXF_SINGULARITY_LIBRARYDIR=/projects/dan1/people/${USER}/cache/singularity/cache/
+> export NXF_REFGENIE_PATH=/maps/projects/dan1/apps/etc/refgenie_nfcore/nf-core/refgenie_genomes.config
+> export NXF_TEMP=/scratch/temp/${USER}/nxf
+> export NXF_WORK=/scratch/temp/${USER}/nxf/work
+> mkdir -p $NXF_HOME
+> mkdir -p $NXF_SINGULARITY_CACHEDIR
+> mkdir -p $NXF_SINGULARITY_LIBRARYDIR
 >
+> export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib
+> mkdir -p $MPLCONFIGDIR
+> 
+> if [ $HOSTNAME != "danhead01fl.unicph.domain" ]; then
+>        if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
+>                mkdir -p "/scratch/temp/${USER}/singularity-tmp"
+>        fi
+>        if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
+>                mkdir -p "/scratch/temp/${USER}/matplotlib"
+>        fi
+>        export TMPDIR=/scratch/temp/${USER}
+> fi
+>
+> if [ -n "$SLURMD_NODENAME" ]; then
+>        if [ "$SLURMD_NODENAME" != "danhead01fl" ]; then
+>                if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
+>                        mkdir -p "/scratch/temp/${USER}/singularity-tmp"
+>                fi
+>                if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
+>                        mkdir -p "/scratch/temp/${USER}/matplotlib"
+>                fi
+>                export TMPDIR=/scratch/temp/${USER}
+>        fi
+> fi
+> ```
 >    Then, close and reopen the terminal or run the following command to apply the changes:
 >
 >    ```bash
