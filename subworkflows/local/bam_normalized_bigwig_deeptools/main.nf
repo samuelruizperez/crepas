@@ -1,5 +1,6 @@
 include { DEEPTOOLS_BAMCOVERAGE } from '../../../modules/nf-core/deeptools/bamcoverage/main'
-include { FILE_SORT } from '../../../modules/local/file_sort/main'
+include { FILE_SORT as FILE_SORT_NORM } from '../../../modules/local/file_sort/main'
+include { FILE_SORT as FILE_SORT_SOI } from '../../../modules/local/file_sort/main'
 include { BEDGRAPH_SIGNAL_OVER_INPUT } from '../../../modules/local/bedgraph_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 
@@ -160,12 +161,12 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     //
     // MODULE: Sort the bedgraph
     //
-    FILE_SORT (
+    FILE_SORT_NORM (
        DEEPTOOLS_BAMCOVERAGE.out.bedgraph,
         'bedgraph'
     )
-    ch_bdg = FILE_SORT.out.sorted
-    ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
+    ch_bdg = FILE_SORT_NORM.out.sorted
+    ch_versions = ch_versions.mix(FILE_SORT_NORM.out.versions.first())
 
 
     // Create channel: [ val(meta), [ ip_bedgraph ], [ control_bedgraph ] ]
@@ -204,7 +205,15 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         )
         ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
 
-        ch_bdg = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg)
+        //
+        // MODULE: Sort the SOI bedgraph
+        //
+        FILE_SORT_SOI (
+            BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph,
+            'bedgraph'
+        )
+
+        ch_bdg = FILE_SORT_SOI.out.sorted.mix(ch_bdg)
 
     }
 
