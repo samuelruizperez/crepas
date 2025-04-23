@@ -137,25 +137,25 @@
 > mkdir -p $MPLCONFIGDIR
 > 
 > if [ $HOSTNAME != "danhead01fl.unicph.domain" ]; then
->        if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
+>         if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
 >                mkdir -p "/scratch/temp/${USER}/singularity-tmp"
->        fi
->        if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
->                mkdir -p "/scratch/temp/${USER}/matplotlib"
->        fi
->        export TMPDIR=/scratch/temp/${USER}
+>         fi
+>         if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
+>                 mkdir -p "/scratch/temp/${USER}/matplotlib"
+>         fi
+>         export TMPDIR=/scratch/temp/${USER}
 > fi
 >
 > if [ -n "$SLURMD_NODENAME" ]; then
->        if [ "$SLURMD_NODENAME" != "danhead01fl" ]; then
->                if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
->                        mkdir -p "/scratch/temp/${USER}/singularity-tmp"
->                fi
->                if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
->                        mkdir -p "/scratch/temp/${USER}/matplotlib"
->                fi
->                export TMPDIR=/scratch/temp/${USER}
->        fi
+>         if [ "$SLURMD_NODENAME" != "danhead01fl" ]; then
+>                 if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
+>                         mkdir -p "/scratch/temp/${USER}/singularity-tmp"
+>                 fi
+>                 if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
+>                         mkdir -p "/scratch/temp/${USER}/matplotlib"
+>                 fi
+>                 export TMPDIR=/scratch/temp/${USER}
+>         fi
 > fi
 > ```
 >    Then, close and reopen the terminal or run the following command to apply the changes:
