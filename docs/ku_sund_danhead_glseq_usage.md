@@ -120,6 +120,9 @@
 > mkdir -p $SINGULARITY_TMPDIR
 > mkdir -p $SINGULARITY_CACHEDIR
 > 
+> ### Matplotlib env vars
+> export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib
+> mkdir -p $MPLCONFIGDIR
 >
 > ### Nextflow env vars
 > export NXF_OPTS="-Xms1g -Xmx4g"
@@ -133,9 +136,6 @@
 > mkdir -p $NXF_SINGULARITY_CACHEDIR
 > mkdir -p $NXF_SINGULARITY_LIBRARYDIR
 >
-> export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib
-> mkdir -p $MPLCONFIGDIR
-> 
 > if [ $HOSTNAME != "danhead01fl.unicph.domain" ]; then
 >         if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
 >                mkdir -p "/scratch/temp/${USER}/singularity-tmp"
