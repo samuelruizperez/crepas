@@ -96,8 +96,8 @@
     ```
     </details>
 
+<!-- 
 ---
-
 > [!WARNING]
 > **[Temporary fix]** The following issues involving the `SINGULARITY_TMPDIR` environment variable may occur when running the pipeline:
 >
@@ -162,7 +162,7 @@
 >
 >    ```bash
 >    source ~/.bashrc
->    ```
+>    ``` -->
 
 ## Running the pipeline
 
