@@ -901,9 +901,8 @@ workflow GLSEQ {
     SAMTOOLS_STATS_SUMMARY (
         ch_samtools_stats_summary,
         params.genome,
-        params.spikein_genome
+        params.spikein_genome ?: Channel.of([])
         // TODO: fix this params.spikein_genome ?: Channel.of([])
-
     )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
