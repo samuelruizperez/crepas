@@ -627,7 +627,7 @@ workflow GLSEQ {
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig,
+            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo,
             ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
@@ -917,7 +917,7 @@ workflow GLSEQ {
             params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig.collect{it[1]}.ifEmpty([]),
+            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])

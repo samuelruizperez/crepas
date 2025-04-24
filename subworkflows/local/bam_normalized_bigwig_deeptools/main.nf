@@ -5,7 +5,9 @@ include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modu
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO }                from '../../../modules/nf-core/bedtools/map/main'
 include { BEDGRAPH_NORMALIZE }          from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_signal_over_input/main'
-include { UCSC_BEDGRAPHTOBIGWIG     }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+
 
 workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
 
@@ -74,7 +76,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     //
     BEDTOOLS_MAP_ENDO (
         ch_windows_bdg_raw,
-        ch_chrom_sizes
+        ch_chrom_sizes_endo
     )
     ch_bdg_raw = BEDTOOLS_MAP_ENDO.out.mapped
     ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
@@ -307,15 +309,23 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     //
     // MODULE: Convert bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG (
-        ch_bdg_all,
-        ch_chrom_sizes.map { it[1] }
+    UCSC_BEDGRAPHTOBIGWIG_ENDO (
+        ch_bdg_all.filter { it -> it[0].genome == genome },
+        ch_chrom_sizes_endo.map { it[1] }
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
    
+   if (spikein_genome) {
+        UCSC_BEDGRAPHTOBIGWIG_EXO (
+            ch_bdg_all.filter { it -> it[0].genome == spikein_genome },
+            ch_chrom_sizes_exo.map { it[1] }
+        )
+        ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
+    }
 
     emit:
-    bigwig      = UCSC_BEDGRAPHTOBIGWIG.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_exo       = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig         // channel: [ val(meta), [ bigwig ] ]
 
     versions      = ch_versions                            // channel: [ versions.yml ]
 }
