@@ -1,4 +1,4 @@
-process EDITCHROMSIZES_ENDO {
+process CHROM_SIZES_SPIKEIN_SPLIT {
     tag "$sizes"
     label 'process_single'
 
