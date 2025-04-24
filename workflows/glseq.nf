@@ -108,6 +108,7 @@ workflow GLSEQ {
     ch_gene_bed      // channel: path(gene.beds)
     ch_chrom_sizes   // channel: path(chrom.sizes)
     ch_chrom_sizes_endo // path(chrom.sizes.endo)
+    ch_chrom_sizes_exo
     ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
@@ -601,7 +602,8 @@ workflow GLSEQ {
     //
     BAM_NORMALIZED_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
-        ch_chrom_sizes,
+        ch_chrom_sizes_endo,
+        ch_chrom_sizes_exo,
         params.genome,
         params.spikein_genome,
         params.skip_srpm,

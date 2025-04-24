@@ -1,6 +1,8 @@
 include { DEEPTOOLS_BAMCOVERAGE }       from '../../../modules/nf-core/deeptools/bamcoverage/main'
-include { BEDTOOLS_MAKEWINDOWS }        from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BEDTOOLS_MAP }                from '../../../modules/nf-core/bedtools/map/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO }        from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO }        from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modules/nf-core/bedtools/map/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO }                from '../../../modules/nf-core/bedtools/map/main'
 include { BEDGRAPH_NORMALIZE }          from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG     }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
@@ -9,7 +11,8 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
 
     take:
     ch_bam_bai               // channel: [ val(meta), [ bam ], [ bai ] ]
-    ch_chrom_sizes          // channel: [ bed ]
+    ch_chrom_sizes_endo          // channel: [ bed ]
+    ch_chrom_sizes_exo          // channel: [ bed ]
     genome                  // string: genome name
     spikein_genome          // string: spike-in genome name
     skip_srpm           // boolean: skip the SRPM normalization step
@@ -49,29 +52,66 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     //
     // MODULE: Make windows of equal size across the whole genome
     //
-    BEDTOOLS_MAKEWINDOWS (
-        ch_chrom_sizes
+    BEDTOOLS_MAKEWINDOWS_ENDO (
+        ch_chrom_sizes_endo
     )
-    ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
+    ch_windows_endo = BEDTOOLS_MAKEWINDOWS_ENDO.out.bed
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_ENDO.out.versions.first())
 
     // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
     ch_bdg_raw
-        .combine(ch_windows)
+        .filter { meta, bdg ->
+            meta.genome == genome
+        }
+        .combine(ch_windows_endo)
         .map { meta_bdg_raw, bdg_raw, meta_windows, windows ->
             [ meta_bdg_raw, windows, bdg_raw ]
         }
         .set { ch_windows_bdg_raw }
 
     //
-    // MODULE: Map the coverage bedgraph to the windows
+    // MODULE: Map the coverage bedgraph to the windows (endogenous genome)
     //
-    BEDTOOLS_MAP (
+    BEDTOOLS_MAP_ENDO (
         ch_windows_bdg_raw,
         ch_chrom_sizes
     )
-    ch_bdg_raw = BEDTOOLS_MAP.out.mapped
-    ch_versions = ch_versions.mix(BEDTOOLS_MAP.out.versions.first())
+    ch_bdg_raw = BEDTOOLS_MAP_ENDO.out.mapped
+    ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
+
+    ch_windows_exo = Channel.empty()
+    if (spikein_genome) {
+        BEDTOOLS_MAKEWINDOWS_EXO (
+            ch_chrom_sizes_exo
+        )
+        ch_windows_exo = BEDTOOLS_MAKEWINDOWS_EXO.out.bed
+        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_EXO.out.versions.first())
+
+        // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
+        ch_bdg_raw
+            .filter { meta, bdg ->
+                meta.genome == spikein_genome
+            }
+            .combine(ch_windows_exo)
+            .map { meta_bdg_raw, bdg_raw, meta_windows, windows ->
+                [ meta_bdg_raw, windows, bdg_raw ]
+            }
+            .set { ch_windows_bdg_raw_exo }
+
+        //
+        // MODULE: Map the coverage bedgraph to the windows (spike-in genome)
+        //
+        BEDTOOLS_MAP_EXO (
+            ch_windows_bdg_raw_exo,
+            ch_chrom_sizes_exo
+        )
+        ch_bdg_raw_exo = BEDTOOLS_MAP_EXO.out.mapped
+        ch_versions = ch_versions.mix(BEDTOOLS_MAP_EXO.out.versions.first())
+
+        // Merge the two channels
+        ch_bdg_raw = ch_bdg_raw.mix(ch_bdg_raw_exo)
+    }
+
 
     // Modify channel meta to add RPM normalization factors
     ch_bdg_rpm = Channel.empty()
