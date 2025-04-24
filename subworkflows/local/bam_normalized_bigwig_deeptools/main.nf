@@ -5,6 +5,7 @@ include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modu
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO }                from '../../../modules/nf-core/bedtools/map/main'
 include { BEDGRAPH_NORMALIZE }          from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_signal_over_input/main'
+include { FILE_SORT as BEDGRAPH_SORT } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 
@@ -305,6 +306,16 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         // ch_bdg_all = FILE_SORT_SOI.out.sorted.mix(ch_bdg_all)
 
     }
+
+    //
+    // MODULE: Sort the bedgraph so that it works with ucsc_bedgraphtobigwig
+    //
+    BEDGRAPH_SORT (
+        ch_bdg_all,
+        'bedgraph'
+    )
+    ch_bdg_all = BEDGRAPH_SORT.out.sorted
+    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
     //
     // MODULE: Convert bedgraph to bigwig
