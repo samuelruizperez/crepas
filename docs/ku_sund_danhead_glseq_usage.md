@@ -241,7 +241,7 @@ You can test the correct functioning of any pipeline version by running one of t
   - `local_test_atacseq`
   - `local_test_chorseq`
 
-If you have not already, remember to start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, source your `.bashrc` file to load the environment variables, and load the required ***modules***, and create an ***output directory*** for the test run as described in the previous steps.
+If you have not already, remember to start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, source your `.bashrc` file to load the environment variables, load the required ***modules***, and create an ***output directory*** for the test run as described in the previous steps.
 
 Now you can run a test by executing a command like the following:
 
