@@ -94,7 +94,7 @@ if (is.null(opt$exogenous_genome_name)) {
                     # Add a new column for flT1_multimapping_reads
                     flT1_multimapping_reads = flT1_raw_total_sequences - flT3_raw_total_sequences) %>%
                   # move flT1_multimapping_reads after last column with flT1 in the name
-                  relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(tmp[-which(colnames(tmp) == "flT1_multimapping_reads")])), n = 1))
+                  relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
                   
 
 } else {
@@ -165,7 +165,7 @@ if (is.null(opt$exogenous_genome_name)) {
     tmp <- tmp %>%
       mutate(flT1_multimapping_reads = flT1_raw_total_sequences - !!sym(actual_flt3_rts_colname)) %>%
       # move flT1_multimapping_reads after last column with flT1 in the name
-      relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(tmp[-which(colnames(tmp) == "flT1_multimapping_reads")])), n = 1))
+      relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
   } else {
     warning("No valid columns found for flT1 or flT2 multimapping reads.")
     stop("Processing cannot continue without valid columns.")
