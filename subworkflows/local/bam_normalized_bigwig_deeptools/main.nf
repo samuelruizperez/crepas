@@ -1,14 +1,21 @@
-include { DEEPTOOLS_BAMCOVERAGE } from '../../../modules/nf-core/deeptools/bamcoverage/main'
-include { FILE_SORT as FILE_SORT_NORM } from '../../../modules/local/file_sort/main'
-include { FILE_SORT as FILE_SORT_SOI } from '../../../modules/local/file_sort/main'
-include { BEDGRAPH_SIGNAL_OVER_INPUT } from '../../../modules/local/bedgraph_signal_over_input/main'
-include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { DEEPTOOLS_BAMCOVERAGE }       from '../../../modules/nf-core/deeptools/bamcoverage/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO }        from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO }        from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modules/nf-core/bedtools/map/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO }                from '../../../modules/nf-core/bedtools/map/main'
+include { BEDGRAPH_NORMALIZE }          from '../../../modules/local/bedgraph_normalize/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_signal_over_input/main'
+include { FILE_SORT as BEDGRAPH_SORT } from '../../../modules/local/file_sort/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+
 
 workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
 
     take:
     ch_bam_bai               // channel: [ val(meta), [ bam ], [ bai ] ]
-    ch_chrom_sizes          // channel: [ bed ]
+    ch_chrom_sizes_endo          // channel: [ bed ]
+    ch_chrom_sizes_exo          // channel: [ bed ]
     genome                  // string: genome name
     spikein_genome          // string: spike-in genome name
     skip_srpm           // boolean: skip the SRPM normalization step
@@ -29,171 +36,252 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         }
         .set { ch_bam_bai_raw }
 
+    //
+    // MODULE: Calculate raw coverage per bin
+    //
+    DEEPTOOLS_BAMCOVERAGE (
+        ch_bam_bai_raw,
+        [],
+        []
+    )
+    ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE.out.bedgraph
+    ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE.out.versions.first())
 
-    ch_bam_bai_rpm = Channel.empty()
+    // bamCoverage merges contiguous bins with the same coverage and there is no option to disable this.
+    // See https://github.com/deeptools/deepTools/issues/907#issuecomment-576729674
+    // Therefore, to get bins of equal size across the whole genome,
+    // we have to make windows and map the bedgraph to the windows:
 
-    ch_bam_bai
+    //
+    // MODULE: Make windows of equal size across the whole genome
+    //
+    BEDTOOLS_MAKEWINDOWS_ENDO (
+        ch_chrom_sizes_endo
+    )
+    ch_windows_endo = BEDTOOLS_MAKEWINDOWS_ENDO.out.bed
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_ENDO.out.versions.first())
+
+    // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
+    ch_bdg_raw
+        .filter { meta, bdg ->
+            meta.genome == genome
+        }
+        .combine(ch_windows_endo)
+        .map { meta_bdg_raw, bdg_raw, meta_windows, windows ->
+            [ meta_bdg_raw, windows, bdg_raw ]
+        }
+        .set { ch_windows_bdg_raw }
+
+    //
+    // MODULE: Map the coverage bedgraph to the windows (endogenous genome)
+    //
+    BEDTOOLS_MAP_ENDO (
+        ch_windows_bdg_raw,
+        ch_chrom_sizes_endo
+    )
+    ch_bdg_raw = BEDTOOLS_MAP_ENDO.out.mapped
+    ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
+
+    ch_windows_exo = Channel.empty()
+    if (spikein_genome) {
+        BEDTOOLS_MAKEWINDOWS_EXO (
+            ch_chrom_sizes_exo
+        )
+        ch_windows_exo = BEDTOOLS_MAKEWINDOWS_EXO.out.bed
+        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_EXO.out.versions.first())
+
+        // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
+        ch_bdg_raw
+            .filter { meta, bdg ->
+                meta.genome == spikein_genome
+            }
+            .combine(ch_windows_exo)
+            .map { meta_bdg_raw, bdg_raw, meta_windows, windows ->
+                [ meta_bdg_raw, windows, bdg_raw ]
+            }
+            .set { ch_windows_bdg_raw_exo }
+
+        //
+        // MODULE: Map the coverage bedgraph to the windows (spike-in genome)
+        //
+        BEDTOOLS_MAP_EXO (
+            ch_windows_bdg_raw_exo,
+            ch_chrom_sizes_exo
+        )
+        ch_bdg_raw_exo = BEDTOOLS_MAP_EXO.out.mapped
+        ch_versions = ch_versions.mix(BEDTOOLS_MAP_EXO.out.versions.first())
+
+        // Merge the two channels
+        ch_bdg_raw = ch_bdg_raw.mix(ch_bdg_raw_exo)
+    }
+
+
+    // Modify channel meta to add RPM normalization factors
+    ch_bdg_rpm = Channel.empty()
+
+    ch_bdg_raw
         .map {
-            meta, bam, bai ->
+            meta, bdg ->
                 def meta_clone = meta.clone()
                 meta_clone.norm_factor_val = 1e6 / meta_clone.total_mapped_reads
                 meta_clone.norm_factor_type = 'rpm'
-                [ meta_clone, bam, bai ]
+                [ meta_clone, bdg ]
         }
-        .set { ch_bam_bai_rpm }
+        .set { ch_bdg_rpm }
 
-
-    ch_bam_bai_srpm = Channel.empty()
+    // Modify channel meta to add RPM normalization factors
+    ch_bdg_srpm = Channel.empty()
     if (!skip_srpm) {
 
-        ch_bam_bai
+        ch_bdg_raw
             .map {
-                meta, bam, bai ->
-                    [ meta.id, meta, bam, bai ]
+                meta, bdg ->
+                    [ meta.id, meta, bdg ]
             }
-            .branch { id, meta, bam, bai ->
+            .branch { id, meta, bdg ->
                 endo: meta.genome == genome
                 exo: meta.genome == spikein_genome
             }
-            .set { ch_bam_bai_genome }
+            .set { ch_bdg_genome }
 
-        ch_bam_bai_genome
+        ch_bdg_genome
             .endo
-            .combine(ch_bam_bai_genome.exo, by: 0)
-            .map { id, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
+            .combine(ch_bdg_genome.exo, by: 0)
+            .map { id, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.norm_factor_val = 1e6 / exo_meta.total_mapped_reads
                 meta_clone.norm_factor_type = 'srpm'
-                [ meta_clone, endo_bam, endo_bai ]
+                [ meta_clone, endo_bdg ]
             }
-            .set { ch_bam_bai_srpm }
+            .set { ch_bdg_srpm }
     }
 
-    ch_bam_bai_cisrpm = Channel.empty()
+    ch_bdg_cisrpm = Channel.empty()
     if (!skip_cisrpm) {
 
         // Split BAMs by genome (endo and exo) and by type (ip and control)
-        ch_bam_bai
+        ch_bdg_raw
             .map {
-                meta, bam, bai ->
-                    [ meta.id, meta, bam, bai ]
+                meta, bdg ->
+                    [ meta.id, meta, bdg ]
             }
-            .branch { id, meta, bam, bai ->
+            .branch { id, meta, bdg ->
                 endo_ip: meta.genome == genome && !meta.is_control
                 endo_control: meta.genome == genome && meta.is_control
                 exo_ip: meta.genome == spikein_genome && !meta.is_control
                 exo_control: meta.genome == spikein_genome && meta.is_control
             }
-            .set { ch_bam_bai_genome_type }
+            .set { ch_bdg_genome_type }
 
         // Combine the endo and exo BAMs (ChIPs)
-        ch_bam_bai_genome_type
+        ch_bdg_genome_type
             .endo_ip
-            .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
+            .combine(ch_bdg_genome_type.exo_ip, by: 0)
             .map { 
-                ip_id, endo_ip_meta, endo_ip_bam, endo_ip_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
-                    [ endo_ip_meta.control, endo_ip_meta, endo_ip_bam, endo_ip_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ]
+                ip_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+                    [ endo_ip_meta.control, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
             }
-            .set { ch_bam_bai_genome_ip }
+            .set { ch_bdg_genome_ip }
 
         // Combine the endo and exo BAMs (inputs)
-        ch_bam_bai_genome_type
+        ch_bdg_genome_type
             .endo_control
-            .combine(ch_bam_bai_genome_type.exo_control, by: 0)
-            .map { control_id, endo_control_meta, endo_control_bam, endo_control_bai, exo_control_meta, exo_control_bam, exo_control_bai ->
-                [ endo_control_meta.id, endo_control_meta, endo_control_bam, endo_control_bai, exo_control_meta, exo_control_bam, exo_control_bai ]
+            .combine(ch_bdg_genome_type.exo_control, by: 0)
+            .map { control_id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+                [ endo_control_meta.id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
             }
-            .set { ch_bam_bai_genome_control }
+            .set { ch_bdg_genome_control }
 
         // Combine the combined ChIPs with the combined inputs
-        ch_bam_bai_genome_ip
-            .combine(ch_bam_bai_genome_control, by: 0)
+        ch_bdg_genome_ip
+            .combine(ch_bdg_genome_control, by: 0)
             .map { 
-                id, endo_ip_meta, endo_ip_bam, endo_ip_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai, endo_control_meta, endo_control_bam, endo_control_bai, exo_control_meta, exo_control_bam, exo_control_bai ->
+                id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
                     meta_clone.norm_factor_val = (1e6 / exo_ip_meta.total_mapped_reads) * (exo_control_meta.total_mapped_reads / endo_control_meta.total_mapped_reads)
                     meta_clone.norm_factor_type = 'cisrpm'
-                    [ meta_clone, endo_ip_bam, endo_ip_bai ]
+                    [ meta_clone, endo_ip_bdg ]
             }
-            .set { ch_bam_bai_ip_cisrpm }
+            .set { ch_bdg_ip_cisrpm }
         
         // Now do the missing CISRPM for the endogenous inputs
         // In this case CISRPM is the same as RPM
-        ch_bam_bai_rpm
-            .filter { meta, bam, bai ->
+        ch_bdg_rpm
+            .filter { meta, bdg ->
                 meta.genome == genome && meta.is_control
             }
-            .map { meta, bam, bai ->
+            .map { meta, bdg ->
                 def meta_clone = meta.clone()
                 // just change norm_factor_type to cisrpm but keeping norm_factor_val the untouched
                 meta_clone.norm_factor_type = 'cisrpm'
-                [ meta_clone, bam, bai ]
+                [ meta_clone, bdg ]
             }
-            .set { ch_bam_bai_control_cisrpm }
+            .set { ch_bdg_control_cisrpm }
 
-        ch_bam_bai_cisrpm = ch_bam_bai_ip_cisrpm.mix(ch_bam_bai_control_cisrpm)
+        ch_bdg_cisrpm = ch_bdg_ip_cisrpm.mix(ch_bdg_control_cisrpm)
     }
 
-    ch_bam_bai_raw
-        .mix(ch_bam_bai_rpm)
-        .mix(ch_bam_bai_srpm)
-        .mix(ch_bam_bai_cisrpm)
-        .set { ch_bam_bai_all }
+    ch_bdg_rpm
+        .mix(ch_bdg_srpm)
+        .mix(ch_bdg_cisrpm)
+        .set { ch_bdg_norm }
 
     // TODO: print for debugging
-    ch_bam_bai_all
+    ch_bdg_norm
         .map {
-            meta, bam, bai ->
-                "${meta}\t${bam}\t${bai}"
+            meta, bdg ->
+                "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bam_bai_all_norms.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
-    // MODULE: Calculate raw and normalized coverage per bin
+    // MODULE: Normalize the bedgraphs
     //
-    DEEPTOOLS_BAMCOVERAGE (
-        ch_bam_bai_all,
-        [],
-        []
+    BEDGRAPH_NORMALIZE (
+        ch_bdg_norm
     )
-    ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE.out.versions.first())
-
-    //
-    // MODULE: Sort the bedgraph
-    //
-    FILE_SORT_NORM (
-       DEEPTOOLS_BAMCOVERAGE.out.bedgraph,
-        'bedgraph'
-    )
-    ch_bdg = FILE_SORT_NORM.out.sorted
-    ch_versions = ch_versions.mix(FILE_SORT_NORM.out.versions.first())
+    ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
 
 
-    // Create channel: [ val(meta), [ ip_bedgraph ], [ control_bedgraph ] ]
+    // Add raw bedgraph to 
+    ch_bdg_all = ch_bdg_raw.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
+
+    // //
+    // // MODULE: Sort the bedgraph
+    // //
+    // FILE_SORT_NORM (
+    //    DEEPTOOLS_BAMCOVERAGE.out.bedgraph,
+    //     'bedgraph'
+    // )
+    // ch_bdg = FILE_SORT_NORM.out.sorted
+    // ch_versions = ch_versions.mix(FILE_SORT_NORM.out.versions.first())
+
+
+    // Create channel: [ val(meta), [ ip_bdg ], [ control_bdg ] ]
     ch_bdg_ip_control_cisrpm = Channel.empty()
     if (!skip_cisrpmsoi) {
-        ch_bdg
-            .filter { meta, bedgraph ->
+        ch_bdg_all
+            .filter { meta, bdg ->
                 meta.norm_factor_type == 'cisrpm'
             }
-            .branch { meta, bedgraph ->
+            .branch { meta, bdg ->
                 ips_with_control: meta.control
-                    return [ meta.control, meta, bedgraph ]
+                    return [ meta.control, meta, bdg ]
                 // Cannot calculate CISRPM-SOI for ChIPs without inputs
                 // ips_without_control: !meta.control && !meta.is_control
-                //     return [ meta, bedgraph ]
+                //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
-                    return [ meta.id, meta, bedgraph ]
+                    return [ meta.id, meta, bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
         ch_bdg_ip_control_cisrpm
             .ips_with_control
             .combine(ch_bdg_ip_control_cisrpm.controls, by: 0)
-            .map { control_id, ip_meta, ip_bedgraph, control_meta, control_bedgraph ->
+            .map { control_id, ip_meta, ip_bdg, control_meta, control_bdg ->
                 def meta_clone = ip_meta.clone()
                 meta_clone.signal_over_input = true
-                [ meta_clone, ip_bedgraph, control_bedgraph ]
+                [ meta_clone, ip_bdg, control_bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
@@ -205,30 +293,50 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         )
         ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
 
-        //
-        // MODULE: Sort the SOI bedgraph
-        //
-        FILE_SORT_SOI (
-            BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph,
-            'bedgraph'
-        )
+        ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_all)
 
-        ch_bdg = FILE_SORT_SOI.out.sorted.mix(ch_bdg)
+        // //
+        // // MODULE: Sort the SOI bedgraph
+        // //
+        // FILE_SORT_SOI (
+        //     BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph,
+        //     'bedgraph'
+        // )
+
+        // ch_bdg_all = FILE_SORT_SOI.out.sorted.mix(ch_bdg_all)
 
     }
 
     //
+    // MODULE: Sort the bedgraph so that it works with ucsc_bedgraphtobigwig
+    //
+    BEDGRAPH_SORT (
+        ch_bdg_all,
+        'bedgraph'
+    )
+    ch_bdg_all = BEDGRAPH_SORT.out.sorted
+    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
+
+    //
     // MODULE: Convert bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG (
-        ch_bdg,
-        ch_chrom_sizes.map { it[1] }
+    UCSC_BEDGRAPHTOBIGWIG_ENDO (
+        ch_bdg_all.filter { it -> it[0].genome == genome },
+        ch_chrom_sizes_endo.map { it[1] }
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG.out.versions.first())
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
    
+   if (spikein_genome) {
+        UCSC_BEDGRAPHTOBIGWIG_EXO (
+            ch_bdg_all.filter { it -> it[0].genome == spikein_genome },
+            ch_chrom_sizes_exo.map { it[1] }
+        )
+        ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
+    }
 
     emit:
-    bigwig      = UCSC_BEDGRAPHTOBIGWIG.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_exo       = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig         // channel: [ val(meta), [ bigwig ] ]
 
     versions      = ch_versions                            // channel: [ versions.yml ]
 }

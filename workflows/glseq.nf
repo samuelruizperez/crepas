@@ -108,6 +108,7 @@ workflow GLSEQ {
     ch_gene_bed      // channel: path(gene.beds)
     ch_chrom_sizes   // channel: path(chrom.sizes)
     ch_chrom_sizes_endo // path(chrom.sizes.endo)
+    ch_chrom_sizes_exo
     ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
@@ -601,7 +602,8 @@ workflow GLSEQ {
     //
     BAM_NORMALIZED_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
-        ch_chrom_sizes,
+        ch_chrom_sizes_endo,
+        ch_chrom_sizes_exo,
         params.genome,
         params.spikein_genome,
         params.skip_srpm,
@@ -625,7 +627,7 @@ workflow GLSEQ {
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig,
+            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo,
             ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
@@ -902,7 +904,7 @@ workflow GLSEQ {
         ch_samtools_stats_summary,
         params.genome,
         params.spikein_genome ?: Channel.of([])
-
+        // TODO: fix this params.spikein_genome ?: Channel.of([])
     )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
@@ -915,7 +917,7 @@ workflow GLSEQ {
             params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig.collect{it[1]}.ifEmpty([]),
+            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])

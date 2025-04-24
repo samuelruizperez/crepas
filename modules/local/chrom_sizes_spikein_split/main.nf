@@ -1,4 +1,4 @@
-process EDITCHROMSIZES_ENDO {
+process CHROM_SIZES_SPIKEIN_SPLIT {
     tag "$sizes"
     label 'process_single'
 
@@ -9,11 +9,12 @@ process EDITCHROMSIZES_ENDO {
 
     input:
     tuple val(meta), path(sizes)
-    val filter_genome_string
-    val keep_genome_string
+    val exo_genome_string
+    val endo_genome_string
 
     output:
-    tuple val(meta), path ("*.sizes")   , emit: sizes
+    tuple val(meta), path ("*.${endo_genome_string}.sizes")   , emit: endo_sizes
+    tuple val(meta), path ("*.${exo_genome_string}.sizes")   , emit: exo_sizes
     path  "versions.yml"                , emit: versions
 
     when:
@@ -24,9 +25,16 @@ process EDITCHROMSIZES_ENDO {
     """
     awk \\
         $args \\
-        '!(\$1 ~ /_${filter_genome_string}\$/)' \\
+        '!(\$1 ~ /_${exo_genome_string}\$/)' \\
         $sizes \\
-        > ${sizes.baseName}.${keep_genome_string}.sizes
+        > ${sizes.baseName}.${endo_genome_string}.sizes
+
+    awk \\
+        $args \\
+        '(\$1 ~ /_${exo_genome_string}\$/)' \\
+        $sizes \\
+        > ${sizes.baseName}.${exo_genome_string}.sizes
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -38,6 +46,7 @@ process EDITCHROMSIZES_ENDO {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch endo.sizes
+    touch exo.sizes
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
