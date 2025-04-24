@@ -70,7 +70,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         ch_windows_bdg_raw,
         ch_chrom_sizes      
     )
-    ch_bdg_raw = BEDTOOLS_MAP.out.bedgraph
+    ch_bdg_raw = BEDTOOLS_MAP.out.bed
     ch_versions = ch_versions.mix(BEDTOOLS_MAP.out.versions.first())
 
     // Modify channel meta to add RPM normalization factors
