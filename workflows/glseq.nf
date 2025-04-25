@@ -602,8 +602,8 @@ workflow GLSEQ {
     //
     BAM_NORMALIZED_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
-        ch_chrom_sizes_endo,
-        ch_chrom_sizes_exo,
+        ch_chrom_sizes_endo.first(),
+        ch_chrom_sizes_exo.first(),
         params.genome,
         params.spikein_genome,
         params.skip_srpm,
