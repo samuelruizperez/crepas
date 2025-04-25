@@ -335,6 +335,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     }
 
     emit:
+    bigwig_endo_rpm  = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' } // channel: [ val(meta), [ bigwig ] ]
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig         // channel: [ val(meta), [ bigwig ] ]
 

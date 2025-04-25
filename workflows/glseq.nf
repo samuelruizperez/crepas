@@ -627,7 +627,7 @@ workflow GLSEQ {
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo,
+            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm,
             ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
