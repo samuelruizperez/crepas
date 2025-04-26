@@ -21,7 +21,7 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
     def args  = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def min_count = args2.contains('--min_count') ? args2.split('--min_count ')[1].split(' ')[0] : 1
+    def min_count = args2.contains('--min_count ') ? args2.split('--min_count ')[1].split(' ')[0] : 1
     min_count = min_count.toInteger() 
     """
     awk \\
