@@ -252,7 +252,9 @@
                     "fa_icon": "fas fa-cut"
                 },
                 "trim_minimum_length": {
-                    "type": "string"
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Instructs Trim Galore to remove reads shorter than this length after adapter/quality trimming."
                 },
                 "skip_trimming": {
                     "type": "boolean",
