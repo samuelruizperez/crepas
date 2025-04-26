@@ -174,6 +174,13 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
+    
+    // Modify channel meta to add CISRPM normalization factors
+    ch_bdg_genome_type = Channel.empty()
+    ch_bdg_genome_ip = Channel.empty()
+    ch_bdg_genome_control = Channel.empty()
+    ch_bdg_ip_cisrpm = Channel.empty()
+    ch_bdg_control_cisrpm = Channel.empty()
     ch_bdg_cisrpm = Channel.empty()
     if (!skip_cisrpm) {
 
@@ -191,8 +198,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .set { ch_bdg_genome_type }
 
         // Combine the endo and exo BAMs (ChIPs)
-        ch_bdg_genome_type
-            .endo_ip
+        ch_bdg_genome_type.endo_ip
             .combine(ch_bdg_genome_type.exo_ip, by: 0)
             .map { ip_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
                     [ endo_ip_meta.control, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
@@ -202,8 +208,8 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         // TODO: print for debugging
         ch_bdg_genome_ip
             .map {
-                meta, bdg ->
-                    "${meta}\t${bdg}"
+                control_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+                    "${control_id}\t${endo_ip_meta}\t${endo_ip_bdg}\t${exo_ip_meta}\t${exo_ip_bdg}"
             }
             .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
@@ -218,8 +224,8 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         // TODO: print for debugging
         ch_bdg_genome_control
             .map {
-                meta, bdg ->
-                    "${meta}\t${bdg}"
+                control_id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+                    "${control_id}\t${endo_control_meta}\t${endo_control_bdg}\t${exo_control_meta}\t${exo_control_bdg}"
             }
             .collectFile( name: 'ch_bdg_genome_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
@@ -286,8 +292,9 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     BEDGRAPH_NORMALIZE (
         ch_bdg_norm
     )
-    ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
     ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
+
+    ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
 
     // Create channel: [ val(meta), [ ip_bdg ], [ control_bdg ] ]
     ch_bdg_ip_control_cisrpm = Channel.empty()
