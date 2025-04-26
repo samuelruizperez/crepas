@@ -240,27 +240,13 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     BEDGRAPH_NORMALIZE (
         ch_bdg_norm
     )
+    ch_bdg_raw_norm = ch_bdg_raw.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
     ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
-
-
-    // Add raw bedgraph to 
-    ch_bdg_all = ch_bdg_raw.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
-
-    // //
-    // // MODULE: Sort the bedgraph
-    // //
-    // FILE_SORT_NORM (
-    //    DEEPTOOLS_BAMCOVERAGE.out.bedgraph,
-    //     'bedgraph'
-    // )
-    // ch_bdg = FILE_SORT_NORM.out.sorted
-    // ch_versions = ch_versions.mix(FILE_SORT_NORM.out.versions.first())
-
 
     // Create channel: [ val(meta), [ ip_bdg ], [ control_bdg ] ]
     ch_bdg_ip_control_cisrpm = Channel.empty()
     if (!skip_cisrpmsoi) {
-        ch_bdg_all
+        ch_bdg_raw_norm
             .filter { meta, bdg ->
                 meta.norm_factor_type == 'cisrpm'
             }
@@ -271,17 +257,17 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
                 // ips_without_control: !meta.control && !meta.is_control
                 //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
-                    return [ meta.id, meta, bdg ]
+                    return [ meta.id, bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
         ch_bdg_ip_control_cisrpm
             .ips_with_control
             .combine(ch_bdg_ip_control_cisrpm.controls, by: 0)
-            .map { control_id, ip_meta, ip_bdg, control_meta, control_bdg ->
+            .map { control_id, ip_meta, ip_bdg, control_bdg ->
                 def meta_clone = ip_meta.clone()
-                meta_clone.signal_over_input = true
-                [ meta_clone, ip_bdg, control_bdg ]
+                    meta_clone.signal_over_input = true
+                    [ meta_clone, ip_bdg, control_bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
@@ -291,19 +277,8 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         BEDGRAPH_SIGNAL_OVER_INPUT (
             ch_bdg_ip_control_cisrpm
         )
+        ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_raw_norm)
         ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
-
-        ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_all)
-
-        // //
-        // // MODULE: Sort the SOI bedgraph
-        // //
-        // FILE_SORT_SOI (
-        //     BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph,
-        //     'bedgraph'
-        // )
-
-        // ch_bdg_all = FILE_SORT_SOI.out.sorted.mix(ch_bdg_all)
 
     }
 
@@ -316,6 +291,14 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     )
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
+
+    // TODO: print for debugging
+    ch_bdg_all
+        .map {
+            meta, bdg ->
+                "${meta}\t${bdg}"
+        }
+        .collectFile( name: 'ch_bdg_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     //
     // MODULE: Convert bedgraph to bigwig
