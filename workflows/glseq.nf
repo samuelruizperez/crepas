@@ -31,7 +31,7 @@ include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_rea
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
 // include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
 // include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
-include { BAM_NORMALIZED_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalized_bigwig_deeptools/main'
+include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
 
 /*
@@ -559,6 +559,7 @@ workflow GLSEQ {
     //
     // MODULE: Generate stats for the final filtered BAM files
     //
+    // TODO: remove this since it is redundant
     BAM_STATS_SAMTOOLS_FINAL (
         ch_filtered_bam.join(ch_filtered_index, by: [0]),
         ch_fasta.first()
@@ -600,7 +601,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
     //
-    BAM_NORMALIZED_BIGWIG_DEEPTOOLS (
+    BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
         ch_chrom_sizes_endo.first(),
         ch_chrom_sizes_exo.first(),
@@ -610,7 +611,7 @@ workflow GLSEQ {
         params.skip_cisrpm,
         params.skip_cisrpmsoi
     )
-    ch_versions = ch_versions.mix(BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.versions)
+    ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
     //
     // SUBWORKFLOW: Normalised bigWig coverage tracks
@@ -627,7 +628,7 @@ workflow GLSEQ {
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm,
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm,
             ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
@@ -917,7 +918,7 @@ workflow GLSEQ {
             params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
-            BAM_NORMALIZED_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])

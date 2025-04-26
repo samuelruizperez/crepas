@@ -10,7 +10,7 @@ include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../..
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 
 
-workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
+workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     take:
     ch_bam_bai               // channel: [ val(meta), [ bam ], [ bai ] ]
