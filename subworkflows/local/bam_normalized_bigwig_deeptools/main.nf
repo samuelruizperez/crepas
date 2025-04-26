@@ -345,6 +345,15 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
+  
+    // Remove empty bedgraphs (mostly from SOI) to avoid bdg to bw conversion errors
+    ch_bdg_all
+        .filter {
+            meta, bdg ->
+                bdg.size() > 0
+        }
+        .set { ch_bdg_all }
+
     // TODO: print for debugging
     ch_bdg_all
         .map {
@@ -352,6 +361,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
                 "${meta}\t${bdg}"
         }
         .collectFile( name: 'ch_bdg_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
 
     //
     // MODULE: Convert bedgraph to bigwig
