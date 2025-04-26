@@ -1,4 +1,4 @@
-include { DEEPTOOLS_BAMCOVERAGE }       from '../../../modules/nf-core/deeptools/bamcoverage/main'
+include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINS }       from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO }        from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO }        from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modules/nf-core/bedtools/map/main'
@@ -8,6 +8,7 @@ include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_si
 include { FILE_SORT as BEDGRAPH_SORT } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1 }     from '../../../modules/nf-core/deeptools/bamcoverage/main'
 
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
@@ -16,11 +17,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bam_bai               // channel: [ val(meta), [ bam ], [ bai ] ]
     ch_chrom_sizes_endo          // channel: [ bed ]
     ch_chrom_sizes_exo          // channel: [ bed ]
+    coverage_bin_size      // int: size of the coverage bin in bp
     genome                  // string: genome name
     spikein_genome          // string: spike-in genome name
     skip_srpm           // boolean: skip the SRPM normalization step
     skip_cisrpm          // boolean: skip the CISRPM normalization step
     skip_cisrpmsoi      // boolean: skip the CISRPM-SOI normalization step
+    skip_plot_profile
 
     main:
 
@@ -39,13 +42,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     //
     // MODULE: Calculate raw coverage per bin
     //
-    DEEPTOOLS_BAMCOVERAGE (
+    DEEPTOOLS_BAMCOVERAGE_BINS (
         ch_bam_bai,
         [],
         []
     )
-    ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE.out.bedgraph
-    ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE.out.versions.first())
+    ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE_BINS.out.bedgraph
+    ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINS.out.versions.first())
 
     // bamCoverage merges contiguous bins with the same coverage and there is no option to disable this.
     // See https://github.com/deeptools/deepTools/issues/907#issuecomment-576729674
@@ -382,10 +385,40 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
     }
 
+
+    // if coverage_bin_size is not 1, then we need to generate bw with that binsize for computeMatrix
+    ch_binsize1 = Channel.empty()
+    if (coverage_bin_size != 1 && !skip_plot_profile) {
+
+        ch_bam_bai
+            // we only want these bw for the endo genome
+            .filter { meta, bam, bai ->
+                meta.genome == genome
+            }
+            .map { meta, bam, bai ->
+                def meta_clone = meta.clone()
+                // we want them normalized to RPM
+                meta_clone.norm_factor_val = 1e6 / meta_clone.total_mapped_reads
+                meta_clone.norm_factor_type = 'rpm'
+                [ meta_clone, bam, bai ]
+            }
+            .set { ch_binsize1 }
+    
+        DEEPTOOLS_BAMCOVERAGE_BINSIZE1 (
+            ch_binsize1,
+            [],
+            []
+        )
+        ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
+        ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
+
+    }
+    
     emit:
     bigwig_endo_rpm  = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' } // channel: [ val(meta), [ bigwig ] ]
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = ch_bw_exo         // channel: [ val(meta), [ bigwig ] ]
+    bigwig_binsize1   = ch_binsize1       // channel: [ val(meta), [ bigwig ] ]
 
     versions      = ch_versions                            // channel: [ versions.yml ]
 }

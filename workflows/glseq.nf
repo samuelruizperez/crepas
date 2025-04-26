@@ -605,11 +605,13 @@ workflow GLSEQ {
         ch_filtered_bam_bai,
         ch_chrom_sizes_endo.first(),
         ch_chrom_sizes_exo.first(),
+        params.coverage_bin_size,
         params.genome,
         params.spikein_genome,
         params.skip_srpm,
         params.skip_cisrpm,
-        params.skip_cisrpmsoi
+        params.skip_cisrpmsoi,
+        params.skip_plot_profile
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -628,7 +630,7 @@ workflow GLSEQ {
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm,
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1,
             ch_gene_bed.map{ it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
