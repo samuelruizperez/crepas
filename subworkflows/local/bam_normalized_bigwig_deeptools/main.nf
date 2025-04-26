@@ -183,6 +183,14 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             }
             .set { ch_bdg_genome_ip }
 
+        // TODO: print for debugging
+        ch_bdg_genome_ip
+            .map {
+                meta, bdg ->
+                    "${meta}\t${bdg}"
+            }
+            .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
         // Combine the endo and exo BAMs (inputs)
         ch_bdg_genome_type
             .endo_control
@@ -191,6 +199,14 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
                 [ endo_control_meta.id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
             }
             .set { ch_bdg_genome_control }
+        
+        // TODO: print for debugging
+        ch_bdg_genome_control
+            .map {
+                meta, bdg ->
+                    "${meta}\t${bdg}"
+            }
+            .collectFile( name: 'ch_bdg_genome_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
         // Combine the combined ChIPs with the combined inputs
         ch_bdg_genome_ip
@@ -203,6 +219,14 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
                     [ meta_clone, endo_ip_bdg ]
             }
             .set { ch_bdg_ip_cisrpm }
+
+        // TODO: print for debugging
+        ch_bdg_ip_cisrpm
+            .map {
+                meta, bdg ->
+                    "${meta}\t${bdg}"
+            }
+            .collectFile( name: 'ch_bdg_ip_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
         
         // Now do the missing CISRPM for the endogenous inputs
         // In this case CISRPM is the same as RPM
@@ -217,6 +241,14 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
                 [ meta_clone, bdg ]
             }
             .set { ch_bdg_control_cisrpm }
+        
+        // TODO: print for debugging
+        ch_bdg_control_cisrpm
+            .map {
+                meta, bdg ->
+                    "${meta}\t${bdg}"
+            }
+            .collectFile( name: 'ch_bdg_control_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
         ch_bdg_cisrpm = ch_bdg_ip_cisrpm.mix(ch_bdg_control_cisrpm)
     }
@@ -253,9 +285,9 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             .branch { meta, bdg ->
                 ips_with_control: meta.control
                     return [ meta.control, meta, bdg ]
-                // Cannot calculate CISRPM-SOI for ChIPs without inputs
-                // ips_without_control: !meta.control && !meta.is_control
-                //     return [ meta, bdg ]
+                    // Cannot calculate CISRPM-SOI for ChIPs without inputs
+                    // ips_without_control: !meta.control && !meta.is_control
+                    //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
                     return [ meta.id, bdg ]
             }
