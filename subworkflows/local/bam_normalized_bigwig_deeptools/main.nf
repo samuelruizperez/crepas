@@ -79,7 +79,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         ch_windows_bdg_raw,
         ch_chrom_sizes_endo
     )
-    ch_bdg_raw = BEDTOOLS_MAP_ENDO.out.mapped
+    ch_map_endo = BEDTOOLS_MAP_ENDO.out.mapped
     ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
 
     ch_windows_exo = Channel.empty()
@@ -108,18 +108,18 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
             ch_windows_bdg_raw_exo,
             ch_chrom_sizes_exo
         )
-        ch_bdg_raw_exo = BEDTOOLS_MAP_EXO.out.mapped
+        ch_map_exo = BEDTOOLS_MAP_EXO.out.mapped
         ch_versions = ch_versions.mix(BEDTOOLS_MAP_EXO.out.versions.first())
 
         // Merge the two channels
-        ch_bdg_raw = ch_bdg_raw.mix(ch_bdg_raw_exo)
+        ch_map_raw = ch_map_endo.mix(ch_map_exo)
     }
 
 
     // Modify channel meta to add RPM normalization factors
     ch_bdg_rpm = Channel.empty()
 
-    ch_bdg_raw
+    ch_map_raw
         .map {
             meta, bdg ->
                 def meta_clone = meta.clone()
@@ -133,7 +133,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     ch_bdg_srpm = Channel.empty()
     if (!skip_srpm) {
 
-        ch_bdg_raw
+        ch_map_raw
             .map {
                 meta, bdg ->
                     [ meta.id, meta, bdg ]
@@ -160,7 +160,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     if (!skip_cisrpm) {
 
         // Split BAMs by genome (endo and exo) and by type (ip and control)
-        ch_bdg_raw
+        ch_map_raw
             .map {
                 meta, bdg ->
                     [ meta.id, meta, bdg ]
@@ -177,8 +177,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         ch_bdg_genome_type
             .endo_ip
             .combine(ch_bdg_genome_type.exo_ip, by: 0)
-            .map { 
-                ip_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+            .map { ip_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
                     [ endo_ip_meta.control, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
             }
             .set { ch_bdg_genome_ip }
@@ -211,8 +210,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
         // Combine the combined ChIPs with the combined inputs
         ch_bdg_genome_ip
             .combine(ch_bdg_genome_control, by: 0)
-            .map { 
-                id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+            .map { id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
                     meta_clone.norm_factor_val = (1e6 / exo_ip_meta.total_mapped_reads) * (exo_control_meta.total_mapped_reads / endo_control_meta.total_mapped_reads)
                     meta_clone.norm_factor_type = 'cisrpm'
@@ -272,7 +270,7 @@ workflow BAM_NORMALIZED_BIGWIG_DEEPTOOLS {
     BEDGRAPH_NORMALIZE (
         ch_bdg_norm
     )
-    ch_bdg_raw_norm = ch_bdg_raw.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
+    ch_bdg_raw_norm = ch_map_raw.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
     ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
 
     // Create channel: [ val(meta), [ ip_bdg ], [ control_bdg ] ]
