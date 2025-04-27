@@ -9,14 +9,17 @@
 */
 
 include { UTILS_NFVALIDATION_PLUGIN } from '../../../subworkflows/nf-core/utils_nfvalidation_plugin'
-include { paramsSummaryMap          } from 'plugin/nf-validation'
+include { UTILS_NFCORE_PIPELINE     } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE   } from '../../../subworkflows/nf-core/utils_nextflow_pipeline'
+include { paramsSummaryMap          } from 'plugin/nf-validation'
 include { completionEmail           } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { dashedLine                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { nfCoreLogo                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+//include { nfCoreLogo                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { getWorkflowVersion        } from '../../nf-core/utils_nfcore_pipeline'
+
+include { logColours                } from '../../nf-core/utils_nfcore_pipeline'
 include { imNotification            } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { UTILS_NFCORE_PIPELINE     } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { workflowCitation          } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 /*
@@ -50,7 +53,8 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    pre_help_text = nfCoreLogo(monochrome_logs)
+    //pre_help_text = nfCoreLogo(monochrome_logs)
+    pre_help_text = grothLabGlseqLogo(monochrome_logs)
     post_help_text = '\n' + workflowCitation() + '\n' + dashedLine(monochrome_logs)
     def String workflow_command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --genome GRCh37 --outdir <OUTDIR>"
     UTILS_NFVALIDATION_PLUGIN (
@@ -278,4 +282,36 @@ def macsGsizeWarn(log) {
         "  It will be auto-calculated by 'khmer unique-kmers.py' using the '--read_length' parameter.\n" +
         "  Explicitly provide '--macs_gsize macs3_genome_size' to change this behaviour.\n" +
         "==================================================================================="
+}
+
+
+def grothLabGlseqLogo(monochrome_logs = true) {
+    Map colors = logColours(monochrome_logs)
+    String.format(
+        """\n
+        ${dashedLine(monochrome_logs)}
+${colors.white}█████████████████████████████████████████████████████████████████████████████${colors.reset}
+${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
+${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
+${colors.white}█▌////██████╗/██████╗//██████╗/████████╗██╗//██╗██╗//////█████╗/██████╗////▐█${colors.reset}
+${colors.white}█▌///██╔════╝/██╔══██╗██╔═══██╗╚══██╔══╝██║//██║██║/////██╔══██╗██╔══██╗///▐█${colors.reset}
+${colors.white}█▌///██║//███╗██████╔╝██║///██║///██║///███████║██║/////███████║██████╔╝///▐█${colors.reset}
+${colors.white}█▌///██║///██║██╔══██╗██║///██║///██║///██╔══██║██║/////██╔══██║██╔══██╗///▐█${colors.reset}
+${colors.white}█▌///╚██████╔╝██║//██║╚██████╔╝///██║///██║//██║███████╗██║//██║██████╔╝///▐█${colors.reset}
+${colors.white}█▌////╚═════╝/╚═╝//╚═╝/╚═════╝////╚═╝///╚═╝//╚═╝╚══════╝╚═╝//╚═╝╚═════╝////▐█${colors.reset}
+${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
+${colors.white}█▌////////////////██████╗/██╗/////███████╗███████╗/██████╗/////////////////▐█${colors.reset}
+${colors.white}█▌///////////////██╔════╝/██║/////██╔════╝██╔════╝██╔═══██╗////////////////▐█${colors.reset}
+${colors.white}█▌///////////////██║//███╗██║/////███████╗█████╗//██║///██║////////////////▐█${colors.reset}
+${colors.white}█▌///////////////██║///██║██║/////╚════██║██╔══╝//██║▄▄/██║////////////////▐█${colors.reset}
+${colors.white}█▌///////////////╚██████╔╝███████╗███████║███████╗╚██████╔╝////////////////▐█${colors.reset}
+${colors.white}█▌////////////////╚═════╝/╚══════╝╚══════╝╚══════╝/╚══▀▀═╝/////////////////▐█${colors.reset}
+${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
+${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
+${colors.white}█████████████████████████████████████████████████████████████████████████████${colors.reset}
+
+${colors.purple}  ${workflow.manifest.name} ${getWorkflowVersion()}${colors.reset}
+        ${dashedLine(monochrome_logs)}
+        """.stripIndent()
+    )
 }
