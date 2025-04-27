@@ -653,46 +653,6 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
     }
 
-    // if (!params.skip_count_reads_in_bins) {
-    //     //
-    //     // SUBWORKFLOW: Count reads in bins across samples with featureCounts
-    //     //
-    //     COUNT_READS_IN_BINS (
-    //         ch_filtered_bam,
-    //         ch_chrom_sizes_endo
-    //     )
-    //     ch_versions = ch_versions.mix(COUNT_READS_IN_BINS.out.versions)
-    // }
-
-
-    // Extract only ChOR-seq samples
-    // ch_filtered_bam
-    //     .join(ch_filtered_index, by: [0])
-    //     .mix(ch_filtered_exo_bam.join(ch_filtered_exo_index, by: [0]))
-    //     .filter { it[0].exp_type == 'chorseq' }
-    //     .set { ch_filtered_bam_bai_chor }
-
-    // ch_filtered_bam_bai_chor
-    //     .map {
-    //         meta, bam, bai ->
-    //             "${meta}\t${bam}\t${bai}"
-    //     }
-    //     .collectFile( name: 'ch_filtered_bam_bai_chor.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    
-
-    //
-    // SUBWORKFLOW: CHOR-seq analysis: compute reference-adjusted reads per million (RRPM)
-    //
-    // ch_chor_rrpm = Channel.empty()
-    // BAM_CHORSEQ_RRPM (
-    //     ch_filtered_bam_bai_chor,
-    //     ch_chrom_sizes_endo,
-    //     params.genome,
-    //     params.spikein_genome
-    // )
-    // ch_chor_rrpm = BAM_CHORSEQ_RRPM.out.rrpm
-    // ch_versions = ch_versions.mix(BAM_CHORSEQ_RRPM.out.versions)
-
     // Here we remove the exogenous samples from the filtered_bam_bai channel
     ch_filtered_bam = ch_filtered_bam.filter { it[0].genome == params.genome }
     ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }

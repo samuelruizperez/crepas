@@ -1,8 +1,8 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
+    "$schema": "https://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/grothlab/glseq/master/nextflow_schema.json",
     "title": "grothlab/glseq pipeline parameters",
-    "description": "Nextflow pipeline parameters for the grothlab/glseq pipeline.",
+    "description": "grothlab/glseq is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
     "type": "object",
     "definitions": {
         "input_output_options": {
@@ -30,7 +30,6 @@
                 },
                 "seq_platform": {
                     "type": "string",
-                    "default": null,
                     "description": "Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header.",
                     "help_text": "See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown."
                 },
@@ -129,6 +128,9 @@
                     "fa_icon": "fas fa-bezier-curve",
                     "description": "Path to directory or tar.gz archive for pre-built STAR index."
                 },
+                "hisat2_index": {
+                    "type": "string"
+                },
                 "gene_bed": {
                     "type": "string",
                     "format": "file-path",
@@ -139,11 +141,10 @@
                 },
                 "initiation_zones": {
                     "type": "string",
-                    "default": null,
                     "format": "file-path",
                     "mimetype": "text/plain",
                     "fa_icon": "fas fa-procedures",
-                    "description": "Path to BED file containing initiation zones for SCAR-seq analysis."   
+                    "description": "Path to BED file containing initiation zones for SCAR-seq analysis."
                 },
                 "macs_gsize": {
                     "type": "number",
@@ -153,7 +154,6 @@
                 },
                 "blacklist": {
                     "type": "string",
-                    "default": null,
                     "format": "file-path",
                     "description": "Path to blacklist regions in BED format, used for filtering alignments.",
                     "help_text": "If provided, alignments that overlap with the regions in this file will be filtered out (see [ENCODE blacklists](https://sites.google.com/site/anshulkundaje/projects/blacklists)). The file should be in BED format. Blacklisted regions for *GRCh37*, *GRCh38*, *GRCm38*, *hg19*, *hg38*, *mm10* are bundled with the pipeline in the [`blacklists`](../assets/blacklists/) directory, and as such will be automatically used if any of those genomes are specified with the `--genome` parameter.",
@@ -332,7 +332,6 @@
                 },
                 "map_n_multimappers": {
                     "type": "integer",
-                    "default": null,
                     "fa_icon": "fas fa-dice-d20",
                     "description": "Number of multimappers to map."
                 }
@@ -346,7 +345,6 @@
             "properties": {
                 "spikein_genome": {
                     "type": "string",
-                    "default": null,
                     "description": "Name of the spike-in genome if used in the experiment. The spike-in chromosome names in the `--fasta` and `<aligner>_index` files should have the format `<chromosome_name>_<spikein_genome>`, e.g. `chr1_dm6`.",
                     "fa_icon": "fas fa-dna"
                 },
@@ -386,6 +384,10 @@
                     "default": true,
                     "description": "Save the intermediate BAM files from the multimapper allocation step.",
                     "fa_icon": "fas fa-save"
+                },
+                "allocate_exogenous": {
+                    "type": "boolean",
+                    "default": true
                 }
             }
         },
@@ -400,6 +402,38 @@
                 }
             }
         },
+        "coverage_and_normalization_options": {
+            "title": "Coverage and normalization options",
+            "type": "object",
+            "fa_icon": "fas fa-chart-area",
+            "description": "Options to adjust coverage and normalization criteria.",
+            "properties": {
+                "skip_srpm": {
+                    "type": "boolean"
+                },
+                "skip_cisrpm": {
+                    "type": "boolean"
+                },
+                "skip_cisrpmsoi": {
+                    "type": "boolean"
+                },
+                "soi_min_count": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "coverage_extend_reads": {
+                    "type": "integer",
+                    "default": 250
+                },
+                "coverage_bin_size": {
+                    "type": "integer",
+                    "default": 250
+                },
+                "save_coverage_intermeds": {
+                    "type": "boolean"
+                }
+            }
+        },
         "downsampling_options": {
             "title": "Downsampling options",
             "type": "object",
@@ -408,7 +442,6 @@
             "properties": {
                 "bam_downsampling_method": {
                     "type": "string",
-                    "default": null,
                     "description": "Method to downsample BAM files.",
                     "fa_icon": "fas fa-compress-arrows-alt",
                     "enum": ["min_by_type"]
@@ -422,7 +455,7 @@
                 },
                 "bam_downsampling_accuracy": {
                     "type": "number",
-                    "default": 0.000001,
+                    "default": 1e-6,
                     "description": "Accuracy of downsampling BAM files. See [Picard](https://gatk.broadinstitute.org/hc/en-us/articles/360036431292-DownsampleSam-Picard) for more details.",
                     "fa_icon": "fas fa-compress-arrows-alt"
                 },
@@ -500,6 +533,24 @@
                 },
                 "save_macs_pileup_intermeds": {
                     "type": "boolean"
+                },
+                "skip_edd": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "edd_bin_size": {
+                    "type": "string"
+                },
+                "edd_gap_penalty": {
+                    "type": "string"
+                },
+                "edd_num_trials": {
+                    "type": "integer",
+                    "default": 10000
+                },
+                "edd_fdr": {
+                    "type": "number",
+                    "default": 0.05
                 }
             }
         },
@@ -537,12 +588,6 @@
                     "description": "Skip deepTools plotProfile.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_count_reads_in_bins": {
-                    "type": "boolean",
-                    "description": "Skip counting reads in bins.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": false
-                },
                 "skip_plot_fingerprint": {
                     "type": "boolean",
                     "description": "Skip deepTools plotFingerprint.",
@@ -572,32 +617,6 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip all QC steps except for MultiQC."
-                }
-            }
-        },
-        "chorseq_analysis_options": {
-            "title": "ChOR-seq analysis options",
-            "type": "object",
-            "fa_icon": "fas fa-dna",
-            "description": "Options to adjust ChOR-seq analysis criteria.",
-            "properties": {
-                "chor_bin_size": {
-                    "type": "integer",
-                    "default": 250,
-                    "description": "Bin size for ChOR-seq analysis.",
-                    "fa_icon": "fas fa-dna"
-                },
-                "chor_extend_reads": {
-                    "type": "integer",
-                    "default": 250,
-                    "description": "How much to extend reads for ChOR-seq analysis.",
-                    "fa_icon": "fas fa-dna"
-                },
-                "save_chor_intermeds": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Save intermediate files for ChOR-seq analysis.",
-                    "fa_icon": "fas fa-save"
                 }
             }
         },
@@ -693,41 +712,6 @@
                     "description": "Institutional config URL link.",
                     "hidden": true,
                     "fa_icon": "fas fa-users-cog"
-                }
-            }
-        },
-        "max_job_request_options": {
-            "title": "Max job request options",
-            "type": "object",
-            "fa_icon": "fab fa-acquisitions-incorporated",
-            "description": "Set the top limit for requested resources for any single job.",
-            "help_text": "If you are running on a smaller system, a pipeline step requesting more resources than are available may cause the Nextflow to stop the run with an error. These options allow you to cap the maximum resources requested by any single job so that the pipeline will run on your system.\n\nNote that you can not _increase_ the resources requested by any job using these options. For that you will need your own configuration file. See [the nf-core website](https://nf-co.re/usage/configuration) for details.",
-            "properties": {
-                "max_cpus": {
-                    "type": "integer",
-                    "description": "Maximum number of CPUs that can be requested for any single job.",
-                    "default": 16,
-                    "fa_icon": "fas fa-microchip",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
-                },
-                "max_memory": {
-                    "type": "string",
-                    "description": "Maximum amount of memory that can be requested for any single job.",
-                    "default": "128.GB",
-                    "fa_icon": "fas fa-memory",
-                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`"
-                },
-                "max_time": {
-                    "type": "string",
-                    "description": "Maximum amount of time that can be requested for any single job.",
-                    "default": "240.h",
-                    "fa_icon": "far fa-clock",
-                    "pattern": "^(\\d+\\.?\\s*(s|m|h|d|day)\\s*)+$",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`"
                 }
             }
         },
@@ -833,6 +817,9 @@
             "$ref": "#/definitions/alignment_shifting_options"
         },
         {
+            "$ref": "#/definitions/coverage_and_normalization_options"
+        },
+        {
             "$ref": "#/definitions/downsampling_options"
         },
         {
@@ -842,16 +829,10 @@
             "$ref": "#/definitions/process_skipping_options"
         },
         {
-            "$ref": "#/definitions/chorseq_analysis_options"
-        },
-        {
             "$ref": "#/definitions/scarseq_analysis_options"
         },
         {
             "$ref": "#/definitions/institutional_config_options"
-        },
-        {
-            "$ref": "#/definitions/max_job_request_options"
         },
         {
             "$ref": "#/definitions/generic_options"
@@ -886,9 +867,6 @@
         },
         "validationShowHiddenParams": {
             "type": "boolean"
-        },
-        "hisat2_index": {
-            "type": "string"
         }
     }
 }
