@@ -216,7 +216,7 @@
       --spikein_genome dm6 \
       ...
       --outdir <path_to_output_directory> \
-      --work-dir <path_to_output_directory>/work/
+      -work-dir <path_to_output_directory>/work/
     ```
 
 > [!TIP]
@@ -249,7 +249,7 @@ nextflow run grothlab/glseq \
   -r main \
   -profile ku_sund_danhead_mod,local_test_scarseq \
   --outdir <path_to_output_directory> \
-  --work-dir <path_to_output_directory>/work/
+  -work-dir <path_to_output_directory>/work/
 ```
 
 ## Reference genome files
@@ -329,7 +329,7 @@ nextflow run /user/datadir/software/glseq \
       -profile ku_sund_danhead_mod \
       --input /user/datadir/projects/project1/project1_glseq_samplesheet.csv \
       --outdir /user/datadir/projects/project1/output/ \
-      --work-dir /user/datadir/projects/project1/output/work/ \
+      -work-dir /user/datadir/projects/project1/output/work/ \
       --aligner bowtie2 \
       --read_length 50 \
       --with_umi \
