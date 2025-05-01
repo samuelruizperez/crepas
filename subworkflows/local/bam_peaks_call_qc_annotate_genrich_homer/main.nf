@@ -51,7 +51,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     // Create channels: [ meta, ip_bam, peaks ]
     ch_bam
-        .join(ch_gr_peaks, by: [0])
+        .join(ch_gr_peaks, by: 0)
         .map {
             meta, ip_bam, control_bam, peaks ->
                 [ meta, ip_bam, peaks ]
@@ -76,7 +76,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peak
-        .join(FRIP_SCORE.out.txt, by: [0])
+        .join(FRIP_SCORE.out.txt, by: 0)
         .map {
             meta, ip_bam, peaks, frip ->
                 [ meta, peaks, frip ]

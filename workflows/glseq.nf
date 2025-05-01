@@ -843,13 +843,12 @@ workflow GLSEQ {
                 def meta_clone = meta.clone()
                 meta_clone.id = meta_clone.id - ~/_REP\d+$/
                 meta_clone.control = meta_clone.control - ~/_REP\d+$/
-                [ meta_clone.id, meta_clone, [ ip_bam ], [ control_bam ] ]
+                [ meta_clone.id, meta_clone, [ ip_bams ], [ control_bams ] ]
         }
         .groupTuple(by: 0)
         .map {
-            metas, ip_bams, control_bams ->
-                def meta_clone = metas[0].clone()
-                [ meta_clone, ip_bams.flatten(), control_bams.flatten() ]
+            id, metas, ip_bams, control_bams ->
+                [ metas[0], ip_bams.flatten(), control_bams.flatten() ]
         }
         .set { ch_ip_control_bam_merged_reps }
 
@@ -1014,7 +1013,12 @@ workflow GLSEQ {
             ch_subreadfeaturecounts_multiqc.collect{it[1]}.ifEmpty([]),
 
             ch_deseq2_pca_multiqc.collect().ifEmpty([]),
-            ch_deseq2_clustering_multiqc.collect().ifEmpty([])
+            ch_deseq2_clustering_multiqc.collect().ifEmpty([]),
+
+            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect().ifEmpty([])
+            
         )
         ch_multiqc_report = MULTIQC.out.report
     }
