@@ -576,6 +576,11 @@
                 "edd_fdr": {
                     "type": "number",
                     "default": 0.05
+                },
+                "skip_genrich": {
+                    "type": "boolean",
+                    "description": "Skip Genrich peak calling.",
+                    "fa_icon": "fas fa-fast-forward"
                 }
             }
         },

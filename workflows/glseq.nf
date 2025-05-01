@@ -863,21 +863,22 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
     //
-    BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-        ch_ip_control_bam_merged_reps,
-        ch_fasta.map{ it[1] }.first(),
-        ch_gtf.map{ it[1] }.first(),
-        ch_blacklist.map{ it[1] }.first(),
-        ".annotatePeaks.txt",
-        ch_gr_peak_count_header,
-        ch_gr_frip_score_header,
-        ch_gr_peak_annotation_header,
-        params.narrow_peak,
-        params.skip_peak_annotation,
-        params.skip_peak_qc
-    )
-    ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
-
+    if (params.skip_genrich) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
+            ch_ip_control_bam_merged_reps,
+            ch_fasta.map{ it[1] }.first(),
+            ch_gtf.map{ it[1] }.first(),
+            ch_blacklist.map{ it[1] }.first(),
+            ".annotatePeaks.txt",
+            ch_gr_peak_count_header,
+            ch_gr_frip_score_header,
+            ch_gr_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
+    }
 
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
