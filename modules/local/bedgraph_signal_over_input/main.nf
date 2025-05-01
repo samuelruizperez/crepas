@@ -1,6 +1,6 @@
-process EDITCHROMSIZES_ENDO {
-    tag "$sizes"
-    label 'process_single'
+process BEDGRAPH_SIGNAL_OVER_INPUT {
+    tag "$meta.id"
+    label 'process_low'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,12 +8,10 @@ process EDITCHROMSIZES_ENDO {
         'nf-core/ubuntu:22.04' }"
 
     input:
-    tuple val(meta), path(sizes)
-    val filter_genome_string
-    val keep_genome_string
+    tuple val(meta), path(ip_bedgraph), path(control_bedgraph)
 
     output:
-    tuple val(meta), path ("*.sizes")   , emit: sizes
+    tuple val(meta), path("*.bedgraph") , emit: bedgraph
     path  "versions.yml"                , emit: versions
 
     when:
@@ -21,12 +19,22 @@ process EDITCHROMSIZES_ENDO {
 
     script:
     def args  = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def min_count = args2.contains('--min_count ') ? args2.split('--min_count ')[1].split(' ')[0] : 1
+    min_count = min_count.toInteger() 
     """
     awk \\
         $args \\
-        '!(\$1 ~ /_${filter_genome_string}\$/)' \\
-        $sizes \\
-        > ${sizes.baseName}.${keep_genome_string}.sizes
+        'NR==FNR {key=\$1 FS \$2 FS \$3; value[key]=\$4; next} 
+            {key=\$1 FS \$2 FS \$3; chip=\$4; input=(key in value ? value[key] : 0); 
+            if (chip >= $min_count && input >= $min_count) { 
+                ratio = chip / input; 
+                print \$1, \$2, \$3, ratio 
+            }}' OFS="\\t" \\
+        $control_bedgraph \\
+        $ip_bedgraph \\
+    > ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -37,7 +45,7 @@ process EDITCHROMSIZES_ENDO {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch endo.sizes
+    touch  ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

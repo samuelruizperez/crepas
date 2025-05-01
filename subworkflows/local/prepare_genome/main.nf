@@ -27,7 +27,7 @@ include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extr
 
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_BLACKLIST_REGIONS } from '../../../modules/local/genome_blacklist_regions/main'
-include { EDITCHROMSIZES_ENDO  } from '../../../modules/local/editchromsizes_endo/main'
+include { CHROM_SIZES_SPIKEIN_SPLIT  } from '../../../modules/local/chrom_sizes_spikein_split/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -73,12 +73,12 @@ workflow PREPARE_GENOME {
 
 
     // Make fasta file available if reference saved or IGV is run
-    if (params.save_reference || !params.skip_igv) {
-        file("${params.outdir}/genome/").mkdirs()
-        // copy fasta file (second element of tuple) to output directory
-        ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
-        //ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
-    }
+    // if (params.save_reference || !params.skip_igv) {
+    //     file("${params.outdir}/genome/").mkdirs()
+    //     // copy fasta file (second element of tuple) to output directory
+    //     ch_fasta.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+    //     //ch_fasta_exo.map{ it[1] }.collect{ it.copyTo("${params.outdir}/genome/") }
+    // }
 
     //
     // Uncompress GTF annotation file or create from GFF3 if required
@@ -158,15 +158,16 @@ workflow PREPARE_GENOME {
     //
     // Create endogenous genome chromosome sizes file
     //
-
     ch_chrom_sizes_endo = ch_chrom_sizes
+    ch_chrom_sizes_exo = Channel.empty()
     if (spikein_genome) {
-        EDITCHROMSIZES_ENDO ( ch_chrom_sizes, spikein_genome, genome )
-        ch_chrom_sizes_endo = EDITCHROMSIZES_ENDO.out.sizes
-        ch_versions        = ch_versions.mix(EDITCHROMSIZES_ENDO.out.versions)
+        CHROM_SIZES_SPIKEIN_SPLIT ( ch_chrom_sizes, spikein_genome, genome )
+        ch_chrom_sizes_endo = CHROM_SIZES_SPIKEIN_SPLIT.out.endo_sizes.map { [ it[0] + [ genome: genome ], it[1] ] }
+        ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
+        ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
     }
 
-    // get list of scaffolds in EDITCHROMSIZES_ENDO.out.sizes
+    // get list of scaffolds in CHROM_SIZES_SPIKEIN_SPLIT.out.sizes
     // this are the ones that contain a dot in the first column of the tab-separated file
     ch_scaffolds = Channel.empty()
     ch_chrom_sizes
@@ -303,6 +304,7 @@ workflow PREPARE_GENOME {
     gene_bed      = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes   = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo = ch_chrom_sizes_endo //    channel: [ val(meta), [ genome_endo.sizes ]]
+    chrom_sizes_exo = ch_chrom_sizes_exo //    channel: [ val(meta), [ genome_exo.sizes ]]
     scaffolds  = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist     = ch_blacklist              //    channel: [  blacklist.bed ]
