@@ -863,6 +863,10 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
     //
+
+    ch_genrich_frip_multiqc = Channel.empty()
+    ch_genrich_peak_count_multiqc = Channel.empty()
+    ch_genrich_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_ip_control_bam_merged_reps,
@@ -877,6 +881,9 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_genrich_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc
+        ch_genrich_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc
+        ch_genrich_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
     }
 
@@ -1016,9 +1023,9 @@ workflow GLSEQ {
             ch_deseq2_pca_multiqc.collect().ifEmpty([]),
             ch_deseq2_clustering_multiqc.collect().ifEmpty([]),
 
-            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect{it[1]}.ifEmpty([]),
-            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect{it[1]}.ifEmpty([]),
-            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect().ifEmpty([])
+            ch_genrich_frip_multiqc.collect{it[1]}.ifEmpty([]),
+            ch_genrich_peak_count_multiqc.collect{it[1]}.ifEmpty([]),
+            ch_genrich_plot_homer_annotatepeaks_tsv.collect().ifEmpty([])
             
         )
         ch_multiqc_report = MULTIQC.out.report
