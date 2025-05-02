@@ -843,7 +843,7 @@ workflow GLSEQ {
                 def meta_clone = meta.clone()
                 meta_clone.id = meta_clone.id - ~/_REP\d+$/
                 meta_clone.control = meta_clone.control - ~/_REP\d+$/
-                [ meta_clone.id, meta_clone, [ ip_bams ], [ control_bams ] ]
+                [ meta_clone.id, meta_clone, [ ip_bam ], [ control_bam ] ]
         }
         .groupTuple(by: 0)
         .map {
@@ -867,7 +867,7 @@ workflow GLSEQ {
     ch_genrich_frip_multiqc = Channel.empty()
     ch_genrich_peak_count_multiqc = Channel.empty()
     ch_genrich_plot_homer_annotatepeaks_tsv = Channel.empty()
-    if (params.skip_genrich) {
+    if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_ip_control_bam_merged_reps,
             ch_fasta.map{ it[1] }.first(),
