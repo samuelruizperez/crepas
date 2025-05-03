@@ -77,7 +77,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     // Call peaks with Genrich
     //
     GENRICH (
-        SAMTOOLS_SORT.out.bam,
+        ch_ip_control_bam_merged_reps,
         ch_blacklist
     )
     ch_versions = ch_versions.mix(GENRICH.out.versions.first())
