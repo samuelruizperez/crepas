@@ -150,7 +150,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         //
         HOMER_ANNOTATEPEAKS (
             ch_gr_peaks,
-            ch_fasta,
+            ch_fasta.map{ it[1] },
             ch_gtf
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
