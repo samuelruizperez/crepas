@@ -35,6 +35,44 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     )
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
+    SAMTOOLS_SORT
+        .out
+        .bam
+        .branch { meta, bam ->
+            ips_with_control: meta.control
+                return [ meta.control, meta, [ bam ] ]
+            ips_wo_control: !meta.control && !meta.is_control
+                return [ meta.id, meta, [ bam ] ]
+            controls: !meta.control && meta.is_control
+                return [ meta.id, [ bam ] ]
+        }
+        .set { ch_bam_by_type }
+
+    // Create channel: [ meta, [ip_bams_merged_reps], [control_bams_merged_reps] ]
+    ch_bam_by_type.ips_with_control
+        .combine(ch_bam_by_type.controls, by: 0)
+        .mix(ch_bam_by_type.ips_wo_control)
+        .map { control_id, ip_meta, ip_bam, control_bam ->
+            def meta_clone = ip_meta.clone()
+            meta_clone.id = meta_clone.id - ~/_REP\d+$/
+            meta_clone.control = meta_clone.control - ~/_REP\d+$/
+            [ meta_clone.id, meta_clone, ip_bam, control_bam ?: [] ]
+        }
+        .groupTuple()
+        .map {
+            id, metas, ip_bams, control_bams ->
+                [ metas[0], ip_bams.flatten(), control_bams.flatten() ]
+        }
+        .set { ch_ip_control_bam_merged_reps }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_merged_reps
+        .map {
+            meta, ip_bams, control_bams ->
+                "${meta}\t${ip_bams}\t${control_bams}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
     //
     // Call peaks with Genrich
     //
