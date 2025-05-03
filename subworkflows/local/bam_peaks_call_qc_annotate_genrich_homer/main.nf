@@ -3,6 +3,7 @@
 // Call peaks with Genrich, annotate with HOMER and perform downstream QC
 //
 
+include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
 include { GENRICH           } from '../../../modules/nf-core/genrich/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
@@ -28,11 +29,17 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     ch_versions = Channel.empty()
 
+    SAMTOOLS_SORT (
+        ch_bam,
+        ch_fasta.first()
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
+
     //
     // Call peaks with Genrich
     //
     GENRICH (
-        ch_bam,
+        SAMTOOLS_SORT.out.bam,
         ch_blacklist
     )
     ch_versions = ch_versions.mix(GENRICH.out.versions.first())
