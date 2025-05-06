@@ -105,6 +105,11 @@
                         "git_sha": "b1966f36ec9de31927b2603d8f499960b2a4c294",
                         "installed_by": ["fastq_fastqc_umitools_trimgalore", "modules"]
                     },
+                    "genrich": {
+                        "branch": "master",
+                        "git_sha": "6975891607e1137873df654d87754714161a754f",
+                        "installed_by": ["modules"]
+                    },
                     "gffread": {
                         "branch": "master",
                         "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",

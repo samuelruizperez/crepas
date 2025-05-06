@@ -23,6 +23,7 @@ include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/ma
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 // include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
@@ -82,8 +83,11 @@ ch_spp_nsc_header           = file("$projectDir/assets/multiqc/spp_nsc_header.tx
 ch_spp_rsc_header           = file("$projectDir/assets/multiqc/spp_rsc_header.txt", checkIfExists: true)
 ch_spp_correlation_header   = file("$projectDir/assets/multiqc/spp_correlation_header.txt", checkIfExists: true)
 ch_peak_count_header        = file("$projectDir/assets/multiqc/peak_count_header.txt", checkIfExists: true)
+ch_gr_peak_count_header     = file("$projectDir/assets/multiqc/gr_peak_count_header.txt", checkIfExists: true)
 ch_frip_score_header        = file("$projectDir/assets/multiqc/frip_score_header.txt", checkIfExists: true)
+ch_gr_frip_score_header     = file("$projectDir/assets/multiqc/gr_frip_score_header.txt", checkIfExists: true)
 ch_peak_annotation_header   = file("$projectDir/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
+ch_gr_peak_annotation_header = file("$projectDir/assets/multiqc/gr_peak_annotation_header.txt", checkIfExists: true)
 ch_deseq2_pca_header        = Channel.value(file("$projectDir/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
 ch_deseq2_clustering_header = Channel.value(file("$projectDir/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
@@ -833,6 +837,32 @@ workflow GLSEQ {
     }
 
     //
+    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
+    //
+    ch_genrich_frip_multiqc = Channel.empty()
+    ch_genrich_peak_count_multiqc = Channel.empty()
+    ch_genrich_plot_homer_annotatepeaks_tsv = Channel.empty()
+    if (!params.skip_genrich) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
+            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
+            ch_fasta.first(),
+            ch_gtf.map{ it[1] }.first(),
+            ch_blacklist.map{ it[1] }.first(),
+            ".annotatePeaks.txt",
+            ch_gr_peak_count_header,
+            ch_gr_frip_score_header,
+            ch_gr_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_genrich_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc
+        ch_genrich_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc
+        ch_genrich_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
+    }
+
+    //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
     ch_scar_smooth = Channel.empty()
@@ -966,7 +996,12 @@ workflow GLSEQ {
             ch_subreadfeaturecounts_multiqc.collect{it[1]}.ifEmpty([]),
 
             ch_deseq2_pca_multiqc.collect().ifEmpty([]),
-            ch_deseq2_clustering_multiqc.collect().ifEmpty([])
+            ch_deseq2_clustering_multiqc.collect().ifEmpty([]),
+
+            ch_genrich_frip_multiqc.collect{it[1]}.ifEmpty([]),
+            ch_genrich_peak_count_multiqc.collect{it[1]}.ifEmpty([]),
+            ch_genrich_plot_homer_annotatepeaks_tsv.collect().ifEmpty([])
+            
         )
         ch_multiqc_report = MULTIQC.out.report
     }

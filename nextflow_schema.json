@@ -504,21 +504,24 @@
                     "help_text": "MACS3 is run by default with the [`--broad`](https://github.com/taoliu/MACS#--broad) flag. Specify this flag to call peaks in narrowPeak mode.",
                     "fa_icon": "fas fa-arrows-alt-h"
                 },
+                "peak_cutoff_method": {
+                    "type": "string",
+                    "default": "qvalue",
+                    "description": "Whether to use q-value or p-value as the cutoff for peak calling.",
+                    "fa_icon": "fas fa-sort-amount-down",
+                    "enum": ["qvalue", "pvalue"]
+                },
+                "narrow_cutoff": {
+                    "type": "number",
+                    "default": 0.01,
+                    "description": "Specifies narrow cutoff value for MACS3 and Genrich peak calling.",
+                    "fa_icon": "fas fa-hand-scissors"
+                },
                 "broad_cutoff": {
                     "type": "number",
                     "default": 0.1,
-                    "description": "Specifies broad cutoff value for MACS3. Only used when --narrow_peak isnt specified.",
+                    "description": "Specifies broad cutoff value for MACS3 and Genrich peak calling.",
                     "fa_icon": "fas fa-hand-scissors"
-                },
-                "macs_fdr": {
-                    "type": "number",
-                    "description": "Minimum FDR (q-value) cutoff for peak detection, --macs_fdr and --macs_pvalue are mutually exclusive.",
-                    "fa_icon": "fas fa-sort-amount-down"
-                },
-                "macs_pvalue": {
-                    "type": "number",
-                    "description": "p-value cutoff for peak detection, --macs_fdr and --macs_pvalue are mutually exclusive. If --macs_pvalue cutoff is set, q-value will not be calculated and reported as -1 in the final .xls file.",
-                    "fa_icon": "fas fa-sort-amount-down"
                 },
                 "min_reps_consensus": {
                     "type": "integer",
@@ -576,6 +579,23 @@
                 "edd_fdr": {
                     "type": "number",
                     "default": 0.05
+                },
+                "genrich_narrow_gap": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Genrich narrow gap parameter.",
+                    "fa_icon": "fas fa-hand-scissors"
+                },
+                "genrich_broad_gap": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Genrich broad gap parameter.",
+                    "fa_icon": "fas fa-hand-scissors"
+                },
+                "skip_genrich": {
+                    "type": "boolean",
+                    "description": "Skip Genrich peak calling.",
+                    "fa_icon": "fas fa-fast-forward"
                 }
             }
         },
