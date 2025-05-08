@@ -117,6 +117,7 @@ workflow GLSEQ {
     ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
+    ch_sparsebed     // channel: path(sparse.bed)
     ch_initiation_zones // channel: path(initiation_zones)
     ch_bwa_index     // channel: path(bwa/index/)
     ch_bowtie2_index // channel: path(bowtie2/index)
@@ -729,7 +730,7 @@ workflow GLSEQ {
         ch_ip_control_bam_bai_merged_reps,
         ch_chrom_sizes.map{ it[1] }.first(),
         ch_blacklist.map{ it[1] }.first(),
-        [],
+        ch_sparsebed.map{ it[1] }.first(),
         []
     )
     ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())

@@ -7,6 +7,7 @@ include {
     GUNZIP as GUNZIP_GTF
     GUNZIP as GUNZIP_GFF
     GUNZIP as GUNZIP_GENE_BED
+    GUNZIP as GUNZIP_SPARSEBED
     GUNZIP as GUNZIP_BLACKLIST } from '../../../modules/nf-core/gunzip/main'
 
 include {
@@ -39,6 +40,7 @@ workflow PREPARE_GENOME {
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
     blacklist          //    file: /path/to/blacklist.bed
+    sparsebed          //    file: /path/to/sparsebed.bed
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
@@ -99,6 +101,16 @@ workflow PREPARE_GENOME {
         }
         ch_gtf      = GFFREAD ( ch_gff, ch_fasta.map{ it[1] } ).gtf.map{ [ [id:'gtf'], it[1] ] }
         ch_versions = ch_versions.mix(GFFREAD.out.versions)
+    }
+
+    ch_sparsebed = Channel.empty()
+    if (params.sparsebed) {
+        if (params.sparsebed.endsWith('.gz')) {
+            ch_sparsebed = GUNZIP_SPARSEBED ( [ [id:'sparsebed'], params.sparsebed ] ).gunzip
+            ch_versions  = ch_versions.mix(GUNZIP_SPARSEBED.out.versions)
+        } else {
+            ch_sparsebed = Channel.of( [ [id:'sparsebed'], file(params.sparsebed) ] )
+        }
     }
 
     // Create dummy file 
@@ -308,6 +320,7 @@ workflow PREPARE_GENOME {
     scaffolds  = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed  = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist     = ch_blacklist              //    channel: [  blacklist.bed ]
+    sparsebed     = ch_sparsebed              //    channel: [ val(meta), [ sparsebed.bed ]]
     initiation_zones = ch_initiation_zones    //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index     = ch_bwa_index              //    path: bwa/index/
     bowtie2_index = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
