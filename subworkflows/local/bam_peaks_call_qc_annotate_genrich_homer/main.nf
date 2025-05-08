@@ -4,6 +4,7 @@
 //
 
 include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
+include { CONSENRICH             } from '../../../modules/local/consenrich/main'
 include { GENRICH           } from '../../../modules/nf-core/genrich/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
@@ -17,6 +18,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     ch_fasta                          // channel: [ fasta  ]
     ch_gtf                            // channel: [ gtf ]
     ch_blacklist                     // channel: [ bed ]
+    ch_chrom_sizes                   // channel: [ bed ]
     annotate_peaks_suffix             //  string: suffix for input HOMER annotate peaks files to be trimmed off
     ch_peak_count_header_multiqc      // channel: [ header_file ]
     ch_frip_score_multiqc             // channel: [ header_file ]
@@ -72,6 +74,18 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
                 "${meta}\t${ip_bams}\t${control_bams}"
         }
         .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    //
+    // Call consensus regions with Consenrich
+    //
+    CONSENRICH (
+        ch_ip_control_bam_merged_reps,
+        ch_chrom_sizes,
+        ch_blacklist,
+        [],
+        []
+    )
+    ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
 
     //
     // Call peaks with Genrich

@@ -848,6 +848,7 @@ workflow GLSEQ {
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
+            ch_chrom_sizes_endo.map{ it[1] }.first(),
             ".annotatePeaks.txt",
             ch_gr_peak_count_header,
             ch_gr_frip_score_header,
