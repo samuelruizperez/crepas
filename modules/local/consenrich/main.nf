@@ -16,9 +16,9 @@ process CONSENRICH {
 
     output:
     tuple val(meta), path("${prefix}.consenrich_output.tsv"),           emit: results
-    tuple val(meta), path("consenrich_signal_track_${prefix}.bw"),      optional:true, emit: signal_track
-    tuple val(meta), path("consenrich_residuals_track_${prefix}.bw"),   optional:true, emit: residuals_track
-    tuple val(meta), path("consenrich_eratio_track_${prefix}.bw"),      optional:true, emit: eratio_track
+    tuple val(meta), path("*consenrich_signal_track*.bw"),      optional:true, emit: signal_track
+    tuple val(meta), path("*consenrich_residuals_track*.bw"),   optional:true, emit: residuals_track
+    tuple val(meta), path("*consenrich_eratio_track*.bw"),      optional:true, emit: eratio_track
     tuple val(meta), path("${prefix}_*.tsv.gz"),                        optional:true, emit: gain_log
     tuple val(meta), path("consenrich_${prefix}_args.json"),            optional:true, emit: args_json
     tuple val(meta), path("*.npz"),                                     optional:true, emit: matrix
@@ -44,6 +44,7 @@ process CONSENRICH {
         --experiment_id $prefix \\
         $treatment \\
         $control \\
+        --sizes_file $chrom_sizes \\
         $blacklist \\
         $sparsebed \\
         $active_regions \\
