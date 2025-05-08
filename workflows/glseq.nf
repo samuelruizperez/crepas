@@ -727,8 +727,8 @@ workflow GLSEQ {
     //
     CONSENRICH (
         ch_ip_control_bam_bai_merged_reps,
-        ch_chrom_sizes,
-        ch_blacklist,
+        ch_chrom_sizes.map{ it[1] }.first(),
+        ch_blacklist.map{ it[1] }.first(),
         [],
         []
     )
