@@ -592,6 +592,24 @@
                     "description": "Genrich broad gap parameter.",
                     "fa_icon": "fas fa-hand-scissors"
                 },
+                "save_genrich_pileup": {
+                    "type": "boolean",
+                    "description": "Instruct Genrich to save pileup files.",
+                    "fa_icon": "fas fa-save",
+                    "default": true
+                },
+                "save_genrich_pvalues": {
+                    "type": "boolean",
+                    "description": "Instruct Genrich to save p-values.",
+                    "fa_icon": "fas fa-save",
+                    "default": true
+                },
+                "save_genrich_intervals": {
+                    "type": "boolean",
+                    "description": "Instruct Genrich to save intervals.",
+                    "fa_icon": "fas fa-save",
+                    "default": true
+                },
                 "skip_genrich": {
                     "type": "boolean",
                     "description": "Skip Genrich peak calling.",
