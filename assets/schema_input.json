@@ -1,6 +1,6 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://github.com/grothlab/glseq/blob/main/assets/schema_input.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/grothlab/glseq/main/assets/schema_input.json",
     "title": "grothlab/glseq pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
@@ -82,6 +82,10 @@
                 "meta": ["control_replicate"]
             }
         },
-        "required": ["sample", "fastq_1", "exp_type", "replicate"]
+        "required": ["sample", "fastq_1", "exp_type", "replicate"],
+        "dependentRequired": {
+            "antibody": ["control"],
+            "control": ["control_replicate"]
+        },
     }
 }
