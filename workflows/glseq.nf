@@ -8,7 +8,7 @@ include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
 include { BAM_FLAGSTAT_MAPPED } from '../modules/local/bam_flagstat_mapped/main'
-include { CONSENRICH             } from '../../../modules/local/consenrich/main'
+include { CONSENRICH             } from '../modules/local/consenrich/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
