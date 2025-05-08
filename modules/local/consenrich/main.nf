@@ -35,6 +35,7 @@ process CONSENRICH {
     def blacklist       = blacklist         ? "--blacklist_file $blacklist" : ""
     def sparsebed       = sparsebed         ? "--sparsebed $sparsebed" : ""
     def active_regions  = active_regions    ? "--active_regions $active_regions" : ""
+    def no_sparsebed    = !sparsebed && !active_regions ? "--no_sparsebed" : ""
     def single_end      = meta.single_end   ? "--single_end" : ""
     """
     consenrich \\
@@ -48,6 +49,7 @@ process CONSENRICH {
         $blacklist \\
         $sparsebed \\
         $active_regions \\
+        $no_sparsebed \\
         $single_end \\
         --output_file ${prefix}.consenrich_output.tsv
 
