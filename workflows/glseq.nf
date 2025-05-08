@@ -884,7 +884,6 @@ workflow GLSEQ {
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
-            ch_filtered_index.filter { it[0].exp_type != 'scarseq' },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
