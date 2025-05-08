@@ -596,6 +596,11 @@
                     "type": "boolean",
                     "description": "Skip Genrich peak calling.",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_consenrich": {
+                    "type": "boolean",
+                    "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",
+                    "fa_icon": "fas fa-fast-forward"
                 }
             }
         },

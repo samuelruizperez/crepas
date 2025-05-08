@@ -8,6 +8,7 @@ include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
 include { BAM_FLAGSTAT_MAPPED } from '../modules/local/bam_flagstat_mapped/main'
+include { CONSENRICH             } from '../../../modules/local/consenrich/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -683,9 +684,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
     }
     
-    //
-    // Create channels: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
-    //
+    // Branch channels based on if input control is present
     ch_filtered_bam
         .join(ch_filtered_index, by: 0)
         .branch { meta, bam, bai ->
@@ -696,11 +695,51 @@ workflow GLSEQ {
             controls: !meta.control && meta.is_control
                 return [ meta.id, [ bam ], [ bai ] ]
         }
-        .set { ch_genome_bam_bai }
+        .set { ch_bam_by_type }
 
-    ch_genome_bam_bai.ips_with_control
-        .combine(ch_genome_bam_bai.controls, by: 0)
-        .mix(ch_genome_bam_bai.ips_wo_control)
+    // Create channel for Consenrich: [ meta, [ip_bams_merged_reps], [ip_bais_merged_reps], [control_bams_merged_reps], [control_bais_merged_reps] ]
+    ch_bam_by_type.ips_with_control
+        .combine(ch_bam_by_type.controls, by: 0)
+        .mix(ch_bam_by_type.ips_wo_control)
+        .map { control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ->
+            def meta_clone = ip_meta.clone()
+            meta_clone.id = meta_clone.id - ~/_REP\d+$/
+            meta_clone.control = meta_clone.control - ~/_REP\d+$/
+            [ meta_clone.id, meta_clone, ip_bam, ip_bai, control_bam ?: [], control_bai ?: [] ]
+        }
+        .groupTuple()
+        .map {
+            id, metas, ip_bams, ip_bais, control_bams, control_bais ->
+                [ metas[0], ip_bams.flatten(), ip_bais.flatten(), control_bams.flatten(), control_bais.flatten() ]
+        }
+        .set { ch_ip_control_bam_bai_merged_reps }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_bai_merged_reps
+        .map {
+            meta, bams, bais, control_bams, control_bais ->
+                "${meta}\t${bams}\t${bais}\t${control_bams}\t${control_bais}"
+        }
+        .collectFile( name: 'ch_ip_control_bam_bai_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        
+    //
+    // MODULE: Call consensus regions with Consenrich
+    //
+    CONSENRICH (
+        ch_ip_control_bam_bai_merged_reps,
+        ch_chrom_sizes,
+        ch_blacklist,
+        [],
+        []
+    )
+    ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
+    
+    //
+    // Create channel for deepTools plotFingerprint: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
+    //
+    ch_bam_by_type.ips_with_control
+        .combine(ch_bam_by_type.controls, by: 0)
+        .mix(ch_bam_by_type.ips_wo_control)
         .map { it -> [ it[1], it[2] + (it[4] ?: []), it[3] + (it[5] ?: []) ] }
         .set { ch_ip_control_bam_bai }
     
@@ -711,7 +750,7 @@ workflow GLSEQ {
                 "${meta}\t${bams}\t${bais}"
         }
         .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-    
+
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
@@ -845,10 +884,10 @@ workflow GLSEQ {
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
+            ch_filtered_index.filter { it[0].exp_type != 'scarseq' },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
-            ch_chrom_sizes_endo.map{ it[1] }.first(),
             ".annotatePeaks.txt",
             ch_gr_peak_count_header,
             ch_gr_frip_score_header,
