@@ -158,6 +158,10 @@ def validateInputParameters() {
         error ("Both '--read_length' and '--macs_gsize' not specified! Please specify either to infer MACS3 genome size for peak calling.")
     }
 
+    if (params.trim_q_cutoff && params.trim_nextseq) {
+        error("Both '--trim_q_cutoff' and '--trim_nextseq' parameters have been provided (or one is set by default and the other was provided on top). Please provide only one.")
+    }
+
     // if --read_length and either hardtrim3_length or hardtrim5_length are provided, then check if they are equal
     if (params.read_length && (params.hardtrim3_length || params.hardtrim5_length)) {
         if (params.hardtrim3_length && params.hardtrim3_length != params.read_length) {
