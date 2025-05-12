@@ -245,10 +245,10 @@
                     "description": "Instructs Trim Galore to remove bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed.",
                     "fa_icon": "fas fa-cut"
                 },
-                "trim_full_truseq": {
+                "trim_full_length": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Instructs Trim Galore to search for the full length (33 bp) TruSeq adapter sequences for both complement and reverse complements.",
+                    "description": "Instructs Trim Galore to search for the full length (33 bp) TruSeq (ChIP-seq, ChOR-seq, SCAR-seq) or Nextera (ATAC-seq) adapter sequences for both complement and reverse complements.",
                     "help_text": "The default (false) setting will mean that the auto-detect function of Trim Galore will be used. See [https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#adapter-auto-detection](https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#adapter-auto-detection)",
                     "fa_icon": "fas fa-cut"
                 },
