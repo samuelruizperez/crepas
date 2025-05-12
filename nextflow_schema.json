@@ -216,6 +216,18 @@
                     "default": true,
                     "description": "Get deduplication statistics.",
                     "fa_icon": "fas fa-dna"
+                },
+                "umi_dedup_tool": {
+                    "type": "string",
+                    "default": "umicollapse",
+                    "description": "UMI deduplication tool to use.",
+                    "fa_icon": "fas fa-dna",
+                    "enum": ["umicollapse", "umitools"]
+                },
+                "save_dedup_intermeds": {
+                    "type": "boolean",
+                    "description": "Save intermediate files from the UMI deduplication step.",
+                    "fa_icon": "fas fa-save"
                 }
             }
         },

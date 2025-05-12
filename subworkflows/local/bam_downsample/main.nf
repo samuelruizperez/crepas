@@ -96,7 +96,7 @@ workflow BAM_DOWNSAMPLE {
     SAMTOOLS_INDEX (
         ch_ds_bam
     )
-    ch_ds_index = SAMTOOLS_INDEX.out.index
+    ch_ds_index = SAMTOOLS_INDEX.out.bai
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
@@ -111,7 +111,7 @@ workflow BAM_DOWNSAMPLE {
 
     emit:
     bam      = ch_ds_bam   // channel: [ val(meta), [ bam ] ]
-    index    = ch_ds_index           // channel: [ val(meta), [ index ] ]
+    bai      = ch_ds_index           // channel: [ val(meta), [ index ] ]
     stats    = BAM_STATS_SAMTOOLS.out.stats // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
