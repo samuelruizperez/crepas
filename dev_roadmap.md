@@ -58,3 +58,6 @@ separately for each experiment (chipseq, scarseq, etc.) and not for all experime
 # what happens with process_stats_summary.R if there is a dot in either the genome or the spikein_genome name?
 
 # verify that befor SOI both files have same number of bins in the same order
+
+# add input_basedir
+See https://nf-co.re/pixelator/latest/docs/usage/

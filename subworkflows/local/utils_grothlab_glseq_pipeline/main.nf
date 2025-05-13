@@ -172,6 +172,12 @@ def validateInputParameters() {
         }
     }
 
+    if (params.map_n_multimappers) {
+        if (!['chromap', 'bowtie2'].contains(params.aligner)) {
+            error("The '--map_n_multimappers' parameter requires the aligner to be set to 'chromap' or 'bowtie2'.")
+        }
+    }
+
     if (params.allocate_n_multimappers) {
         if (!params.map_n_multimappers || params.map_n_multimappers < params.allocate_n_multimappers) {
             error("The '--map_n_multimappers' parameter must be equal or greater than the '--allocate_n_multimappers' parameter.")

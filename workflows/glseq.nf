@@ -7,7 +7,12 @@
 include { IGV                                 } from '../modules/local/igv/main'
 include { MULTIQC                             } from '../modules/local/multiqc/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
-include { BAM_FLAGSTAT_MAPPED } from '../modules/local/bam_flagstat_mapped/main'
+
+include { 
+    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT1
+    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2
+    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
+                                              } from '../modules/local/bam_flagstat_mapped/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -70,7 +75,6 @@ include { BAM_MARKDUPLICATES_PICARD         } from '../subworkflows/nf-core/bam_
 include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS } from '../subworkflows/nf-core/bam_dedup_stats_samtools_umitools'
 include { BAM_STATS_SAMTOOLS                } from '../subworkflows/nf-core/bam_stats_samtools'
 include { BAM_SORT_STATS_SAMTOOLS           } from '../subworkflows/nf-core/bam_sort_stats_samtools'
-include { BAM_STATS_SAMTOOLS as BAM_STATS_SAMTOOLS_FINAL } from '../subworkflows/nf-core/bam_stats_samtools/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -376,6 +380,7 @@ workflow GLSEQ {
         }
     }
 
+
     //
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
@@ -392,6 +397,38 @@ workflow GLSEQ {
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     //
+    // MODULE: Extract total mapped reads from flagstats
+    //
+    BAM_FLAGSTAT_MAPPED_FLT1 (
+        ch_filtered_flagstat
+    )
+    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT1.out.versions)
+
+    // Extract the total mapped reads from the text file
+    BAM_FLAGSTAT_MAPPED_FLT1.out.txt
+        .map {
+            meta, total ->
+                [ meta, total.splitCsv(header:false)[0][0] ]
+        }
+        .set { ch_flT1_total }
+
+    // Add the total_mapped_reads to the bams' metas
+    ch_filtered_bam
+        .map {
+            meta, bam ->
+                [ meta, bam ]
+        }
+        .combine(ch_flT1_total, by: 0)
+        .map {
+            meta, bam, total ->
+                meta_clone = meta.clone()
+                meta_clone.flT1_total_mapped_reads = total.toDouble()
+                [ meta_clone, bam ]
+        }
+        .set { ch_filtered_bam }
+
+
+    //
     // SUBWORKFLOW: Spike-in splitting
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
@@ -404,6 +441,7 @@ workflow GLSEQ {
     ch_filtered2_exo_flagstat = Channel.empty()
     ch_filtered2_exo_stats = Channel.empty()
     ch_filtered2_exo_idxstats = Channel.empty()
+    ch_filtered2_endo_exo_bam = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
@@ -425,6 +463,43 @@ workflow GLSEQ {
         ch_filtered2_exo_flagstat = BAM_SPIKEIN_SPLIT.out.exo_flagstat
         ch_filtered2_exo_idxstats = BAM_SPIKEIN_SPLIT.out.exo_idxstats
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
+    
+        //
+        // MODULE: Extract total mapped reads from flagstats
+        //
+        BAM_FLAGSTAT_MAPPED_FLT2 (
+            ch_filtered2_flagstat.mix(ch_filtered2_exo_flagstat)
+        )
+        ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT2.out.versions)
+
+        // Extract the total mapped reads from the text file
+        BAM_FLAGSTAT_MAPPED_FLT2.out.txt
+            .map {
+                meta, total ->
+                    [ meta, total.splitCsv(header:false)[0][0] ]
+            }
+            .set { ch_flT2_total }
+
+        // Add the total_mapped_reads both endo and exo bams' metas
+        ch_filtered_bam
+            .mix(ch_filtered_exo_bam)
+            .map {
+                meta, bam ->
+                    [ meta, bam ]
+            }
+            .combine(ch_flT2_total, by: 0)
+            .map {
+                meta, bam, total ->
+                    meta_clone = meta.clone()
+                    meta_clone.flT2_total_mapped_reads = total.toDouble()
+                    [ meta_clone, bam ]
+            }
+            .set { ch_filtered2_endo_exo_bam }
+
+        // Split again the endo and exo bams
+        ch_filtered_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.genome }
+        ch_filtered_exo_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.spikein_genome }
+
     }
 
     //
@@ -474,39 +549,7 @@ workflow GLSEQ {
         .mix(ch_filtered_exo_index)
         .set { ch_filtered_index }
 
-    //
-    // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
-    //
-    // TODO: the same blacklist is used for both the endogenous and exogenous BAM files
-    BAM_FILTER_SAMBAMBA_FINAL (
-        ch_filtered_bam.join(ch_filtered_index, by: 0),
-        ch_filtered_bed.first(),
-        ch_fasta.first()
-    )
-    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FINAL.out.bam
-    ch_filtered_index = BAM_FILTER_SAMBAMBA_FINAL.out.index
-    ch_filtered3_stats = BAM_FILTER_SAMBAMBA_FINAL.out.stats
-    ch_filtered3_flagstat = BAM_FILTER_SAMBAMBA_FINAL.out.flagstat
-    ch_filtered3_idxstats = BAM_FILTER_SAMBAMBA_FINAL.out.idxstats
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FINAL.out.versions)
-    
-    //
-    // MODULE: Picard post alignment QC
-    //
-    // TODO: using first() to convert the tuple to a value channel and make it consumable
-    ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
-    if (!params.skip_picard_metrics) {
-        PICARD_COLLECTMULTIPLEMETRICS (
-            //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.index, by: [0]),
-            ch_filtered_bam.join(ch_filtered_index, by: [0]),
-            ch_fasta.first(),
-            ch_fai.first()
-        )
-        ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
-        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
-    }
-
-    // Split the BAM and indexes into atacseq and other
+    // Split the BAM and indexes into atacseq and other (for shifting)
     ch_filtered_bam
         .branch { meta, bam ->
             atacseq: meta.exp_type == 'atacseq'
@@ -531,6 +574,70 @@ workflow GLSEQ {
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
+
+    //
+    // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
+    //
+    // TODO: the same blacklist is used for both the endogenous and exogenous BAM files
+    BAM_FILTER_SAMBAMBA_FINAL (
+        ch_filtered_bam.join(ch_filtered_index, by: 0),
+        ch_filtered_bed.first(),
+        ch_fasta.first()
+    )
+    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FINAL.out.bam
+    ch_filtered_index = BAM_FILTER_SAMBAMBA_FINAL.out.index
+    ch_filtered3_stats = BAM_FILTER_SAMBAMBA_FINAL.out.stats
+    ch_filtered3_flagstat = BAM_FILTER_SAMBAMBA_FINAL.out.flagstat
+    ch_filtered3_idxstats = BAM_FILTER_SAMBAMBA_FINAL.out.idxstats
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FINAL.out.versions)
+
+     //
+    // MODULE: Extract total mapped reads from flagstats
+    //
+    BAM_FLAGSTAT_MAPPED_FLT3 (
+        ch_filtered3_flagstat
+    )
+    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT3.out.versions)
+
+    // Extract the total mapped reads from the text file
+    BAM_FLAGSTAT_MAPPED_FLT3.out.txt
+        .map {
+            meta, total ->
+                [ meta, total.splitCsv(header:false)[0][0] ]
+        }
+        .set { ch_flT3_total }
+
+    // Add the total_mapped_reads to the bams' metas
+    ch_filtered_bam
+        .combine(ch_filtered_index, by: 0)
+        .map {
+            meta, bam, bai ->
+                [ meta, bam, bai ]
+        }
+        .combine(ch_flT3_total, by: 0)
+        .map {
+            meta, bam, bai, total ->
+                meta_clone = meta.clone()
+                meta_clone.flT3_total_mapped_reads = total.toDouble()
+                [ meta_clone, bam, bai ]
+        }
+        .set { ch_filtered_bam_bai }
+
+    //
+    // MODULE: Picard post alignment QC
+    //
+    // TODO: using first() to convert the tuple to a value channel and make it consumable
+    ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
+    if (!params.skip_picard_metrics) {
+        PICARD_COLLECTMULTIPLEMETRICS (
+            //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.index, by: [0]),
+            ch_filtered_bam.join(ch_filtered_index, by: [0]),
+            ch_fasta.first(),
+            ch_fai.first()
+        )
+        ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
+        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
+    }
 
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
@@ -561,48 +668,6 @@ workflow GLSEQ {
     }
 
     //
-    // MODULE: Generate stats for the final filtered BAM files
-    //
-    // TODO: remove this since it is redundant
-    BAM_STATS_SAMTOOLS_FINAL (
-        ch_filtered_bam.join(ch_filtered_index, by: [0]),
-        ch_fasta.first()
-    )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS_FINAL.out.versions)
-
-    //
-    // MODULE: Extract total mapped reads from flagstats
-    //
-    BAM_FLAGSTAT_MAPPED (
-        BAM_STATS_SAMTOOLS_FINAL.out.flagstat
-    )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED.out.versions)
-
-    // Add the total mapped reads to the bams' metas
-    BAM_FLAGSTAT_MAPPED.out.txt
-        .map {
-            meta, total ->
-                [ meta, total.splitCsv(header:false)[0][0] ]
-        }
-        .set { ch_total }
-
-    // Add the total_mapped_reads to the bams' metas
-    ch_filtered_bam
-        .join(ch_filtered_index, by: [0])
-        .map {
-            meta, bam, bai ->
-                [ meta, bam, bai ]
-        }
-        .combine(ch_total, by: 0)
-        .map {
-            meta, bam, bai, total ->
-                meta_clone = meta.clone()
-                meta_clone.total_mapped_reads = total.toDouble()
-                [ meta_clone, bam, bai ]
-        }
-        .set { ch_filtered_bam_bai }
-
-    //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
     //
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
@@ -615,7 +680,10 @@ workflow GLSEQ {
         params.skip_srpm,
         params.skip_cisrpm,
         params.skip_cisrpmsoi,
-        params.skip_plot_profile
+        params.skip_plot_profile,
+        params.rpm_use_flT2_total,
+        params.srpm_use_flT2_total,
+        params.cisrpm_use_flT2_total
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -745,9 +813,6 @@ workflow GLSEQ {
         }
         .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
-
 
     //
     // MODULE: Calculate genome size with khmer
@@ -756,17 +821,6 @@ workflow GLSEQ {
     // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
     // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_macs_gsize                     = Channel.empty()
-    // def need_macs_gsize = false
-    // ch_ip_control_bam_cs.count().map { n ->
-    //     if (n > 0) {
-    //         need_macs_gsize = true
-    //     }
-    // }
-    // if (need_macs_gsize) {
-    //     ch_macs_gsize = params.macs_gsize
-    // }
-    //
-
     ch_custompeaks_frip_multiqc       = Channel.empty()
     ch_custompeaks_count_multiqc      = Channel.empty()
     ch_plothomerannotatepeaks_multiqc = Channel.empty()
@@ -862,13 +916,28 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
     }
 
+
+    ch_filtered_bam_ss = Channel.empty()
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
+
+    // Make ch_chrom_sizes_endo empty if there are no scarseq samples
+    // This is to avoid unnecessarily running modules in the next subworkflow
+    ch_chrom_sizes_endo
+        .combine(ch_filtered_bam_ss)
+        .first()
+        .map {
+            sizes_meta, sizes, ss_meta, ss_bam ->
+            [sizes_meta, sizes]
+        }
+        .set { ch_chrom_sizes_endo_ss }
+
     //
     // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
     //
     ch_scar_smooth = Channel.empty()
     BAM_CREATE_SCAR_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_chrom_sizes_endo.first(),
+        ch_chrom_sizes_endo_ss.first(),
         ch_blacklist.first(),
         ch_initiation_zones.first()
         //ch_scaffolds
@@ -897,7 +966,6 @@ workflow GLSEQ {
         ch_samtools_stats_summary,
         params.genome,
         params.spikein_genome ?: Channel.of([])
-        // TODO: fix this params.spikein_genome ?: Channel.of([])
     )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
