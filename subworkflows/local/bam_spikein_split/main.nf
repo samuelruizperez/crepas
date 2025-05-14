@@ -39,6 +39,7 @@ workflow BAM_SPIKEIN_SPLIT {
 
     // TODO: I would need to separate the genome fasta, right now both endo and exo stats
     // are analyzed with the same (main) genome
+    // either way, this has no effect on BAM output (https://bioinformatics.stackexchange.com/a/4218)
     BAM_SORT_STATS_SAMTOOLS(SAMBAMBA_VIEW.out.bam, ch_fasta)
 
     ch_versions = ch_versions.mix(SAMBAMBA_VIEW.out.versions,

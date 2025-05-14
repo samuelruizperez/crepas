@@ -23,7 +23,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     skip_srpm           // boolean: skip the SRPM normalization step
     skip_cisrpm          // boolean: skip the CISRPM normalization step
     skip_cisrpmsoi      // boolean: skip the CISRPM-SOI normalization step
-    skip_plot_profile
+    skip_plot_profile   // boolean: skip the plot profile step
+    rpm_use_flT2_total  // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
+    srpm_use_flT2_total // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for SRPM normalization
+    cisrpm_use_flT2_total // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for CISRPM normalization
 
     main:
 
@@ -126,12 +129,25 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    // Modify channel meta to add RPM normalization factors
+    // Copy and modify channel meta to add RPM normalization factors
     ch_bdg_rpm = Channel.empty()
     ch_bdg_map
         .map { meta, bdg ->
             def meta_clone = meta.clone()
-            meta_clone.norm_factor_val = 1e6 / meta_clone.total_mapped_reads
+            // if meta.antibody is in the list of antibodies to use flT2_total_mapped_reads or flT1_total_mapped_reads for RPM normalization, otherwise use flT3_total_mapped_reads
+            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
+                if (meta_clone.flT2_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                } else {
+                    // Samples without spike-in wouldn't have flT2_total_mapped_reads, so we use flT1_total_mapped_reads instead
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT1_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT1_total_mapped_reads'
+                }
+            } else {
+                meta_clone.norm_factor_val = 1e6 / meta_clone.flT3_total_mapped_reads
+                meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+            }
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bdg ]
         }
@@ -145,7 +161,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    // Modify channel meta to add SRPM normalization factors
+    // Copy and modify channel meta to add SRPM normalization factors
     ch_bdg_srpm = Channel.empty()
     if (!skip_srpm) {
         ch_bdg_map
@@ -162,9 +178,15 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome.exo, by: 0)
             .map { id, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
-                    meta_clone.norm_factor_val = 1e6 / exo_meta.total_mapped_reads
-                    meta_clone.norm_factor_type = 'srpm'
-                    [ meta_clone, endo_bdg ]
+                if (srpm_use_flT2_total && meta_clone.antibody in srpm_use_flT2_total.split(',').collect { it.trim() }) {
+                    meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                } else {
+                    meta_clone.norm_factor_val = 1e6 / exo_meta.flT3_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+                }
+                meta_clone.norm_factor_type = 'srpm'
+                [ meta_clone, endo_bdg ]
             }
             .set { ch_bdg_srpm }
     }
@@ -178,7 +200,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
     
-    // Modify channel meta to add CISRPM normalization factors
+    // Copy and modify channel meta to add CISRPM normalization factors
     ch_bdg_genome_type = Channel.empty()
     ch_bdg_genome_ip = Channel.empty()
     ch_bdg_genome_control = Channel.empty()
@@ -237,7 +259,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome_control, by: 0)
             .map { id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
-                    meta_clone.norm_factor_val = (1e6 / exo_ip_meta.total_mapped_reads) * (exo_control_meta.total_mapped_reads / endo_control_meta.total_mapped_reads)
+                    if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() }) {
+                        meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT2_total_mapped_reads) * (exo_control_meta.flT2_total_mapped_reads / endo_control_meta.flT2_total_mapped_reads)
+                        meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                    } else {
+                        meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT3_total_mapped_reads) * (exo_control_meta.flT3_total_mapped_reads / endo_control_meta.flT3_total_mapped_reads)
+                        meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+                    }
                     meta_clone.norm_factor_type = 'cisrpm'
                     [ meta_clone, endo_ip_bdg ]
             }
@@ -252,19 +280,28 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .collectFile( name: 'ch_bdg_ip_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
         
         // Now do the missing CISRPM for the endogenous inputs
-        // In this case CISRPM is the same as RPM
-        ch_bdg_rpm
+        // In this case CISRPM is the same as RPM, but we cannot
+        // just copy the RPM from before, since cisrpm_use_flT2_total
+        // can be different than rpm_use_flT2_total
+        ch_bdg_map
             .filter { meta, bdg ->
                 meta.genome == genome && meta.is_control
             }
             .map { meta, bdg ->
                 def meta_clone = meta.clone()
-                // just change norm_factor_type to cisrpm but keeping norm_factor_val the untouched
+                if (cisrpm_use_flT2_total && meta.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() }) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                } else {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT3_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+                }
                 meta_clone.norm_factor_type = 'cisrpm'
                 [ meta_clone, bdg ]
             }
             .set { ch_bdg_control_cisrpm }
-        
+
+
         // TODO: print for debugging
         ch_bdg_control_cisrpm
             .map {
@@ -397,12 +434,25 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                // we want them normalized to RPM
-                meta_clone.norm_factor_val = 1e6 / meta_clone.total_mapped_reads
+                // if meta.antibody is in the list of antibodies to use flT2_total_mapped_reads or flT1_total_mapped_reads for RPM normalization, otherwise use flT3_total_mapped_reads
+                if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
+                    if (meta_clone.flT2_total_mapped_reads) {
+                        meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
+                        meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                    } else {
+                        // Samples without spike-in wouldn't have flT2_total_mapped_reads, so we use flT1_total_mapped_reads instead
+                        meta_clone.norm_factor_val = 1e6 / meta_clone.flT1_total_mapped_reads
+                        meta_clone.norm_factor_val_used = 'flT1_total_mapped_reads'
+                    }
+                } else {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT3_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+                }
                 meta_clone.norm_factor_type = 'rpm'
-                [ meta_clone, bam, bai ]
+                    [ meta_clone, bam, bai ]
             }
             .set { ch_binsize1 }
+        
     
         DEEPTOOLS_BAMCOVERAGE_BINSIZE1 (
             ch_binsize1,
@@ -413,13 +463,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
 
     }
-    
+
     emit:
     bigwig_endo_rpm  = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' } // channel: [ val(meta), [ bigwig ] ]
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
-    bigwig_exo       = ch_bw_exo         // channel: [ val(meta), [ bigwig ] ]
-    bigwig_binsize1   = ch_binsize1       // channel: [ val(meta), [ bigwig ] ]
+    bigwig_exo       = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
+    bigwig_binsize1  = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
 
-    versions      = ch_versions                            // channel: [ versions.yml ]
+    versions      = ch_versions                                     // channel: [ versions.yml ]
 }
 

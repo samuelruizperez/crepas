@@ -129,7 +129,10 @@
                     "description": "Path to directory or tar.gz archive for pre-built STAR index."
                 },
                 "hisat2_index": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "path",
+                    "fa_icon": "fas fa-bezier-curve",
+                    "description": "Path to directory or tar.gz archive for pre-built HISAT2 index."
                 },
                 "gene_bed": {
                     "type": "string",
@@ -160,7 +163,11 @@
                     "fa_icon": "fas fa-book-dead"
                 },
                 "splicesites": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to splice sites file for HISAT2.",
+                    "help_text": "If using HISAT2 as the aligner, you can provide a list of known splice sites, which HISAT2 makes use of to align reads with small anchors. If this file is not provided, it will be generated from the GTF file.",
+                    "fa_icon": "fas fa-code-branch"
                 },
                 "save_reference": {
                     "type": "boolean",
@@ -195,8 +202,8 @@
             "properties": {
                 "with_umi": {
                     "type": "boolean",
-                    "description": "Enable UMI extraction and deduplication.",
-                    "help_text": "Set this parameter to enable UMI extraction and deduplication. ",
+                    "default": false,
+                    "description": "Set this parameter to enable UMI extraction and deduplication.",
                     "fa_icon": "fas fa-dna"
                 },
                 "skip_umi_extract": {
@@ -257,23 +264,25 @@
                     "description": "Instructs Trim Galore to remove bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed.",
                     "fa_icon": "fas fa-cut"
                 },
-                "trim_full_truseq": {
+                "trim_full_length": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Instructs Trim Galore to search for the full length (33 bp) TruSeq adapter sequences for both complement and reverse complements.",
+                    "default": true,
+                    "description": "Instructs Trim Galore to search for the full length (33 bp) TruSeq (ChIP-seq, ChOR-seq, SCAR-seq) or Nextera (ATAC-seq) adapter sequences for both complement and reverse complements.",
                     "help_text": "The default (false) setting will mean that the auto-detect function of Trim Galore will be used. See [https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#adapter-auto-detection](https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#adapter-auto-detection)",
                     "fa_icon": "fas fa-cut"
                 },
                 "trim_nextseq": {
                     "type": "integer",
-                    "description": "Instructs Trim Galore to apply the --nextseq=X option, to trim based on quality after removing poly-G tails.",
-                    "help_text": "This enables the option Cutadapt `--nextseq-trim=3'CUTOFF` option via Trim Galore, which will set a quality cutoff (that is normally given with -q instead), but qualities of G bases are ignored. This trimming is in common for the NextSeq- and NovaSeq-platforms, where basecalls without any signal are called as high-quality G bases.",
-                    "fa_icon": "fas fa-cut"
+                    "description": "Instructs Trim Galore to apply the `--nextseq=X` option, to trim based on quality after removing poly-G tails.",
+                    "help_text": "This enables the Cutadapt `--nextseq-trim=3'CUTOFF` option via Trim Galore, which will set a quality cutoff (that is normally given with -q instead), but qualities of G bases are ignored. This trimming is in common for the NextSeq- and NovaSeq-platforms, where basecalls without any signal are called as high-quality G bases. Read the [Cutadapt documentation](https://cutadapt.readthedocs.io/en/stable/guide.html#nextseq-trim) for more details.",
+                    "fa_icon": "fas fa-cut",
+                    "default": 20
                 },
                 "trim_stringency": {
                     "type": "integer",
                     "default": 3,
-                    "description": "Instructs Trim Galore to use this stringency when searching for adapter sequences.",
+                    "description": "Instructs Trim Galore to use this stringency (minimum overlap) when searching for adapter sequences.",
+                    "help_text": "In other words, to reduce the number of falsely trimmed bases, the alignment algorithm in Trim Galore requires that at least this number of bases of the adapter are aligned to the read. This parameter corresponds to the `--stringency` option in Trim Galore and the `--overlap` option in [Cutadapt](https://cutadapt.readthedocs.io/en/stable/guide.html#random-matches).",
                     "fa_icon": "fas fa-cut"
                 },
                 "trim_error_rate": {
@@ -284,7 +293,6 @@
                 },
                 "trim_q_cutoff": {
                     "type": "integer",
-                    "default": 20,
                     "description": "Instructs Trim Galore to use this quality cutoff when trimming.",
                     "fa_icon": "fas fa-cut"
                 },
@@ -320,14 +328,19 @@
             "description": "Options to adjust hard trimming criteria.",
             "properties": {
                 "hardtrim5_length": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Instructs Trim Galore to hard-trim (shorten) reads to this length from their 3' end. This is performed after adapter/quality trimming.",
+                    "fa_icon": "fas fa-cut"
                 },
                 "hardtrim3_length": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Instructs Trim Galore to hard-trim (shorten) reads to this length from their 5' end. This is performed after adapter/quality trimming.",
+                    "fa_icon": "fas fa-cut"
                 },
-                "save_htrimmed": {
+                "save_hardtrimmed": {
                     "type": "boolean",
-                    "default": true
+                    "default": true,
+                    "description": "Whether to save the hard-trimmed reads (FASTQs) in the output directory."
                 }
             }
         },
@@ -340,13 +353,13 @@
                 "aligner": {
                     "type": "string",
                     "default": "chromap",
-                    "description": "Specifies the alignment algorithm to use - available options are 'bwa', 'bowtie2' and 'star'.",
+                    "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bowtie2", "chromap", "star"]
+                    "enum": ["bwa", "bowtie2", "chromap", "star", "hisat2"]
                 },
                 "bwa_min_score": {
                     "type": "integer",
-                    "description": "Don\u2019t output BWA MEM alignments with score lower than this parameter.",
+                    "description": "Don't output BWA MEM alignments with score lower than this parameter.",
                     "fa_icon": "fas fa-hand-paper"
                 },
                 "sort_bam": {
@@ -364,7 +377,7 @@
                 "save_unaligned": {
                     "type": "boolean",
                     "fa_icon": "fas fa-save",
-                    "description": "Where possible, save unaligned reads from either STAR, HISAT2 or Salmon to the results directory.",
+                    "description": "Where possible, save unaligned reads from either STAR or HISAT2 to the results directory.",
                     "help_text": "This may either be in the form of FastQ or BAM files depending on the options available for that particular tool."
                 },
                 "map_n_multimappers": {
@@ -382,12 +395,13 @@
             "properties": {
                 "spikein_genome": {
                     "type": "string",
-                    "description": "Name of the spike-in genome if used in the experiment. The spike-in chromosome names in the `--fasta` and `<aligner>_index` files should have the format `<chromosome_name>_<spikein_genome>`, e.g. `chr1_dm6`.",
+                    "description": "Name of the spike-in genome (if used in the experiment). The spike-in (exogenous) chromosome names in the `--fasta` and `<aligner>_index` files should have the format `<chromosome_name>_<spikein_genome>`, e.g. `chr1_dm6`.",
                     "fa_icon": "fas fa-dna"
                 },
                 "save_spikein_intermeds": {
                     "type": "boolean",
-                    "description": "Save intermediate files for spike-in genome alignment.",
+                    "default": false,
+                    "description": "Save intermediate files during spike-in splitting and filtering of BAMs. These include the split and filtered BAM files before coordinate-sorting.",
                     "fa_icon": "fas fa-save"
                 }
             }
@@ -406,14 +420,14 @@
                 "allocation_method": {
                     "type": "string",
                     "default": "allo",
-                    "description": "Method to allocate multimappers.",
+                    "description": "Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`.",
                     "fa_icon": "fas fa-dice-d20",
                     "enum": ["allo", "chromap", "mmr"]
                 },
                 "allo_mixed_cnn": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Use CNN trained on histone ChIP-seq datasets with mixed peaks, narrow by default. See [allo](https://github.com/seqcode/allo?tab=readme-ov-file#options) for more details.",
+                    "description": "When using Allo for multimapper allocation, use the CNN trained on histone ChIP-seq datasets with mixed peaks, otherwise use the default (narrow). See [allo](https://github.com/seqcode/allo?tab=readme-ov-file#options) for more details.",
                     "fa_icon": "fas fa-dice-d20"
                 },
                 "save_allocation_intermeds": {
@@ -424,7 +438,9 @@
                 },
                 "allocate_exogenous": {
                     "type": "boolean",
-                    "default": true
+                    "default": true,
+                    "description": "Whether to also allocate multimappers in the spike-in (exogenous) BAM files.",
+                    "fa_icon": "fas fa-dice-d20"
                 }
             }
         },
@@ -435,7 +451,10 @@
             "description": "Options to adjust alignment shifting criteria.",
             "properties": {
                 "save_shifting_intermeds": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to save the intermediate files from the alignment shifting (only done on ATAC-seq data).",
+                    "fa_icon": "fas fa-save"
                 }
             }
         },
@@ -446,28 +465,65 @@
             "description": "Options to adjust coverage and normalization criteria.",
             "properties": {
                 "skip_srpm": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "skip_cisrpm": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "skip_cisrpmsoi": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "soi_min_count": {
                     "type": "integer",
-                    "default": 1
+                    "default": 1,
+                    "description": "Minimum number of reads required in a bin to be included in the signal over input (SOI) calculation.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "coverage_extend_reads": {
                     "type": "integer",
-                    "default": 250
+                    "default": 250,
+                    "description": "This parameter allows the extension of reads to fragment size. If set, each read is extended, without exception.",
+                    "help_text": "Single-end: Requires a user specified value for the final fragment length. Reads that already exceed this fragment length will not be extended. Paired-end: Reads with mates are always extended to match the fragment size defined by the two read mates. Unmated reads, mate reads that map too far apart (>4x fragment length) or even map to different chromosomes are treated like single-end reads. The input of a fragment length value is optional. If no value is specified, it is estimated from the data (mean of the fragment size of all mate reads). Read the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-processing-options) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "coverage_bin_size": {
                     "type": "integer",
-                    "default": 250
+                    "default": 250,
+                    "description": "Size of the bins, in bases, for the output of the coverage calculation.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "rpm_use_flT2_total": {
+                    "type": "string",
+                    "default": "H3K9me3,H3K27me3",
+                    "description": "Comma-separated list of histone marks for which RPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "srpm_use_flT2_total": {
+                    "type": "string",
+                    "default": "H3K9me3,H3K27me3",
+                    "description": "Comma-separated list of histone marks for which SRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "cisrpm_use_flT2_total": {
+                    "type": "string",
+                    "default": "H3K9me3,H3K27me3",
+                    "description": "Comma-separated list of histone marks for which CISRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "save_coverage_intermeds": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format.",
+                    "fa_icon": "fas fa-save"
                 }
             }
         },
@@ -479,7 +535,8 @@
             "properties": {
                 "bam_downsampling_method": {
                     "type": "string",
-                    "description": "Method to downsample BAM files.",
+                    "description": "Method to downsample BAM files. Only option currently is `min_by_type`. Leave empty to disable downsampling.",
+                    "help_text": "The `min_by_type` method will downsample each input BAM file to the minimum total mapped reads across all input BAM files, and will downsample each ChIP file to the minimum total mapped reads across all ChIP files. Currently, this downsampling method does not differentiate between samples/inputs of different experiment types (e.g., ChIP-seq vs. ChOR-seq).",
                     "fa_icon": "fas fa-compress-arrows-alt",
                     "enum": ["min_by_type"]
                 },
@@ -512,8 +569,8 @@
             "properties": {
                 "narrow_peak": {
                     "type": "boolean",
-                    "description": "Run MACS3 in narrowPeak mode.",
-                    "help_text": "MACS3 is run by default with the [`--broad`](https://github.com/taoliu/MACS#--broad) flag. Specify this flag to call peaks in narrowPeak mode.",
+                    "default": false,
+                    "description": "Whether to call narrow peaks with MACS3 and Genrich. Default is to call broad peaks.",
                     "fa_icon": "fas fa-arrows-alt-h"
                 },
                 "peak_cutoff_method": {
@@ -526,13 +583,13 @@
                 "narrow_cutoff": {
                     "type": "number",
                     "default": 0.01,
-                    "description": "Specifies narrow cutoff value for MACS3 and Genrich peak calling.",
+                    "description": "Specifies narrow cutoff value (p-value or q-value) for MACS3 and Genrich peak calling.",
                     "fa_icon": "fas fa-hand-scissors"
                 },
                 "broad_cutoff": {
                     "type": "number",
                     "default": 0.1,
-                    "description": "Specifies broad cutoff value for MACS3 and Genrich peak calling.",
+                    "description": "Specifies broad cutoff value (p-value or q-value) for MACS3 and Genrich peak calling.",
                     "fa_icon": "fas fa-hand-scissors"
                 },
                 "min_reps_consensus": {
