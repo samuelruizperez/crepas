@@ -5,8 +5,8 @@ process PHANTOMPEAKQUALTOOLS {
     // WARN: Version information not provided by tool on CLI. Please update version string below when bumping container versions.
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/phantompeakqualtools:1.2.2--b64989dc389ecdce' :
-        'community.wave.seqera.io/library/phantompeakqualtools:1.2.2--373db669f5db1330' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/4a/4a1cddfad5b503ee347cc5de17d172e1876c547fca00aa844559c9e764fb400f/data' :
+        'community.wave.seqera.io/library/phantompeakqualtools:1.2.2--f8026fe2526a5e18' }"
 
     input:
     tuple val(meta), path(bam)
