@@ -578,7 +578,7 @@ workflow GLSEQ {
         ch_fasta
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
-    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
+    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
     //
@@ -636,7 +636,6 @@ workflow GLSEQ {
     ch_picardcollectmultiplemetrics_multiqc = Channel.empty()
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
-            //FILTER_BAM_BAMTOOLS.out.bam.join(FILTER_BAM_BAMTOOLS.out.bai, by: [0]),
             ch_filtered_bam.join(ch_filtered_index, by: [0]),
             ch_fasta.first(),
             ch_fai.first()
@@ -644,32 +643,6 @@ workflow GLSEQ {
         ch_picardcollectmultiplemetrics_multiqc = PICARD_COLLECTMULTIPLEMETRICS.out.metrics
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
-
-    // Split the BAM and indexes into atacseq and other
-    ch_filtered_bam
-        .branch { meta, bam ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
-        }
-        .set { ch_filtered_bam }
-
-    ch_filtered_index
-        .branch { meta, index ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
-        }
-        .set { ch_filtered_index }
-
-    //
-    // SUBWORKFLOW: Shift ATAC-seq reads
-    //
-    BAM_SHIFT_READS (
-        ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
-        ch_fasta
-    )
-    ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
-    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
-    ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
@@ -719,14 +692,6 @@ workflow GLSEQ {
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
-    //
-    // SUBWORKFLOW: Normalised bigWig coverage tracks
-    //
-    // BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC (
-    //     ch_filtered_bam.join(ch_filtered2_flagstat, by: 0),
-    //     ch_chrom_sizes_endo.map{ it[1] }.first()
-    // )
-    // ch_versions = ch_versions.mix(BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC.out.versions)
 
     ch_deeptoolsplotprofile_multiqc = Channel.empty()
     if (!params.skip_plot_profile) {
