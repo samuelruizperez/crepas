@@ -255,7 +255,7 @@ Options to adjust UMI extraction and deduplication criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `with_umi` | Set this parameter to enable UMI extraction and deduplication. | `boolean` |  |  |  |
+| `with_umi` | Set this parameter to enable UMI extraction and deduplication. | `boolean` | false |  |  |
 | `skip_umi_extract` | Skip UMI extraction step. <details><summary>Help</summary><small>Use this flag to skip the UMI extraction/transfer step. This is useful if you have already extracted UMIs from your data but want to run the deduplication</small></details>| `boolean` | true |  |  |
 | `umi_discard_read` | Discard R1 or R2 if required | `integer` |  |  |  |
 | `get_dedup_stats` | Get deduplication statistics. | `boolean` | true |  |  |
