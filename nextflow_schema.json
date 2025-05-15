@@ -213,9 +213,43 @@
                     "fa_icon": "fas fa-dna",
                     "default": true
                 },
+                "umitools_extract_method": {
+                    "type": "string",
+                    "description": "UMI pattern to use. Can be either `string` (default) or `regex`.",
+                    "help_text": "More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).\n",
+                    "fa_icon": "fas fa-dna",
+                    "default": "string",
+                    "enum": ["string", "regex"]
+                },
+                "umitools_bc_pattern": {
+                    "type": "string",
+                    "default": "NNNNNNNNN",
+                    "fa_icon": "fas fa-barcode",
+                    "help_text": "More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).",
+                    "description": "The UMI barcode pattern to use e.g. 'NNNNNN' indicates that the first 6 nucleotides of the read are from the UMI."
+                },
+                "umitools_bc_pattern2": {
+                    "type": "string",
+                    "default": "NNNNNNNNN",
+                    "fa_icon": "fas fa-barcode",
+                    "description": "The UMI barcode pattern to use if the UMI is located in read 2."
+                },
+                "umi_separator": {
+                    "type": "string",
+                    "description": "Separator used to separate the UMI from the read name.",
+                    "fa_icon": "fas fa-dna",
+                    "default": "_"
+                },
+                "umi_grouping_method": {
+                    "type": "string",
+                    "description": "Method to use to determine read groups by subsuming those with similar UMIs. All methods start by identifying the reads with the same mapping position, but treat similar yet nonidentical UMIs differently.",
+                    "fa_icon": "fas fa-dna",
+                    "default": "percentile",
+                    "enum": ["unique", "percentile", "directional", "adjacency", "cluster"]
+                },
                 "umi_discard_read": {
                     "type": "integer",
-                    "description": "Discard R1 or R2 if required",
+                    "description": "After UMI barcode extraction discard either R1 or R2 by setting this parameter to `1` or `2`, respectively.",
                     "fa_icon": "fas fa-dna"
                 },
                 "get_dedup_stats": {
