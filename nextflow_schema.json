@@ -256,7 +256,7 @@
                 },
                 "umi_dedup_tool": {
                     "type": "string",
-                    "default": "umicollapse",
+                    "default": "umitools",
                     "description": "UMI deduplication tool to use.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["umicollapse", "umitools"]

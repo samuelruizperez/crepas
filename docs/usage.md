@@ -264,7 +264,7 @@ Options to adjust UMI extraction and deduplication criteria.
 | `umi_grouping_method` | Method to use to determine read groups by subsuming those with similar UMIs. All methods start by identifying the reads with the same mapping position, but treat similar yet nonidentical UMIs differently. | `string` | percentile |  |  |
 | `umi_discard_read` | After UMI barcode extraction discard either R1 or R2 by setting this parameter to `1` or `2`, respectively. | `integer` |  |  |  |
 | `get_dedup_stats` | Get deduplication statistics. | `boolean` | true |  |  |
-| `umi_dedup_tool` | UMI deduplication tool to use. | `string` | umicollapse |  |  |
+| `umi_dedup_tool` | UMI deduplication tool to use. | `string` | umitools |  |  |
 | `save_dedup_intermeds` | Save intermediate files from the UMI deduplication step. | `boolean` |  |  |  |
 
 #### Adapter trimming options
