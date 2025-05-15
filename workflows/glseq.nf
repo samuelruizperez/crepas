@@ -800,14 +800,14 @@ workflow GLSEQ {
     //
     // MODULE: Call consensus regions with Consenrich
     //
-    CONSENRICH (
-        ch_ip_control_bam_bai_merged_reps,
-        ch_chrom_sizes.map{ it[1] }.first(),
-        ch_blacklist.map{ it[1] }.first(),
-        ch_sparsebed.map{ it[1] }.first(),
-        []
-    )
-    ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
+    // CONSENRICH (
+    //     ch_ip_control_bam_bai_merged_reps,
+    //     ch_chrom_sizes.map{ it[1] }.first(),
+    //     ch_blacklist.map{ it[1] }.first(),
+    //     ch_sparsebed.map{ it[1] }.first(),
+    //     []
+    // )
+    // ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
     
     //
     // Create channel for deepTools plotFingerprint: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
