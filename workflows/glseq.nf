@@ -516,8 +516,22 @@ workflow GLSEQ {
         // Split again the endo and exo bams
         ch_filtered_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.genome }
         ch_filtered_exo_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.spikein_genome }
-
     }
+
+    // TODO: print for debugging
+    ch_filtered_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_bam_flt2.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
+    
+    ch_filtered_exo_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_exo_bam_flt2.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
 
     //
     // SUBWORKFLOW: Allocation of multimappers
@@ -538,33 +552,49 @@ workflow GLSEQ {
         ch_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats
         ch_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats
         ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.versions)
-    }
-
-    ch_exo_allocated_flagstat = Channel.empty()
-    ch_exo_allocated_stats = Channel.empty()
-    ch_exo_allocated_idxstats = Channel.empty()
-    if (params.allocate_n_multimappers && params.allocation_method != 'chromap' && params.allocate_exogenous) {
-        BAM_ALLOCATE_MULTIMAPPERS_EXO (
-            ch_filtered_exo_bam,
-            ch_fasta,
-            params.allocation_method
-        )
-        ch_filtered_exo_bam = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
-        ch_filtered_exo_index = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
-        ch_exo_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat
-        ch_exo_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats
-        ch_exo_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats
-        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.versions)
+    
+        ch_exo_allocated_flagstat = Channel.empty()
+        ch_exo_allocated_stats = Channel.empty()
+        ch_exo_allocated_idxstats = Channel.empty()
+        if (params.allocate_exogenous) {
+            BAM_ALLOCATE_MULTIMAPPERS_EXO (
+                ch_filtered_exo_bam,
+                ch_fasta,
+                params.allocation_method
+            )
+            ch_filtered_exo_bam = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
+            ch_filtered_exo_index = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
+            ch_exo_allocated_flagstat = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat
+            ch_exo_allocated_stats = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats
+            ch_exo_allocated_idxstats = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats
+            ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.versions)
+        }
     }
 
     // Mix the exogenous and endogenous BAM and index files
     ch_filtered_bam
         .mix(ch_filtered_exo_bam)
         .set { ch_filtered_bam }
+
+    // TODO: print for debugging
+    ch_filtered_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_bam_b4_flt3.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
     
     ch_filtered_index
         .mix(ch_filtered_exo_index)
         .set { ch_filtered_index }
+    
+    // TODO: print for debugging
+    ch_filtered_index
+        .map {
+            meta, index ->
+                "${meta}\t${index}"
+        }
+        .collectFile( name: 'ch_filtered_index_b4_flt3.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
 
     // Split the BAM and indexes into atacseq and other (for shifting)
     ch_filtered_bam
@@ -586,11 +616,26 @@ workflow GLSEQ {
     //
     BAM_SHIFT_READS (
         ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
-        ch_fasta
+        ch_fasta.first()
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
+
+    // TODO: print for debugging
+    ch_filtered_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_filtered_bam_b4_flt3_shifted.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
+
+    ch_filtered_index
+        .map {
+            meta, index ->
+                "${meta}\t${index}"
+        }
+        .collectFile( name: 'ch_filtered_index_b4_flt3_shifted.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
 
     //
     // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
