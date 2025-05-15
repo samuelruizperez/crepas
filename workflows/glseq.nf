@@ -21,9 +21,11 @@ include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_grothlab_glseq_pipeline'
-include { INPUT_CHECK         } from '../subworkflows/local/input_check/main'
-include { BAM_FILTER_SAMBAMBA } from '../subworkflows/local/bam_filter_sambamba/main'
-include { BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FINAL } from '../subworkflows/local/bam_filter_sambamba/main'
+include { INPUT_CHECK            } from '../subworkflows/local/input_check/main'
+include {
+    BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1
+    BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
+                                } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 // include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
@@ -350,6 +352,14 @@ workflow GLSEQ {
         ch_dedup_umi_flagstat = BAM_DEDUP_UMI.out.flagstat
         ch_dedup_umi_idxstats = BAM_DEDUP_UMI.out.idxstats
         ch_dedup_umi_deduplog = BAM_DEDUP_UMI.out.dedup_log
+
+        // TODO: print ch_dedup_umi_deduplog for debugging
+        ch_dedup_umi_deduplog
+            .map {
+                meta, deduplog ->
+                   "${meta}\t${deduplog}"
+            }
+            .collectFile( name: 'ch_dedup_umi_deduplog.txt', newLine: true, sort: false, storeDir: "${params.outdir}") 
         
         ch_versions = ch_versions.mix(BAM_DEDUP_UMI.out.versions.first())
 
@@ -390,17 +400,17 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
-    BAM_FILTER_SAMBAMBA (
+    BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
-    ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
-    ch_filtered_index = BAM_FILTER_SAMBAMBA.out.bai
-    ch_filtered_stats = BAM_FILTER_SAMBAMBA.out.stats
-    ch_filtered_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
-    ch_filtered_idxstats = BAM_FILTER_SAMBAMBA.out.idxstats
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
+    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
+    ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
+    ch_filtered_stats = BAM_FILTER_SAMBAMBA_FLT1.out.stats
+    ch_filtered_flagstat = BAM_FILTER_SAMBAMBA_FLT1.out.flagstat
+    ch_filtered_idxstats = BAM_FILTER_SAMBAMBA_FLT1.out.idxstats
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT1.out.versions)
 
     //
     // MODULE: Extract total mapped reads from flagstats
@@ -585,17 +595,17 @@ workflow GLSEQ {
     // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
     //
     // TODO: the same blacklist is used for both the endogenous and exogenous BAM files
-    BAM_FILTER_SAMBAMBA_FINAL (
+    BAM_FILTER_SAMBAMBA_FLT3 (
         ch_filtered_bam.join(ch_filtered_index, by: 0),
         ch_filtered_bed.first(),
         ch_fasta.first()
     )
-    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FINAL.out.bam
-    ch_filtered_index = BAM_FILTER_SAMBAMBA_FINAL.out.bai
-    ch_filtered3_stats = BAM_FILTER_SAMBAMBA_FINAL.out.stats
-    ch_filtered3_flagstat = BAM_FILTER_SAMBAMBA_FINAL.out.flagstat
-    ch_filtered3_idxstats = BAM_FILTER_SAMBAMBA_FINAL.out.idxstats
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FINAL.out.versions)
+    ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT3.out.bam
+    ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.bai
+    ch_filtered3_stats = BAM_FILTER_SAMBAMBA_FLT3.out.stats
+    ch_filtered3_flagstat = BAM_FILTER_SAMBAMBA_FLT3.out.flagstat
+    ch_filtered3_idxstats = BAM_FILTER_SAMBAMBA_FLT3.out.idxstats
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
      //
     // MODULE: Extract total mapped reads from flagstats
