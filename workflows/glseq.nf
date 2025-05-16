@@ -497,41 +497,46 @@ workflow GLSEQ {
             }
             .set { ch_flT2_total }
 
-        // Add the total_mapped_reads both endo and exo bams' metas
+        // Add the total_mapped_reads both endo and exo bams' and bais' metas
         ch_filtered_bam
             .mix(ch_filtered_exo_bam)
-            .map {
-                meta, bam ->
-                    [ meta, bam ]
-            }
+            .join(ch_filtered_index.mix(ch_filtered_exo_index), by: 0)
             .combine(ch_flT2_total, by: 0)
             .map {
-                meta, bam, total ->
+                meta, bam, bai, total ->
                     meta_clone = meta.clone()
                     meta_clone.flT2_total_mapped_reads = total.toDouble()
-                    [ meta_clone, bam ]
+                    [ meta_clone, bam, bai ]
             }
-            .set { ch_filtered2_endo_exo_bam }
+            .set { ch_filtered2_endo_exo_bam_bai }
 
-        // Split again the endo and exo bams
-        ch_filtered_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.genome }
-        ch_filtered_exo_bam = ch_filtered2_endo_exo_bam.filter { it[0].genome == params.spikein_genome }
+        // Create a new channel with just the BAMs    
+        ch_filtered2_endo_exo_bam_bai
+            .map { meta, bam, bai ->
+                [ meta, bam ]
+            }
+            .branch { meta, bam ->
+                endo: meta.genome == params.genome
+                exo: meta.genome == params.spikein_genome
+            }
+            .set { ch_filtered2_bam }
+        
+        // Create a new channel with just the indexes
+        ch_filtered2_endo_exo_bam_bai
+            .map { meta, bam, bai ->
+                [ meta, bai ]
+            }
+            .branch { meta, bai ->
+                endo: meta.genome == params.genome
+                exo: meta.genome == params.spikein_genome
+            }
+            .set { ch_filtered2_bai }
+
+        ch_filtered_bam = ch_filtered2_bam.endo
+        ch_filtered_exo_bam = ch_filtered2_bam.exo
+        ch_filtered_index = ch_filtered2_bai.endo
+        ch_filtered_exo_index = ch_filtered2_bai.exo
     }
-
-    // TODO: print for debugging
-    ch_filtered_bam
-        .map {
-            meta, bam ->
-                "${meta}\t${bam}"
-        }
-        .collectFile( name: 'ch_filtered_bam_flt2.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
-    
-    ch_filtered_exo_bam
-        .map {
-            meta, bam ->
-                "${meta}\t${bam}"
-        }
-        .collectFile( name: 'ch_filtered_exo_bam_flt2.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
 
     //
     // SUBWORKFLOW: Allocation of multimappers
@@ -576,26 +581,10 @@ workflow GLSEQ {
         .mix(ch_filtered_exo_bam)
         .set { ch_filtered_bam }
 
-    // TODO: print for debugging
-    ch_filtered_bam
-        .map {
-            meta, bam ->
-                "${meta}\t${bam}"
-        }
-        .collectFile( name: 'ch_filtered_bam_b4_flt3.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
-    
     ch_filtered_index
         .mix(ch_filtered_exo_index)
         .set { ch_filtered_index }
     
-    // TODO: print for debugging
-    ch_filtered_index
-        .map {
-            meta, index ->
-                "${meta}\t${index}"
-        }
-        .collectFile( name: 'ch_filtered_index_b4_flt3.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
-
     // Split the BAM and indexes into atacseq and other (for shifting)
     ch_filtered_bam
         .branch { meta, bam ->
@@ -621,21 +610,6 @@ workflow GLSEQ {
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
     ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
-
-    // TODO: print for debugging
-    ch_filtered_bam
-        .map {
-            meta, bam ->
-                "${meta}\t${bam}"
-        }
-        .collectFile( name: 'ch_filtered_bam_b4_flt3_shifted.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
-
-    ch_filtered_index
-        .map {
-            meta, index ->
-                "${meta}\t${index}"
-        }
-        .collectFile( name: 'ch_filtered_index_b4_flt3_shifted.txt', newLine: true, sort: false, storeDir: "${params.outdir}")
 
     //
     // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
