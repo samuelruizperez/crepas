@@ -240,9 +240,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         // Split BAMs by genome (endo and exo) and by type (ip and control)
         ch_bdg_map_mod
             .map { meta, bdg ->
-                [ meta.id, meta, bdg ]
+                [ meta.id, meta.antibody, meta, bdg ]
             }
-            .branch { id, meta, bdg ->
+            .branch { id, antibody, meta, bdg ->
                 endo_ip: meta.genome == genome && !meta.is_control
                 endo_control: meta.genome == genome && meta.is_control
                 exo_ip: meta.genome == spikein_genome && !meta.is_control
@@ -252,40 +252,40 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
         // Combine the endo and exo BAMs (ChIPs)
         ch_bdg_genome_type.endo_ip
-            .combine(ch_bdg_genome_type.exo_ip, by: 0)
-            .map { ip_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
-                    [ endo_ip_meta.control, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
+            .combine(ch_bdg_genome_type.exo_ip, by: [0,1])
+            .map { ip_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+                    [ endo_ip_meta.control, endo_ip_meta.antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
             }
             .set { ch_bdg_genome_ip }
 
         // TODO: print for debugging
         ch_bdg_genome_ip
             .map {
-                control_id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
-                    "${control_id}\t${endo_ip_meta}\t${endo_ip_bdg}\t${exo_ip_meta}\t${exo_ip_bdg}"
+                control_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+                    "${control_id}\t${ip_antibody}\t${endo_ip_meta}\t${endo_ip_bdg}\t${exo_ip_meta}\t${exo_ip_bdg}"
             }
             .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
         // Combine the endo and exo BAMs (inputs)
         ch_bdg_genome_type.endo_control
-            .combine(ch_bdg_genome_type.exo_control, by: 0)
-            .map { control_id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
-                [ endo_control_meta.id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
+            .combine(ch_bdg_genome_type.exo_control, by: [0,1])
+            .map { control_id, control_antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+                [ endo_control_meta.id, endo_control_meta.antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
             }
             .set { ch_bdg_genome_control }
         
         // TODO: print for debugging
         ch_bdg_genome_control
             .map {
-                control_id, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
-                    "${control_id}\t${endo_control_meta}\t${endo_control_bdg}\t${exo_control_meta}\t${exo_control_bdg}"
+                control_id, control_antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+                    "${control_id}\t${control_antibody}\t${endo_control_meta}\t${endo_control_bdg}\t${exo_control_meta}\t${exo_control_bdg}"
             }
             .collectFile( name: 'ch_bdg_genome_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
         // Combine the combined ChIPs with the combined inputs
         ch_bdg_genome_ip
-            .combine(ch_bdg_genome_control, by: 0)
-            .map { id, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
+            .combine(ch_bdg_genome_control, by: [0,1])
+            .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
                     if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() }) {
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT2_total_mapped_reads) * (exo_control_meta.flT2_total_mapped_reads / endo_control_meta.flT2_total_mapped_reads)
