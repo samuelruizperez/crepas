@@ -56,7 +56,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     // bamCoverage merges contiguous bins with the same coverage and there is no option to disable this.
     // See https://github.com/deeptools/deepTools/issues/907#issuecomment-576729674
     // Therefore, to get bins of equal size across the whole genome,
-    // we have to make windows and map the bedgraph to the windows:
+    // we have to make windows and map the bedgraph to the windows.
+    // An alternative would be to use featureCounts:
 
     //
     // MODULE: Make windows of equal size across the whole genome
@@ -129,9 +130,36 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    // Copy and modify channel meta to add RPM normalization factors
-    ch_bdg_rpm = Channel.empty()
+    // Split into ChIP and control channels because inputs' norm_factor_val_used should depend on meta.antibody
+    // from its corresponding ChIP. Thus, for inputs, we need the info of both ChIP and input in the if statements below
     ch_bdg_map
+        .branch { meta, bdg ->
+            ip: !meta.is_control
+            control: meta.is_control
+        }
+        .set { ch_bdg_map_type }
+
+    ch_bdg_map_type
+        // First, modify the controls' metas to add their corresponding ChIP's antibody
+        .control
+        .map { meta, bdg -> [ meta.id, meta, bdg ] }
+        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta, bdg ] }, by: 0)
+        // Temporarily put the meta.antibody in the control meta
+        .map { control_id, control_meta, control_bdg, ip_meta, ip_bdg ->
+                def meta_clone = control_meta.clone()
+                meta_clone.antibody = ip_meta.antibody
+                [ meta_clone, control_bdg ]
+        }
+        // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
+        // Because we don't need the same input normalized in the same way several times
+        .unique()
+        // Now we mix the control and ip channels to evaluate them together below
+        .mix(ch_bdg_map_type.ip)
+        .set { ch_bdg_map_mod }
+
+    // RPM normalization factors
+    ch_bdg_rpm = Channel.empty()
+    ch_bdg_map_mod
         .map { meta, bdg ->
             def meta_clone = meta.clone()
             // if meta.antibody is in the list of antibodies to use flT2_total_mapped_reads or flT1_total_mapped_reads for RPM normalization, otherwise use flT3_total_mapped_reads
@@ -152,7 +180,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             [ meta_clone, bdg ]
         }
         .set { ch_bdg_rpm }
-    
+
+
     // TODO: print for debugging
     ch_bdg_rpm
         .map {
@@ -161,10 +190,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
-    // Copy and modify channel meta to add SRPM normalization factors
+    // Copy and modify channel meta to add SRPM normalization factors (for ChIPs)
     ch_bdg_srpm = Channel.empty()
     if (!skip_srpm) {
-        ch_bdg_map
+        ch_bdg_map_mod
             .map { meta, bdg ->
                     [ meta.id, meta, bdg ]
             }
@@ -208,9 +237,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_control_cisrpm = Channel.empty()
     ch_bdg_cisrpm = Channel.empty()
     if (!skip_cisrpm) {
-
         // Split BAMs by genome (endo and exo) and by type (ip and control)
-        ch_bdg_map
+        ch_bdg_map_mod
             .map { meta, bdg ->
                 [ meta.id, meta, bdg ]
             }
@@ -283,7 +311,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         // In this case CISRPM is the same as RPM, but we cannot
         // just copy the RPM from before, since cisrpm_use_flT2_total
         // can be different than rpm_use_flT2_total
-        ch_bdg_map
+        ch_bdg_map_mod
             .filter { meta, bdg ->
                 meta.genome == genome && meta.is_control
             }
@@ -428,6 +456,31 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     if (coverage_bin_size != 1 && !skip_plot_profile) {
 
         ch_bam_bai
+            .branch { meta, bam, bai ->
+                ip: !meta.is_control
+                control: meta.is_control
+            }
+            .set { ch_bam_bai_type }
+
+        ch_bam_bai_type
+            // First, modify the controls' metas to add their corresponding ChIP's antibody
+            .control
+            .map { meta, bam, bai -> [ meta.id, meta, bam ] }
+            .combine(ch_bam_bai_type.ip.map { meta, bam, bai -> [ meta.control, meta, bam, bai ] }, by: 0)
+            // Temporarily put the meta.antibody in the control meta
+            .map { control_id, control_meta, control_bam, ip_meta, ip_bam, ip_bai ->
+                    def meta_clone = control_meta.clone()
+                    meta_clone.antibody = ip_meta.antibody
+                    [ meta_clone, control_bam, control_bai ]
+            }
+            // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
+            // Because we don't need the same input normalized in the same way several times
+            .unique()
+            // Now we mix the control and ip channels to evaluate them together below
+            .mix(ch_bam_bai_type.ip)
+            .set { ch_bam_bai_mod }
+
+        ch_bam_bai_mod
             // we only want these bw for the endo genome
             .filter { meta, bam, bai ->
                 meta.genome == genome
@@ -472,4 +525,3 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     versions      = ch_versions                                     // channel: [ versions.yml ]
 }
-
