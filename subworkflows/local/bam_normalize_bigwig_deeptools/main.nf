@@ -195,17 +195,17 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     if (!skip_srpm) {
         ch_bdg_map_mod
             .map { meta, bdg ->
-                    [ meta.id, meta, bdg ]
+                    [ meta.id, meta.antibody, meta, bdg ]
             }
-            .branch { id, meta, bdg ->
+            .branch { id, antibody, meta, bdg ->
                 endo: meta.genome == genome
                 exo: meta.genome == spikein_genome
             }
             .set { ch_bdg_genome }
 
         ch_bdg_genome.endo
-            .combine(ch_bdg_genome.exo, by: 0)
-            .map { id, endo_meta, endo_bdg, exo_meta, exo_bdg ->
+            .combine(ch_bdg_genome.exo, by: [0,1])
+            .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
                 if (srpm_use_flT2_total && meta_clone.antibody in srpm_use_flT2_total.split(',').collect { it.trim() }) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
