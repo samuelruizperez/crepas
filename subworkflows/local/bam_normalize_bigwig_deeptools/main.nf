@@ -373,19 +373,19 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .branch { meta, bdg ->
                 ips_with_control: meta.control
-                    return [ meta.control, meta, bdg ]
+                    return [ meta.control, meta.antibody, meta, bdg ]
                 // Cannot calculate CISRPM-SOI for ChIPs without inputs
                 // ips_without_control: !meta.control && !meta.is_control
                 //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
-                    return [ meta.id, bdg ]
+                    return [ meta.id, meta.antibody, bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
         ch_bdg_ip_control_cisrpm
             .ips_with_control
-            .combine(ch_bdg_ip_control_cisrpm.controls, by: 0)
-            .map { control_id, ip_meta, ip_bdg, control_bdg ->
+            .combine(ch_bdg_ip_control_cisrpm.controls, by: [0,1])
+            .map { control_id, ip_antibody, ip_meta, ip_bdg, control_bdg ->
                 def meta_clone = ip_meta.clone()
                     meta_clone.signal_over_input = true
                     [ meta_clone, ip_bdg, control_bdg ]
