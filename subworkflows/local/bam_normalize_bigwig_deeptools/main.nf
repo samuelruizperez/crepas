@@ -374,9 +374,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .branch { meta, bdg ->
                 ips_with_control: meta.control
                     return [ meta.control, meta, bdg ]
-                    // Cannot calculate CISRPM-SOI for ChIPs without inputs
-                    // ips_without_control: !meta.control && !meta.is_control
-                    //     return [ meta, bdg ]
+                // Cannot calculate CISRPM-SOI for ChIPs without inputs
+                // ips_without_control: !meta.control && !meta.is_control
+                //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
                     return [ meta.id, bdg ]
             }
