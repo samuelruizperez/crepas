@@ -28,7 +28,6 @@ include {
                                 } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
-// include { BAM_BEDGRAPH_BIGWIG_BEDTOOLS_UCSC                       } from '../subworkflows/local/bam_bedgraph_bigwig_bedtools_ucsc/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
@@ -37,8 +36,6 @@ include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '..
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
-// include { COUNT_READS_IN_BINS                        } from '../subworkflows/local/count_reads_in_bins/main'
-// include { BAM_CHORSEQ_RRPM                           } from '../subworkflows/local/bam_chorseq_rrpm/main'
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
 
