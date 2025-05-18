@@ -26,7 +26,7 @@
     - [Collection of multiple metrics](#collection-of-multiple-metrics)
     - [Read shifting (ATAC-seq)](#read-shifting-atac-seq)
     - [phantompeakqualtools](#phantompeakqualtools)
-    - [Normalized bigWig files](#normalized-bigwig-files)
+    - [Normalized coverage files](#normalized-coverage-files)
     - [deepTools plots](#deeptools-plots)
     - [Peak calling](#peak-calling)
     - [Create and quantify consensus set of peaks](#create-and-quantify-consensus-set-of-peaks)
