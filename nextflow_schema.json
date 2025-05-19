@@ -721,6 +721,24 @@
                     "description": "Skip Genrich peak calling.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "epic2_binsize": {
+                    "type": "integer",
+                    "default": 150,
+                    "description": "Size of the windows to scan the genome in epic2. Bin size is the smallest possible island.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "epic2_fdr": {
+                    "type": "number",
+                    "default": 0.01,
+                    "description": "In epic2 peak calling, remove all islands with an FDR above this cutoff.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_epic2": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip epic2 peak calling.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
                 "skip_consenrich": {
                     "type": "boolean",
                     "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",

@@ -28,6 +28,7 @@ include {
                                 } from '../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT   } from '../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
@@ -87,10 +88,13 @@ ch_spp_rsc_header           = file("$projectDir/assets/multiqc/spp_rsc_header.tx
 ch_spp_correlation_header   = file("$projectDir/assets/multiqc/spp_correlation_header.txt", checkIfExists: true)
 ch_peak_count_header        = file("$projectDir/assets/multiqc/peak_count_header.txt", checkIfExists: true)
 ch_gr_peak_count_header     = file("$projectDir/assets/multiqc/gr_peak_count_header.txt", checkIfExists: true)
+ch_epic2_peak_count_header     = file("$projectDir/assets/multiqc/epic2_peak_count_header.txt", checkIfExists: true)
 ch_frip_score_header        = file("$projectDir/assets/multiqc/frip_score_header.txt", checkIfExists: true)
 ch_gr_frip_score_header     = file("$projectDir/assets/multiqc/gr_frip_score_header.txt", checkIfExists: true)
+ch_epic2_frip_score_header     = file("$projectDir/assets/multiqc/epic2_frip_score_header.txt", checkIfExists: true)
 ch_peak_annotation_header   = file("$projectDir/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
 ch_gr_peak_annotation_header = file("$projectDir/assets/multiqc/gr_peak_annotation_header.txt", checkIfExists: true)
+ch_epic2_peak_annotation_header = file("$projectDir/assets/multiqc/epic2_peak_annotation_header.txt", checkIfExists: true)
 ch_deseq2_pca_header        = Channel.value(file("$projectDir/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
 ch_deseq2_clustering_header = Channel.value(file("$projectDir/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
@@ -882,7 +886,7 @@ workflow GLSEQ {
 
     // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
     // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
-    ch_macs_gsize                     = Channel.empty()
+    ch_effective_gsize                     = Channel.empty()
     ch_custompeaks_frip_multiqc       = Channel.empty()
     ch_custompeaks_count_multiqc      = Channel.empty()
     ch_plothomerannotatepeaks_multiqc = Channel.empty()
@@ -892,8 +896,63 @@ workflow GLSEQ {
             ch_fasta,
             params.read_length
         )
-        ch_macs_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
+        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
     }
+
+    // Create a channel with the effective genome fraction
+    ch_chrom_sizes_endo
+        .map {
+            meta, bed ->
+                bed.splitCsv(header:false, sep:'\t')
+        }
+        .flatMap { bed ->
+            bed.collect { chr, size ->
+                [ size.toLong() ]
+            }
+        }
+        .sum()
+        .combine(ch_effective_gsize)
+        .map { size, egs ->
+            egs.toDouble() / size.toDouble()
+        }
+
+        .set { ch_effective_gfraction }
+
+    // TODO: Print to file for debuggin
+    ch_effective_gfraction
+        .map { egf ->
+            "${egf}"
+        }
+        .collectFile( name: 'ch_effective_gfraction.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+
+    //
+    // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
+    //
+    ch_epic2_frip_multiqc = Channel.empty()
+    ch_epic2_peak_count_multiqc = Channel.empty()
+    ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
+    if (!params.skip_epic2) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
+            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
+            ch_fasta.first(),
+            ch_gtf.map{ it[1] }.first(),
+            ch_chrom_sizes_endo.first(),
+            ch_effective_gfraction.first(),
+            ".annotatePeaks.txt",
+            ch_epic2_peak_count_header,
+            ch_epic2_frip_score_header,
+            ch_epic2_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
+        ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
+        ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
+    }
+
+
 
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
@@ -904,7 +963,7 @@ workflow GLSEQ {
         ch_gtf.map{ it[1] }.first(),
         ch_chrom_sizes_endo.first(),
         ch_blacklist.first(),
-        ch_macs_gsize.first(),
+        ch_effective_gsize.first(),
         "_peaks.annotatePeaks.txt", // TODO: check if this is correct
         ch_peak_count_header,
         ch_frip_score_header,
@@ -1041,6 +1100,8 @@ workflow GLSEQ {
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),            
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])
