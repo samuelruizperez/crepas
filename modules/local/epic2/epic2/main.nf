@@ -5,7 +5,7 @@ process EPIC2 {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/epic2_pyranges:0f0d5b7c0b42bd87':
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ce0423a5369408ae7871e9988bb6d1e98539f1b1f5c6b60fa2f1d51d1a0bdcc5/data':
         'community.wave.seqera.io/library/epic2_pyranges:7b9f50ca2b9b5c13' }"
 
     input:
