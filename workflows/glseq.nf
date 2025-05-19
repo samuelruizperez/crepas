@@ -913,7 +913,7 @@ workflow GLSEQ {
         .sum()
         .combine(ch_effective_gsize)
         .map { size, egs ->
-            [ egs.toDouble() / size.toDouble() ]
+            egs.toDouble() / size.toDouble()
         }
 
         .set { ch_effective_gfraction }
