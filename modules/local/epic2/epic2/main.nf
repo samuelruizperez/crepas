@@ -15,7 +15,7 @@ process EPIC2 {
 
     output:
     tuple val(meta), path("*.bed")                     , emit: bed
-    tuple val(meta), path("*.peak")                    , emit: peak
+    tuple val(meta), path("*.diffusePeak")             , emit: peak
     path  "versions.yml"                               , emit: versions
 
     when:
