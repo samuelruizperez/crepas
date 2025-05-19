@@ -67,7 +67,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
 
 
     //
-    // Call peaks with Genrich
+    // Call peaks with epic2
     //
     EPIC2 (
         ch_ip_control_bam_merged_reps,
@@ -75,10 +75,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
         efective_gfraction
 
     )
-    ch_versions = ch_versions.mix(GENRICH.out.versions.first())
+    ch_versions = ch_versions.mix(EPIC2.out.versions.first())
 
     //
-    // Filter out samples with 0 Genrich peaks called
+    // Filter out samples with 0 epic2 peaks called
     //
     EPIC2
         .out
@@ -172,15 +172,15 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
                 .set { ch_epic2_peaks_grouped }
             
             //
-            // Genrich QC plots with R
+            // epic2 QC plots with R
             //
-            PLOT_GENRICH_QC (
+            PLOT_EPIC2_QC (
                 ch_epic2_peaks_grouped,
                 is_narrow_peak
             )
-            ch_plot_epic2_qc_txt = PLOT_GENRICH_QC.out.txt
-            ch_plot_epic2_qc_pdf = PLOT_GENRICH_QC.out.pdf
-            ch_versions = ch_versions.mix(PLOT_GENRICH_QC.out.versions)
+            ch_plot_epic2_qc_txt = PLOT_EPIC2_QC.out.txt
+            ch_plot_epic2_qc_pdf = PLOT_EPIC2_QC.out.pdf
+            ch_versions = ch_versions.mix(PLOT_EPIC2_QC.out.versions)
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -217,11 +217,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     emit:
 
     peaks                        = ch_epic2_peaks                   // channel: [ val(meta), [ peaks ] ]
-    bed_intervals                = GENRICH.out.bed_intervals           // channel: [ val(meta), [ bed ] ]
-    bedgraph_pileup              = GENRICH.out.bedgraph_pileup       // channel: [ val(meta), [ bedgraph ] ]
-    bedgraph_pvalues             = GENRICH.out.bedgraph_pvalues       // channel: [ val(meta), [ bedgraph ] ]
-    duplicates                   = GENRICH.out.duplicates        // channel: [ val(meta), [ bed ] ]
-    
     frip_txt                     = FRIP_SCORE.out.txt               // channel: [ val(meta), [ txt ] ]
     frip_multiqc                 = MULTIQC_CUSTOM_PEAKS.out.frip    // channel: [ val(meta), [ frip ] ]
     
