@@ -44,7 +44,7 @@ process EPIC2 {
         ${args2} \\
         -F'\t' \\
         'NR==1 {next} \\
-        { print \$1 "\\t" \$2 "\\t" \$3 "\\tpeak_" NR-1 "\\t" \$5 "\\t" \$6 "\\t" \$4; \\
+        { printf "%s\\t%s\\t%s\\tpeak_%d\\t%s\\t%s\\t%s", \$1, \$2, \$3, NR-1, \$5, \$6, \$4; \\
         for (i=7; i<=NF; i++) printf "\\t%s", \$i; \\
         printf "\\n" }' \\
         ${prefix}.bed \\
