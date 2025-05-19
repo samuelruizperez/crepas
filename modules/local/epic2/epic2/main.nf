@@ -42,11 +42,14 @@ process EPIC2 {
     # Convert to HOMER-compatible BED format
     awk \\
         ${args2} \\
-        'BEGIN{OFS="\t"} \\
-        NR > 1 {print \$1,\$2,\$3,"peak_"(NR-1),\$5,\$6,\$4; print}' \\
+        -F'\t' \\
+        'NR==1 {next} \\
+        { print \$1 "\\t" \$2 "\\t" \$3 "\\tpeak_" NR-1 "\\t" \$5 "\\t" \$6 "\\t" \$4; \\
+        for (i=7; i<=NF; i++) printf "\\t%s", \$i; \\
+        printf "\\n" }' \\
         ${prefix}.bed \\
         > ${prefix}.peak
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         epic2: \$(epic2 --version | sed -e "s/epic2 //g")
