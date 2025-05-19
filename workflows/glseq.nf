@@ -828,7 +828,6 @@ workflow GLSEQ {
             ch_sparsebed.map{ it[1] }.first(),
             []
         )
-        ch_consenrich_multiqc = CONSENRICH.out.multiqc
         ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
     }
 
