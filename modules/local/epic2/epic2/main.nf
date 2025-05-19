@@ -48,7 +48,7 @@ process EPIC2 {
         for (i=7; i<=NF; i++) printf "\\t%s", \$i; \\
         printf "\\n" }' \\
         ${prefix}.bed \\
-        > ${prefix}.peak
+        > ${prefix}.diffusePeak
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

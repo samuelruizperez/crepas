@@ -1100,6 +1100,8 @@ workflow GLSEQ {
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
+            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),            
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])
