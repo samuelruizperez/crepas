@@ -905,7 +905,11 @@ workflow GLSEQ {
             meta, bed ->
                 bed.splitCsv(header:false, sep:'\t')
         }
-        .collect { chr, size -> size }
+        .flatMap { bed ->
+            bed.collect { chr, size ->
+                [ size.toLong() ]
+            }
+        }
         .sum()
         .combine(ch_effective_gsize)
         .map { size, egs ->
