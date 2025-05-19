@@ -82,7 +82,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     //
     EPIC2
         .out
-        .bed
+        .peak
         .filter {
             meta, peaks ->
                 peaks.size() > 0

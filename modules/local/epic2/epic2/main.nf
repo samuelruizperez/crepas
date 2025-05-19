@@ -5,8 +5,8 @@ process EPIC2 {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ce0423a5369408ae7871e9988bb6d1e98539f1b1f5c6b60fa2f1d51d1a0bdcc5/data':
-        'community.wave.seqera.io/library/epic2_pyranges:7b9f50ca2b9b5c13' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/9f/9f41b3fd2e4992c1a7012a86c5ec7f7c58db2cc262188117eedfb5d078de668f/data':
+        'community.wave.seqera.io/library/epic2_pyranges_gawk:ae3474e51d3dfc5e' }"
 
     input:
     tuple val(meta), path(treatment_bam), path(control_bam)
@@ -15,13 +15,15 @@ process EPIC2 {
 
     output:
     tuple val(meta), path("*.bed")                     , emit: bed
-    path  "versions.yml"                             , emit: versions
+    tuple val(meta), path("*.peak")                    , emit: peak
+    path  "versions.yml"                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def chromsizes = chrom_sizes ? "--chromsizes $chrom_sizes" : ""
     def egf = effective_genome_fraction ? "--effective-genome-fraction $effective_genome_fraction" : ""
@@ -37,11 +39,21 @@ process EPIC2 {
         ${control} \\
         --output ${prefix}.bed
 
+    # Convert to HOMER-compatible BED format
+    awk \\
+        ${args2} \\
+        'BEGIN{OFS="\t"} \\
+        NR > 1 {print \$1,\$2,\$3,"peak_"(NR-1),\$5,\$6,\$4; print}' \\
+        ${prefix}.bed \\
+        > ${prefix}.peak
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         epic2: \$(epic2 --version | sed -e "s/epic2 //g")
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
     END_VERSIONS
-    """
+    """   
+
 
     stub:
     def args = task.ext.args ?: ''
