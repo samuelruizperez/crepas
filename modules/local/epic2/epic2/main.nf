@@ -27,7 +27,7 @@ process EPIC2 {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def chromsizes = chrom_sizes ? "--chromsizes $chrom_sizes" : ""
     def egf = effective_genome_fraction ? "--effective-genome-fraction $effective_genome_fraction" : ""
-    def format = meta.single_end ? '' : args.contains('--guess-bampe') ? '' : '--guess-bampe'
+    def format = meta.single_end ? '' : (args.contains('--guess-bampe') ? '' : '--guess-bampe')
     def treatment = treatment_bam   ? "--treatment ${treatment_bam.join(' ')}"   : ""
     def control = control_bam     ? "--control ${control_bam.join(' ')}" : ""
     """
