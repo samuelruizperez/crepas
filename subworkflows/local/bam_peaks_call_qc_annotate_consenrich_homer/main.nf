@@ -27,7 +27,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
         ch_sparsebed,
         ch_active_regions
     )
-    ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
+    ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
 
     emit:
 
