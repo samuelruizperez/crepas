@@ -29,7 +29,8 @@ process CONSENRICH {
 
     script:
     def args            = task.ext.args     ?: ""
-    def prefix          = task.ext.prefix   ?: "${meta.id}"
+    prefix              = task.ext.prefix   ?: "${meta.id}"
+    
     def treatment       = treatment_bam     ? "--bam_files ${treatment_bam.join(' ')}" : ""
     def control         = control_bam       ? "--control_files ${control_bam.join(' ')}" : ""
     def blacklist       = blacklist         ? "--blacklist_file $blacklist" : ""
