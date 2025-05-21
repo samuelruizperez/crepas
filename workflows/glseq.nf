@@ -12,7 +12,6 @@ include {
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
                                               } from '../modules/local/bam_flagstat_mapped/main'
-include { CONSENRICH             } from '../modules/local/consenrich/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -35,6 +34,7 @@ include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../sub
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
@@ -821,14 +821,14 @@ workflow GLSEQ {
     // MODULE: Call consensus regions with Consenrich
     //
     if (!params.skip_consenrich) {
-        CONSENRICH (
+        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER (
             ch_ip_control_bam_bai_merged_reps,
-            ch_chrom_sizes.map{ it[1] }.first(),
+            ch_chrom_sizes_endo.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
             ch_sparsebed.map{ it[1] }.first(),
             []
         )
-        ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
     }
 
     //
