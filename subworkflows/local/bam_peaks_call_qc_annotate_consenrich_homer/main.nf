@@ -22,7 +22,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
 
     CONSENRICH (
         ch_bam,
-        SIZES_SORT.out.sorted,
+        SIZES_SORT.out.sorted.map { it[1] },
         ch_blacklist,
         ch_sparsebed,
         ch_active_regions
