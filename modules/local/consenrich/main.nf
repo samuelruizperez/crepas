@@ -15,7 +15,7 @@ process CONSENRICH {
     path active_regions
 
     output:
-    tuple val(meta), path("${prefix}.consenrich_output.tsv"),           emit: results
+    tuple val(meta), path("*consenrich_output.tsv"),           emit: results
     tuple val(meta), path("*consenrich_signal_track*.bw"),      optional:true, emit: signal_track
     tuple val(meta), path("*consenrich_residuals_track*.bw"),   optional:true, emit: residuals_track
     tuple val(meta), path("*consenrich_eratio_track*.bw"),      optional:true, emit: eratio_track
