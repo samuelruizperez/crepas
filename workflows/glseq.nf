@@ -823,7 +823,7 @@ workflow GLSEQ {
     if (!params.skip_consenrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER (
             ch_ip_control_bam_bai_merged_reps,
-            ch_chrom_sizes_endo.map{ it[1] }.first(),
+            ch_chrom_sizes_endo.first(),
             ch_blacklist.map{ it[1] }.first(),
             ch_sparsebed.map{ it[1] }.first(),
             []
