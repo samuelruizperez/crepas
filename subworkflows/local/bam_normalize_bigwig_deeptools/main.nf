@@ -465,10 +465,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_bam_bai_type
             // First, modify the controls' metas to add their corresponding ChIP's antibody
             .control
-            .map { meta, bam, bai -> [ meta.id, meta, bam ] }
+            .map { meta, bam, bai -> [ meta.id, meta, bam, bai ] }
             .combine(ch_bam_bai_type.ip.map { meta, bam, bai -> [ meta.control, meta, bam, bai ] }, by: 0)
             // Temporarily put the meta.antibody in the control meta
-            .map { control_id, control_meta, control_bam, ip_meta, ip_bam, ip_bai ->
+            .map { control_id, control_meta, control_bam, control_bai, ip_meta, ip_bam, ip_bai ->
                     def meta_clone = control_meta.clone()
                     meta_clone.antibody = ip_meta.antibody
                     [ meta_clone, control_bam, control_bai ]
