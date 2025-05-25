@@ -24,12 +24,10 @@ process FINAL_PARTITION_PLOT {
 
     script:
     def args            = task.ext.args ?: ''
-    def prefix          = task.ext.prefix ?: "${meta.id}"
-    def blacklist_arg   = blacklist ? '' : "--blacklist $blacklist"
+    prefix              = task.ext.prefix ?: "${meta.id}"
+    def blacklist_arg   = blacklist ? "--blacklist $blacklist" : ''
     def okazaki_arg     = okazaki ? "--okazaki_file $okazaki" : ''
     def iz_arg          = initiation_zones ? "--initiation_zones $initiation_zones" : ''
-    // if --exclude_chromosomes is in args and remove_scaffolds is true, then append scaffolds to the comma-separated list of --exclude_chromosomes
-    //def exclude_chr_arg = args.contains("--exclude_chromosomes") && scaffolds != null ? "--exclude_chromosomes ${args.split("--exclude_chromosomes")[1].split(" ")[0]},${scaffolds}" : args
     """
     SCAR_partition_plots.R \\
         --scar_partition_file $partition \\

@@ -524,6 +524,86 @@ For larger experiments, it is recommended to use the `vst` transformation instea
 
 ![MultiQC - DESeq2 sample similarity plot](images/mqc_deseq2_sample_similarity_plot.png)
 
+## SCAR-seq analysis
+
+### Splitting of alignments by strand
+
+SCAR-seq BAM files are split by strand based on the corresponding `strandedness` field in the input samplesheet.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/scarseq/1_split_by_strand/`
+  - `*.forward.bam`: Forward strand alignments.
+  - `*.reverse.bam`: Reverse strand alignments.
+</details>
+
+### Genome-wide coverage per strand
+
+Genome-wide coverage in BEDGRAPH format is generated for the forward and reverse strand alignments.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/scarseq/2_genomecov/`
+  - `*.forward.bdg`: Forward strand coverage in BEDGRAPH format.
+  - `*.reverse.bdg`: Reverse strand coverage in BEDGRAPH format.
+
+</details>
+
+### Removing off-chromosome locations
+
+Then, lines that refer to off-chromosome locations are removed from the BEDGRAPH files:
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+  - `<aligner>/mergedLibrary/scarseq/3_slop/`
+    - `*.forward.slop.bed`: Slopped forward strand coverage.
+    - `*.reverse.slop.bed`: Slopped reverse strand coverage.
+  - `<aligner>/mergedLibrary/scarseq/4_clip`
+    - `*.forward.clip.bedGraph`: Clipped forward strand coverage.
+    - `*.reverse.clip.bedGraph`: Clipped reverse strand coverage.
+
+</details>
+
+### Sorting and conversion to bigWig
+
+The coverage files are then sorted and converted to bigWig format.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/scarseq/5_sort/`
+  - `*.forward.clip.sorted`: Slopped, clipped and sorted forward strand coverage files.
+  - `*.reverse.clip.sorted`: Slopped, clipped and sorted reverse strand coverage files.
+- `<aligner>/mergedLibrary/scarseq/6_bigwig/`
+  - `*.forward.bigWig`: Forward strand coverage in bigWig format.
+  - `*.reverse.bigWig`: Reverse strand coverage in bigWig format.
+
+</details>
+
+### Average coverage over windows
+
+Then, the average coverage score (from the bigWigs) over each genomic window is calculated. 
+
+First, non-overlapping genomic windows are generated. The size of the windows is determined with the `--scar_window_size` parameter. To be able to later parallelize the calculation of the average coverage, the genomic windows are split by chromosome.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/scarseq/7_bwaob/`
+  - `*<chromosome>.forward.bwaob.tab`: Average coverage over windows (per chromosome) for the forward strand.
+  - `*<chromosome>.reverse.bwaob.tab`: Average coverage over windows (per chromosome) for the reverse strand.
+
+</details>
+
+### Normalization of the average coverage
+
+### Substraction of stranded input signal
+
+
+
 ## Aggregate analysis
 
 ### Present QC for the raw read, alignment, peak and differential binding results
