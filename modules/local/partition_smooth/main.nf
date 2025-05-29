@@ -32,7 +32,7 @@ process PARTITION_SMOOTH {
         $radius \\
         $dradius \\
         $zradius \\
-        > ${prefix}.RFD.txt &
+        > ${prefix}.RFD.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
