@@ -1,11 +1,12 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
-include { BEDTOOLS_SLOP                                             } from '../../../modules/nf-core/bedtools/slop/main'
-include { UCSC_BEDCLIP                                              } from '../../../modules/nf-core/ucsc/bedclip/main'
+// include { BEDTOOLS_SLOP                                             } from '../../../modules/nf-core/bedtools/slop/main'
+// include { UCSC_BEDCLIP                                              } from '../../../modules/nf-core/ucsc/bedclip/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BED_SPLIT_BY_CHROMOSOME                                   } from '../../../modules/local/bed_split_by_chromosome/main'
-include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
+//include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
+include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
 include { CPM_CALCULATION as CPM_CALCULATION_SAMPLES                } from '../../../modules/local/cpm_calculation/main'
 include { CPM_CALCULATION as CPM_CALCULATION_INPUTS                 } from '../../../modules/local/cpm_calculation/main'
 include { NORMALIZE_STRANDS                                         } from '../../../modules/local/normalize_strands/main'
@@ -13,11 +14,13 @@ include { SUBSTRACT_INPUT                                           } from '../.
 include { PARTITION_SMOOTH                                          } from '../../../modules/local/partition_smooth/main'
 include { COLLECT_PARTITIONS_BY_CHROMOSOME                          } from '../../../modules/local/collect_partitions_by_chromosome/main'
 include { FINAL_PARTITION_BEDGRAPH                                  } from '../../../modules/local/final_partition_bedgraph/main'
-include { FILE_SORT as FILE_SORT_WINDOWS                            } from '../../../modules/local/file_sort/main'
+// include { FILE_SORT as FILE_SORT_WINDOWS                            } from '../../../modules/local/file_sort/main'
 include { FILE_SORT as FILE_SORT_PARTITIONS                         } from '../../../modules/local/file_sort/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { FINAL_PARTITION_PLOT                                      } from '../../../modules/local/final_partition_plot/main'
+//include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+//include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
 workflow BAM_CREATE_SCAR_PARTITIONS {
@@ -45,7 +48,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .f_bam
         .map {
             meta, f_bam ->
-                [ meta + ['strand':'forward'], f_bam ]
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'forward'
+                [ meta_clone, f_bam ]
         }
         .set { ch_f_bam }
 
@@ -54,7 +59,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .r_bam
         .map {
             meta, r_bam ->
-                [ meta + ['strand':'reverse'], r_bam ]
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'reverse'
+                [ meta_clone, r_bam ]
         }
         .set { ch_r_bam }
 
@@ -80,65 +87,21 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
     //
-    // MODULE: Increase the size of each feature
-    //
-    BEDTOOLS_SLOP (
-        BEDTOOLS_GENOMECOV.out.genomecov,
-        ch_chrom_sizes.map { it[1] }
-    )
-    ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
-
-    //
-    // MODULE: Remove records that are out of annotated chromosome ranges
-    //
-    UCSC_BEDCLIP (
-        BEDTOOLS_SLOP.out.bed,
-        ch_chrom_sizes.map { it[1] }
-    )
-    ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
-
-    //
-    // MODULE: Sort the bedgraph file
-    //
-    FILE_SORT_WINDOWS (
-        UCSC_BEDCLIP.out.bedgraph,
-        'sorted'
-    )
-    ch_versions = ch_versions.mix(FILE_SORT_WINDOWS.out.versions.first())
-
-    //
     // MODULE: Convert bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
+    BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
         FILE_SORT_WINDOWS.out.sorted,
-        ch_chrom_sizes.map { it[1] }
+        ch_chrom_sizes
     )
-    ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
-
-    //
-    // MODULE: Create chromosome windows
-    //
-
-    // TODO: windows are created and split even when not needed (no scarseq samples)
-    // this is an ugly workaround
-    // https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140
-    // def make_windows = false
-    // //ch_chrom_sizes_endo_ss = ch_chrom_sizes_endo
-    // ch_bigwig.count().map { n ->
-    //     if (n > 0) {
-    //         make_windows = true
-    //     }
-    // }
+    ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
+    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
     ch_windows = Channel.empty()
-    //if (make_windows) {
-        BEDTOOLS_MAKEWINDOWS (
-            ch_chrom_sizes
-        )
-        ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
-        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
-    //}
+    BEDTOOLS_MAKEWINDOWS (
+        ch_chrom_sizes
+    )
+    ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
     // Create a channel with each chromosome to iterate over
     ch_chroms = Channel.empty()
@@ -195,12 +158,12 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     //
     // MODULE: Calculate average coverage over windows
     //
-    UCSC_BIGWIGAVERAGEOVERBED (
-        ch_chroms_combs,
-        ch_bw_combs.map{ it[1] }
+    BIGTOOLS_BIGWIGAVERAGEOVERBED (
+        ch_bw_combs,
+        ch_chroms_combs
     )
-    ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
-    ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
+    ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
+    ch_versions = ch_versions.mix(BIGTOOLS_BIGWIGAVERAGEOVERBED.out.versions.first())
 
 
     // Separate samples and input controls
@@ -558,11 +521,11 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     //
     // MODULE: Convert the final partition bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
+    BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS (
         FILE_SORT_PARTITIONS.out.sorted,
-        ch_chrom_sizes.map { it[1] }
+        ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
+    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
 
     FINAL_PARTITION_BEDGRAPH.out.txt
@@ -598,13 +561,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     //
     // MODULE: Plot the final partition
     //
-    FINAL_PARTITION_PLOT (
+    PARTITION_PLOT (
         ch_part_to_plot,
         ch_blacklist,
         ch_initiation_zones
         //ch_scaffolds
     )
-    ch_versions = ch_versions.mix(FINAL_PARTITION_PLOT.out.versions.first())
+    ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
 
 
     emit:

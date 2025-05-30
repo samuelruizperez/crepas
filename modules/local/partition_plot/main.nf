@@ -1,4 +1,4 @@
-process FINAL_PARTITION_PLOT {
+process PARTITION_PLOT {
     tag "$meta.id"
     label 'process_medium_memory'
 

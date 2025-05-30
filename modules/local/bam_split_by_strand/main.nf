@@ -16,7 +16,7 @@ process BAM_SPLIT_BY_STRAND {
     output:
     tuple val(meta), path("*.forward.bam"), emit: f_bam
     tuple val(meta), path("*.reverse.bam"), emit: r_bam
-    path "versions.yml"             , emit: versions
+    path "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,14 +28,18 @@ process BAM_SPLIT_BY_STRAND {
 
     """
     samtools view \\
-        -F 20 -h $bam | \\
-            samtools view -Sb -h \\
-                > ${prefix}.${strand_extension1}.bam
+        --exclude-flags 20 \\
+        --with-header \\
+        --bam \\
+        --output ${prefix}.${strand_extension1}.bam \\
+        ${bam}
 
     samtools view \\
-        -f 16 -h $bam | \\
-            samtools view -Sb -h \\
-                > ${prefix}.${strand_extension2}.bam
+        --require-flags 16 \\
+        --with-header \\
+        --bam \\
+        --output ${prefix}.${strand_extension2}.bam \\
+        ${bam}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
