@@ -90,7 +90,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     // MODULE: Convert bedgraph to bigwig
     //
     BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
-        FILE_SORT_WINDOWS.out.sorted,
+        BEDTOOLS_GENOMECOV.out.genomecov,
         ch_chrom_sizes
     )
     ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
