@@ -34,7 +34,7 @@ process BIGTOOLS_BIGWIGAVERAGEOVERBED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bigwigaverageoverbed: \$(echo \$(bigtools-bigwigaverageoverbed --version 2>&1) | sed 's/^bigtools-bigwigaverageoverbed //')
+        bigtools_bigwigaverageoverbed: \$(echo \$(bigtools-bigwigaverageoverbed --version 2>&1) | sed 's/^bigtools-bigwigaverageoverbed //')
     END_VERSIONS
     """
 
@@ -45,7 +45,7 @@ process BIGTOOLS_BIGWIGAVERAGEOVERBED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bigwigaverageoverbed: \$(echo \$(bigtools-bigwigaverageoverbed --version 2>&1) | sed 's/^bigtools-bigwigaverageoverbed //')
+        bigtools_bigwigaverageoverbed: \$(echo \$(bigtools-bigwigaverageoverbed --version 2>&1) | sed 's/^bigtools-bigwigaverageoverbed //')
     END_VERSIONS
     """
 }

@@ -30,7 +30,7 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bedgraphtobigwig: \$(echo \$(bigtools-bedgraphtobigwig --version 2>&1) | sed 's/^bigtools-bedgraphtobigwig //')
+        bigtools_bedgraphtobigwig: \$(echo \$(bigtools-bedgraphtobigwig --version 2>&1) | sed 's/^bigtools-bedgraphtobigwig //')
     END_VERSIONS
     """
 
@@ -41,7 +41,7 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bedgraphtobigwig: \$(echo \$(bigtools-bedgraphtobigwig --version 2>&1) | sed 's/^bigtools-bedgraphtobigwig //')
+        bigtools_bedgraphtobigwig: \$(echo \$(bigtools-bedgraphtobigwig --version 2>&1) | sed 's/^bigtools-bedgraphtobigwig //')
     END_VERSIONS
     """
 }

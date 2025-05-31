@@ -973,7 +973,8 @@ workflow GLSEQ {
         params.narrow_peak,
         params.skip_peak_annotation,
         params.skip_peak_qc,
-        params.skip_edd
+        params.skip_edd,
+        params.skip_bdgcmp
     )
     ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
 
