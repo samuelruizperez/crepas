@@ -1,11 +1,8 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
-// include { BEDTOOLS_SLOP                                             } from '../../../modules/nf-core/bedtools/slop/main'
-// include { UCSC_BEDCLIP                                              } from '../../../modules/nf-core/ucsc/bedclip/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BED_SPLIT_BY_CHROMOSOME                                   } from '../../../modules/local/bed_split_by_chromosome/main'
-//include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
 include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
 include { CPM_CALCULATION as CPM_CALCULATION_SAMPLES                } from '../../../modules/local/cpm_calculation/main'
 include { CPM_CALCULATION as CPM_CALCULATION_INPUTS                 } from '../../../modules/local/cpm_calculation/main'
@@ -14,10 +11,7 @@ include { SUBSTRACT_INPUT                                           } from '../.
 include { PARTITION_SMOOTH                                          } from '../../../modules/local/partition_smooth/main'
 include { COLLECT_PARTITIONS_BY_CHROMOSOME                          } from '../../../modules/local/collect_partitions_by_chromosome/main'
 include { FINAL_PARTITION_BEDGRAPH                                  } from '../../../modules/local/final_partition_bedgraph/main'
-// include { FILE_SORT as FILE_SORT_WINDOWS                            } from '../../../modules/local/file_sort/main'
 include { FILE_SORT as FILE_SORT_PARTITIONS                         } from '../../../modules/local/file_sort/main'
-//include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-//include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
 include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
@@ -30,7 +24,6 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
-    //ch_scaffolds          // channel: [scaffolds]
 
     main:
 
@@ -565,7 +558,6 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         ch_part_to_plot,
         ch_blacklist,
         ch_initiation_zones
-        //ch_scaffolds
     )
     ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
 
