@@ -2,11 +2,10 @@ process BIGTOOLS_BIGWIGAVERAGEOVERBED {
     tag "$meta.id"
     label 'process_medium'
 
-    // WARN: Version information not provided by tool on CLI. Please update version string below when bumping container versions.
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ucsc-bigwigaverageoverbed:377--h0b8a92a_2' :
-        'biocontainers/ucsc-bigwigaverageoverbed:377--h0b8a92a_2' }"
+        'https://depot.galaxyproject.org/singularity/bigtools:0.5.4--hc1c3326_1' :
+        'quay.io/biocontainers/bigtools:0.5.6--hc1c3326_0' }"
 
     input:
     tuple val(meta), path(bigwig)
@@ -34,7 +33,7 @@ process BIGTOOLS_BIGWIGAVERAGEOVERBED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bigwigaverageoverbed: \$( bigtools-bigwigaverageoverbed --version | sed 's/^bigtools-bigwigaverageoverbed //' )
+        bigtools-bigwigaverageoverbed: \$( bigtools bigwigaverageoverbed --version | sed 's/^bigtools-bigwigaverageoverbed //' )
     END_VERSIONS
     """
 
@@ -45,7 +44,7 @@ process BIGTOOLS_BIGWIGAVERAGEOVERBED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bigtools-bigwigaverageoverbed: \$( bigtools-bigwigaverageoverbed --version | sed 's/^bigtools-bigwigaverageoverbed //' )
+        bigtools-bigwigaverageoverbed: \$( bigtools bigwigaverageoverbed --version | sed 's/^bigtools-bigwigaverageoverbed //' )
     END_VERSIONS
     """
 }
