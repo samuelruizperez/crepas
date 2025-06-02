@@ -252,8 +252,8 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .set { ch_norm_and_smi_to_combine }
 
     // Create channel: [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
-    ch_bwaob.forward
-        .combine(ch_bwaob.reverse, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev ]
+    ch_bwaob_strands.forward
+        .combine(ch_bwaob_strands.reverse, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev ]
         .combine(ch_norm_and_smi_to_combine, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ]
         .map { meta, bwaob_fwd, bwaob_rev, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
             [ meta_norm_or_smi, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev ]
