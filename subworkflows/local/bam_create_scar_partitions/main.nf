@@ -181,7 +181,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     BEDGRAPH_SIGNAL_MINUS_INPUT (
         ch_norm_scar_input
     )
-    ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.tab
+    ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
     ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
 
     // create channel: [ val(meta), [ bdg_fwd ], [ bdg_rev ] ]
