@@ -14,17 +14,15 @@ process PARTITION_SMOOTH {
     val zradius
 
     output:
-    tuple val(updatedMeta), path("*.txt"), emit: rfd
+    tuple val(meta), path("*.tsv"), emit: rfd
     path  "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
-    script: // This script is bundled with the pipeline, in bin
+    script:
     def args  = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    updatedMeta = meta + ['RFD':true]  // Add cpm to meta
-
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     partition_smooth.pl \\
         $f_tab \\
@@ -32,7 +30,7 @@ process PARTITION_SMOOTH {
         $radius \\
         $dradius \\
         $zradius \\
-        > ${prefix}.RFD.txt
+        > ${prefix}.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -43,7 +41,7 @@ process PARTITION_SMOOTH {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.RFD.txt
+    touch  ${prefix}.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
