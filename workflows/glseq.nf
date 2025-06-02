@@ -1064,8 +1064,8 @@ workflow GLSEQ {
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo_ss.first(),
         ch_blacklist.first(),
-        ch_initiation_zones.first()
-        //ch_scaffolds
+        ch_initiation_zones.first(),
+        params.rpm_use_flT2_total
     )
     ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)
