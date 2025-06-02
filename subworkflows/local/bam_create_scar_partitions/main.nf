@@ -102,6 +102,8 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         ch_chrom_sizes
     )
     ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
+    // count number of lines in the windows file
+    ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
     ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
     //
@@ -123,20 +125,22 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
 
 
     // RPM normalization factors
+    // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_smooth)
     ch_bwaob
-        .map { meta, bwaob ->
+        .combine(ch_num_windows)
+        .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
             if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
                 if (meta_clone.flT2_total_mapped_reads) {
-                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
+                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else {
                     // Samples without spike-in wouldn't have flT2_total_mapped_reads, so we use flT1_total_mapped_reads instead
-                    meta_clone.norm_factor_val = 1e6 / meta_clone.flT1_total_mapped_reads
+                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT1_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT1_total_mapped_reads'
                 }
             } else {
-                meta_clone.norm_factor_val = 1e6 / meta_clone.flT3_total_mapped_reads
+                meta_clone.norm_factor_val = 1e6 / (meta_clone.flT3_total_mapped_reads + num_windows)
                 meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
             }
             meta_clone.norm_factor_type = 'rpm'
