@@ -23,16 +23,30 @@ process BEDGRAPH_NORMALIZE {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def norm_factor = args2.contains('--norm_factor ') ? args2.split('--norm_factor ')[1].split(' ')[0] : '1'
     def norm_operation = args2.contains('--norm_operation ') ? args2.split('--norm_operation ')[1].split(' ')[0] : 'multiply'
+    def use_pseudocount = args2.contains('--use_pseudocount')
+
     """
     awk \\
         $args \\
         -v norm_factor=$norm_factor \\
         -v operation=$norm_operation \\
+        -v use_pseudocount=$use_pseudocount \\
+        $(if [ "$use_pseudocount" = "true" ]; then echo "-v num_lines=\$(wc -l < $bdg)"; fi) \\
         'BEGIN { OFS="\\t" } { \\
-        if (operation == "multiply") \$4 = \$4 * norm_factor; \\
-        else if (operation == "divide") \$4 = \$4 / norm_factor; \\
-        else if (operation == "add") \$4 = \$4 + norm_factor; \\
-        else if (operation == "subtract") \$4 = \$4 - norm_factor; \\
+        if (use_pseudocount) { \\
+            if (operation == "multiply") { \\
+                norm_factor = 1E6 / ((1E6 / norm_factor) + num_lines); \\
+                \$4 = (\$4 + 1) * norm_factor; \\
+            } else if (operation == "divide") { \\
+                norm_factor = ((norm_factor * 1E6) + num_lines) / 1E6; \\
+                \$4 = (\$4 + 1) / norm_factor; \\
+            } \\
+        } else { \\
+            if (operation == "multiply") \$4 = \$4 * norm_factor; \\
+            else if (operation == "divide") \$4 = \$4 / norm_factor; \\
+            else if (operation == "add") \$4 = \$4 + norm_factor; \\
+            else if (operation == "subtract") \$4 = \$4 - norm_factor; \\
+        } \\
         print }' \\
         $bdg \\
         > ${prefix}.bedgraph
