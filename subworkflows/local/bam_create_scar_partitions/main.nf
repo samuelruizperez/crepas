@@ -238,6 +238,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_rfd = PARTITION_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
 
+    // TODO: print for debugging
+    ch_rfd
+        .map { meta, rfd ->
+            "${meta}\t${rfd}"
+        }
+        .collectFile( name: 'ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
 
     // Prepare bwaob channel for combine()
     ch_bwaob
@@ -262,6 +269,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
             [ meta_clone, meta, norm_or_smi_fwd, norm_or_smi_rev ]
         }
         .set { ch_norm_and_smi_to_combine }
+
+    // TODO: print for debugging
+    ch_norm_and_smi_to_combine
+        .map { meta, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
+            "${meta}\t${meta_norm_or_smi}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}"
+        }
+        .collectFile( name: 'ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // Create channel: [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
     ch_bwaob_strands.forward
