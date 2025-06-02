@@ -43,7 +43,7 @@ process COLLECT_PARTITIONS {
                 }
             }
         }
-    ' ${windows} ${bwaob_F} ${bwaob_R} ${norm_F} ${norm_R} ${rfd} \\
+    ' ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_fwd} ${norm_rev} ${rfd} \\
     ${sort_cmd} \\
     > ${prefix}.tsv
 
