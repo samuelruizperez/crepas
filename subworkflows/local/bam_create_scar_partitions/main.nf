@@ -265,7 +265,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_norm_and_smi
         .map { meta, norm_or_smi_fwd, norm_or_smi_rev ->
             def meta_clone = meta.clone()
-            meta_clone.removeAll(['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'])
+            meta_clone.removeAll { it.key in ['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'] }
             [ meta_clone, meta, norm_or_smi_fwd, norm_or_smi_rev ]
         }
         .set { ch_norm_and_smi_to_combine }
