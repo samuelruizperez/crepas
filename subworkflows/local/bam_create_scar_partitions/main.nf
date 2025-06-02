@@ -114,6 +114,14 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
     ch_versions = ch_versions.mix(BIGTOOLS_BIGWIGAVERAGEOVERBED.out.versions.first())
 
+    // TODO: print for debugging
+    ch_bwaob
+        .map { meta, bwaob ->
+            "${meta}\t${bwaob}"
+        }
+        .collectFile( name: 'ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
+
     // RPM normalization factors
     ch_bwaob
         .map { meta, bwaob ->
