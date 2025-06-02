@@ -108,7 +108,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     // MODULE: Calculate average coverage over windows
     //
     BIGTOOLS_BIGWIGAVERAGEOVERBED (
-        ch_bw_combs,
+        ch_bigwig,
         ch_windows.first()
     )
     ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
