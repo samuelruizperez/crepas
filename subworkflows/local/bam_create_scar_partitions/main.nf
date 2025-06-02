@@ -328,14 +328,14 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .combine(ch_partitions_by_type.minusinput, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             def okseq = meta_scar.okseq_part_file ? file(meta_scar.okseq_part_file) : null
-            [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ]
+            [ meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ]
         }
         .set { ch_partitions_to_plot }
 
     // TODO: print for debugging
     ch_partitions_to_plot
-        .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
-            "${scar_id}\t${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
+        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
+            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
         }
         .collectFile( name: 'ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
