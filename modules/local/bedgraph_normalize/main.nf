@@ -20,18 +20,18 @@ process BEDGRAPH_NORMALIZE {
     script:
     def args  = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     def norm_factor = args2.contains('--norm_factor ') ? args2.split('--norm_factor ')[1].split(' ')[0] : '1'
     def norm_operation = args2.contains('--norm_operation ') ? args2.split('--norm_operation ')[1].split(' ')[0] : 'multiply'
     def use_pseudocount = args2.contains('--use_pseudocount')
 
     """
     awk \\
-        $args \\
-        -v norm_factor=$norm_factor \\
-        -v operation=$norm_operation \\
-        -v use_pseudocount=$use_pseudocount \\
-        $(if [ "$use_pseudocount" = "true" ]; then echo "-v num_lines=\$(wc -l < $bdg)"; fi) \\
+        ${args} \\
+        -v norm_factor=${norm_factor} \\
+        -v operation=${norm_operation} \\
+        -v use_pseudocount=${use_pseudocount} \\
+        \$(if [ "${use_pseudocount}" = "true" ]; then echo "-v num_lines=\$(wc -l < ${bdg})"; fi) \\
         'BEGIN { OFS="\\t" } { \\
         if (use_pseudocount) { \\
             if (operation == "multiply") { \\
@@ -48,7 +48,7 @@ process BEDGRAPH_NORMALIZE {
             else if (operation == "subtract") \$4 = \$4 - norm_factor; \\
         } \\
         print }' \\
-        $bdg \\
+        ${bdg} \\
         > ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
