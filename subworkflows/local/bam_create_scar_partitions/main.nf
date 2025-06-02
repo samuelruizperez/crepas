@@ -286,7 +286,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .combine(ch_rfd, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
         .combine(ch_windows) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, windows ]
-        .map { meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, windows ->
+        .map { meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, meta_windows, windows ->
             [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
         }
         .set { ch_partitions }
