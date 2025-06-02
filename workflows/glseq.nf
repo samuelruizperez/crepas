@@ -658,7 +658,9 @@ workflow GLSEQ {
                 meta_clone.flT3_total_mapped_reads = total.toDouble()
                 [ meta_clone, bam, bai ]
         }
-        .set { ch_filtered_bam_bai }
+        .tap { ch_filtered_bam_bai }
+        .map { meta, bam, bai -> [ meta, bam ] }
+        .set { ch_filtered_bam } 
 
     //
     // MODULE: Picard post alignment QC
