@@ -494,7 +494,7 @@ if (HAS.OKSEQ) {
           strip.text.y = element_text(size = 5 * .pt),
           strip.background = element_rect(colour="black", fill="#e3e3e3"))
 
-  ggsave(filename = file.path(plots.dir,paste0(PREFIX,"_scatter_plots.pdf")),
+  ggsave(filename = file.path(plots.dir,paste0(PREFIX,".scatter_plots.pdf")),
          plot = partition.scatter.plt, width = plt.width, height = plt.height,
          device = cairo_pdf,
          dpi = 300)
@@ -552,12 +552,12 @@ if (HAS.OKSEQ) {
 
 
 
-ggsave(filename = file.path(plots.dir,paste0(PREFIX,"_partition_RAW.pdf")),
+ggsave(filename = file.path(plots.dir,paste0(PREFIX,".partition_plots_raw.pdf")),
        plot = raw.plt, width = plt.width, height = plt.height,
        device = cairo_pdf,
        dpi = 300)
 
-ggsave(filename = file.path(plots.dir,paste0(PREFIX,"_partition_SMOOTHED.pdf")),
+ggsave(filename = file.path(plots.dir,paste0(PREFIX,".partition_plots_smoothed.pdf")),
        plot = smooth.plt, width = plt.width, height = plt.height,
        device = cairo_pdf,
        dpi = 300)

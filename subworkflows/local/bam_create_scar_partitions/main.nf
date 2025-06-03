@@ -106,6 +106,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
     ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
+    // TODO: print for debugging
+    ch_num_windows
+        .map { num_windows ->
+            "${num_windows}"
+        }
+        .collectFile( name: 'ch_num_windows.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
     //
     // MODULE: Calculate average coverage over windows
     //

@@ -535,7 +535,9 @@ SCAR-seq BAM files are split by strand based on the corresponding `strandedness`
 
 - `<aligner>/mergedLibrary/scarseq/1_split_by_strand/`
   - `*.forward.bam`: Forward strand alignments.
+  - `*.forward.bam.bai`: Index for forward strand alignments.
   - `*.reverse.bam`: Reverse strand alignments.
+  - `*.reverse.bam.bai`: Index for reverse strand alignments.
 </details>
 
 ### Genome-wide coverage per strand
@@ -546,40 +548,10 @@ Genome-wide coverage in BEDGRAPH format is generated for the forward and reverse
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/scarseq/2_genomecov/`
-  - `*.forward.bdg`: Forward strand coverage in BEDGRAPH format.
-  - `*.reverse.bdg`: Reverse strand coverage in BEDGRAPH format.
-
-</details>
-
-### Removing off-chromosome locations
-
-Then, lines that refer to off-chromosome locations are removed from the BEDGRAPH files:
-
-<details markdown="1" open>
-    <summary>Output files</summary>
-
-  - `<aligner>/mergedLibrary/scarseq/3_slop/`
-    - `*.forward.slop.bed`: Slopped forward strand coverage.
-    - `*.reverse.slop.bed`: Slopped reverse strand coverage.
-  - `<aligner>/mergedLibrary/scarseq/4_clip`
-    - `*.forward.clip.bedGraph`: Clipped forward strand coverage.
-    - `*.reverse.clip.bedGraph`: Clipped reverse strand coverage.
-
-</details>
-
-### Sorting and conversion to bigWig
-
-The coverage files are then sorted and converted to bigWig format.
-
-<details markdown="1" open>
-    <summary>Output files</summary>
-
-- `<aligner>/mergedLibrary/scarseq/5_sort/`
-  - `*.forward.clip.sorted`: Slopped, clipped and sorted forward strand coverage files.
-  - `*.reverse.clip.sorted`: Slopped, clipped and sorted reverse strand coverage files.
-- `<aligner>/mergedLibrary/scarseq/6_bigwig/`
-  - `*.forward.bigWig`: Forward strand coverage in bigWig format.
-  - `*.reverse.bigWig`: Reverse strand coverage in bigWig format.
+  - `*.forward.genomecov.bdg`: Forward strand coverage in bedGraph format.
+  - `*.forward.genomecov.bw`: Forward strand coverage in bigWig format.
+  - `*.reverse.genomecov.bdg`: Reverse strand coverage in bedGraph format.
+  - `*.reverse.genomecov.bw`: Reverse strand coverage in bigWig format.
 
 </details>
 
@@ -593,8 +565,8 @@ First, non-overlapping genomic windows are generated. The size of the windows is
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/scarseq/7_bwaob/`
-  - `*<chromosome>.forward.bwaob.tab`: Average coverage over windows (per chromosome) for the forward strand.
-  - `*<chromosome>.reverse.bwaob.tab`: Average coverage over windows (per chromosome) for the reverse strand.
+  - `*.forward.bwaob.bed`: Average coverage over windows for the forward strand.
+  - `*.reverse.bwaob.bed`: Average coverage over windows for the reverse strand.
 
 </details>
 
