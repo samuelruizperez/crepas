@@ -364,7 +364,7 @@ workflow GLSEQ {
                 meta, deduplog ->
                    "${meta}\t${deduplog}"
             }
-            .collectFile( name: 'ch_dedup_umi_deduplog.txt', newLine: true, sort: false, storeDir: "${params.outdir}") 
+            .collectFile( name: 'ch_dedup_umi_deduplog.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug") 
         
         ch_versions = ch_versions.mix(BAM_DEDUP_UMI.out.versions.first())
 
@@ -820,7 +820,7 @@ workflow GLSEQ {
             meta, bams, bais, control_bams, control_bais ->
                 "${meta}\t${bams}\t${bais}\t${control_bams}\t${control_bais}"
         }
-        .collectFile( name: 'ch_ip_control_bam_bai_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_ip_control_bam_bai_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
         
     //
     // MODULE: Call consensus regions with Consenrich
@@ -851,7 +851,7 @@ workflow GLSEQ {
             meta, bams, bais ->
                 "${meta}\t${bams}\t${bais}"
         }
-        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
@@ -884,7 +884,7 @@ workflow GLSEQ {
             meta, ip_bam, control_bam ->
                 "${meta.id}\t${ip_bam}\t${control_bam}"
         }
-        .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
 
 
     //
@@ -930,7 +930,7 @@ workflow GLSEQ {
         .map { egf ->
             "${egf}"
         }
-        .collectFile( name: 'ch_effective_gfraction.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_effective_gfraction.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
 
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
