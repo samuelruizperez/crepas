@@ -1,23 +1,15 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
-include { BEDTOOLS_SLOP                                             } from '../../../modules/nf-core/bedtools/slop/main'
-include { UCSC_BEDCLIP                                              } from '../../../modules/nf-core/ucsc/bedclip/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BED_SPLIT_BY_CHROMOSOME                                   } from '../../../modules/local/bed_split_by_chromosome/main'
-include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
-include { CPM_CALCULATION as CPM_CALCULATION_SAMPLES                } from '../../../modules/local/cpm_calculation/main'
-include { CPM_CALCULATION as CPM_CALCULATION_INPUTS                 } from '../../../modules/local/cpm_calculation/main'
-include { NORMALIZE_STRANDS                                         } from '../../../modules/local/normalize_strands/main'
-include { SUBSTRACT_INPUT                                           } from '../../../modules/local/substract_input/main'
+include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
+include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
+include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_SMOOTH                                          } from '../../../modules/local/partition_smooth/main'
-include { COLLECT_PARTITIONS_BY_CHROMOSOME                          } from '../../../modules/local/collect_partitions_by_chromosome/main'
-include { FINAL_PARTITION_BEDGRAPH                                  } from '../../../modules/local/final_partition_bedgraph/main'
-include { FILE_SORT as FILE_SORT_WINDOWS                            } from '../../../modules/local/file_sort/main'
-include { FILE_SORT as FILE_SORT_PARTITIONS                         } from '../../../modules/local/file_sort/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { FINAL_PARTITION_PLOT                                      } from '../../../modules/local/final_partition_plot/main'
+include { COLLECT_PARTITIONS                                          } from '../../../modules/local/collect_partitions/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
 workflow BAM_CREATE_SCAR_PARTITIONS {
@@ -27,7 +19,8 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
-    //ch_scaffolds          // channel: [scaffolds]
+    rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
+
 
     main:
 
@@ -45,7 +38,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .f_bam
         .map {
             meta, f_bam ->
-                [ meta + ['strand':'forward'], f_bam ]
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'forward'
+                [ meta_clone, f_bam ]
         }
         .set { ch_f_bam }
 
@@ -54,11 +49,21 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .r_bam
         .map {
             meta, r_bam ->
-                [ meta + ['strand':'reverse'], r_bam ]
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'reverse'
+                [ meta_clone, r_bam ]
         }
         .set { ch_r_bam }
 
     ch_bam = ch_f_bam.mix(ch_r_bam)
+
+    //
+    // MODULE: Index BAM files per strand
+    //
+    SAMTOOLS_INDEX (
+        ch_bam
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
     ch_bam
@@ -80,532 +85,286 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
     //
-    // MODULE: Increase the size of each feature
-    //
-    BEDTOOLS_SLOP (
-        BEDTOOLS_GENOMECOV.out.genomecov,
-        ch_chrom_sizes.map { it[1] }
-    )
-    ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
-
-    //
-    // MODULE: Remove records that are out of annotated chromosome ranges
-    //
-    UCSC_BEDCLIP (
-        BEDTOOLS_SLOP.out.bed,
-        ch_chrom_sizes.map { it[1] }
-    )
-    ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
-
-    //
-    // MODULE: Sort the bedgraph file
-    //
-    FILE_SORT_WINDOWS (
-        UCSC_BEDCLIP.out.bedgraph,
-        'sorted'
-    )
-    ch_versions = ch_versions.mix(FILE_SORT_WINDOWS.out.versions.first())
-
-    //
     // MODULE: Convert bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
-        FILE_SORT_WINDOWS.out.sorted,
-        ch_chrom_sizes.map { it[1] }
+    BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
+        BEDTOOLS_GENOMECOV.out.genomecov,
+        ch_chrom_sizes
     )
-    ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
+    ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
+    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
     //
-    // MODULE: Create chromosome windows
+    // MODULE: Create genomic windows
     //
-
-    // TODO: windows are created and split even when not needed (no scarseq samples)
-    // this is an ugly workaround
-    // https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140
-    // def make_windows = false
-    // //ch_chrom_sizes_endo_ss = ch_chrom_sizes_endo
-    // ch_bigwig.count().map { n ->
-    //     if (n > 0) {
-    //         make_windows = true
-    //     }
-    // }
-
     ch_windows = Channel.empty()
-    //if (make_windows) {
-        BEDTOOLS_MAKEWINDOWS (
-            ch_chrom_sizes
-        )
-        ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
-        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
-    //}
-
-    // Create a channel with each chromosome to iterate over
-    ch_chroms = Channel.empty()
-    ch_chrom_sizes
-        .map {
-            meta, bed ->
-                bed.splitCsv(header:false, sep:'\t')
-        }
-        .flatMap { chrom_list ->
-        chrom_list.collect { it[0] }
-        }
-        .set { ch_chroms }
-
-
-    //
-    // MODULE: Split BED (windows) by chromosome
-    //
-    BED_SPLIT_BY_CHROMOSOME (
-        ch_chroms,
-        ch_windows.first()
+    BEDTOOLS_MAKEWINDOWS (
+        ch_chrom_sizes
     )
-    ch_chroms   = BED_SPLIT_BY_CHROMOSOME.out.bed
-    ch_versions = ch_versions.mix(BED_SPLIT_BY_CHROMOSOME.out.versions.first())
+    ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
+    // count number of lines in the windows file
+    ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
 
-
-    // Create channel by combining the bigwig files with the chromosomes (all chroms per bigwig)
-    ch_bigwig
-        .combine(ch_chroms)
-        // Append the chromosome meta information to the bigwig meta information
-        .map {
-            meta, bigWig, chr_meta, chr_bed ->
-                [ meta + chr_meta, bigWig, chr_bed ]
+    // TODO: print for debugging
+    ch_num_windows
+        .map { num_windows ->
+            "${num_windows}"
         }
-        .set { ch_bigwig_chroms }
-    
-    // Separate the channel again because UCSC_BIGWIGAVERAGEOVERBED
-    // expects a channel of bigwig files and a channel of chromosome beds
-    ch_bigwig_chroms
-        .map {
-            meta, bigwig, chrom ->
-                [ meta, bigwig ]
-        }
-        .set {ch_bw_combs}
-
-    // Add bigwig meta information to the chromosome bed files
-    ch_bigwig_chroms
-        .map {
-            meta, bigwig, chrom ->
-                [ meta, chrom ]
-            }
-        .set { ch_chroms_combs }
-
+        .collectFile( name: 'ch_num_windows.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Calculate average coverage over windows
     //
-    UCSC_BIGWIGAVERAGEOVERBED (
-        ch_chroms_combs,
-        ch_bw_combs.map{ it[1] }
+    BIGTOOLS_BIGWIGAVERAGEOVERBED (
+        ch_bigwig,
+        ch_windows.first()
     )
-    ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
-    ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
+    ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
+    ch_versions = ch_versions.mix(BIGTOOLS_BIGWIGAVERAGEOVERBED.out.versions.first())
 
-
-    // Separate samples and input controls
+    // TODO: print for debugging
     ch_bwaob
-        .map {
-            meta, chroms ->
-                meta.control ? null : [ meta, chroms ]
+        .map { meta, bwaob ->
+            "${meta}\t${bwaob}"
         }
-        .set { ch_inputs }
+        .collectFile( name: 'ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
+
+    // RPM normalization factors
+    // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_smooth)
     ch_bwaob
-        .map {
-            meta, chroms ->
-                meta.control ? [ meta, chroms ] : null
-        }
-        .set { ch_samples }
-
-    // for each ch_samples.meta.id, concatenate the files (use collectFile)
-    // remove strand information from the meta information
-    ch_inputs
-        .map {
-            meta, chroms ->
-                def meta_clone = meta.clone()
-                meta_clone.remove('strand')
-                [ meta_clone ]
-        }
-        .unique()
-        .map { it[0] }
-        .map { it -> [ it.id, it ] }
-        .set { ch_i_uniq_meta }
-
-
-    ch_inputs
-        .collectFile(newLine: false, sort: true) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
-            meta, tabs ->
-                // to do it per id and strand:
-                // [ "${meta.id}.${meta.strand}.inputs_windows.tab", tabs ]
-                // to do it per id only
-                [ "${meta.id}.bwaob.windows.tab", tabs ]
-        }
-        // readd meta information based on meta.id in the filename
-        .map {
-            tab ->
-                def id = tab.name.split("\\.")[0]
-                [ id, tab ]
-        }
-        .join(ch_i_uniq_meta, by: 0)
-        // flip meta and tab to have meta first
-        .map {
-            id, tab, meta ->
-                [ meta, tab ]
-        }
-        .set { ch_inputs_bed }
-
-
-    ch_samples
-        .map {
-            meta, chroms ->
-                def meta_clone = meta.clone()
-                meta_clone.remove('strand')
-                [ meta_clone ]
-        }
-        .unique()
-        .map { it[0] }
-        .map { it -> [ it.id, it ] }
-        .set { ch_s_uniq_meta }
-
-
-
-    ch_samples
-        .collectFile(newLine: false, sort: true) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/windows_cat") {
-            meta, tabs ->
-                // to do it per id and strand:
-                // [ "${meta.id}.${meta.strand}.samples_windows.tab", tabs ]
-                // to do it per id only
-                [ "${meta.id}.bwaob.windows.tab", tabs ]
-        }
-        // re-add meta information based on meta.id in the filename
-        .map {
-            tab ->
-                def id = tab.name.split("\\.")[0]
-                [ id, tab ]
-        }
-        .join(ch_s_uniq_meta, by: 0)
-        // flip meta and tab to have meta first
-        .map {
-            id, tab, meta ->
-                [ meta, tab ]
-        }
-        .set { ch_samples_bed }
-    
-
-    //
-    // MODULE: Calculate CPM
-    //
-    CPM_CALCULATION_SAMPLES (
-        ch_samples_bed
-    )
-    ch_versions = ch_versions.mix(CPM_CALCULATION_SAMPLES.out.versions.first())
-
-    ch_cpm_samples = CPM_CALCULATION_SAMPLES.out.cpm
-        .map {
-            meta, cpm ->
-                [ meta.id, cpm.splitCsv(header:false)[0][0] ]
-        }
-
-    CPM_CALCULATION_INPUTS (
-        ch_inputs_bed
-    )
-    ch_versions = ch_versions.mix(CPM_CALCULATION_INPUTS.out.versions.first())
-
-    ch_cpm_inputs = CPM_CALCULATION_INPUTS.out.cpm
-        .map {
-            meta, cpm ->
-                [ meta.id, cpm.splitCsv(header:false)[0][0] ] // TODO: check if flatten is correct
-        }
-
-    // concat samples and inputs and add their corresponding cpm
-    ch_samples
-        .map {
-            meta, chroms ->
-                [ meta.id, meta, chroms ]
-        }
-        .combine(ch_cpm_samples, by: 0)
-        .concat(
-            ch_inputs
-            .map {
-                meta, chroms ->
-                    [ meta.id, meta, chroms ]
+        .combine(ch_num_windows)
+        .map { meta, bwaob, num_windows ->
+            def meta_clone = meta.clone()
+            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
+                if (meta_clone.flT2_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
+                    meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
+                } else {
+                    // Samples without spike-in wouldn't have flT2_total_mapped_reads, so we use flT1_total_mapped_reads instead
+                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT1_total_mapped_reads + num_windows)
+                    meta_clone.norm_factor_val_used = 'flT1_total_mapped_reads'
                 }
-            .combine(ch_cpm_inputs, by: 0)
-        )
-        .map {
-            id, meta, chroms, cpm ->
-                [ meta, chroms, cpm ]
+            } else {
+                meta_clone.norm_factor_val = 1e6 / (meta_clone.flT3_total_mapped_reads + num_windows)
+                meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
+            }
+            meta_clone.norm_factor_type = 'rpm'
+            [ meta_clone, bwaob ]
         }
-        .set { ch_samples_inputs_cpm }
+        .set { ch_bwaob_rpm }
 
     //
     // MODULE: Normalize strands
     //
-    NORMALIZE_STRANDS (
-        ch_samples_inputs_cpm,
+    BEDGRAPH_NORMALIZE (
+        ch_bwaob_rpm
     )
-    ch_normalized_strands = NORMALIZE_STRANDS.out.tab
-    ch_versions = ch_versions.mix(NORMALIZE_STRANDS.out.versions.first())
+    ch_norm = BEDGRAPH_NORMALIZE.out.bedgraph
+    ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
 
-    // for each of the chromosomes, and each of the strands, subtract the input from the sample
-    //ch_norm_s_i_cpm = Channel.empty()
-
-    // Step 1: Separate samples and controls
-    ch_normalized_strands
-        .filter { meta, tab, cpm -> meta.control } // this is the groovy way to check if meta.control is empty/not null
-        .set { ch_samples }
-
-    ch_normalized_strands
-        .filter { meta, tab, cpm -> !meta.control }
-        .set { ch_controls }
-
-
-    // Step 2: Combine samples and controls based on matching chromosome and strand
-    ch_samples
-        .combine(ch_controls)
-        .filter { sampleMeta, sampleTab, sampleCpm, controlMeta, controlTab, controlCpm ->
-            sampleMeta.chr == controlMeta.chr &&
-            sampleMeta.strand == controlMeta.strand &&
-            sampleMeta.control == controlMeta.id
+    // for each of the strands, subtract the input from the sample
+    ch_norm
+        .branch { meta, bdg ->
+            scar_with_input: meta.control
+                return [ meta.control, meta.strand, meta, bdg ]
+            input: !meta.control && meta.is_control
+                return [ meta.id, meta.strand, bdg ]
         }
-        .map { sampleMeta, sampleTab, sampleCpm, controlMeta, controlTab, controlCpm ->
-            tuple(sampleMeta, sampleTab, controlTab, sampleCpm)
+        .set { ch_norm_by_type }
+
+    // create channel: [ val(meta), [ scar_bdg ], [ input_bdg ] ]
+    ch_norm_by_type
+        .scar_with_input
+        .combine(ch_norm_by_type.input, by: [0, 1]) // combine by id and strand
+        .map { input_id, strand, scar_meta, scar_bdg, input_bdg ->
+            def meta_clone = scar_meta.clone()
+                meta_clone.signal_minus_input = true
+                [ meta_clone, scar_bdg, input_bdg ]
         }
-        .set { ch_norm_s_i_cpm }
+        .set { ch_norm_scar_input }
+
+
+    // TODO: print for debugging
+    ch_norm_scar_input
+        .map { meta, scar_bdg, input_bdg ->
+            "${meta}\t${scar_bdg}\t${input_bdg}"
+        }
+        .collectFile( name: 'ch_norm_scar_input.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug") 
 
 
     //
     // MODULE: Substract input from sample
     //
-    SUBSTRACT_INPUT (
-        ch_norm_s_i_cpm
+    BEDGRAPH_SIGNAL_MINUS_INPUT (
+        ch_norm_scar_input
     )
-    ch_substracted = SUBSTRACT_INPUT.out.tab
-    ch_versions = ch_versions.mix(SUBSTRACT_INPUT.out.versions.first())
+    ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
+    ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
 
-
-    // concat normalized output and substracted output
-    ch_normalized_strands
+    // create channel: [ val(meta), [ bdg_fwd ], [ bdg_rev ] ]
+    ch_norm
+        .mix(ch_bdg_smi)
+        // copy meta and remove meta.strand to then merge fwd and rev by meta
         .map {
-            meta, tab, cpm ->
-                [ meta, tab ]
-        }
-        .concat(ch_substracted)
-        // copy meta and remove meta.strand from meta clone
-        .map {
-            meta, tab ->
+            meta, bdg ->
                 def meta_clone = meta.clone()
                 meta_clone.remove('strand')
-                [ meta_clone, meta, tab ]
+                [ meta_clone, meta, bdg ]
         }
-        .branch { meta_clone, meta, tab ->
+        .branch { meta_clone, meta, bdg ->
             forward: meta.strand == 'forward'
             reverse: meta.strand == 'reverse'
         }
-        .set { ch_norm_and_subs }  // Assign to new channel
+        .set { ch_norm_and_smi }
 
-    ch_norm_and_subs.forward
-        .combine(ch_norm_and_subs.reverse, by: 0)
-        .map { meta_clone, meta1, tab1, meta2, tab2 ->
-            [ meta_clone, tab1, tab2 ]
+    ch_norm_and_smi.forward
+        .combine(ch_norm_and_smi.reverse, by: 0)
+        .map { meta_clone, meta_fwd, bdg_fwd, meta_rev, bdg_rev ->
+            [ meta_clone, bdg_fwd, bdg_rev ]
         }
-        .set { ch_norm_and_subs }
+        .set { ch_norm_and_smi }
 
+    // TODO: print for debugging
+    ch_norm_and_smi
+        .map { meta, bdg_fwd, bdg_rev ->
+            "${meta}\t${bdg_fwd}\t${bdg_rev}"
+        }
+        .collectFile( name: 'ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
-    // MODULE: Smooth the partition
+    // MODULE: Calculate partitions (RFD)
     //
     PARTITION_SMOOTH (
-        ch_norm_and_subs,
+        ch_norm_and_smi,
         params.scar_radius,
         params.scar_dradius,
         params.scar_zradius
     )
-    ch_part_smooth = PARTITION_SMOOTH.out.rfd
+    ch_rfd = PARTITION_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
 
+    // TODO: print for debugging
+    ch_rfd
+        .map { meta, rfd ->
+            "${meta}\t${rfd}"
+        }
+        .collectFile( name: 'ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
+
+    // Prepare bwaob channel for combine()
     ch_bwaob
-        .concat(ch_normalized_strands.map { it -> [ it[0], it[1] ] }) // remove cpm
-        .concat(ch_part_smooth.filter { meta, tab -> !meta.minusinput }) // remove minusinput
-        .map { meta, tab -> [ meta.id, meta.chr, [meta, tab] ] }
-        .groupTuple( by: [0, 1] )
-        .map { id, chr, group ->
-            def sortedGroup = group
-                .sort { a, b ->
-                    // Sorting criteria:
-                    a[0].RFD <=> b[0].RFD ?:           // Sort by RFD (true vs false)
-                    a[0].cpm <=> b[0].cpm ?:          // Sort by cpm (true vs false)
-                    a[0].strand <=> b[0].strand    // Sort by strand (forward vs reverse)
-                }
-
-            def primaryMeta = sortedGroup[0][0]      // Take the first meta (after sorting)
-            def filesList = sortedGroup*.get(1)      // Extract list of files
-
-            [id, chr, [primaryMeta, filesList]]                 // Output the single meta and list of files
+        .map { meta, bwaob ->
+            def meta_clone = meta.clone()
+            meta_clone.remove('strand')
+            [ meta.strand, meta_clone, bwaob ]
         }
-        .map { id, chr, group -> [chr, id, group] }
-        .combine(ch_chroms.map { meta, bed -> [meta.chr, bed] }, by: 0) // add the chromosome bed files
-        // move bed inside of the group
-        .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
-        .set { ch_test1 }
-
-    ch_bwaob
-        .filter { meta, tab -> meta.control }
-        .concat(ch_substracted) //s remove cpm
-        .concat(ch_part_smooth.filter { meta, tab -> meta.minusinput }) // keep only minusinput
-        .map { meta, tab -> [ meta.id, meta.chr, [meta, tab] ] }
-        .groupTuple( by: [0, 1] )
-        .map { id, chr, group ->
-            def sortedGroup = group
-                .sort { a, b ->
-                    // Sorting criteria:
-                    a[0].RFD <=> b[0].RFD ?:           // Sort by RFD (true vs false)
-                    a[0].cpm <=> b[0].cpm ?:          // Sort by cpm (true vs false)
-                    a[0].strand <=> b[0].strand    // Sort by strand (forward vs reverse)
-                }
-
-            def primaryMeta = sortedGroup[0][0] + ['minusinput':true]      // Take the first meta (after sorting)
-            def filesList = sortedGroup*.get(1)      // Extract list of files
-
-            [id, chr, [primaryMeta, filesList]]                 // Output the single meta and list of files
+        .branch { strand, meta, bwaob ->
+            forward: strand == 'forward'
+                return [ meta, bwaob ]
+            reverse: strand == 'reverse'
+                return [ meta, bwaob ]
         }
-        .map { id, chr, group -> [chr, id, group] }
-        .combine(ch_chroms.map { meta, bed -> [meta.chr, bed] }, by: 0) // add the chromosome bed files
-        // move bed inside of the group
-        .map { chr, id, group, bed -> [id, chr, [group[0], [bed, group[1]].flatten()]] }
-        .set { ch_test2 }
+        .set { ch_bwaob_strands }
 
+    // Prepare norm and smi channel for combine()
+    ch_norm_and_smi
+        .map { meta, norm_or_smi_fwd, norm_or_smi_rev ->
+            def meta_clone = meta.clone()
+            meta_clone.removeAll { it.key in ['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'] }
+            [ meta_clone, meta, norm_or_smi_fwd, norm_or_smi_rev ]
+        }
+        .set { ch_norm_and_smi_to_combine }
 
-    ch_test1
-        .concat(ch_test2)
-        .map { chr, id, group -> [group[0], group[1]] }
-        .set { ch_test_all }
+    // TODO: print for debugging
+    ch_norm_and_smi_to_combine
+        .map { meta, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
+            "${meta}\t${meta_norm_or_smi}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}"
+        }
+        .collectFile( name: 'ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
+    // Create channel: [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
+    ch_bwaob_strands.forward
+        .combine(ch_bwaob_strands.reverse, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev ]
+        .combine(ch_norm_and_smi_to_combine, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ]
+        .map { meta, bwaob_fwd, bwaob_rev, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
+            [ meta_norm_or_smi, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev ]
+        }
+        .combine(ch_rfd, by: 0) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
+        .combine(ch_windows) // this creates channel: [ meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, windows ]
+        .map { meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, meta_windows, windows ->
+            [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
+        }
+        .set { ch_partitions }
 
+    // TODO: print for debugging
+    ch_partitions
+        .map { meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ->
+            "${meta}\t${windows}\t${bwaob_fwd}\t${bwaob_rev}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}\t${rfd}"
+        }
+        .collectFile( name: 'ch_partitions.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
-    COLLECT_PARTITIONS_BY_CHROMOSOME (
-        ch_test_all
+    //
+    // MODULE: Collect partitions
+    //
+    COLLECT_PARTITIONS (
+        ch_partitions
     )
-    ch_versions = ch_versions.mix(COLLECT_PARTITIONS_BY_CHROMOSOME.out.versions.first())
+    ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
+    COLLECT_PARTITIONS
+        .out
+        .tsv
+        .branch { meta, tsv ->
+            scar_with_input: !meta.is_control && !meta.signal_minus_input
+                return [ meta.control, meta, tsv ]
+            input: meta.is_control
+                return [ meta.id, tsv ]
+            minusinput: meta.signal_minus_input
+                return [ meta.id, tsv ]
+        }
+        .set { ch_partitions_by_type }
 
-    // TODO: REMOVE print channel to file for debugging
-    COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
-        .map {
-            meta, txt ->
-                "${meta}\t${txt}"
+    ch_partitions_by_type
+        .scar_with_input
+        .combine(ch_partitions_by_type.input, by: 0) // this creates channel: [ input_id, meta_scar, scar_tsv, input_tsv ]
+        .map { input_id, meta_scar, scar_tsv, input_tsv ->
+            [ meta_scar.id, meta_scar, scar_tsv, input_tsv ]
         }
-        .collectFile( name: 'ch_collect_part_by_chrom_out.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .combine(ch_partitions_by_type.minusinput, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
+        .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
+            def okseq = meta_scar.okseq_part_file ? file(meta_scar.okseq_part_file) : null
+            [ meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ]
+        }
+        .set { ch_partitions_to_plot }
 
-    ch_s_uniq_meta
-        .concat(ch_i_uniq_meta)
-        .unique { it -> it[0] }
-        // remove chr from meta information
-        .map {
-            id, meta ->
-                def meta_clone = meta.clone()
-                meta_clone.remove('chr')
-                [ id, meta_clone ]
+    // TODO: print for debugging
+    ch_partitions_to_plot
+        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
+            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
         }
-        .set { ch_si_uniq_meta_mod }
+        .collectFile( name: 'ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
-    // collect all chromosomes by meta - meta.chr
-    COLLECT_PARTITIONS_BY_CHROMOSOME.out.txt
-        .collectFile(newLine: true, sort: false) { //, storeDir: "${params.outdir}/${params.aligner}/mergedLibrary/scarseq/collect") {
-            meta, txt ->
-                // to do it per id and minusinput:
-                [ "${meta.id}${meta.minusinput ? '.minusinput' : ''}.final.txt", txt ]
-        }
-        // re-add meta information based on meta.id in the filename
-        .map {
-            txt ->
-                def id = txt.name.split("\\.")[0]
-                [ id, txt ]
-        }
-        .combine(ch_si_uniq_meta_mod, by: 0)
-        // flip meta and tab to have meta first
-        .map {
-            id, txt, meta ->
-                [ meta, txt ]
-        }
-        .map {
-            meta, txt ->
-                def minusinput = txt.name.contains(".minusinput")
-                def meta_clone = meta + ['minusinput':minusinput ]
-                [ meta_clone, txt ]
-        }
-        .set { ch_collected }
-
-    //
-    // MODULE: Generate the final partition bedgraph
-    //
-    FINAL_PARTITION_BEDGRAPH (
-        ch_collected
-    )
-    ch_versions = ch_versions.mix(FINAL_PARTITION_BEDGRAPH.out.versions.first())
-
-    //
-    // MODULE: Sort the final partition bedgraph
-    //
-    FILE_SORT_PARTITIONS (
-        FINAL_PARTITION_BEDGRAPH.out.tmp,
-        'bdg'
-    )
-    ch_versions = ch_versions.mix(FILE_SORT_PARTITIONS.out.versions.first())
-
-    //
-    // MODULE: Convert the final partition bedgraph to bigwig
-    //
-    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
-        FILE_SORT_PARTITIONS.out.sorted,
-        ch_chrom_sizes.map { it[1] }
-    )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
-
-
-    FINAL_PARTITION_BEDGRAPH.out.txt
-        .map {
-            meta, txt ->
-                // remove "_minusinput" from the id
-                meta.minusinput ? [ meta.id.replaceAll("_minusinput", ""), meta, txt ] :
-                meta.control ? [ meta.control, meta, txt ] :
-                [ meta.id, meta, txt ]
-        }
-        .branch { id, meta, txt ->
-            control:    !meta.control && !meta.minusinput
-            samples:    meta.control && !meta.minusinput
-            minusinput: meta.minusinput
-        }
-        .set { ch_part_to_plot }
-    
-
-    ch_part_to_plot.samples
-        .combine(ch_part_to_plot.control, by: 0)
-        .map {
-            id, meta1, txt1, meta2, txt2 ->
-                [ meta1.id, meta1, txt1, txt2 ]
-        }
-        .combine(ch_part_to_plot.minusinput, by: 0)
-        .map {
-            id, meta1, txt1, txt2, meta3, txt3 ->
-                def okseq = meta1.okseq_part_file ? file(meta1.okseq_part_file) : null
-                [ meta1, txt1, txt2, txt3, okseq ]
-        }
-        .set { ch_part_to_plot }
 
     //
     // MODULE: Plot the final partition
     //
-    FINAL_PARTITION_PLOT (
-        ch_part_to_plot,
+    PARTITION_PLOT (
+        ch_partitions_to_plot,
         ch_blacklist,
         ch_initiation_zones
-        //ch_scaffolds
     )
-    ch_versions = ch_versions.mix(FINAL_PARTITION_PLOT.out.versions.first())
+    ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
 
+    //
+    // MODULE: Convert the final partition bedgraph to bigwig
+    //
+    BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS (
+        COLLECT_PARTITIONS.out.bdg,
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
     emit:
     tab      = PARTITION_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]

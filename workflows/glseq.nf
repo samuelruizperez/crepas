@@ -658,7 +658,9 @@ workflow GLSEQ {
                 meta_clone.flT3_total_mapped_reads = total.toDouble()
                 [ meta_clone, bam, bai ]
         }
-        .set { ch_filtered_bam_bai }
+        .tap { ch_filtered_bam_bai }
+        .map { meta, bam, bai -> [ meta, bam ] }
+        .set { ch_filtered_bam } 
 
     //
     // MODULE: Picard post alignment QC
@@ -973,7 +975,8 @@ workflow GLSEQ {
         params.narrow_peak,
         params.skip_peak_annotation,
         params.skip_peak_qc,
-        params.skip_edd
+        params.skip_edd,
+        params.skip_bdgcmp
     )
     ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
 
@@ -1063,8 +1066,8 @@ workflow GLSEQ {
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo_ss.first(),
         ch_blacklist.first(),
-        ch_initiation_zones.first()
-        //ch_scaffolds
+        ch_initiation_zones.first(),
+        params.rpm_use_flT2_total
     )
     ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)

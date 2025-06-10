@@ -1,32 +1,32 @@
-include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINS }       from '../../../modules/nf-core/deeptools/bamcoverage/main'
-include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO }        from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO }        from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO }                from '../../../modules/nf-core/bedtools/map/main'
-include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO }                from '../../../modules/nf-core/bedtools/map/main'
-include { BEDGRAPH_NORMALIZE }          from '../../../modules/local/bedgraph_normalize/main'
-include { BEDGRAPH_SIGNAL_OVER_INPUT }  from '../../../modules/local/bedgraph_signal_over_input/main'
-include { FILE_SORT as BEDGRAPH_SORT } from '../../../modules/local/file_sort/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO }   from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1 }     from '../../../modules/nf-core/deeptools/bamcoverage/main'
+include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINS           } from '../../../modules/nf-core/deeptools/bamcoverage/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO             } from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO              } from '../../../modules/nf-core/bedtools/makewindows/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO                             } from '../../../modules/nf-core/bedtools/map/main'
+include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO                              } from '../../../modules/nf-core/bedtools/map/main'
+include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT                                    } from '../../../modules/local/bedgraph_signal_over_input/main'
+include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_ENDO   } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_EXO    } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1       } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     take:
-    ch_bam_bai               // channel: [ val(meta), [ bam ], [ bai ] ]
-    ch_chrom_sizes_endo          // channel: [ bed ]
-    ch_chrom_sizes_exo          // channel: [ bed ]
-    coverage_bin_size      // int: size of the coverage bin in bp
+    ch_bam_bai              // channel: [ val(meta), [ bam ], [ bai ] ]
+    ch_chrom_sizes_endo     // channel: [ bed ]
+    ch_chrom_sizes_exo      // channel: [ bed ]
+    coverage_bin_size       // int: size of the coverage bin in bp
     genome                  // string: genome name
     spikein_genome          // string: spike-in genome name
-    skip_srpm           // boolean: skip the SRPM normalization step
-    skip_cisrpm          // boolean: skip the CISRPM normalization step
-    skip_cisrpmsoi      // boolean: skip the CISRPM-SOI normalization step
-    skip_plot_profile   // boolean: skip the plot profile step
-    rpm_use_flT2_total  // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
-    srpm_use_flT2_total // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for SRPM normalization
-    cisrpm_use_flT2_total // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for CISRPM normalization
+    skip_srpm               // boolean: skip the SRPM normalization step
+    skip_cisrpm             // boolean: skip the CISRPM normalization step
+    skip_cisrpmsoi          // boolean: skip the CISRPM-SOI normalization step
+    skip_plot_profile       // boolean: skip the plot profile step
+    rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
+    srpm_use_flT2_total     // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for SRPM normalization
+    cisrpm_use_flT2_total   // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for CISRPM normalization
 
     main:
 
@@ -180,7 +180,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             [ meta_clone, bdg ]
         }
         .set { ch_bdg_rpm }
-
 
     // TODO: print for debugging
     ch_bdg_rpm
@@ -354,6 +353,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
 
+
     //
     // MODULE: Normalize the bedgraphs
     //
@@ -392,6 +392,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .set { ch_bdg_ip_control_cisrpm }
 
+
         //
         // MODULE: Calculate CIRSPM signal over input (ChIP over input)
         //
@@ -402,6 +403,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
 
     }
+
 
     //
     // MODULE: Sort the bedgraph so that it works with ucsc_bedgraphtobigwig
@@ -434,22 +436,22 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     //
     // MODULE: Convert bedgraph to bigwig
     //
-    UCSC_BEDGRAPHTOBIGWIG_ENDO (
+    BIGTOOLS_BEDGRAPHTOBIGWIG_ENDO (
         ch_bdg_all.filter { it -> it[0].genome == genome },
-        ch_chrom_sizes_endo.map { it[1] }
+        ch_chrom_sizes_endo
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
+    ch_bigwig_endo_rpm = BIGTOOLS_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' }
+    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
    
    ch_bw_exo = Channel.empty()
    if (spikein_genome) {
-        UCSC_BEDGRAPHTOBIGWIG_EXO (
+        BIGTOOLS_BEDGRAPHTOBIGWIG_EXO (
             ch_bdg_all.filter { it -> it[0].genome == spikein_genome },
-            ch_chrom_sizes_exo.map { it[1] }
+            ch_chrom_sizes_exo
         )
-        ch_bw_exo = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig
-        ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
+        ch_bw_exo = BIGTOOLS_BEDGRAPHTOBIGWIG_EXO.out.bigwig
+        ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
     }
-
 
     // if coverage_bin_size is not 1, then we need to generate bw with that binsize for computeMatrix
     ch_binsize1 = Channel.empty()
@@ -515,11 +517,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
 
+    } else {
+        ch_binsize1 = ch_bigwig_endo_rpm
     }
 
     emit:
-    bigwig_endo_rpm  = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' } // channel: [ val(meta), [ bigwig ] ]
-    bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo_rpm  = ch_bigwig_endo_rpm                           // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo      = BIGTOOLS_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
     bigwig_binsize1  = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
 

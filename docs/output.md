@@ -330,8 +330,8 @@ Additionally, the following normalization methods (e.g., to account for input co
 | -------- | ----------- | -------- | ------ | ---------- |
 | **Raw**     | No normalization | $$\alpha_i \times 1$$ | <ul><li>$$\text{endogenous ChIP } \alpha$$</li><li>$$\text{exogenous ChIP } \alpha$$ </li><li>$$\text{endogenous input } \alpha$$</li><li>$$\text{exogenous input } \alpha$$</li></ul> | - |
 | **RPM**     | **R**eads **P**er **M**illion mapped reads | $$\alpha_i \times \frac{10^6}{\text{total mapped reads}}$$ | <ul><li>$$\text{endogenous ChIP } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous ChIP } \alpha_{\text{RPM}}$$ </li><li>$$\text{endogenous input } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous input } \alpha_{\text{RPM}}$$</li></ul> | - |
-| **SRPM**    | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}}$$  | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul> | [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
-| **CISRPM** | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul> | [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007) |
+| **SRPM**    | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}}$$  | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul> | [Orlando et al. (2014)](https://doi.org/10.1016/j.celrep.2014.10.018), [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
+| **CISRPM** | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul> | [Fursova et al. (2019)](https://doi.org/10.1016/j.molcel.2019.03.024), [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007) |
 | **CISRPM-SOI** | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput | Keep only the bins $\alpha_i$ where $\alpha_{\text{CISRPM ChIP}} >$ `--soi_min_count` and $\alpha_{\text{CISRPM input}} >$ `--soi_min_count`. <br><br> For the bins that pass this filter: $$\alpha_{\text{CISRPM-SOI}} = \frac{\alpha_{\text{CISRPM ChIP}}}{\alpha_{\text{CISRPM input}}}$$ | $$\alpha_{\text{CISRPM-SOI}}$$ | - |
 
 
@@ -535,7 +535,9 @@ SCAR-seq BAM files are split by strand based on the corresponding `strandedness`
 
 - `<aligner>/mergedLibrary/scarseq/1_split_by_strand/`
   - `*.forward.bam`: Forward strand alignments.
+  - `*.forward.bam.bai`: Index for forward strand alignments.
   - `*.reverse.bam`: Reverse strand alignments.
+  - `*.reverse.bam.bai`: Index for reverse strand alignments.
 </details>
 
 ### Genome-wide coverage per strand
@@ -546,40 +548,10 @@ Genome-wide coverage in BEDGRAPH format is generated for the forward and reverse
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/scarseq/2_genomecov/`
-  - `*.forward.bdg`: Forward strand coverage in BEDGRAPH format.
-  - `*.reverse.bdg`: Reverse strand coverage in BEDGRAPH format.
-
-</details>
-
-### Removing off-chromosome locations
-
-Then, lines that refer to off-chromosome locations are removed from the BEDGRAPH files:
-
-<details markdown="1" open>
-    <summary>Output files</summary>
-
-  - `<aligner>/mergedLibrary/scarseq/3_slop/`
-    - `*.forward.slop.bed`: Slopped forward strand coverage.
-    - `*.reverse.slop.bed`: Slopped reverse strand coverage.
-  - `<aligner>/mergedLibrary/scarseq/4_clip`
-    - `*.forward.clip.bedGraph`: Clipped forward strand coverage.
-    - `*.reverse.clip.bedGraph`: Clipped reverse strand coverage.
-
-</details>
-
-### Sorting and conversion to bigWig
-
-The coverage files are then sorted and converted to bigWig format.
-
-<details markdown="1" open>
-    <summary>Output files</summary>
-
-- `<aligner>/mergedLibrary/scarseq/5_sort/`
-  - `*.forward.clip.sorted`: Slopped, clipped and sorted forward strand coverage files.
-  - `*.reverse.clip.sorted`: Slopped, clipped and sorted reverse strand coverage files.
-- `<aligner>/mergedLibrary/scarseq/6_bigwig/`
-  - `*.forward.bigWig`: Forward strand coverage in bigWig format.
-  - `*.reverse.bigWig`: Reverse strand coverage in bigWig format.
+  - `*.forward.genomecov.bdg`: Forward strand coverage in bedGraph format.
+  - `*.forward.genomecov.bw`: Forward strand coverage in bigWig format.
+  - `*.reverse.genomecov.bdg`: Reverse strand coverage in bedGraph format.
+  - `*.reverse.genomecov.bw`: Reverse strand coverage in bigWig format.
 
 </details>
 
@@ -593,8 +565,8 @@ First, non-overlapping genomic windows are generated. The size of the windows is
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/scarseq/7_bwaob/`
-  - `*<chromosome>.forward.bwaob.tab`: Average coverage over windows (per chromosome) for the forward strand.
-  - `*<chromosome>.reverse.bwaob.tab`: Average coverage over windows (per chromosome) for the reverse strand.
+  - `*.forward.bwaob.bed`: Average coverage over windows for the forward strand.
+  - `*.reverse.bwaob.bed`: Average coverage over windows for the reverse strand.
 
 </details>
 

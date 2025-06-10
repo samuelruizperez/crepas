@@ -665,7 +665,13 @@
                     "description": "Skip consensus peak generation, annotation and counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "save_macs_pileup_intermeds": {
+                "skip_bdgcmp": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip bdgcmp calculation with MACS3.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "save_macs_bdgcmp_intermeds": {
                     "type": "boolean"
                 },
                 "skip_edd": {

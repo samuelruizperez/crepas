@@ -1,4 +1,4 @@
-process FINAL_PARTITION_PLOT {
+process PARTITION_PLOT {
     tag "$meta.id"
     label 'process_medium_memory'
 
@@ -14,9 +14,9 @@ process FINAL_PARTITION_PLOT {
     //val scaffolds
 
     output:
-    path "*_scatter_plots.pdf"                , optional:true, emit: scatter_pdf
-    path "*_partition_RAW.pdf"                , emit: partition_raw_pdf
-    path "*_partition_SMOOTHED.pdf"           , emit: partition_smoothed_pdf
+    path "*.scatter_plots.pdf"                , optional:true, emit: scatter_pdf
+    path "*.partition_plots_raw.pdf"                , emit: partition_raw_pdf
+    path "*.partition_plots_smoothed.pdf"           , emit: partition_smoothed_pdf
     path "versions.yml"                       , emit: versions
 
     when:
