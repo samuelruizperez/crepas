@@ -521,8 +521,8 @@
                 },
                 "soi_min_count": {
                     "type": "integer",
-                    "default": 1,
-                    "description": "Minimum number of reads required in a bin to be included in the signal over input (SOI) calculation.",
+                    "default": 0,
+                    "description": "Minimum CISRPM value required in a bin to be included in the signal over input (SOI) calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "coverage_extend_reads": {
