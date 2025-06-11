@@ -187,9 +187,9 @@ workflow GLSEQ {
         )
         ch_genome_bam             = FASTQ_ALIGN_BWA.out.bam
         ch_genome_bam_index       = FASTQ_ALIGN_BWA.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.idxstats)
         ch_multiqc_files          = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.stats.collect{it[1]})
         ch_multiqc_files          = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.flagstat.collect{it[1]})
         ch_multiqc_files          = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.idxstats.collect{it[1]})
@@ -210,9 +210,9 @@ workflow GLSEQ {
         )
         ch_genome_bam        = FASTQ_ALIGN_BOWTIE2.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_BOWTIE2.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats.collect{it[1]})
@@ -235,9 +235,9 @@ workflow GLSEQ {
 
         ch_genome_bam        = FASTQ_ALIGN_CHROMAP.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_CHROMAP.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.idxstats.collect{it[1]})
@@ -262,9 +262,9 @@ workflow GLSEQ {
         ch_genome_bam        = FASTQ_ALIGN_STAR.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_STAR.out.bai
         ch_transcriptome_bam = FASTQ_ALIGN_STAR.out.bam_transcript
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.idxstats.collect{it[1]})
@@ -281,9 +281,9 @@ workflow GLSEQ {
         )
         ch_genome_bam        = FASTQ_ALIGN_HISAT2.out.bam
         ch_genome_bam_index  = FASTQ_ALIGN_HISAT2.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.idxstats.collect{it[1]})
@@ -325,9 +325,9 @@ workflow GLSEQ {
         ch_merged_bam_bai,
         ch_fasta.first()
     )
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.stats)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.flagstat)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.idxstats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.stats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.flagstat)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.idxstats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.flagstat.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.idxstats.collect{it[1]})
@@ -394,9 +394,9 @@ workflow GLSEQ {
         )
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(ch_mk_stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(ch_mk_flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(ch_mk_idxstats.collect{it[1]})
@@ -427,9 +427,9 @@ workflow GLSEQ {
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats.collect{it[1]})
@@ -472,7 +472,6 @@ workflow GLSEQ {
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    
     ch_filtered_exo_bam = Channel.empty()
     ch_filtered_exo_index = Channel.empty()
     if (params.spikein_genome) {
@@ -487,11 +486,11 @@ workflow GLSEQ {
         ch_filtered_exo_bam     = BAM_SPIKEIN_SPLIT.out.exo_bam
         ch_filtered_index       = BAM_SPIKEIN_SPLIT.out.bai
         ch_filtered_exo_index   = BAM_SPIKEIN_SPLIT.out.exo_bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.exo_stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.flagstat)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.exo_flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.idxstats)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.exo_idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_stats.collect{it[1]})
@@ -569,9 +568,9 @@ workflow GLSEQ {
         )
         ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bam
         ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats.collect{it[1]})
@@ -588,9 +587,9 @@ workflow GLSEQ {
             )
             ch_filtered_exo_bam         = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
             ch_filtered_exo_index       = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
-            ch_samtools_stats_summary   = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats)
-            ch_samtools_stats_summary   = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat)
-            ch_samtools_stats_summary   = samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats)
+            ch_samtools_stats_summary   = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats)
+            ch_samtools_stats_summary   = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat)
+            ch_samtools_stats_summary   = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats)
             ch_multiqc_files            = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats.collect{it[1]})
             ch_multiqc_files            = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat.collect{it[1]})
             ch_multiqc_files            = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats.collect{it[1]})
@@ -644,9 +643,9 @@ workflow GLSEQ {
     )
     ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
     ch_filtered_index       = BAM_FILTER_SAMBAMBA_FLT3.out.bai
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat)
-    ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat)
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect{it[1]})
@@ -791,9 +790,9 @@ workflow GLSEQ {
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
         ch_filtered_index = BAM_DOWNSAMPLE.out.bai
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.flagstat)
-        ch_samtools_stats_summary = samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.idxstats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.flagstat)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.idxstats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect{it[1]})
