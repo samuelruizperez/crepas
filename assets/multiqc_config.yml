@@ -100,7 +100,7 @@ module_order:
       name: "LIB: FastQC (raw)"
       info: "This section of the report shows FastQC results for individual libraries before trimming."
       path_filters:
-        # - "./fastqc/*.zip"
+        - "./fastqc/*.zip"
   - cutadapt:
       anchor: "cutadapt"
       name: "LIB: TrimGalore!/Cutadapt (trimmed)"
@@ -110,7 +110,7 @@ module_order:
       name: "LIB: FastQC (trimmed)"
       info: "This section of the report shows FastQC results for individual libraries after trimming."
       path_filters:
-        # - "./trimgalore/fastqc/*.zip"
+        - "./trimgalore/fastqc/*.zip"
   - samtools:
       anchor: "samtools_alignment"
       name: "LIB: SAMTools stats (aligned)"
@@ -210,16 +210,29 @@ extra_fn_clean_exts:
   - ".spp"
   - "lc_extrap"
 
-# # Customise the module search patterns to speed up execution time
-# #  - Skip module sub-tools that we are not interested in
-# #  - Replace file-content searching with filename pattern searching
-# #  - Don't add anything that is the same as the MultiQC default
-# # See https://multiqc.info/docs/#optimise-file-search-patterns for details
+
+# Customise the module search patterns to speed up execution time
+#  - Skip module sub-tools that we are not interested in
+#  - Replace file-content searching with filename pattern searching
+#  - Don't add anything that is the same as the MultiQC default
+# See https://multiqc.info/docs/#optimise-file-search-patterns for details
 sp:
   cutadapt:
     fn: "*trimming_report.txt"
+
+  hisat2:
+    fn: "*.hisat2.summary.log"
+
   preseq:
     fn: "*.lc_extrap.txt"
+
+  samtools/stats:
+    fn: "*.stats"
+  samtools/flagstat:
+    fn: "*.flagstat"
+  samtools/idxstats:
+    fn: "*.idxstats*"
+
   deeptools/plotFingerprintOutRawCounts:
     fn: "*plotFingerprint*"
   deeptools/plotProfile:
@@ -227,3 +240,35 @@ sp:
   phantompeakqualtools/out:
     fn: "*.spp.out"
 
+  picard/markdups:
+    fn: "*.MarkDuplicates.metrics.txt"
+  picard/alignment_metrics:
+    skip: true
+  picard/basedistributionbycycle:
+    skip: true
+  picard/gcbias:
+    skip: true
+  picard/hsmetrics:
+    skip: true
+  picard/insertsize:
+    skip: true
+  picard/oxogmetrics:
+    skip: true
+  picard/pcr_metrics:
+    skip: true
+  picard/quality_by_cycle:
+    skip: true
+  picard/quality_score_distribution:
+    skip: true
+  picard/quality_yield_metrics:
+    skip: true
+  picard/rnaseqmetrics:
+    skip: true
+  picard/rrbs_metrics:
+    skip: true
+  picard/sam_file_validation:
+    skip: true
+  picard/variant_calling_metrics:
+    skip: true
+  picard/wgs_metrics:
+    skip: true
