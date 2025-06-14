@@ -88,7 +88,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     )
     ch_bdg_map_endo = BEDTOOLS_MAP_ENDO.out.mapped
     ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
-
+    
+    ch_bdg_map = ch_bdg_map_endo
     ch_windows_exo = Channel.empty()
     ch_windows_exo_bdg_raw = Channel.empty()
     if (spikein_genome) {
