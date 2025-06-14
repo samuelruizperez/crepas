@@ -372,9 +372,9 @@ workflow GLSEQ {
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.bai
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(ch_mk_stats.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(ch_mk_flagstat.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(ch_mk_idxstats.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.stats.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.metrics.collect{it[1]})
         ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
