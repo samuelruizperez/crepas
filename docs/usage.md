@@ -28,9 +28,9 @@ You will need to create a samplesheet with information about the samples you wou
 | Column   | Description |
 | -------- | ----------- |
 | `sample` |  Custom sample name. This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. Avoid including the experiment type in this identifier, since it will be parsed from the `exp_type` column and prepended to the sample name by default. |
-| `fastq_1` | **Full path** to FastQ file for reads 1. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. |
-| `fastq_2` | **Full path** to FastQ file for reads 2. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. |
-| `fastq_umi` | **Full path** to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
+| `fastq_1` | **Full path** to FASTQ file for reads 1. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. |
+| `fastq_2` | **Full path** to FASTQ file for reads 2. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. |
+| `fastq_umi` | **Full path** to the corresponding UMI FASTQ file for deduplication. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty if a separate UMI file is not available. |
 | `okseq_part_file` |**Full path** to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
 | `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries (technical replicates). Must start from `1..<number of replicates>`. |
 | `exp_type` | One of `chipseq`, `atacseq`, `scarseq`, `chorseq`. |
