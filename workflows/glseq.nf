@@ -424,29 +424,35 @@ workflow GLSEQ {
         }
         .set { ch_flT1_total }
 
-    // Add the total_mapped_reads to the bams' metas
+    // Add the total_mapped_reads to the bams' and bais' metas
     ch_filtered_bam
-        .map {
-            meta, bam ->
-                [ meta, bam ]
-        }
+        .join(ch_filtered_index, by: 0)
         .combine(ch_flT1_total, by: 0)
         .map {
-            meta, bam, total ->
+            meta, bam, bai, total ->
                 meta_clone = meta.clone()
                 meta_clone.flT1_total_mapped_reads = total.toDouble()
-                [ meta_clone, bam ]
+                [ meta_clone, bam, bai ]
+        }
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            [ meta, bam ]
         }
         .set { ch_filtered_bam }
 
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            [ meta, bai ]
+        }
+        .set { ch_filtered_index }
 
     //
     // SUBWORKFLOW: Spike-in splitting
     //
     // TODO: if fasta and gtf are specified but not genome, val keep_genome_string in
     // BAM_SPLIT_BY_GENOME will fail
-    ch_filtered_exo_bam = Channel.empty()
-    ch_filtered_exo_index = Channel.empty()
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
