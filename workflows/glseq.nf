@@ -532,7 +532,21 @@ workflow GLSEQ {
         ch_filtered_exo_bam = ch_filtered2_bam.exo
         ch_filtered_index = ch_filtered2_bai.endo
         ch_filtered_exo_index = ch_filtered2_bai.exo
+    } else {
+        // If no spike-in genome add genome to metas
+        ch_filtered_bam
+            .join(ch_filtered_index, by: 0)
+            .map { meta, bam, bai ->
+                meta_clone = meta.clone()
+                meta_clone.genome = params.genome
+                [ meta_clone, bam, bai ]
+        }
+        .set { ch_filtered_bam_bai }
+
+        ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
+        ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
     }
+
 
     //
     // SUBWORKFLOW: Allocation of multimappers
