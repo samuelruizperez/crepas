@@ -249,7 +249,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, scar_bdg, input_bdg ->
             "${meta}\t${scar_bdg}\t${input_bdg}"
         }
-        .collectFile( name: '10_scar_ch_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug") 
+        .collectFile( name: '11_scar_ch_norm_scar_input.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     //
@@ -266,7 +266,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, bdg ->
             "${meta}\t${bdg}"
         }
-        .collectFile( name: '11_scar_ch_bdg_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '12_scar_ch_bdg_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // create channel: [ val(meta), [ bdg_fwd ], [ bdg_rev ] ]
     ch_norm
@@ -296,7 +296,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, bdg_fwd, bdg_rev ->
             "${meta}\t${bdg_fwd}\t${bdg_rev}"
         }
-        .collectFile( name: '12_scar_ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '13_scar_ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Calculate partitions (RFD)
@@ -315,7 +315,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, rfd ->
             "${meta}\t${rfd}"
         }
-        .collectFile( name: '13_scar_ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '14_scar_ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     // Prepare bwaob channel for combine()
@@ -348,7 +348,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
             "${meta}\t${meta_norm_or_smi}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}"
         }
-        .collectFile( name: '14_scar_ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '15_scar_ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // Create channel: [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
     ch_bwaob_strands.forward
@@ -369,7 +369,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ->
             "${meta}\t${windows}\t${bwaob_fwd}\t${bwaob_rev}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}\t${rfd}"
         }
-        .collectFile( name: '15_scar_ch_partitions.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '16_scar_ch_partitions.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Collect partitions
@@ -411,7 +411,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
             "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
         }
-        .collectFile( name: '16_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     //
