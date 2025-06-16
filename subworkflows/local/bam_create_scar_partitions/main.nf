@@ -26,6 +26,14 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
 
     ch_versions = Channel.empty()
 
+    // TODO: print for debugging
+    ch_bam
+        .map { meta, bam ->
+            "${meta}\t${bam}"
+        }
+        .collectFile( name: '1_scar_ch_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
+
     //
     // MODULE: Split BAMs by strand (forward and reverse)
     //
@@ -44,6 +52,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_f_bam }
 
+    // TODO: print for debugging
+    ch_f_bam
+        .map { meta, f_bam ->
+            "${meta}\t${f_bam}"
+        }
+        .collectFile( name: '2_scar_ch_f_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
     BAM_SPLIT_BY_STRAND
         .out
         .r_bam
@@ -54,8 +69,22 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
                 [ meta_clone, r_bam ]
         }
         .set { ch_r_bam }
+    
+    // TODO: print for debugging
+    ch_r_bam
+        .map { meta, r_bam ->
+            "${meta}\t${r_bam}"
+        }
+        .collectFile( name: '3_scar_ch_r_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     ch_bam = ch_f_bam.mix(ch_r_bam)
+
+    // TODO: print for debugging
+    ch_bam
+        .map { meta, bam ->
+            "${meta}\t${bam}"
+        }
+        .collectFile( name: '4_scar_ch_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Index BAM files per strand
@@ -73,6 +102,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_bam_scale }
 
+    // TODO: print for debugging
+    ch_bam_scale
+        .map { meta, bam, scale ->
+            "${meta}\t${bam}\t${scale}"
+        }
+        .collectFile( name: '5_scar_ch_bam_scale.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
     //
     // MODULE: Calculate genome coverage
     //
@@ -84,6 +120,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     )
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
+
     //
     // MODULE: Convert bedgraph to bigwig
     //
@@ -93,6 +130,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     )
     ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
     ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
+
+    // TODO: print for debugging
+    ch_bigwig
+        .map { meta, bigwig ->
+            "${meta}\t${bigwig}"
+        }
+        .collectFile( name: '6_scar_ch_bigwig.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Create genomic windows
@@ -111,7 +155,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { num_windows ->
             "${num_windows}"
         }
-        .collectFile( name: 'ch_num_windows.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '7_scar_ch_num_windows.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Calculate average coverage over windows
@@ -128,7 +172,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, bwaob ->
             "${meta}\t${bwaob}"
         }
-        .collectFile( name: 'ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '8_scar_ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     // RPM normalization factors
@@ -155,6 +199,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_bwaob_rpm }
 
+    // TODO: print for debugging
+    ch_bwaob_rpm
+        .map { meta, bwaob ->
+            "${meta}\t${bwaob}"
+        }
+        .collectFile( name: '9_scar_ch_bwaob_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+
     //
     // MODULE: Normalize strands
     //
@@ -163,6 +214,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     )
     ch_norm = BEDGRAPH_NORMALIZE.out.bedgraph
     ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
+
+    // TODO: print for debugging
+    ch_norm
+        .map { meta, bdg ->
+            "${meta}\t${bdg}"
+        }
+        .collectFile( name: '10_scar_ch_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // for each of the strands, subtract the input from the sample
     ch_norm
@@ -191,7 +249,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, scar_bdg, input_bdg ->
             "${meta}\t${scar_bdg}\t${input_bdg}"
         }
-        .collectFile( name: 'ch_norm_scar_input.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug") 
+        .collectFile( name: '11_scar_ch_norm_scar_input.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     //
@@ -202,6 +260,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     )
     ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
     ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
+
+    // TODO: print for debugging
+    ch_bdg_smi
+        .map { meta, bdg ->
+            "${meta}\t${bdg}"
+        }
+        .collectFile( name: '12_scar_ch_bdg_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // create channel: [ val(meta), [ bdg_fwd ], [ bdg_rev ] ]
     ch_norm
@@ -231,7 +296,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, bdg_fwd, bdg_rev ->
             "${meta}\t${bdg_fwd}\t${bdg_rev}"
         }
-        .collectFile( name: 'ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '13_scar_ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Calculate partitions (RFD)
@@ -250,7 +315,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, rfd ->
             "${meta}\t${rfd}"
         }
-        .collectFile( name: 'ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '14_scar_ch_rfd.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     // Prepare bwaob channel for combine()
@@ -277,12 +342,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_norm_and_smi_to_combine }
 
+
     // TODO: print for debugging
     ch_norm_and_smi_to_combine
         .map { meta, meta_norm_or_smi, norm_or_smi_fwd, norm_or_smi_rev ->
             "${meta}\t${meta_norm_or_smi}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}"
         }
-        .collectFile( name: 'ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '15_scar_ch_norm_and_smi_to_combine.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     // Create channel: [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
     ch_bwaob_strands.forward
@@ -303,7 +369,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .map { meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ->
             "${meta}\t${windows}\t${bwaob_fwd}\t${bwaob_rev}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}\t${rfd}"
         }
-        .collectFile( name: 'ch_partitions.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '16_scar_ch_partitions.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
     //
     // MODULE: Collect partitions
@@ -339,12 +405,13 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .set { ch_partitions_to_plot }
 
+
     // TODO: print for debugging
     ch_partitions_to_plot
         .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
             "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
         }
-        .collectFile( name: 'ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
+        .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
 
     //

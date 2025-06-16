@@ -214,14 +214,14 @@ def check_samplesheet(file_in, file_out):
                     sys.exit(1)
 
                 ## Check that multiple replicates are of the same datatype i.e. single-end / paired-end
-                if not all(
-                    x[0][0] == sample_mapping_dict[sample][1][0][0] for x in sample_mapping_dict[sample].values()
-                ):
-                    print_error(
-                        f"Multiple replicates of a sample must be of the same datatype i.e. single-end or paired-end!",
-                        "Sample",
-                        sample,
-                    )
+                # if not all(
+                #     x[0][0] == sample_mapping_dict[sample][1][0][0] for x in sample_mapping_dict[sample].values()
+                # ):
+                #     print_error(
+                #         f"Multiple replicates of a sample must be of the same datatype i.e. single-end or paired-end!",
+                #         "Sample",
+                #         sample,
+                #     )
 
                 for replicate in sorted(sample_mapping_dict[sample].keys()):
                     ## Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end

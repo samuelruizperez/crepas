@@ -28,16 +28,16 @@ You will need to create a samplesheet with information about the samples you wou
 | Column   | Description |
 | -------- | ----------- |
 | `sample` |  Custom sample name. This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. Avoid including the experiment type in this identifier, since it will be parsed from the `exp_type` column and prepended to the sample name by default. |
-| `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. |
-| `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. |
-| `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
-| `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
+| `fastq_1` | **Full path** to FASTQ file for reads 1. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. |
+| `fastq_2` | **Full path** to FASTQ file for reads 2. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. |
+| `fastq_umi` | **Full path** to the corresponding UMI FASTQ file for deduplication. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty if a separate UMI file is not available. |
+| `okseq_part_file` |**Full path** to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
 | `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries (technical replicates). Must start from `1..<number of replicates>`. |
 | `exp_type` | One of `chipseq`, `atacseq`, `scarseq`, `chorseq`. |
-| `strandedness` | Either `forward` or `reverse` (SCAR-seq) or leave empty for unstranded (ChIP-seq, ChOR-seq, ATAC-seq). |
-| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when `control` is specified. |
-| `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. Required when `antibody` is specified. |
-| `control_replicate` | Integer representing replicate number for control sample. |
+| `strandedness` | Either `forward` or `reverse` (only SCAR-seq): <br><ul><li>If the library was prepared using NGS indexed PentAdapter™ adapters (PentaBase ApS, Denmark), as in the [SCAR-seq paper](https://doi.org/10.1038/s41596-021-00585-3), set this to `forward`.</li><li>If the library was prepared using [xGen™ UDI-UMI Adapters](https://eu.idtdna.com/page/products/next-generation-sequencing/ngs-adapters-indexing-primers) (Integrated DNA Technologies, Inc.), the [insert strandedness is flipped](https://eu.idtdna.com/pages/support/faqs/can-the-xgen-unique-dual-index-umi-adapters-be-used-for-rna-seq), so set this to `reverse`.</li></ul><br>This field is only relevant for SCAR-seq; leave it empty for unstranded data (ChIP-seq, ChOR-seq, ATAC-seq). |
+| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. It should be empty in the case of input control rows. It is required when the `control` field is specified. |
+| `control` | This column should contain the `sample` identifier of the corresponding input control for the IP. It should be empty in the case of input control rows. It is required when the `antibody` field is specified. |
+| `control_replicate` | Integer representing the replicate number for the corresponding input control sample. It should be empty in the case of input control rows. |
 
 
 ### Example 1: Multiple biological replicates
@@ -105,7 +105,7 @@ condition_1_INPUT,condition_1_bRep1_tRep2_INPUT_R1.fastq.gz,condition_1_bRep1_tR
 condition_1_INPUT,condition_1_bRep2_tRep1_INPUT_R1.fastq.gz,condition_1_bRep2_tRep1_INPUT_R3.fastq.gz,condition_1_bRep2_tRep1_INPUT_R2.fastq.gz,,2,chipseq,,,,
 condition_1_INPUT,condition_1_bRep2_tRep2_INPUT_R1.fastq.gz,condition_1_bRep2_tRep2_INPUT_R3.fastq.gz,condition_1_bRep2_tRep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
 ```
-
+<!-- 
 ### Example 3: Full design
 
 The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet.
@@ -113,7 +113,7 @@ The pipeline will auto-detect whether a sample is single- or paired-end using th
 A final design file may look something like the one below. This is for two antibodies and associated controls, where the second replicate of the `WT_BCATENIN_IP` and `NAIVE_BCATENIN_IP` samples have been sequenced twice:
 
 > [!NOTE]
-> You can download this example samplesheet [here]() or copy and save the cell below:
+> You can download this example samplesheet [here]() or copy and save the cell below: -->
 
 ## Reference genome files
 
