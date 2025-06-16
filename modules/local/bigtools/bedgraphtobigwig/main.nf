@@ -23,7 +23,7 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     bigtools bedgraphtobigwig \\
-        --nthreads ${nthreads} \\
+        --nthreads ${task.cpus} \\
         ${bedgraph} \\
         ${sizes} \\
         ${prefix}.bw
