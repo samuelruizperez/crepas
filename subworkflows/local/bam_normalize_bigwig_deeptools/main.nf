@@ -236,7 +236,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_ip_cisrpm = Channel.empty()
     ch_bdg_control_cisrpm = Channel.empty()
     ch_bdg_cisrpm = Channel.empty()
-    if (!skip_cisrpm) {
+    // if (spikein_genome) is needed, otherwise cisrpm will be attempted for
+    // controls, and this will fail, since there is no flT2_total_mapped_reads
+    if (spikein_genome && !skip_cisrpm) {
         // Split BAMs by genome (endo and exo) and by type (ip and control)
         ch_bdg_map_mod
             .map { meta, bdg ->
