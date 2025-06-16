@@ -1,5 +1,6 @@
 /*
  * Split a BAM file by strand
+ * It uses SAM FLAG 16: read reverse strand (0x10)
  */
 process BAM_SPLIT_BY_STRAND {
     tag "$meta.id"
@@ -23,27 +24,52 @@ process BAM_SPLIT_BY_STRAND {
 
     script:
     def prefix            = task.ext.prefix ?: "${meta.id}"
-    def strand_extension1 = meta.strandedness == 'reverse' ? 'reverse' : 'forward'
-    def strand_extension2 = meta.strandedness == 'reverse' ? 'forward' : 'reverse'
-
+    
+    if (meta.strandedness == 'forward') {
     """
-    samtools view \\
-        --exclude-flags 20 \\
-        --with-header \\
-        --bam \\
-        --output ${prefix}.${strand_extension1}.bam \\
-        ${bam}
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --exclude-flags 16 \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
 
-    samtools view \\
-        --require-flags 16 \\
-        --with-header \\
-        --bam \\
-        --output ${prefix}.${strand_extension2}.bam \\
-        ${bam}
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --require-flags 16 \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        END_VERSIONS
+        """
+    } else if (meta.strandedness == 'reverse') {
     """
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --exclude-flags 16 \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
+
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --require-flags 16 \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        END_VERSIONS
+        """
+    }
 }

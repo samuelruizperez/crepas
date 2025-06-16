@@ -21,8 +21,6 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
     script:
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
-    // Test: From bwaob --help: "Note: for parts of the runtime, the actual usage may be nthreads+1"
-    def nthreads = task.cpus > 1 ? task.cpus - 1 : task.cpus
     """
     bigtools bedgraphtobigwig \\
         --nthreads ${nthreads} \\
