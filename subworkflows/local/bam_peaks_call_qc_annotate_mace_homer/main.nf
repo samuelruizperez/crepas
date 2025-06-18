@@ -58,7 +58,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     MACE_PREPROCESSOR (
         ch_bam_merged_reps,
-        ch_blacklist
+        ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(MACE_PREPROCESSOR.out.versions.first())
 
