@@ -1,4 +1,4 @@
 sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-WL295,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498074/ERR498074.fastq.gz",,,,1,ChIP-exo,,ONECUT1,,,
-WL296,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498076/ERR498076.fastq.gz",,,,2,ChIP-exo,,ONECUT1,,,
-WL297,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498075/ERR498075.fastq.gz",,,,3,ChIP-exo,,ONECUT1,,,
+WL,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498074/ERR498074.fastq.gz",,,,1,ChIP-exo,,ONECUT1,,,
+WL,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498076/ERR498076.fastq.gz",,,,2,ChIP-exo,,ONECUT1,,,
+WL,"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498075/ERR498075.fastq.gz",,,,3,ChIP-exo,,ONECUT1,,,
