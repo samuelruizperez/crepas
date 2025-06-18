@@ -4,7 +4,7 @@
 //
 
 include { MACE_MACE           } from '../../../modules/local/mace/mace/main'
-include { UCSC_WIGTOBIGWIG    } from '../../../modules/nf-core/ucsc/wigToBigWig/main'
+include { UCSC_WIGTOBIGWIG    } from '../../../modules/nf-core/ucsc/wigtobigwig/main'
 include { MACE_PREPROCESSOR } from '../../../modules/local/mace/preprocessor/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
