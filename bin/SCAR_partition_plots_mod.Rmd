@@ -122,23 +122,36 @@ opt <- parser$parse_args()
 opt_scar_partition_file <- NULL
 
 opt_scarminusinput_partition_file <- c(
-  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_555_dTAG_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
   
 )
 
 opt_strandedinput_partition_file <- NULL
 
-opt_okazaki_file <- NULL
-  
-  #"/home/whq695/datadir/projects/glseq_runs/SJC013_old2/partition_plots/896b4cf20a63da6582a31906c071f2/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
-opt_initiation_zones <- "/home/whq695/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
-opt_blacklist <- "/home/whq695/datadir/projects/glseq_runs/SJC013_old2/partition_plots/896b4cf20a63da6582a31906c071f2/GRCm39.ExcludeRanges.Boyle.Excludable_v2.bed"
+opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/blacklists/bed/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz"
 
-opt_prefix <- "LKO_exp043"
+opt_prefix <- "MCM2_NatGen_test"
 
-opt_outdir <- "/maps/projects/dan1/people/whq695/projects/glseq_runs/LKO_exp043/glseq/plot_test"
+opt_outdir <- "/maps/projects/dan1/people/whq695/projects/glseq_runs/MCM2_NatGen_test/glseq/plots"
 
 opt_rpm_cutoff <- 0.3
 
@@ -500,7 +513,7 @@ RFD_mean_df
 
 # set a color in Dark2 palette for each sample, but set OK-seq to dark gray
 if (HAS_OKSEQ) {
-  dark2_colors <- RColorBrewer::brewer.pal(8, "Dark2")
+  dark2_colors <- RColorBrewer::brewer.pal(length(unique(RFD_mean_df$sample)), "Paired")
   sample_names <- unique(RFD_mean_df$sample)
   sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
   sample_colors["OK-seq"] <- "grey60"
@@ -558,7 +571,7 @@ ggsave(filename = file.path(plots.dir,paste0(PREFIX,".partition_plots_raw.pdf"))
 
 ### Smoothed partition plot(s)
 
-```{r}
+```{r, fig.width=3.93701, fig.height=2.55906}
 
 smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
@@ -577,13 +590,13 @@ smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)
           legend.title = element_blank(),
           axis.title = element_text(size = 7),
           axis.text = element_text(size = 5),
-          legend.text = element_text(size = 6),
+          legend.text = element_text(size = 5),
           strip.background = element_blank(),
           aspect.ratio = 1) +
     guides(color = guide_legend(order = 1)) +
     facet_wrap(~ type, nrow = 1, labeller = labeller(.cols = sample_labels)) +
     scale_y_continuous(expand = expansion(mult = c(0.1, 0.1))) +
-    labs(caption = paste("N =", n.izs), size = 2) +
+    labs(caption = paste("N =", n.izs), size = 1) +
     annotate(geom = 'text', label = 'Lagging', x = -Inf, y = Inf, hjust = -0.13,
             vjust = 2, size = 2) +
     annotate(geom = 'text', label = 'Leading', x = -Inf, y = -Inf, hjust = -0.13,
@@ -592,6 +605,9 @@ smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)
             vjust = -1.5, size = 2) +
     annotate(geom = 'text', label = 'Leading', x = Inf, y = Inf, hjust = 1.13,
             vjust = 2, size = 2)
+
+
+smooth_plot
 
 ggsave(filename = file.path(plots.dir, paste0(PREFIX, ".partition_plots_smooth.pdf")),
        plot = smooth_plot, width = 10, height = 6.5, units = "cm")
