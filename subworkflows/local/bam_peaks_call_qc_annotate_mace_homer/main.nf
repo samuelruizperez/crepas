@@ -1,11 +1,10 @@
 
 //
-// Call peaks with Genrich, annotate with HOMER and perform downstream QC
+// Call peaks with MACE, annotate with HOMER and perform downstream QC
 //
-
-include { MACE_MACE           } from '../../../modules/local/mace/mace/main'
-include { UCSC_WIGTOBIGWIG    } from '../../../modules/nf-core/ucsc/wigtobigwig/main'
 include { MACE_PREPROCESSOR } from '../../../modules/local/mace/preprocessor/main'
+include { UCSC_WIGTOBIGWIG    } from '../../../modules/nf-core/ucsc/wigtobigwig/main'
+include { MACE_MACE           } from '../../../modules/local/mace/mace/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
 include { MULTIQC_CUSTOM_PEAKS     } from '../../../modules/local/multiqc_custom_peaks/main'

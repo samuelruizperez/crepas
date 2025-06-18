@@ -1041,29 +1041,6 @@ workflow GLSEQ {
     }
 
     //
-    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
-    //
-    if (!params.skip_genrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
-            ch_fasta.first(),
-            ch_gtf.map{ it[1] }.first(),
-            ch_blacklist.map{ it[1] }.first(),
-            ".annotatePeaks.txt",
-            ch_gr_peak_count_header,
-            ch_gr_frip_score_header,
-            ch_gr_peak_annotation_header,
-            params.narrow_peak,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect{it[1]})
-        ch_versions      = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
-    }
-
-    //
     // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
     //
     if (!params.skip_mace) {
