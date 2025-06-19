@@ -779,6 +779,7 @@ workflow GLSEQ {
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
         ch_filtered_index = BAM_DOWNSAMPLE.out.bai
+        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect{it[1]})
@@ -787,8 +788,7 @@ workflow GLSEQ {
     }
     
     // Branch channels based on if input control is present
-    ch_filtered_bam
-        .join(ch_filtered_index, by: 0)
+    ch_filtered_bam_bai
         .branch { meta, bam, bai ->
             ips_with_control: meta.control
                 return [ meta.control, meta, [ bam ], [ bai ] ]
@@ -1045,7 +1045,7 @@ workflow GLSEQ {
     //
     if (!params.skip_mace) {
         BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type == 'ChIP-exo' }.join(ch_filtered_index, by: 0),
+            ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
