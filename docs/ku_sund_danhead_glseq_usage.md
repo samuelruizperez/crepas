@@ -217,6 +217,7 @@ sbatch glseq_job.sh
 You can test the correct functioning of any pipeline version (`-r <version>`) by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
 
   - `local_test_chipseq`
+  - `local_test_chipexo`
   - `local_test_chorseq`
   - `local_test_scarseq`
   - `local_test_atacseq`
