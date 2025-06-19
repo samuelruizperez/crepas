@@ -1,0 +1,47 @@
+process ROCCO {
+    tag "$meta.id"
+    label 'process_high'
+
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/a0/a0526a7f7adf6fa2e99db65b1da7b13e60dc50568378c5ed02a40f87901725a2/data' :
+        'community.wave.seqera.io/library/bedtools_deeptoolsintervals_pybedtools_samtools_pruned:1608bbec38a48f4a' }"
+
+    input:
+    tuple val(meta), path(bams_or_bws)
+    tuple val(meta2), path(bamlist_txt)
+    tuple val(meta2), path(chrom_sizes)
+    tuple val(meta3), path(params_file)
+    val effective_genome_size
+
+    output:
+    tuple val(meta), path("*.bed"),                             emit: bed
+    tuple val(meta), path("*.narrowPeak"),    optional:true,    emit: narrow_peak
+    tuple val(meta), path("*.mps"),           optional:true,    emit: model_mps
+    path "versions.yml",                                        emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def args            = task.ext.args     ?: ""
+    prefix              = task.ext.prefix   ?: "${meta.id}"
+    
+    def samples         = samples           ? "--input_files ${bams_or_bws.join(' ')}" : ""
+    """
+    rocco \\
+        ${args} \\
+        --threads $task.cpus \\
+        $samples \\
+        --chrom_sizes_file ${chrom_sizes} \\
+
+        --outfile ${prefix}.bed
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        Consenrich: \$(echo \$(Consenrich -h 2>&1) | sed 's/^Consenrich, version //; s/ .*\$//')
+    END_VERSIONS
+    """
+}
+
+// TODO: version parsing
