@@ -25,23 +25,36 @@ process ROCCO {
 
     script:
     def args            = task.ext.args     ?: ""
-    prefix              = task.ext.prefix   ?: "${meta.id}"
-    
+    def prefix          = task.ext.prefix   ?: "${meta.id}"
     def samples         = samples           ? "--input_files ${bams_or_bws.join(' ')}" : ""
+    def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     rocco \\
         ${args} \\
-        --threads $task.cpus \\
-        $samples \\
+        --threads ${task.cpus} \\
+        --ecdf_proc ${task.cpus} \\
+        --verbose \\
+        ${samples} \\
         --chrom_sizes_file ${chrom_sizes} \\
-
         --outfile ${prefix}.bed
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Consenrich: \$(echo \$(Consenrich -h 2>&1) | sed 's/^Consenrich, version //; s/ .*\$//')
+        rocco: ${VERSION}
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    """
+    touch ${prefix}.bed
+    touch ${prefix}.narrowPeak
+    touch ${prefix}.mps
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        rocco: ${VERSION}
     END_VERSIONS
     """
 }
-
-// TODO: version parsing

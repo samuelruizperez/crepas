@@ -827,8 +827,8 @@ workflow GLSEQ {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER (
             ch_ip_control_bam_bai_merged_reps,
             ch_chrom_sizes_endo.first(),
-            ch_blacklist.map{ it[1] }.first(),
-            ch_sparsebed.map{ it[1] }.first(),
+            ch_blacklist.first(),
+            ch_sparsebed.first(),
             []
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())

@@ -1,5 +1,6 @@
 include { FILE_SORT as SIZES_SORT } from '../../../modules/local/file_sort/main'
 include { CONSENRICH           } from '../../../modules/local/consenrich/main'
+include { ROCCO               } from '../../../modules/local/rocco/main'
 
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
@@ -18,16 +19,26 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
         ch_chrom_sizes,
         'sizes'
     )
+    ch_chrom_sizes = SIZES_SORT.out.sorted
     ch_versions = ch_versions.mix(SIZES_SORT.out.versions.first())
 
     CONSENRICH (
         ch_bam,
-        SIZES_SORT.out.sorted.map { it[1] },
+        ch_chrom_sizes,
         ch_blacklist,
         ch_sparsebed,
         ch_active_regions
     )
     ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
+
+    ROCCO (
+        CONSENRICH.out.results,
+        CONSENRICH.out.bamlist,
+        ch_chrom_sizes,
+        CONSENRICH.out.params_file,
+        CONSENRICH.out.effective_genome_size
+    )
+    ch_versions = ch_versions.mix(ROCCO.out.versions.first())
 
     emit:
 
