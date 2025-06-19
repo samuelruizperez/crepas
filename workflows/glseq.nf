@@ -679,7 +679,7 @@ workflow GLSEQ {
     //
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
-            ch_filtered_bam.join(ch_filtered_index, by: [0]),
+            ch_filtered_bam_bai,
             ch_fasta.first(),
             ch_fai.first()
         )
@@ -803,11 +803,12 @@ workflow GLSEQ {
     ch_bam_by_type.ips_with_control
         .combine(ch_bam_by_type.controls, by: 0)
         .mix(ch_bam_by_type.ips_wo_control)
-        .map { control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ->
-            def meta_clone = ip_meta.clone()
+        // this is: control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai
+        .map { it ->
+            def meta_clone = it[1].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, ip_bam, ip_bai, control_bam ?: [], control_bai ?: [] ]
+            [ meta_clone.id, meta_clone, it[2], it[3], it[4] ?: [], it[5] ?: [] ]
         }
         .groupTuple()
         .map {
