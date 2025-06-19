@@ -749,6 +749,69 @@
                     "type": "boolean",
                     "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_mace": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip MACE peak calling.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "mace_kmer_size": {
+                    "type": "integer",
+                    "description": "Set the k-mer size for MACE peak calling. Kmer size [6,12] to correct nucleotide composition bias. kmerSize < 0.5*read_length. Larger KmerSize might make program slower. Set kmerSize = 0 to turn off nucleotide compsition bias correction. default=6. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_bin": {
+                    "type": "integer",
+                    "description": "Chromosome chunk size. Each chomosome will be cut into small chunks of this size. Decrease chunk size will save more RAM. default=100000 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_depth": {
+                    "type": "integer",
+                    "description": "Reference reads count (default = 10 million). Sequencing depth will be normailzed to this number, so that wig files are comparable between replicates. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_qcut": {
+                    "type": "number",
+                    "description": "phred scaled mapping quality threshhold to determine “uniqueness” of alignments. default=30. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_norm_method": {
+                    "type": "string",
+                    "description": "methods (“EM”, “AM”, “GM”, or “SNR”) used to consolidate replicates and reduce noise. “EM” = Entropy weighted mean, “AM”=Arithmetic mean, “GM”=Geometric mean, “SNR”=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna",
+                    "enum": ["EM", "AM", "GM", "SNR"]
+                },
+                "mace_pvalue": {
+                    "type": "number",
+                    "description": "Pvalue cutoff for border detection and subsequent border pairing. default=0.05. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_max_dist": {
+                    "type": "integer",
+                    "description": "Maximum distance allowed for border pairing. default=100 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_fuzzy_size": {
+                    "type": "integer",
+                    "description": "Peaks (i.e. borders) located closely within this window will be merged. default=5 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_window_size": {
+                    "type": "integer",
+                    "description": "Background window size used to determine background signal level. default=100 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "mace_signal_fold": {
+                    "type": "number",
+                    "description": "Minimum coverage signal used to build model (i.e. estimate optimal peak pair size). default=2.0. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "save_mace_intermeds": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
+                    "fa_icon": "fas fa-save"
                 }
             }
         },
