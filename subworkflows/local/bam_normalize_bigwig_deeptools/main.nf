@@ -129,7 +129,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .map { meta, bdg ->
             "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     // Split into ChIP and control channels because inputs' norm_factor_val_used should depend on meta.antibody
     // from its corresponding ChIP. Thus, for inputs, we need the info of both ChIP and input in the if statements below
@@ -188,7 +188,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta, bdg ->
                 "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bdg_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     // Copy and modify channel meta to add SRPM normalization factors (for ChIPs)
     ch_bdg_srpm = Channel.empty()
@@ -226,7 +226,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta, bdg ->
                 "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     
     // Copy and modify channel meta to add CISRPM normalization factors
@@ -266,7 +266,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 control_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
                     "${control_id}\t${ip_antibody}\t${endo_ip_meta}\t${endo_ip_bdg}\t${exo_ip_meta}\t${exo_ip_bdg}"
             }
-            .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+            .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
         // Combine the endo and exo BAMs (inputs)
         ch_bdg_genome_type.endo_control
@@ -282,7 +282,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 control_id, control_antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     "${control_id}\t${control_antibody}\t${endo_control_meta}\t${endo_control_bdg}\t${exo_control_meta}\t${exo_control_bdg}"
             }
-            .collectFile( name: 'ch_bdg_genome_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+            .collectFile( name: 'ch_bdg_genome_control.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
         // Combine the combined ChIPs with the combined inputs
         ch_bdg_genome_ip
@@ -307,7 +307,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 meta, bdg ->
                     "${meta}\t${bdg}"
             }
-            .collectFile( name: 'ch_bdg_ip_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+            .collectFile( name: 'ch_bdg_ip_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
         
         // Now do the missing CISRPM for the endogenous inputs
         // In this case CISRPM is the same as RPM, but we cannot
@@ -338,7 +338,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 meta, bdg ->
                     "${meta}\t${bdg}"
             }
-            .collectFile( name: 'ch_bdg_control_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+            .collectFile( name: 'ch_bdg_control_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
         ch_bdg_cisrpm = ch_bdg_ip_cisrpm.mix(ch_bdg_control_cisrpm)
     }
@@ -354,7 +354,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta, bdg ->
                 "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bdg_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_norm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
 
     //
@@ -433,7 +433,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta, bdg ->
                 "${meta}\t${bdg}"
         }
-        .collectFile( name: 'ch_bdg_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_bdg_all.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
 
     //
