@@ -52,11 +52,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     ch_bam_by_type.ips_with_control
         .combine(ch_bam_by_type.controls, by: 0)
         .mix(ch_bam_by_type.ips_wo_control)
-        .map { control_id, ip_meta, ip_bam, control_bam ->
-            def meta_clone = ip_meta.clone()
+        // this is: [ control_id, ip_meta, ip_bam, control_bam ]
+        // control_bam can be empty if we only have ips_wo_control        
+        .map { it ->
+            def meta_clone = it[1].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, ip_bam, control_bam ?: [] ]
+            [ meta_clone.id, meta_clone, it[2], it[3] ?: [] ]
         }
         .groupTuple()
         .map {

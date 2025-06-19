@@ -803,7 +803,8 @@ workflow GLSEQ {
     ch_bam_by_type.ips_with_control
         .combine(ch_bam_by_type.controls, by: 0)
         .mix(ch_bam_by_type.ips_wo_control)
-        // this is: control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai
+        // this is: [ control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
+        // control_bam and control_bai can be empty if we only have ips_wo_control
         .map { it ->
             def meta_clone = it[1].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
