@@ -1045,7 +1045,7 @@ workflow GLSEQ {
     //
     if (!params.skip_mace) {
         BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type == 'ChIP-exo' },
+            ch_filtered_bam.filter { it[0].exp_type == 'ChIP-exo' }.join(ch_filtered_index, by: 0),
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),

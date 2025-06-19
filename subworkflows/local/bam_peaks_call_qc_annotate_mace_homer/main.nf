@@ -13,7 +13,7 @@ include { PLOT_HOMER_ANNOTATEPEAKS } from '../../../modules/local/plot_homer_ann
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     take:
-    ch_bam                            // channel: [ val(meta), bam ]
+    ch_bam_bai                            // channel: [ val(meta), bam, bai ]
     ch_fasta                          // channel: [ fasta  ]
     ch_gtf                            // channel: [ gtf ]
     ch_blacklist                     // channel: [ bed ]
@@ -31,25 +31,25 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     ch_versions = Channel.empty()
 
     // Create channel: [ meta, [bams_merged_reps] ]
-    ch_bam
-        .map { meta, bam ->
+    ch_bam_bai
+        .map { meta, bam, bai ->
             def meta_clone = meta.clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, bam ]
+            [ meta_clone.id, meta_clone, bam, bai ]
         }
         .groupTuple()
         .map {
-            id, metas, bams ->
-                [ metas[0], bams.flatten() ]
+            id, metas, bams, bais ->
+                [ metas[0], bams.flatten(), bais.flatten() ]
         }
         .set { ch_bam_merged_reps }
 
     // TODO: Print to file for debuggin
     ch_bam_merged_reps
         .map {
-            meta, bams ->
-                "${meta}\t${bams}"
+            meta, bams, bais ->
+                "${meta}\t${bams}\t${bais}"
         }
         .collectFile( name: 'ch_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug/BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER" )
 

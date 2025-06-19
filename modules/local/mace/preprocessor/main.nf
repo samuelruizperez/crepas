@@ -9,7 +9,7 @@ process MACE_PREPROCESSOR {
         'biocontainers/mace:1.2_cv1' }"
 
     input:
-    tuple val(meta), path(treatment_bam)
+    tuple val(meta), path(bam), path(bai)
     tuple val(meta2), path(chrom_sizes)
 
     output:
@@ -23,7 +23,7 @@ process MACE_PREPROCESSOR {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def treatment  = treatment_bam ? "--inputFile ${treatment_bam.join(',')}" : ""
+    def treatment  = bam ? "--inputFile ${bam.join(',')}" : ""
     """
     preprocessor.py \\
         ${args} \\
