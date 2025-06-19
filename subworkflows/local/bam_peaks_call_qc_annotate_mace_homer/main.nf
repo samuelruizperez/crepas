@@ -140,16 +140,16 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         .set { ch_mace_peaks }
 
     // Create channels: [ meta, bam, peaks ]
-    ch_bam
+    ch_bam_bai
         .join(ch_mace_peaks, by: 0)
         .map {
-            meta, bam, peaks ->
-                [ meta, bam, peaks ]
+            meta, bam, bai, peaks ->
+                [ meta, bam, bai, peaks ]
         }
         // Split channel by bam
         .transpose()
         .map {
-            meta, bam, peaks ->
+            meta, bam, bai, peaks ->
                 def meta_clone = meta.clone()
                 meta_clone.id = bam.getSimpleName()
                 [ meta_clone, bam, peaks ]
