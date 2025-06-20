@@ -8,8 +8,7 @@ process ROCCO {
         'community.wave.seqera.io/library/bedtools_deeptoolsintervals_pybedtools_samtools_pruned:1608bbec38a48f4a' }"
 
     input:
-    tuple val(meta), path(bams_or_bws)
-    tuple val(meta2), path(bamlist_txt)
+    tuple val(meta), path(bams_or_bws), path(bamlist)
     tuple val(meta2), path(chrom_sizes)
     tuple val(meta3), path(params_file)
     val effective_genome_size
@@ -27,14 +26,19 @@ process ROCCO {
     def args            = task.ext.args     ?: ""
     def prefix          = task.ext.prefix   ?: "${meta.id}"
     def samples         = samples           ? "--input_files ${bams_or_bws.join(' ')}" : ""
+    def bamlist_txt     = bamlist           ? "${bamlist.join(',')}" : ""
+    def bamlist_arg     = bamlist           ? "--bamlist_txt bamlist.txt" : ""
     def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
+    echo "${bamlist_txt}" | tr ',' '\\n' > bamlist.txt
+
     rocco \\
         ${args} \\
         --threads ${task.cpus} \\
         --ecdf_proc ${task.cpus} \\
         --verbose \\
         ${samples} \\
+        ${bamlist_arg} \\
         --chrom_sizes_file ${chrom_sizes} \\
         --outfile ${prefix}.bed
 
@@ -51,6 +55,7 @@ process ROCCO {
     touch ${prefix}.bed
     touch ${prefix}.narrowPeak
     touch ${prefix}.mps
+    touch bamlist.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

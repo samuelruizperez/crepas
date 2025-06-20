@@ -821,7 +821,7 @@ workflow GLSEQ {
         .collectFile( name: 'ch_ip_control_bam_bai_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
         
     //
-    // MODULE: Call consensus regions with Consenrich
+    // MODULE: Call consensus regions with Consenrich and ROCCO
     //
     if (!params.skip_consenrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER (

@@ -15,6 +15,9 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
 
     ch_versions = Channel.empty()
 
+    //
+    // MODULE: Sort chromosome sizes (avoid Consenrich errors)
+    //
     SIZES_SORT (
         ch_chrom_sizes,
         'sizes'
@@ -22,6 +25,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
     ch_chrom_sizes = SIZES_SORT.out.sorted
     ch_versions = ch_versions.mix(SIZES_SORT.out.versions.first())
 
+
+    //
+    // MODULE: Integrate ChIPs and their input controls
+    //
     CONSENRICH (
         ch_bam,
         ch_chrom_sizes,
@@ -31,9 +38,25 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
     )
     ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
 
+    
+    // Create channel: [ val(meta), ch_csr_signal, bamlist_txt ]
+    CONSENRICH
+        .out
+        .signal_track
+        .combine(ch_bam, by: 0)
+        // this is: [ val(meta), ch_csr_signal, [ ip_bams ], [ ip_bais ], [ control_bams ], [ control_bais ] ]
+        .map { meta, ch_csr_signal, ip_bams, ip_bais, control_bams, control_bais ->
+            [ ]
+
+
+
+
+    //
+    // MODULE: Call peaks
+    //
     ROCCO (
         CONSENRICH.out.results,
-        CONSENRICH.out.bamlist,
+        ch_bam_list,
         ch_chrom_sizes,
         CONSENRICH.out.params_file,
         CONSENRICH.out.effective_genome_size
