@@ -17,6 +17,7 @@ process MACE_MACE {
     tuple val(meta), path("*.border_cluster.bed"),     emit: border_cluster
     tuple val(meta), path("*.border_pair_elite.bed"),  emit: border_pair_elite
     tuple val(meta), path("*.border_pair.bed"),        emit: border_pair
+    tuple val(meta), path("*.border_pair.peak"),       emit: border_pair_peak
     path  "versions.yml",                              emit: versions
 
     when:
@@ -24,6 +25,7 @@ process MACE_MACE {
 
     script:
     def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     mace.py \\
@@ -32,6 +34,13 @@ process MACE_MACE {
         --forward ${forward_bw} \\
         --reverse ${reverse_bw} \\
         --out-prefix ${prefix}
+
+    awk \\
+        ${args2} \\
+        -F'\t' \\
+        '{ printf "%s\\t%s\\t%s\\tpeak_%d\\t%s\\t%s\\t%s\\n", \$1, \$2, \$3, NR, \$5, ".", \$4 }' \\
+        ${prefix}.border_pair.bed \\
+        > ${prefix}.border_pair.peak   
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

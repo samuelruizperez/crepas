@@ -8,7 +8,7 @@ include { MACE_MACE           } from '../../../modules/local/mace/mace/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
 include { MULTIQC_CUSTOM_PEAKS     } from '../../../modules/local/multiqc_custom_peaks/main'
-include { PLOT_MACS3_QC as PLOT_MACE_QC } from '../../../modules/local/plot_macs3_qc/main'
+// include { PLOT_MACS3_QC as PLOT_MACE_QC } from '../../../modules/local/plot_macs3_qc/main'
 include { PLOT_HOMER_ANNOTATEPEAKS } from '../../../modules/local/plot_homer_annotatepeaks/main'
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
@@ -132,7 +132,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     MACE_MACE
         .out
-        .border_pair
+        .border_pair_peak
         .filter {
             meta, peaks ->
                 peaks.size() > 0
@@ -184,8 +184,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks          = Channel.empty()
-    ch_plot_mace_qc_txt            = Channel.empty()
-    ch_plot_mace_qc_pdf            = Channel.empty()
+    // ch_plot_mace_qc_txt            = Channel.empty()
+    // ch_plot_mace_qc_pdf            = Channel.empty()
     ch_plot_homer_annotatepeaks_txt = Channel.empty()
     ch_plot_homer_annotatepeaks_pdf = Channel.empty()
     ch_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -224,13 +224,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
             //
             // MACE QC plots with R
             //
-            PLOT_MACE_QC (
-                ch_mace_peaks_grouped,
-                is_narrow_peak
-            )
-            ch_plot_mace_qc_txt = PLOT_MACE_QC.out.txt
-            ch_plot_mace_qc_pdf = PLOT_MACE_QC.out.pdf
-            ch_versions = ch_versions.mix(PLOT_MACE_QC.out.versions)
+            // PLOT_MACE_QC (
+            //     ch_mace_peaks_grouped,
+            //     is_narrow_peak
+            // )
+            // ch_plot_mace_qc_txt = PLOT_MACE_QC.out.txt
+            // ch_plot_mace_qc_pdf = PLOT_MACE_QC.out.pdf
+            // ch_versions = ch_versions.mix(PLOT_MACE_QC.out.versions)
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -270,6 +270,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     border                       = MACE_MACE.out.border            // channel: [ val(meta), [ bed ] ]
     border_cluster               = MACE_MACE.out.border_cluster    // channel: [ val(meta), [ bed ] ]
     border_pair_elite            = MACE_MACE.out.border_pair_elite // channel: [ val(meta), [ bed ] ]
+    border_pair                  = MACE_MACE.out.border_pair       // channel: [ val(meta), [ bed ] ]
+    border_pair_peak             = MACE_MACE.out.border_pair_peak  // channel: [ val(meta), [ bed ] ]
 
     frip_txt                     = FRIP_SCORE.out.txt               // channel: [ val(meta), [ txt ] ]
     frip_multiqc                 = MULTIQC_CUSTOM_PEAKS.out.frip    // channel: [ val(meta), [ frip ] ]
@@ -277,8 +279,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     peak_count_multiqc           = MULTIQC_CUSTOM_PEAKS.out.count   // channel: [ val(meta), [ counts ] ]
     homer_annotatepeaks          = ch_homer_annotatepeaks           // channel: [ val(meta), [ txt ] ]
 
-    plot_mace_qc_txt               = ch_plot_mace_qc_txt             // channel: [ txt ]
-    plot_mace_qc_pdf               = ch_plot_mace_qc_pdf             // channel: [ pdf ]
+    // plot_mace_qc_txt               = ch_plot_mace_qc_txt             // channel: [ txt ]
+    // plot_mace_qc_pdf               = ch_plot_mace_qc_pdf             // channel: [ pdf ]
 
     plot_homer_annotatepeaks_txt = ch_plot_homer_annotatepeaks_txt  // channel: [ txt ]
     plot_homer_annotatepeaks_pdf = ch_plot_homer_annotatepeaks_pdf  // channel: [ pdf ]
