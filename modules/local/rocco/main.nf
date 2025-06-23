@@ -10,7 +10,7 @@ process ROCCO {
     input:
     tuple val(meta), path(bams_or_bws), path(bamlist)
     tuple val(meta2), path(chrom_sizes)
-    tuple val(meta3), path(params_file)
+    tuple val(meta3), path(params)
     val effective_genome_size
 
     output:
@@ -23,11 +23,14 @@ process ROCCO {
     task.ext.when == null || task.ext.when
 
     script:
-    def args            = task.ext.args     ?: ""
-    def prefix          = task.ext.prefix   ?: "${meta.id}"
-    def samples         = samples           ? "--input_files ${bams_or_bws.join(' ')}" : ""
-    def bamlist_txt     = bamlist           ? "${bamlist.join(',')}" : ""
-    def bamlist_arg     = bamlist           ? "--bamlist_txt bamlist.txt" : ""
+    def args            = task.ext.args         ?: ""
+    def prefix          = task.ext.prefix       ?: "${meta.id}"
+    def samples         = samples               ? "--input_files ${bams_or_bws.join(' ')}" : ""
+    def bamlist_txt     = bamlist               ? "${bamlist.join(',')}" : ""
+    def bamlist_arg     = bamlist               ? "--bamlist_txt bamlist.txt" : ""
+    def sizes_arg       = chrom_sizes           ? "--chrom_sizes_file ${chrom_sizes}" : ""
+    def egsize_arg      = effective_genome_size ? "--effective_genome_size ${effective_genome_size}" : ""
+    def params_arg      = params                ? "--params ${params}" : ""
     def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     echo "${bamlist_txt}" | tr ',' '\\n' > bamlist.txt
@@ -39,7 +42,9 @@ process ROCCO {
         --verbose \\
         ${samples} \\
         ${bamlist_arg} \\
-        --chrom_sizes_file ${chrom_sizes} \\
+        ${sizes_arg} \\
+        ${params_arg} \\
+        ${egsize_arg} \\
         --outfile ${prefix}.bed
 
     cat <<-END_VERSIONS > versions.yml
@@ -55,7 +60,7 @@ process ROCCO {
     touch ${prefix}.bed
     touch ${prefix}.narrowPeak
     touch ${prefix}.mps
-    touch bamlist.txt
+    touch ${prefix}.bamlist.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

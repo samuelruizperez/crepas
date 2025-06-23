@@ -165,6 +165,20 @@
                     "fa_icon": "fas fa-book-dead",
                     "help_text": "Defines the annotation file of 'sparse segments' (genomic regions) from the complement of an 'inflated' BED file of known active regions. See https://github.com/nolan-h-hamilton/Consenrich/blob/5e7f287d81ac4a9bc098ae29e825a5ded07af3b8/consenrich/consenrich.py#L58C54-L58C174"
                 },
+                "active_regions": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to BED file with active regions for Consenrich.",
+                    "fa_icon": "fas fa-book-dead",
+                    "help_text": "Defines the annotation file of 'active regions' (genomic regions) for Consenrich. See https://github.com/nolan-h-hamilton/Consenrich/blob/5e7f287d81ac4a9bc098ae29e825a5ded07af3b8/consenrich/consenrich.py#L67"
+                },
+                "rocco_params": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to ROCCO parameters file.",
+                    "fa_icon": "fas fa-file-alt",
+                    "help_text": "CSV file containing chromosome-specific optimization parameters. Each supported genome has a custom `--params` file packaged with ROCCO, but a custom file has to be manually passed to ROCCO within this pipeline. Consider using this argument to set chromosome-specific budget and gamma values custom to your data and preferences. See the [ROCCO documentation](https://nolan-h-hamilton.github.io/ROCCO/#rocco-constants) for more details."
+                },
                 "splicesites": {
                     "type": "string",
                     "format": "file-path",

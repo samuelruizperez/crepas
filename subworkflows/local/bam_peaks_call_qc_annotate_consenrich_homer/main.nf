@@ -10,6 +10,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
     ch_blacklist          // channel: [ val(meta), [ blacklist ] ]
     ch_sparsebed          // channel: [ val(meta), [ sparsebed ] ]
     ch_active_regions     // channel: [ val(meta), [ active_regions ] ]
+    ch_rocco_params      // channel: [ val(meta), path(rocco_params) ]
+    ch_effective_gsize
 
     main:
 
@@ -44,11 +46,11 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
         .out
         .signal_track
         .combine(ch_bam, by: 0)
-        // this is: [ val(meta), ch_csr_signal, [ ip_bams ], [ ip_bais ], [ control_bams ], [ control_bais ] ]
         .map { meta, ch_csr_signal, ip_bams, ip_bais, control_bams, control_bais ->
             // TODO: check if ip_bams and control_bams should be interleaved or
             //       in the same order as in consenrich. Here we just mix them:
             [ meta, ch_csr_signal, ip_bams + control_bams ]
+        }
         .set { ch_csr_signal_bamlist }
 
 
@@ -64,10 +66,9 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
     //
     ROCCO (
         ch_csr_signal_bamlist,
-        ch_bam_list,
         ch_chrom_sizes,
-        CONSENRICH.out.params_file,
-        CONSENRICH.out.effective_genome_size
+        ch_rocco_params,
+        ch_effective_gsize
     )
     ch_versions = ch_versions.mix(ROCCO.out.versions.first())
 

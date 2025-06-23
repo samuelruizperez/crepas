@@ -125,6 +125,8 @@ workflow GLSEQ {
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
     ch_sparsebed     // channel: path(sparse.bed)
+    ch_active_regions // channel: path(active_regions.bed)
+    ch_rocco_params   // channel: path(params.csv)
     ch_initiation_zones // channel: path(initiation_zones)
     ch_bwa_index     // channel: path(bwa/index/)
     ch_bowtie2_index // channel: path(bowtie2/index)
@@ -829,7 +831,10 @@ workflow GLSEQ {
             ch_chrom_sizes_endo.first(),
             ch_blacklist.first(),
             ch_sparsebed.first(),
-            []
+            [],
+            ch_rocco_params.first(),
+            ch_effective_gsize.first()
+
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
     }
