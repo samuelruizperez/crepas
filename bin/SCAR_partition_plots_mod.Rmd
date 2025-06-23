@@ -122,24 +122,31 @@ opt <- parser$parse_args()
 opt_scar_partition_file <- NULL
 
 opt_scarminusinput_partition_file <- c(
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
   "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
   
 )
+
+#opt_scarminusinput_partition_file <- c(
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+#  
+#)
+
 
 opt_strandedinput_partition_file <- NULL
 
@@ -148,6 +155,8 @@ opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_
 opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
 opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/blacklists/bed/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz"
+
+opt_chrom_sizes <- "/home/whq695/Groth_group/shared/references/Mus_musculus/GRCm38/genome/chrom_sizes/GRCm38.primary_assembly.genome.chrom.sizes"
 
 opt_prefix <- "MCM2_NatGen_test"
 
@@ -252,6 +261,15 @@ if (is.null(opt_blacklist)) {
   HAS_BLACKLIST <- TRUE
 }
 
+HAS_CHROM_SIZES <- FALSE
+if (is.null(opt_chrom_sizes)) {
+  HAS_CHROM_SIZES <- FALSE
+} else if (!file.exists(opt_chrom_sizes)) {
+  HAS_CHROM_SIZES <- FALSE
+} else {
+  HAS_CHROM_SIZES <- TRUE
+}
+
 
 if (!HAS_OKSEQ) {
   if (!HAS_IZ) {
@@ -287,20 +305,22 @@ print(paste("RPM cutoff:",opt_rpm_cutoff))
 
 ```{r}
 
-## =================== Load SCAR partition file =================================
-
 cls <- c("seqnames","start","end", # Coordinates of bin
-         "F","R",                  # Forward (F) and Reverse (R) raw counts in bin
-         "F_RPM","R_RPM",          # Forward (F_RPM) and Reverse (R_RPM) CPMs in bin
-         "RFD_raw","RFD",          # Partition scores computed with raw (RFD_raw) and smoothed (RFD) CPMs
+         "fwd_counts","rev_counts",              # Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+         "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+         "RFD_raw","RFD_smooth",          # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
          "RFD_deriv",              # Value of the derivative of the partition at this bin
          "score",                  # not used
          "zero_deriv")             # second derivative at this bin
 
-blacklist_gr <- GRanges()
 if (HAS_BLACKLIST) {
   blacklist_df <- read_tsv(opt_blacklist, col_select = c(1:3), col_names = c("seqnames","start","end"))
   blacklist_gr <- makeGRangesFromDataFrame(blacklist_df)
+}
+
+if (HAS_CHROM_SIZES) {
+  chrom_sizes_df <- read_tsv(opt_chrom_sizes, col_select = c(1:2), col_names = c("chr", "sizes"))
+  chrom_sizes <- deframe(chrom_sizes_df)
 }
 
 ```
@@ -318,24 +338,30 @@ if (HAS_OKSEQ) {
   }
   
   OK_df <- OK_df %>%
-    dplyr::filter(!seqnames %in% chrom_excl) %>%
+    dplyr::filter(!seqnames %in% chrom_excl,
+                  seqnames %in% names(chrom_sizes)) %>%
     mutate(names = paste0(seqnames, ":", start, "-", end),
-           exprs = `F` + R, # total raw counts
-           RPM = F_RPM + R_RPM # total counts pr. million
+           total_counts = fwd_counts + rev_counts, # total raw counts
+           RPM = fwd_RPM + rev_RPM                 # total counts per million
            )
 
-  OK_gr <- makeGRangesFromDataFrame(OK_df, keep.extra.columns = TRUE)
+  OK_gr <- makeGRangesFromDataFrame(OK_df, seqinfo = chrom_sizes, keep.extra.columns = TRUE)
+  
+  # Remove bins that overlap a blacklisted region
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
   # Keep only bins with sufficient coverage
   OK_gr_tmp <- subset(OK_gr, RPM >= RPM_cutoff)
 
+  # Keep only bins with a RFD zero derivative above the quantile threshold
   OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv,
                                                probs = opt_zero_deriv_quantile,
                                                na.rm = TRUE))]
   
   # Calculate OK-seq bin size
   OK_BIN_SIZE <- OK_df$end[1] - OK_df$start[1]
+
+#For initiation zones less than 3 bins apart, the bin with the highest RFD derivative was selected.
   
   # Merge overlapping/adjacent bins with a gap smaller than 3x bin size
   OK_red_gr <- GenomicRanges::reduce(OK_gr_tmp,
@@ -404,8 +430,8 @@ for (type in names(part_files)) {
       mutate(names = paste0(seqnames, ":", start, "-", end),
             IZ = NA,
             strand = "*",
-            exprs = `F` + R, # total raw counts
-            RPM = F_RPM + R_RPM, # total counts pr. million
+            total_counts = fwd_counts + rev_counts, # total raw counts
+            RPM = fwd_RPM + rev_RPM, # total counts pr. million
             type = type,
             sample = base_name)
 
@@ -480,11 +506,11 @@ for (type in names(part_files)) {
 
     tmp_mean_df <- RFD_break_all_gr %>% 
       as_tibble() %>%
-      dplyr::filter(F_RPM >= RPM_cutoff | R_RPM >= RPM_cutoff) %>%
+      dplyr::filter(fwd_RPM >= RPM_cutoff | rev_RPM >= RPM_cutoff) %>%
       dplyr::group_by(dist, sample, type) %>%
       dplyr::summarise(
         RFD_raw = mean(RFD_raw, na.rm = TRUE),
-        RFD = mean(RFD, na.rm = TRUE))
+        RFD_smooth = mean(RFD_smooth, na.rm = TRUE))
       
     RFD_mean_df <- bind_rows(RFD_mean_df, tmp_mean_df)
 
@@ -527,7 +553,7 @@ if (HAS_OKSEQ) {
 
 ```{r}
 
-raw_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)) +
+raw_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey92", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -633,7 +659,7 @@ for (type in names(part_files)) {
       print("Computing correlations with OK-seq...")
 
       RFD.cor.mat <- as.data.frame(RFD_gr) %>%
-        filter((F_RPM + R_RPM) >= RPM_cutoff) %>%
+        filter((fwd_RPM + rev_RPM) >= RPM_cutoff) %>%
         group_by(names, sample) %>%
         # TODO: modified this so column RFD is numeric ("" are replaced with NA too)
         dplyr::mutate(RFD = as.numeric(RFD)) %>%
@@ -700,7 +726,7 @@ if (HAS_OKSEQ) {
                        limits = c(-max.part,max.part)) +
     scale_x_continuous(breaks=c(-0.6, 0, 0.6),
                        limits =  c(-max.part,max.part)) +
-    geom_smooth(se=F,method="lm",size=0.3,colour="red") +
+    geom_smooth(se = FALSE, method="lm",size=0.3,colour="red") +
     theme_bw(base_size = 20, base_family = "Helvetica") +
     geom_text(data = RFD_spear_df,
               aes(x = -0.4, y = 0.5,

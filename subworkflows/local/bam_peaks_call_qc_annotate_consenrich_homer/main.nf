@@ -46,16 +46,24 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
         .combine(ch_bam, by: 0)
         // this is: [ val(meta), ch_csr_signal, [ ip_bams ], [ ip_bais ], [ control_bams ], [ control_bais ] ]
         .map { meta, ch_csr_signal, ip_bams, ip_bais, control_bams, control_bais ->
-            [ ]
+            // TODO: check if ip_bams and control_bams should be interleaved or
+            //       in the same order as in consenrich. Here we just mix them:
+            [ meta, ch_csr_signal, ip_bams + control_bams ]
+        .set { ch_csr_signal_bamlist }
 
 
-
+    // TODO: Print for debugging
+    ch_csr_signal_bamlist
+        .map { meta, ch_csr_signal, bamlist ->
+            "${meta}\t${ch_csr_signal}\t${bamlist}"
+        }
+        .collectFile( name: 'ch_csr_signal_bamlist.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER" )
 
     //
     // MODULE: Call peaks
     //
     ROCCO (
-        CONSENRICH.out.results,
+        ch_csr_signal_bamlist,
         ch_bam_list,
         ch_chrom_sizes,
         CONSENRICH.out.params_file,
@@ -65,7 +73,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
 
     emit:
 
-    results     = CONSENRICH.out.results   // channel: [ val(meta), [ tsv ] ]
+    rocco_bed   = ROCCO.out.bed            // channel: [ val(meta), path(rocco_bed) ]
 
     versions    = ch_versions              // channel: [ versions.yml ]
 }
