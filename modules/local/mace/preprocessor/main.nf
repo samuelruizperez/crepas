@@ -41,10 +41,8 @@ process MACE_PREPROCESSOR {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.border.bed
-    touch ${prefix}.border_cluster.bed
-    touch ${prefix}.border_pair_elite.bed
-    touch ${prefix}.border_pair.bed
+    touch ${prefix}_Forward.wig
+    touch ${prefix}_Reverse.wig
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

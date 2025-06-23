@@ -220,17 +220,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
                         [ meta_new, peaks ]
                 }
                 .set { ch_mace_peaks_grouped }
-            
-            //
-            // MACE QC plots with R
-            //
-            // PLOT_MACE_QC (
-            //     ch_mace_peaks_grouped,
-            //     is_narrow_peak
-            // )
-            // ch_plot_mace_qc_txt = PLOT_MACE_QC.out.txt
-            // ch_plot_mace_qc_pdf = PLOT_MACE_QC.out.pdf
-            // ch_versions = ch_versions.mix(PLOT_MACE_QC.out.versions)
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -249,6 +238,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
                         [ meta_new, anns ]
                 }
                 .set { ch_homer_annotatepeaks_grouped }
+            
             //
             // Peak annotation QC plots with R
             //
