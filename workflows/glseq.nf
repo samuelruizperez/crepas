@@ -656,7 +656,7 @@ workflow GLSEQ {
         }
         .set { ch_flT3_total }
 
-    // Add the total_mapped_reads to the bams' metas
+    // Add the total_mapped_reads to the bams' and bais' metas
     ch_filtered_bam
         .combine(ch_filtered_index, by: 0)
         .map {
@@ -670,8 +670,13 @@ workflow GLSEQ {
                 meta_clone.flT3_total_mapped_reads = total.toDouble()
                 [ meta_clone, bam, bai ]
         }
-        .tap { ch_filtered_bam_bai }
-        .map { meta, bam, bai -> [ meta, bam ] }
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam_bai
+        .map {
+            meta, bam, bai ->
+                [ meta, bam ] 
+        }
         .set { ch_filtered_bam } 
 
     //
