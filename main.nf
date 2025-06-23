@@ -99,7 +99,6 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.blacklist,
         PREPARE_GENOME.out.sparsebed,
         PREPARE_GENOME.out.active_regions,
-        PREPARE_GENOME.out.sparsebed,
         PREPARE_GENOME.out.rocco_params,
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
