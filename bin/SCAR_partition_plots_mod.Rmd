@@ -452,7 +452,7 @@ rm(OK_file, OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist, overlap_pai
 
 ```{r}
 
-partition_mean_df <- c()
+partition_df <- c()
 
 for (type in names(part_files)) {
 
@@ -519,7 +519,7 @@ for (type in names(part_files)) {
   # Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps
   partition_gr$dist <- start(partition_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
   
-  partition_mean_df <- partition_mean_df %>%
+  partition_df <- partition_df %>%
     bind_rows(as_tibble(partition_gr))
 
   }
@@ -530,28 +530,36 @@ for (type in names(part_files)) {
 if (HAS_OKSEQ) {
 
   # Expand RFD_gr for each unique sample_facet in partition_mean_df
-  sample_facets <- unique(partition_mean_df$sample_facet)
+  sample_facets <- unique(partition_df$sample_facet)
   
   expanded_RFD <- tidyr::expand_grid(
     as_tibble(RFD_gr),
     sample_facet = sample_facets
   )
   
-  partition_mean_df <- partition_mean_df %>%
+  partition_df <- partition_df %>%
     bind_rows(expanded_RFD)
 
 }
 
-partition_mean_df <- partition_mean_df %>%
+
+# get a summary table with the number of unique break_ID per sample and sample_type
+partition_summary <- partition_df %>%
+  dplyr::group_by(sample, sample_type) %>%
+  dplyr::summarise(N_IZ = n_distinct(break_ID), .groups = "drop")
+
+partition_mean_df <- partition_df %>%
   dplyr::filter(RPM >= RPM_cutoff) %>%
   dplyr::group_by(dist, sample, sample_type, sample_facet) %>%
   dplyr::summarise(
     RFD_raw = mean(RFD_raw, na.rm = TRUE),
-    RFD_smooth = mean(RFD_smooth, na.rm = TRUE)
+    RFD_smooth = mean(RFD_smooth, na.rm = TRUE),
+    .groups = "drop"
   ) %>%
   mutate(sample = gsub("^scarseq_", "", sample))
 
 partition_mean_df
+
 
 ```
 
@@ -696,30 +704,33 @@ for (type in names(part_files)) {
     if (HAS_OKSEQ) {
       print("Computing correlations with OK-seq...")
 
-      RFD_cor_mat <- as_tibble(partition_gr) %>%
+      RFD_cor_mat <- partition_df %>%
         filter(RPM >= RPM_cutoff,
                !is.na(RFD_smooth)) %>%
-        dplyr::select(interval, type, sample, RFD_smooth)
-      
-      RFD_cor_df  <- reshape2::dcast(RFD_cor_mat, interval ~ sample, value.var = "RFD_smooth", fun.aggregate = mean)
-      
-      
-      colnames(RFD_cor_df) <- c("interval","OKseq", pf)
+        dplyr::select(interval, sample_type, sample, RFD_smooth)
 
-tmp_RFD_cor_df <- RFD_cor_mat %>%
-  group_by(interval, sample) %>%
-  summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
-  pivot_wider(names_from = sample, values_from = RFD_smooth)      
+      RFD_cor_df <- RFD_cor_mat %>%
+        group_by(interval, sample) %>%
+        summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
+        pivot_wider(names_from = sample, values_from = RFD_smooth)      
       
-      cor.comp <- colnames(RFD_cor_df)[-1]
+    
+      #cor.comp <- colnames(RFD_cor_df)[-1]
+      cor.comp <- colnames(RFD_cor_df)[2:3]
       cor.comp <- cor.comp[order(cor.comp)]
+      
+      
       cor.df <- c()
+      
       for (i in 1:(length(cor.comp)-1)) {
+        message("i=",i)
         for (j in (i+1):length(cor.comp)) {
+          message("j=",j)
           comp.x <- cor.comp[i]
           comp.y <- cor.comp[j]
           cor.obj <- cor.test(RFD_cor_df[,comp.x], RFD_cor_df[,comp.y], method = "spearman",
                               use = "pairwise.complete.obs")
+          
           tmp.df <- data.frame(cor.x = comp.x, cor.y = comp.y,
                               spearman.cor = cor.obj$estimate,
                               cor.pvalue = cor.obj$p.value,
