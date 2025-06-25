@@ -103,9 +103,9 @@ def check_samplesheet(file_in, file_out):
                 print_error("Replicate id not an integer!", "Line", line)
                 sys.exit(1)
 
-            ## Check exp_type is either 'chipseq' or 'scarseq'
-            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq"]:
-                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', or 'chorseq'!", "Line", line)
+            ## Check exp_type
+            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq", "ChIP-exo"]:
+                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', 'chorseq', or 'ChIP-exo'!", "Line", line)
                 sys.exit(1)
 
             # strandedness should only be specified for scarseq

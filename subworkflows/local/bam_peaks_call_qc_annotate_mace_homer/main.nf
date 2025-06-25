@@ -1,22 +1,23 @@
 
 //
-// Call peaks with Genrich, annotate with HOMER and perform downstream QC
+// Call peaks with MACE, annotate with HOMER and perform downstream QC
 //
-
-include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
-include { GENRICH           } from '../../../modules/nf-core/genrich/main'
+include { MACE_PREPROCESSOR } from '../../../modules/local/mace/preprocessor/main'
+include { UCSC_WIGTOBIGWIG    } from '../../../modules/nf-core/ucsc/wigtobigwig/main'
+include { MACE_MACE           } from '../../../modules/local/mace/mace/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
 include { MULTIQC_CUSTOM_PEAKS     } from '../../../modules/local/multiqc_custom_peaks/main'
-include { PLOT_MACS3_QC as PLOT_GENRICH_QC } from '../../../modules/local/plot_macs3_qc/main'
+// include { PLOT_MACS3_QC as PLOT_MACE_QC } from '../../../modules/local/plot_macs3_qc/main'
 include { PLOT_HOMER_ANNOTATEPEAKS } from '../../../modules/local/plot_homer_annotatepeaks/main'
 
-workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
+workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     take:
-    ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
+    ch_bam_bai                            // channel: [ val(meta), bam, bai ]
     ch_fasta                          // channel: [ fasta  ]
     ch_gtf                            // channel: [ gtf ]
     ch_blacklist                     // channel: [ bed ]
+    ch_chrom_sizes                    // channel: [ val(meta), path(chrom_sizes) ]
     annotate_peaks_suffix             //  string: suffix for input HOMER annotate peaks files to be trimmed off
     ch_peak_count_header_multiqc      // channel: [ header_file ]
     ch_frip_score_multiqc             // channel: [ header_file ]
@@ -29,88 +30,129 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     ch_versions = Channel.empty()
 
-    SAMTOOLS_SORT (
-        ch_bam,
-        ch_fasta.first()
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
-
-    SAMTOOLS_SORT
-        .out
-        .bam
-        .branch { meta, bam ->
-            ips_with_control: meta.control
-                return [ meta.control, meta, [ bam ] ]
-            ips_wo_control: !meta.control && !meta.is_control
-                return [ meta.id, meta, [ bam ] ]
-            controls: !meta.control && meta.is_control
-                return [ meta.id, [ bam ] ]
-        }
-        .set { ch_bam_by_type }
-
-    // Create channel: [ meta, [ip_bams_merged_reps], [control_bams_merged_reps] ]
-    ch_bam_by_type.ips_with_control
-        .combine(ch_bam_by_type.controls, by: 0)
-        .mix(ch_bam_by_type.ips_wo_control)
-        // this is: [ control_id, ip_meta, ip_bam, control_bam ]
-        // control_bam can be empty if we only have ips_wo_control        
-        .map { it ->
-            def meta_clone = it[1].clone()
+    // Create channel: [ meta, [bams_merged_reps] ]
+    ch_bam_bai
+        .map { meta, bam, bai ->
+            def meta_clone = meta.clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, it[2], it[3] ?: [] ]
+            [ meta_clone.id, meta_clone, bam, bai ]
         }
         .groupTuple()
         .map {
-            id, metas, ip_bams, control_bams ->
-                [ metas[0], ip_bams.flatten(), control_bams.flatten() ]
+            id, metas, bams, bais ->
+                [ metas[0], bams.flatten(), bais.flatten() ]
         }
-        .set { ch_ip_control_bam_merged_reps }
+        .set { ch_bam_merged_reps }
 
     // TODO: Print to file for debuggin
-    ch_ip_control_bam_merged_reps
+    ch_bam_merged_reps
         .map {
-            meta, ip_bams, control_bams ->
-                "${meta}\t${ip_bams}\t${control_bams}"
+            meta, bams, bais ->
+                "${meta}\t${bams}\t${bais}"
         }
-        .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
-
+        .collectFile( name: 'ch_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug/BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER" )
 
     //
-    // Call peaks with Genrich
+    // MODULE: Preprocess BAM files for MACE peak caller
     //
-    GENRICH (
-        ch_ip_control_bam_merged_reps,
-        ch_blacklist
+    MACE_PREPROCESSOR (
+        ch_bam_merged_reps,
+        ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(GENRICH.out.versions.first())
+    ch_versions = ch_versions.mix(MACE_PREPROCESSOR.out.versions.first())
+
+    // Add strand to the meta information
+    MACE_PREPROCESSOR
+        .out
+        .forward_wig
+        .map {
+            meta, forward_wig ->
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'forward'
+                [ meta_clone, forward_wig ]
+        }
+        .set { ch_fwd_wig }
+
+    MACE_PREPROCESSOR
+        .out
+        .reverse_wig
+        .map {
+            meta, reverse_wig ->
+                def meta_clone = meta.clone()
+                meta_clone.strand = 'reverse'
+                [ meta_clone, reverse_wig ]
+        }
+        .set { ch_rwd_wig }
+
+    // Merge forward and reverse strands into one channel
+    ch_wig = ch_fwd_wig.mix(ch_rwd_wig)
+
+    UCSC_WIGTOBIGWIG (
+        ch_wig,
+        ch_chrom_sizes.map { it[1] }
+    )
+    ch_versions = ch_versions.mix(UCSC_WIGTOBIGWIG.out.versions.first())
+
+    // Split channel by strand and create channels: [ meta, bw ]
+    UCSC_WIGTOBIGWIG
+        .out
+        .bw
+        .map {
+            meta, bw ->
+                def meta_clone = meta.clone()
+                meta_clone.remove('strand')
+                [ meta_clone, meta, bw ]
+        }
+        .branch { meta_clone, meta, bw ->
+            forward: meta.strand == 'forward'
+                return [ meta_clone, bw ]
+            reverse: meta.strand == 'reverse'
+                return [ meta_clone, bw ]
+        }
+        .set { ch_bw_by_strand }
+
+    // Create channel: [ meta, forward_bw, reverse_bw ]
+    ch_bw_by_strand
+        .forward
+        .combine(ch_bw_by_strand.reverse, by: 0)
+        .set { ch_bw }
 
     //
-    // Filter out samples with 0 Genrich peaks called
+    // MODULE: Border detection and border pairing with MACE
     //
-    GENRICH
+    MACE_MACE (
+        ch_bw,
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(MACE_MACE.out.versions.first())
+
+    //
+    // Filter out samples with 0 MACE peaks called
+    //
+    MACE_MACE
         .out
-        .peak
+        .border_pair_peak
         .filter {
             meta, peaks ->
                 peaks.size() > 0
         }
-        .set { ch_gr_peaks }
+        .set { ch_mace_peaks }
 
-    // Create channels: [ meta, ip_bam, peaks ]
-    ch_bam
-        .join(ch_gr_peaks, by: 0)
+    // Create channels: [ meta, bam, peaks ]
+    ch_bam_bai
+        .join(ch_mace_peaks, by: 0)
         .map {
-            meta, ip_bam, control_bam, peaks ->
-                [ meta, ip_bam, peaks ]
+            meta, bam, bai, peaks ->
+                [ meta, bam, bai, peaks ]
         }
-        // Split channel by ip_bam
+        // Split channel by bam
         .transpose()
         .map {
-            meta, ip_bam, peaks ->
+            meta, bam, bai, peaks ->
                 def meta_clone = meta.clone()
-                meta_clone.id = ip_bam.getSimpleName()
-                [ meta_clone, ip_bam, peaks ]
+                meta_clone.id = bam.getSimpleName()
+                [ meta_clone, bam, peaks ]
         }
         .set { ch_bam_peak }
 
@@ -126,7 +168,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     ch_bam_peak
         .join(FRIP_SCORE.out.txt, by: 0)
         .map {
-            meta, ip_bam, peaks, frip ->
+            meta, bam, peaks, frip ->
                 [ meta, peaks, frip ]
         }
         .set { ch_bam_peak_frip }
@@ -142,8 +184,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks          = Channel.empty()
-    ch_plot_gr_qc_txt            = Channel.empty()
-    ch_plot_gr_qc_pdf            = Channel.empty()
+    // ch_plot_mace_qc_txt            = Channel.empty()
+    // ch_plot_mace_qc_pdf            = Channel.empty()
     ch_plot_homer_annotatepeaks_txt = Channel.empty()
     ch_plot_homer_annotatepeaks_pdf = Channel.empty()
     ch_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -152,7 +194,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         // Annotate peaks with HOMER
         //
         HOMER_ANNOTATEPEAKS (
-            ch_gr_peaks,
+            ch_mace_peaks,
             ch_fasta.map{ it[1] },
             ch_gtf
         )
@@ -163,7 +205,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
             // Create channels: [ meta, [ peaks ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
-            ch_gr_peaks
+            ch_mace_peaks
                 .map {
                     meta, peaks ->
                         [ meta.exp_type, meta.genome, peaks ]
@@ -177,18 +219,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
                         meta_new.genome = genome
                         [ meta_new, peaks ]
                 }
-                .set { ch_gr_peaks_grouped }
-            
-            //
-            // Genrich QC plots with R
-            //
-            PLOT_GENRICH_QC (
-                ch_gr_peaks_grouped,
-                is_narrow_peak
-            )
-            ch_plot_gr_qc_txt = PLOT_GENRICH_QC.out.txt
-            ch_plot_gr_qc_pdf = PLOT_GENRICH_QC.out.pdf
-            ch_versions = ch_versions.mix(PLOT_GENRICH_QC.out.versions)
+                .set { ch_mace_peaks_grouped }
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -207,6 +238,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
                         [ meta_new, anns ]
                 }
                 .set { ch_homer_annotatepeaks_grouped }
+            
             //
             // Peak annotation QC plots with R
             //
@@ -224,20 +256,21 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     emit:
 
-    peaks                        = ch_gr_peaks                   // channel: [ val(meta), [ peaks ] ]
-    bed_intervals                = GENRICH.out.bed_intervals           // channel: [ val(meta), [ bed ] ]
-    bedgraph_pileup              = GENRICH.out.bedgraph_pileup       // channel: [ val(meta), [ bedgraph ] ]
-    bedgraph_pvalues             = GENRICH.out.bedgraph_pvalues       // channel: [ val(meta), [ bedgraph ] ]
-    duplicates                   = GENRICH.out.duplicates        // channel: [ val(meta), [ bed ] ]
-    
+    peaks                        = ch_mace_peaks                   // channel: [ val(meta), [ peaks ] ]
+    border                       = MACE_MACE.out.border            // channel: [ val(meta), [ bed ] ]
+    border_cluster               = MACE_MACE.out.border_cluster    // channel: [ val(meta), [ bed ] ]
+    border_pair_elite            = MACE_MACE.out.border_pair_elite // channel: [ val(meta), [ bed ] ]
+    border_pair                  = MACE_MACE.out.border_pair       // channel: [ val(meta), [ bed ] ]
+    border_pair_peak             = MACE_MACE.out.border_pair_peak  // channel: [ val(meta), [ bed ] ]
+
     frip_txt                     = FRIP_SCORE.out.txt               // channel: [ val(meta), [ txt ] ]
     frip_multiqc                 = MULTIQC_CUSTOM_PEAKS.out.frip    // channel: [ val(meta), [ frip ] ]
     
     peak_count_multiqc           = MULTIQC_CUSTOM_PEAKS.out.count   // channel: [ val(meta), [ counts ] ]
     homer_annotatepeaks          = ch_homer_annotatepeaks           // channel: [ val(meta), [ txt ] ]
 
-    plot_gr_qc_txt               = ch_plot_gr_qc_txt             // channel: [ txt ]
-    plot_gr_qc_pdf               = ch_plot_gr_qc_pdf             // channel: [ pdf ]
+    // plot_mace_qc_txt               = ch_plot_mace_qc_txt             // channel: [ txt ]
+    // plot_mace_qc_pdf               = ch_plot_mace_qc_pdf             // channel: [ pdf ]
 
     plot_homer_annotatepeaks_txt = ch_plot_homer_annotatepeaks_txt  // channel: [ txt ]
     plot_homer_annotatepeaks_pdf = ch_plot_homer_annotatepeaks_pdf  // channel: [ pdf ]
