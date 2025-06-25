@@ -172,7 +172,6 @@ opt_exclude_chromosomes <- "chrX,chrY,chrM"
 
 ```
 
-
 ```{r}
 
 # Initialize partition files and flags
@@ -314,13 +313,15 @@ cls <- c("seqnames","start","end", # Coordinates of bin
          "zero_deriv")             # second derivative at this bin
 
 if (HAS_BLACKLIST) {
-  blacklist_df <- read_tsv(opt_blacklist, col_select = c(1:3), col_names = c("seqnames","start","end"))
-  blacklist_gr <- makeGRangesFromDataFrame(blacklist_df)
+  blacklist_df <- read_tsv(opt_blacklist, col_select = c(1:3), col_names = c("seqnames","start","end"), show_col_types = FALSE)
+  blacklist_gr <- makeGRangesFromDataFrame(blacklist_df, starts.in.df.are.0based = TRUE)
+  rm(blacklist_df)
 }
 
 if (HAS_CHROM_SIZES) {
-  chrom_sizes_df <- read_tsv(opt_chrom_sizes, col_select = c(1:2), col_names = c("chr", "sizes"))
+  chrom_sizes_df <- read_tsv(opt_chrom_sizes, col_select = c(1:2), col_names = c("chr", "sizes"), show_col_types = FALSE)
   chrom_sizes <- deframe(chrom_sizes_df)
+  rm(chrom_sizes_df)
 }
 
 ```
@@ -330,74 +331,120 @@ if (HAS_CHROM_SIZES) {
 ```{r}
 
 if (HAS_OKSEQ) {
-
-  OK_df <- read_tsv(OK_file, col_names = cls)
+  
+  message("\n[", Sys.time(), "] Reading the OK-seq RFD file...")
+  OK_df <- read_tsv(OK_file, col_names = cls, show_col_types = FALSE)
 
   if (ncol(OK_df) != 12) {
     stop("[", Sys.time(), "] ERROR: The OK-seq RFD file is not in the correct format (ncol != 12)")
   }
-  
+
+  message("\n[", Sys.time(), "] Removing OK-seq bins within excluded chromosomes or outside of chrom_sizes...")
   OK_df <- OK_df %>%
     dplyr::filter(!seqnames %in% chrom_excl,
                   seqnames %in% names(chrom_sizes)) %>%
-    mutate(names = paste0(seqnames, ":", start, "-", end),
-           total_counts = fwd_counts + rev_counts, # total raw counts
-           RPM = fwd_RPM + rev_RPM                 # total counts per million
-           )
+    mutate(total_counts = fwd_counts + rev_counts, # total raw counts
+           RPM = fwd_RPM + rev_RPM,                 # total counts per million
+           sample = "OK-seq",
+           sample_type = "OK-seq")
 
-  OK_gr <- makeGRangesFromDataFrame(OK_df, seqinfo = chrom_sizes, keep.extra.columns = TRUE)
+  message("\n[", Sys.time(), "] Converting the start positions of the OK-seq bins to 1-based...")
+  OK_gr <- makeGRangesFromDataFrame(OK_df,
+                                    seqinfo = chrom_sizes,
+                                    keep.extra.columns = TRUE,
+                                    starts.in.df.are.0based = TRUE)
   
-  # Remove bins that overlap a blacklisted region
+  # We copy the interval now and not before with dplyr because the start
+  # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
+  OK_gr$interval <- paste0(seqnames(OK_gr), ":", start(OK_gr), "-", end(OK_gr))
+  
+  message("\n[", Sys.time(), "] Removing OK-seq bins that overlap a blacklisted region...")
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
-  # Keep only bins with sufficient coverage
+  message("\n[", Sys.time(), "] Keeping only OK-seq bins with sufficient coverage...")
   OK_gr_tmp <- subset(OK_gr, RPM >= RPM_cutoff)
 
-  # Keep only bins with a RFD zero derivative above the quantile threshold
+  message("\n[", Sys.time(), "] Keeping only OK-seq bins with a RFD zero derivative above the quantile threshold...")
   OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv,
                                                probs = opt_zero_deriv_quantile,
                                                na.rm = TRUE))]
   
-  # Calculate OK-seq bin size
-  OK_BIN_SIZE <- OK_df$end[1] - OK_df$start[1]
-
-#For initiation zones less than 3 bins apart, the bin with the highest RFD derivative was selected.
+  message("\n[", Sys.time(), "] Calculating OK-seq bin size...")
+  OK_BIN_SIZE <- width(OK_gr)[1]
   
-  # Merge overlapping/adjacent bins with a gap smaller than 3x bin size
-  OK_red_gr <- GenomicRanges::reduce(OK_gr_tmp,
+  # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials),
+  # for initiation zones less than 3 bins apart, the bin with the highest RFD derivative is selected:
+
+  message("\n[", Sys.time(), "] Merging overlapping/adjacent OK-seq bins with a gap smaller than 3x bin size...")
+  OK_reduced_gr <- GenomicRanges::reduce(OK_gr_tmp,
                                      min.gapwidth = OK_BIN_SIZE * 3,
                                      with.revmap = TRUE)
 
-  # For each set of merged bins, keep the bin with the highest RFD_deriv
-  filtered_data <- OK_gr_tmp[sapply(OK_red_gr$revmap, 
+  # For each set of merged bins,
+  message("\n[", Sys.time(), "] Keeping the OK-seq bin with the highest RFD derivative...")
+  filtered_data <- OK_gr_tmp[sapply(OK_reduced_gr$revmap, 
     function(x) { x[which.max(OK_gr_tmp$RFD_deriv[x])] })]
 
   # Set these bins as initiation zones
-  OK_gr$IZ <- ifelse(OK_gr$names %in% filtered_data$names, TRUE, FALSE)
+  OK_gr$IZ <- ifelse(OK_gr$interval %in% filtered_data$interval, TRUE, FALSE)
 
-  OK_gr$sample <- "OK-seq"
+  message("\n[", Sys.time(), "] The number of initiation zones after preprocessing is ", sum(OK_gr$IZ), ".")
+  IZ_gr <- subset(OK_gr, IZ)
+
+} else {
+  
+  message("\n[", Sys.time(), "] Loading initiation zones from file: ", opt_initiation_zones, "...")
+  IZ_df <- read_tsv(opt_initiation_zones,
+                    col_select = c(1:3),
+                    col_names = c("seqnames", "start", "end"),
+                    show_col_types = FALSE)
+
+  message("\n[", Sys.time(), "] Removing initiation zones within excluded chromosomes or outside of chrom_sizes...")
+  IZ_gr <- IZ_df %>%
+    filter(!seqnames %in% chrom_excl,
+           seqnames %in% names(chrom_sizes)) %>%
+    mutate(sample = "OK-seq",
+           sample_type = "OK-seq") %>%
+    makeGRangesFromDataFrame(seqinfo = chrom_sizes,
+                             keep.extra.columns = TRUE,
+                             starts.in.df.are.0based = TRUE)
 
 }
 
-```
+message("\n[", Sys.time(), "] Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
 
-```{r}
+# Get original start coordinate for each initiation zone 
+IZ_gr$break_start <- start(IZ_gr)
 
-line_colors <- c("SCAR_Input_Corrected" = "darkgreen",
-                 "SCAR" = "darkblue",
-                 "strandedInput" = "orange")
+# Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
+IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
 
-line_colors <- line_colors[names(part_files)]
+# Finding the nearest resized initiation zone to each resized initiation zone
+IZ_dist <- distanceToNearest(IZ_gr)
 
-sample_labels <-  c("SCAR_Input_Corrected" =  "SCAR (Input-corrected)",
-                    "SCAR" = "SCAR", "strandedInput" = "Stranded input")
+# Removing overlapping resized initiation zones
+IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
 
-sample_labels <- sample_labels[names(part_files)]
+message("\n[", Sys.time(), "] The number of initiation zones after filtering is: ", length(IZ_gr), ".")
 
-if (HAS_OKSEQ) {
- line_colors <- c("OK-seq" = "darkgray", line_colors)
+# As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
+message("\n[", Sys.time(), "] Calculating RFD rates around initiation zones (100 kb upstream and 100 kb
+downstream of each IZ) by averaging values within each bin position...")
 
-}
+message("\n[", Sys.time(), "] Finding which initiation zones overlap which OK-seq bins...")
+overlap_pairs <- findOverlaps(IZ_gr, OK_gr)
+
+# Extracting the OK-seq bins that overlap with an initiation zone
+RFD_gr <- OK_gr[subjectHits(overlap_pairs)]
+
+# Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
+RFD_gr$break_ID <- IZ_gr$interval[queryHits(overlap_pairs)]
+
+# Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps
+RFD_gr$dist <- start(RFD_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
+
+# Remove temporary variables
+rm(OK_file, OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist, overlap_pairs)
 
 ```
 
@@ -405,155 +452,132 @@ if (HAS_OKSEQ) {
 
 ```{r}
 
-RFD_mean_df <- c()
+partition_mean_df <- c()
 
 for (type in names(part_files)) {
 
-  message("\n[", Sys.time(), "] Processing partition type: ", type, "\n")
+  message("\n[", Sys.time(), "] Processing partition type: ", type, "...")
   
   for (file in part_files[[type]]) {
 
     base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(file))
-    message("\n[", Sys.time(), "] Processing partition file: ", base_name, " (", file, ")\n")
+    message("\n[", Sys.time(), "] Processing partition file: ", base_name, "\n(", file, ")...")
 
-    SCAR_df <- read_tsv(file, col_names = cls)
+    message("\n[", Sys.time(), "] Reading partition file...")
+    SCAR_df <- read_tsv(file, col_names = cls, show_col_types = FALSE)
     
-    # TODO: remove
-    print(SCAR_df %>% filter(seqnames == "chr1"))
-
     if (ncol(SCAR_df) != 12) {
       stop("[", Sys.time(), "] ERROR:", base_name, "is not a partition file format (ncol != 12)")
     }
 
+    message("\n[", Sys.time(), "] Removing partition bins within excluded chromosomes or outside of chromosome sizes...")
     SCAR_df <- SCAR_df %>%
-      dplyr::filter(!seqnames %in% chrom_excl) %>%
-      mutate(names = paste0(seqnames, ":", start, "-", end),
-            IZ = NA,
+      dplyr::filter(!seqnames %in% chrom_excl,
+                    seqnames %in% names(chrom_sizes)) %>%
+      mutate(IZ = NA,
             strand = "*",
             total_counts = fwd_counts + rev_counts, # total raw counts
-            RPM = fwd_RPM + rev_RPM, # total counts pr. million
-            type = type,
-            sample = base_name)
-
-    # TODO: remove
-    print(SCAR_df %>% filter(seqnames == "chr1"))
+            RPM = fwd_RPM + rev_RPM,                # total counts pr. million
+            sample = base_name,
+            sample_type = type,
+            sample_facet = type)
     
-    PART_BIN_SIZE <- SCAR_df$end[1] - SCAR_df$start[1]
-
-    print(paste(file, "bin size:", PART_BIN_SIZE))
+    SCAR_gr <- makeGRangesFromDataFrame(SCAR_df,
+                                        seqinfo = chrom_sizes,
+                                        keep.extra.columns = TRUE,
+                                        starts.in.df.are.0based = TRUE)
+    
+    # We copy the interval now and not before with dplyr because the start
+    # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
+    SCAR_gr$interval <- paste0(seqnames(SCAR_gr), ":", start(SCAR_gr), "-", end(SCAR_gr))    
+      
+    message("\n[", Sys.time(), "] Removing partition bins that overlap a blacklisted region...")
+    SCAR_gr <- SCAR_gr[!overlapsAny(SCAR_gr, blacklist_gr, minoverlap = 1)]
+      
+    PART_BIN_SIZE <- width(SCAR_gr)[1]
+    message("\n[", Sys.time(), "] This partition's bin size is ", PART_BIN_SIZE, " bp.")
 
     if (HAS_OKSEQ) {
-
       if (OK_BIN_SIZE != PART_BIN_SIZE) {
-        stop("\n[", Sys.time(), "] ERROR: Bin size of", base_name, "(", PART_BIN_SIZE, "bp ) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, "bp ).\n")
+        stop("\n[", Sys.time(), "] ERROR: Bin size of", base_name,
+             "(", PART_BIN_SIZE, "bp ) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, "bp ).\n")
       }
 
-      RFD_gr <- as_tibble(OK_gr) %>%
-        mutate(type = type,
-               sample = "OK-seq") %>%
-        dplyr::select(colnames(SCAR_df)) %>%
-        bind_rows(SCAR_df) %>%
-        makeGRangesFromDataFrame(keep.extra.columns = TRUE)
-
-      # print rows where sample is "SCAR_Input_Corrected" and seqnames is "chr1"
-      print(head(RFD_gr[which(RFD_gr$sample == base_name & seqnames(RFD_gr) == "chr1"), ]))
-
-      OK_ext_gr <- subset(RFD_gr, IZ & sample == "OK-seq")
-      
-      print(head(OK_ext_gr))
-
-
-    } else {
-
-      RFD_gr <- SCAR_df %>%
-        makeGRangesFromDataFrame(keep.extra.columns = TRUE)
-
-      message("\n[", Sys.time(), "] Loading initiation zones from file: ", opt_initiation_zones, "\n")
-      IZ_df <- read_tsv(opt_initiation_zones, col_select = c(1:3), col_names = TRUE)
-
-      OK_ext_gr <- IZ_df %>%
-        filter(!seqnames %in% chrom_excl) %>%
-        mutate(sample = "OK-seq") %>%
-        makeGRangesFromDataFrame(keep.extra.columns = TRUE)
-
-    }
-
-    # Get start position of initiation zone
-    OK_ext_gr$break_start <- start(OK_ext_gr)
-
-    # Exclude overlapping initiation zones (within 20,000 bp by default):
-
-      # First resize initiation zones
-      OK_ext_gr <- resize(OK_ext_gr, IZ_LIMITS * 2, fix = "center")
-
-      # Then, find the nearest initiation zone to each initiation zone
-      OK_dist <- distanceToNearest(OK_ext_gr)
-
-      # Remove overlapping initiation zones
-      OK_ext_gr <- OK_ext_gr[-queryHits(subset(OK_dist,
-                                              OK_dist@elementMetadata$distance==0))]
-
-    # Remove overlap with blacklisted regions
-    RFD_gr <- RFD_gr[!overlapsAny(RFD_gr, blacklist_gr, minoverlap = 1)]
-
-    n.izs <- length(OK_ext_gr)
-    message("\n[", Sys.time(), "] The number of initiation zones after filtering is: ", n.izs, "\n")
-
-    overlap.pairs <- findOverlaps(OK_ext_gr, RFD_gr)
-    RFD_break_all_gr <- RFD_gr[subjectHits(overlap.pairs)]
-    RFD_break_all_gr$break_ID <- OK_ext_gr$names[queryHits(overlap.pairs)]
-    RFD_break_all_gr$dist <- start(RFD_break_all_gr) - OK_ext_gr$break_start[queryHits(overlap.pairs)]
-
-    tmp_mean_df <- RFD_break_all_gr %>% 
-      as_tibble() %>%
-      dplyr::filter(fwd_RPM >= RPM_cutoff | rev_RPM >= RPM_cutoff) %>%
-      dplyr::group_by(dist, sample, type) %>%
-      dplyr::summarise(
-        RFD_raw = mean(RFD_raw, na.rm = TRUE),
-        RFD_smooth = mean(RFD_smooth, na.rm = TRUE))
-      
-    RFD_mean_df <- bind_rows(RFD_mean_df, tmp_mean_df)
-
-    
-    rm(tmp_mean_df)
+  # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
+  message("\n[", Sys.time(), "] Calculating partition rates around initiation zones (100 kb upstream and 100 kb
+  downstream of each IZ) by averaging values within each bin position...")
+  
+  message("\n[", Sys.time(), "] Finding which initiation zones overlap which OK-seq bins...")
+  overlap_pairs <- findOverlaps(IZ_gr, SCAR_gr)
+  
+  # Extracting the OK-seq bins that overlap with an initiation zone
+  partition_gr <- SCAR_gr[subjectHits(overlap_pairs)]
+  
+  # Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
+  partition_gr$break_ID <- IZ_gr$interval[queryHits(overlap_pairs)]
+  
+  # Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps
+  partition_gr$dist <- start(partition_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
+  
+  partition_mean_df <- partition_mean_df %>%
+    bind_rows(as_tibble(partition_gr))
 
   }
 
+  }
 }
 
+if (HAS_OKSEQ) {
 
-# remove "scarseq_" prefix from sample names
-RFD_mean_df <- RFD_mean_df %>%
-  mutate(sample = gsub("scarseq_", "", sample))
+  # Expand RFD_gr for each unique sample_facet in partition_mean_df
+  sample_facets <- unique(partition_mean_df$sample_facet)
+  
+  expanded_RFD <- tidyr::expand_grid(
+    as_tibble(RFD_gr),
+    sample_facet = sample_facets
+  )
+  
+  partition_mean_df <- partition_mean_df %>%
+    bind_rows(expanded_RFD)
 
-# TODO: remove
-print(head(RFD_mean_df))
+}
 
+partition_mean_df <- partition_mean_df %>%
+  dplyr::filter(RPM >= RPM_cutoff) %>%
+  dplyr::group_by(dist, sample, sample_type, sample_facet) %>%
+  dplyr::summarise(
+    RFD_raw = mean(RFD_raw, na.rm = TRUE),
+    RFD_smooth = mean(RFD_smooth, na.rm = TRUE)
+  ) %>%
+  mutate(sample = gsub("^scarseq_", "", sample))
 
-RFD_mean_df
+partition_mean_df
+
 ```
 
 ## Partition plots
 
 ```{r}
 
+sample_labels <-  c("SCAR_Input_Corrected" =  "SCAR (Input-corrected)",
+                    "SCAR" = "SCAR", "strandedInput" = "Stranded input")
+sample_labels <- sample_labels[names(part_files)]
+
 # set a color in Dark2 palette for each sample, but set OK-seq to dark gray
-if (HAS_OKSEQ) {
-  dark2_colors <- RColorBrewer::brewer.pal(length(unique(RFD_mean_df$sample)), "Paired")
-  sample_names <- unique(RFD_mean_df$sample)
-  sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
-  sample_colors["OK-seq"] <- "grey60"
-  line_colors <- sample_colors
-}
+dark2_colors <- RColorBrewer::brewer.pal(length(unique(partition_mean_df$sample)), "Paired")
+sample_names <- unique(partition_mean_df$sample)
+sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
+sample_colors["OK-seq"] <- "grey60"
+line_colors <- sample_colors
 
 ```
 
 
 ### Raw partition plot(s)
 
-```{r}
+```{r, fig.height = 2.5}
 
-raw_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
+raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey92", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -563,20 +587,21 @@ raw_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sam
     geom_line(size = 0.3) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
-    ylab("Partition or RFD") +
+    ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
+    labs(caption = paste("N =", length(IZ_gr))) +
     theme_bw(base_family = "Helvetica") +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           legend.title = element_blank(),
-          axis.title = element_text(size = 7),
-          axis.text = element_text(size = 5),
+          axis.title = element_text(size = 6),
+          axis.text = element_text(size = 6),
           legend.text = element_text(size = 6),
           strip.background = element_blank(),
-          aspect.ratio = 1) +
+          aspect.ratio = 1,
+          plot.caption = element_text(size = 6)) +
     guides(color = guide_legend(order = 1)) +
-    facet_wrap(~ type, nrow = 1, labeller = labeller(.cols = sample_labels)) +
-    scale_y_continuous(expand = expansion(mult = c(0.1, 0.1))) +
-    labs(caption = paste("N =", n.izs), size = 2) +
+    facet_wrap(~ sample_facet, nrow = 1, labeller = labeller(.cols = sample_labels)) +
+    scale_y_continuous(expand = expansion(mult = c(0.11, 0.11))) +
     annotate(geom = 'text', label = 'Lagging', x = -Inf, y = Inf, hjust = -0.13,
             vjust = 2, size = 2) +
     annotate(geom = 'text', label = 'Leading', x = -Inf, y = -Inf, hjust = -0.13,
@@ -588,18 +613,24 @@ raw_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sam
 
 raw_plot
 
+```
+
+```{r}
+
+
 ggsave(filename = file.path(plots.dir,paste0(PREFIX,".partition_plots_raw.pdf")),
-       plot = raw_plot, width = 10, height = 6.5, units = "cm",
+       plot = raw_plot, width = 4, height = 2.5, units = "in",
        dpi = 300)
 
 
 ```
 
+
 ### Smoothed partition plot(s)
 
-```{r, fig.width=3.93701, fig.height=2.55906}
+```{r, fig.height = 2.5}
 
-smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)) +
+smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey92", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -609,20 +640,21 @@ smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)
     geom_line(stat = "smooth", method = "gam", se = FALSE, size = 0.5) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
-    ylab("Partition or RFD") +
+    ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
+    labs(caption = paste("N =", length(IZ_gr))) +
     theme_bw(base_family = "Helvetica") +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           legend.title = element_blank(),
-          axis.title = element_text(size = 7),
-          axis.text = element_text(size = 5),
-          legend.text = element_text(size = 5),
+          axis.title = element_text(size = 6),
+          axis.text = element_text(size = 6),
+          legend.text = element_text(size = 6),
           strip.background = element_blank(),
-          aspect.ratio = 1) +
+          aspect.ratio = 1,
+          plot.caption = element_text(size = 6)) +
     guides(color = guide_legend(order = 1)) +
-    facet_wrap(~ type, nrow = 1, labeller = labeller(.cols = sample_labels)) +
-    scale_y_continuous(expand = expansion(mult = c(0.1, 0.1))) +
-    labs(caption = paste("N =", n.izs), size = 1) +
+    facet_wrap(~ sample_facet, nrow = 1, labeller = labeller(.cols = sample_labels)) +
+    scale_y_continuous(expand = expansion(mult = c(0.11, 0.11))) +
     annotate(geom = 'text', label = 'Lagging', x = -Inf, y = Inf, hjust = -0.13,
             vjust = 2, size = 2) +
     annotate(geom = 'text', label = 'Leading', x = -Inf, y = -Inf, hjust = -0.13,
@@ -635,6 +667,11 @@ smooth_plot <- ggplot(RFD_mean_df, aes(x = dist / 1000, y = RFD, color = sample)
 
 smooth_plot
 
+
+```
+
+```{r}
+
 ggsave(filename = file.path(plots.dir, paste0(PREFIX, ".partition_plots_smooth.pdf")),
        plot = smooth_plot, width = 10, height = 6.5, units = "cm")
 
@@ -643,6 +680,7 @@ ggsave(filename = file.path(plots.dir, paste0(PREFIX, ".partition_plots_smooth.p
        dpi = 600)
 
 ```
+
 
 ## Correlation scatter plots vs OK-seq
 
@@ -658,24 +696,29 @@ for (type in names(part_files)) {
     if (HAS_OKSEQ) {
       print("Computing correlations with OK-seq...")
 
-      RFD.cor.mat <- as.data.frame(RFD_gr) %>%
-        filter((fwd_RPM + rev_RPM) >= RPM_cutoff) %>%
-        group_by(names, sample) %>%
-        # TODO: modified this so column RFD is numeric ("" are replaced with NA too)
-        dplyr::mutate(RFD = as.numeric(RFD)) %>%
-        summarise(RFD = mean(RFD, na.rm = TRUE)) %>% as.data.frame()
+      RFD_cor_mat <- as_tibble(partition_gr) %>%
+        filter(RPM >= RPM_cutoff,
+               !is.na(RFD_smooth)) %>%
+        dplyr::select(interval, type, sample, RFD_smooth)
+      
+      RFD_cor_df  <- reshape2::dcast(RFD_cor_mat, interval ~ sample, value.var = "RFD_smooth", fun.aggregate = mean)
+      
+      
+      colnames(RFD_cor_df) <- c("interval","OKseq", pf)
 
-      RFD.cor.df  <- reshape2::dcast(RFD.cor.mat, names ~ sample, value.var = "RFD", fun.aggregate = mean)
-      colnames(RFD.cor.df) <- c("names","OKseq", pf)
-
-      cor.comp <- colnames(RFD.cor.df)[-1]
+tmp_RFD_cor_df <- RFD_cor_mat %>%
+  group_by(interval, sample) %>%
+  summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = sample, values_from = RFD_smooth)      
+      
+      cor.comp <- colnames(RFD_cor_df)[-1]
       cor.comp <- cor.comp[order(cor.comp)]
       cor.df <- c()
       for (i in 1:(length(cor.comp)-1)) {
         for (j in (i+1):length(cor.comp)) {
           comp.x <- cor.comp[i]
           comp.y <- cor.comp[j]
-          cor.obj <- cor.test(RFD.cor.df[,comp.x], RFD.cor.df[,comp.y], method = "spearman",
+          cor.obj <- cor.test(RFD_cor_df[,comp.x], RFD_cor_df[,comp.y], method = "spearman",
                               use = "pairwise.complete.obs")
           tmp.df <- data.frame(cor.x = comp.x, cor.y = comp.y,
                               spearman.cor = cor.obj$estimate,
@@ -687,14 +730,14 @@ for (type in names(part_files)) {
 
       RFD_spear_df <- rbind(RFD_spear_df, cor.df)
 
-      tmp.cor.melt.df <- melt(RFD.cor.df, id.vars = c("names","OKseq"),
+      tmp_cor_melt_df <- melt(RFD_cor_df, id.vars = c("interval","OKseq"),
                               variable.name = "sample", value.name = "RFD") %>%
         filter(!is.nan(RFD) & !is.nan(OKseq))
 
 
-      colnames(tmp.cor.melt.df) <- c("names", "RFD", "sample", "Partition")
-      tmp.cor.melt.df$sample <- as.character(tmp.cor.melt.df$sample)
-      RFD_cor_melt_df <- rbind(RFD_cor_melt_df, tmp.cor.melt.df)
+      colnames(tmp_cor_melt_df) <- c("interval", "RFD", "sample", "Partition")
+      tmp_cor_melt_df$sample <- as.character(tmp_cor_melt_df$sample)
+      RFD_cor_melt_df <- rbind(RFD_cor_melt_df, tmp_cor_melt_df)
     }
   }
 }
