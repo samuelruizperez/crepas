@@ -29,6 +29,7 @@ include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE      } from '../subworkfl
 include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
@@ -89,12 +90,15 @@ ch_spp_rsc_header           = file("$projectDir/assets/multiqc/spp_rsc_header.tx
 ch_spp_correlation_header   = file("$projectDir/assets/multiqc/spp_correlation_header.txt", checkIfExists: true)
 ch_peak_count_header        = file("$projectDir/assets/multiqc/peak_count_header.txt", checkIfExists: true)
 ch_gr_peak_count_header     = file("$projectDir/assets/multiqc/gr_peak_count_header.txt", checkIfExists: true)
+ch_mace_peak_count_header     = file("$projectDir/assets/multiqc/mace_peak_count_header.txt", checkIfExists: true)
 ch_epic2_peak_count_header     = file("$projectDir/assets/multiqc/epic2_peak_count_header.txt", checkIfExists: true)
 ch_frip_score_header        = file("$projectDir/assets/multiqc/frip_score_header.txt", checkIfExists: true)
 ch_gr_frip_score_header     = file("$projectDir/assets/multiqc/gr_frip_score_header.txt", checkIfExists: true)
+ch_mace_frip_score_header     = file("$projectDir/assets/multiqc/mace_frip_score_header.txt", checkIfExists: true)
 ch_epic2_frip_score_header     = file("$projectDir/assets/multiqc/epic2_frip_score_header.txt", checkIfExists: true)
 ch_peak_annotation_header   = file("$projectDir/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
 ch_gr_peak_annotation_header = file("$projectDir/assets/multiqc/gr_peak_annotation_header.txt", checkIfExists: true)
+ch_mace_peak_annotation_header = file("$projectDir/assets/multiqc/mace_peak_annotation_header.txt", checkIfExists: true)
 ch_epic2_peak_annotation_header = file("$projectDir/assets/multiqc/epic2_peak_annotation_header.txt", checkIfExists: true)
 ch_deseq2_pca_header        = Channel.value(file("$projectDir/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
 ch_deseq2_clustering_header = Channel.value(file("$projectDir/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
@@ -654,7 +658,7 @@ workflow GLSEQ {
         }
         .set { ch_flT3_total }
 
-    // Add the total_mapped_reads to the bams' metas
+    // Add the total_mapped_reads to the bams' and bais' metas
     ch_filtered_bam
         .combine(ch_filtered_index, by: 0)
         .map {
@@ -668,8 +672,13 @@ workflow GLSEQ {
                 meta_clone.flT3_total_mapped_reads = total.toDouble()
                 [ meta_clone, bam, bai ]
         }
-        .tap { ch_filtered_bam_bai }
-        .map { meta, bam, bai -> [ meta, bam ] }
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam_bai
+        .map {
+            meta, bam, bai ->
+                [ meta, bam ] 
+        }
         .set { ch_filtered_bam } 
 
     //
@@ -677,7 +686,7 @@ workflow GLSEQ {
     //
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS (
-            ch_filtered_bam.join(ch_filtered_index, by: [0]),
+            ch_filtered_bam_bai,
             ch_fasta.first(),
             ch_fai.first()
         )
@@ -777,6 +786,7 @@ workflow GLSEQ {
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
         ch_filtered_index = BAM_DOWNSAMPLE.out.bai
+        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect{it[1]})
@@ -785,8 +795,7 @@ workflow GLSEQ {
     }
     
     // Branch channels based on if input control is present
-    ch_filtered_bam
-        .join(ch_filtered_index, by: 0)
+    ch_filtered_bam_bai
         .branch { meta, bam, bai ->
             ips_with_control: meta.control
                 return [ meta.control, meta, [ bam ], [ bai ] ]
@@ -801,11 +810,13 @@ workflow GLSEQ {
     ch_bam_by_type.ips_with_control
         .combine(ch_bam_by_type.controls, by: 0)
         .mix(ch_bam_by_type.ips_wo_control)
-        .map { control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ->
-            def meta_clone = ip_meta.clone()
+        // this is: [ control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
+        // control_bam and control_bai can be empty if we only have ips_wo_control
+        .map { it ->
+            def meta_clone = it[1].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, ip_bam, ip_bai, control_bam ?: [], control_bai ?: [] ]
+            [ meta_clone.id, meta_clone, it[2], it[3], it[4] ?: [], it[5] ?: [] ]
         }
         .groupTuple()
         .map {
@@ -878,7 +889,7 @@ workflow GLSEQ {
     
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
@@ -939,7 +950,7 @@ workflow GLSEQ {
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
+            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_chrom_sizes_endo.first(),
@@ -1023,7 +1034,7 @@ workflow GLSEQ {
     //
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' },
+            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
@@ -1039,6 +1050,30 @@ workflow GLSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect{it[1]})
         ch_versions      = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
+    }
+
+    //
+    // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
+    //
+    if (!params.skip_mace) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER (
+            ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
+            ch_fasta.first(),
+            ch_gtf.map{ it[1] }.first(),
+            ch_blacklist.map{ it[1] }.first(),
+            ch_chrom_sizes_endo.first(),
+            ".annotatePeaks.txt",
+            ch_mace_peak_count_header,
+            ch_mace_frip_score_header,
+            ch_mace_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect{it[1]})
+        ch_versions      = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
     }
 
 
