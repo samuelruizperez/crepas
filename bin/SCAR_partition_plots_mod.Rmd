@@ -119,36 +119,30 @@ opt <- parser$parse_args()
 
 # replace arguments
 
-opt_scar_partition_file <- NULL
+opt_scar_partition_file <- c("/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv",
+                             "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv")
 
 opt_scarminusinput_partition_file <- c(
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+ "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
   "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
-  
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+ "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
 )
 
-#opt_scarminusinput_partition_file <- c(
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-#  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
-#  
-#)
 
-
-opt_strandedinput_partition_file <- NULL
+opt_strandedinput_partition_file <- "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_stranded_input_K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
 
 opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
@@ -545,7 +539,7 @@ if (HAS_OKSEQ) {
 
 # get a summary table with the number of unique break_ID per sample and sample_type
 partition_summary <- partition_df %>%
-  dplyr::group_by(sample, sample_type) %>%
+  dplyr::group_by(sample, sample_type, sample_facet) %>%
   dplyr::summarise(N_IZ = n_distinct(break_ID), .groups = "drop")
 
 partition_mean_df <- partition_df %>%
@@ -583,7 +577,7 @@ line_colors <- sample_colors
 
 ### Raw partition plot(s)
 
-```{r, fig.height = 2.5}
+```{r, fig.height = 2.5, dpi=300, fig.width=10}
 
 raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
@@ -636,7 +630,7 @@ ggsave(filename = file.path(plots.dir,paste0(PREFIX,".partition_plots_raw.pdf"))
 
 ### Smoothed partition plot(s)
 
-```{r, fig.height = 2.5}
+```{r, fig.height = 2.5, dpi=300, fig.width=10}
 
 smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
@@ -657,6 +651,8 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, co
           axis.title = element_text(size = 6),
           axis.text = element_text(size = 6),
           legend.text = element_text(size = 6),
+          legend.key.size = unit(0.3, "cm"),
+          legend.key = element_rect(color = NA, fill = NA),
           strip.background = element_blank(),
           aspect.ratio = 1,
           plot.caption = element_text(size = 6)) +
@@ -690,122 +686,47 @@ ggsave(filename = file.path(plots.dir, paste0(PREFIX, ".partition_plots_smooth.p
 ```
 
 
-## Correlation scatter plots vs OK-seq
+## Scatter plots: RFD (OK-seq) vs partition
 
 ```{r}
 
-RFD_cor_melt_df <- c()
-RFD_spear_df <- c()
+partition_df_flt <- partition_df %>%
+  filter(RPM >= RPM_cutoff,
+         !is.na(RFD_smooth)) %>%
+  dplyr::select(interval,  sample, sample_type, sample_facet, RFD_smooth)
 
-for (type in names(part_files)) {
-  
-  for (file in part_files[[type]]) {
+RFD_plot_df <- partition_df_flt %>%
+  group_by(interval, sample, sample_facet) %>%
+  summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = sample, values_from = RFD_smooth) %>%
+  pivot_longer(cols = -c(interval, "OK-seq", sample_facet), names_to = "sample", values_to = "Partition") %>%
+  dplyr::rename(RFD = "OK-seq") %>%
+  mutate(sample = gsub("^scarseq_", "", sample))
 
-    if (HAS_OKSEQ) {
-      print("Computing correlations with OK-seq...")
+partition_scatter_plot <- RFD_plot_df %>%
+  ggplot(aes(x = RFD, y = Partition)) +
+  geom_hex(bins = 100) +
+  scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+  geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.5) +
+  geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.5) +
+  geom_smooth(se = FALSE, method = "lm", size = 0.3, color = "red") +
+  # add correlation and p-value to the plot
+  stat_cor(aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~")),
+           method = "spearman", size = 2.5,
+           cor.coef.name = c("rho")) +
+  theme_bw(base_size = 20, base_family = "Helvetica") +
+  facet_grid(sample ~ sample_facet, scales = "free", labeller = labeller(.cols = sample_labels)) +
+  theme_bw(base_family = "Helvetica") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.title = element_blank(),
+        axis.title = element_text(size = 6),
+        axis.text = element_text(size = 6),
+        legend.text = element_text(size = 6),
+        strip.background = element_blank(),
+        aspect.ratio = 1)
 
-      RFD_cor_mat <- partition_df %>%
-        filter(RPM >= RPM_cutoff,
-               !is.na(RFD_smooth)) %>%
-        dplyr::select(interval, sample_type, sample, RFD_smooth)
-
-      RFD_cor_df <- RFD_cor_mat %>%
-        group_by(interval, sample) %>%
-        summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
-        pivot_wider(names_from = sample, values_from = RFD_smooth)      
-      
-    
-      #cor.comp <- colnames(RFD_cor_df)[-1]
-      cor.comp <- colnames(RFD_cor_df)[2:3]
-      cor.comp <- cor.comp[order(cor.comp)]
-      
-      
-      cor.df <- c()
-      
-      for (i in 1:(length(cor.comp)-1)) {
-        message("i=",i)
-        for (j in (i+1):length(cor.comp)) {
-          message("j=",j)
-          comp.x <- cor.comp[i]
-          comp.y <- cor.comp[j]
-          cor.obj <- cor.test(RFD_cor_df[,comp.x], RFD_cor_df[,comp.y], method = "spearman",
-                              use = "pairwise.complete.obs")
-          
-          tmp.df <- data.frame(cor.x = comp.x, cor.y = comp.y,
-                              spearman.cor = cor.obj$estimate,
-                              cor.pvalue = cor.obj$p.value,
-                              stringsAsFactors = FALSE)
-          cor.df <- rbind(cor.df, tmp.df)
-        }
-      }
-
-      RFD_spear_df <- rbind(RFD_spear_df, cor.df)
-
-      tmp_cor_melt_df <- melt(RFD_cor_df, id.vars = c("interval","OKseq"),
-                              variable.name = "sample", value.name = "RFD") %>%
-        filter(!is.nan(RFD) & !is.nan(OKseq))
-
-
-      colnames(tmp_cor_melt_df) <- c("interval", "RFD", "sample", "Partition")
-      tmp_cor_melt_df$sample <- as.character(tmp_cor_melt_df$sample)
-      RFD_cor_melt_df <- rbind(RFD_cor_melt_df, tmp_cor_melt_df)
-    }
-  }
-}
-
-if (HAS_OKSEQ) {
-  colnames(RFD_spear_df) <- c("OKseq","sample","spearman.cor","cor.pvalue")
-  RFD_spear_df$tex.label <- paste0("$\\rho = ", sprintf("%0.4f",RFD_spear_df$spearman.cor), "$")
-  RFD_spear_df$tex.label <- paste0("rho == ", sprintf("%0.4f",RFD_spear_df$spearman.cor))
-  RFD_cor_melt_df$sample <- factor(RFD_cor_melt_df$sample,
-                                   levels =  names(sample_labels))
-  RFD_spear_df$sample <- factor(RFD_spear_df$sample,
-                                levels = names(sample_labels))
-}
-
-
-
-if (HAS_OKSEQ) {
-
-  max.part <- max(c(RFD_cor_melt_df$RFD, RFD_cor_melt_df$Partition), na.rm = TRUE)
-
-  partition.scatter.plt <- RFD_cor_melt_df %>%
-    ggplot(aes(x = RFD, y = Partition)) +
-    geom_hex(bins=120) +
-    ggtitle(PREFIX) +
-    scale_fill_gradientn(colours = (brewer.pal(n=9,name="Blues")[2:8])) +
-    geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.5) +
-    geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.5) +
-    scale_y_continuous(breaks=c(-0.6, 0, 0.6),
-                       limits = c(-max.part,max.part)) +
-    scale_x_continuous(breaks=c(-0.6, 0, 0.6),
-                       limits =  c(-max.part,max.part)) +
-    geom_smooth(se = FALSE, method="lm",size=0.3,colour="red") +
-    theme_bw(base_size = 20, base_family = "Helvetica") +
-    geom_text(data = RFD_spear_df,
-              aes(x = -0.4, y = 0.5,
-                  label = tex.label),
-              parse = TRUE, size = 5) +
-    facet_wrap(~ sample, labeller = labeller(.cols = sample_labels)) +
-    theme(panel.spacing = unit(0.3, "lines"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.title = element_text(size = 7),
-          axis.text = element_text(size = 6),
-          legend.text = element_text(size = 6),
-          strip.text.x = element_text(size = 5),
-          strip.text.y = element_text(size = 5),
-          strip.background = element_rect(colour="black", fill="#e3e3e3"))
-
-  ggsave(filename = file.path(plots.dir,paste0(PREFIX,".scatter_plots.pdf")),
-         plot = partition.scatter.plt, width = plot_width, height = plot_height,
-         device = cairo_pdf,
-         dpi = 300)
-
-}
-
-
-
+partition_scatter_plot
 
 ```
 
