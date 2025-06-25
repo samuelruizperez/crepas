@@ -1,5 +1,5 @@
 ---
-title: "plot.Rmd"
+title: "SCAR_partition_plots_mod.Rmd"
 output: html_document
 author: "Samuel Ruiz-Pérez"
 date: "2025-06-03"
@@ -12,11 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 
 #!/usr/bin/env Rscript
-# Author: Nicolas Alcaraz <nicolas.alcaraz@cpr.ku.dk>
-# Script for plotting partition plots of SCARseq together with it's stranded Input
-# Also plots scatter-correlation plots against OK-seq if provided
-# downloaded from https://github.com/grothlab/SCARseq_Pipeline/blob/main/SCAR_partition_plots.R
-# Modified by Samuel Ruiz-Pérez <samper@cancer.dk>
+# Author: Samuel Ruiz-Pérez <samper@cancer.dk>
+# Script for plotting partition plots of SCAR-seq data and scatter plots against OK-seq if provided
+# Adapted from version by Nicolás Alcaraz <nicolas.alcaraz@cpr.ku.dk> at https://github.com/grothlab/SCARseq_Pipeline/blob/a4b327f1901ae6a980767d05ec7af79896a604c9/SCAR_partition_plots.R
+# Adapted from version by Maria Dalby at https://github.com/anderssonlab/Replication_SCARseq/blob/78ffbabbfc8149cdc5bc5b5717878b26ebd4d8f1/replication_SCARseq.R
+# Modified by Samuel Ruiz-Pérez 
 
 options(show.error.locations = TRUE)
 
@@ -119,42 +119,29 @@ opt <- parser$parse_args()
 
 # replace arguments
 
-opt_scar_partition_file <- c("/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv",
-                             "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv")
+
+opt_scar_partition_file <- NULL
 
 opt_scarminusinput_partition_file <- c(
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
- "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T0_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T1_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T3_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
- "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_439_H3K27ac_T8_REP2.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
 )
 
+opt_strandedinput_partition_file <- NULL
 
-opt_strandedinput_partition_file <- "/home/whq695/datadir/projects/glseq_runs/MCM2_NatGen_test/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR_410_stranded_input_K27ac_T0_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
+opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
-opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
-opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/annotations/blacklists/GRCm39.ExcludeRanges.Boyle.Excludable_v2.bed.gz"
 
-opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/blacklists/bed/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz"
+opt_chrom_sizes <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/genome/GRCm39.primary_assembly.genome.fa.sizes"
 
-opt_chrom_sizes <- "/home/whq695/Groth_group/shared/references/Mus_musculus/GRCm38/genome/chrom_sizes/GRCm38.primary_assembly.genome.chrom.sizes"
+opt_prefix <- "LEONIE_TEST"
 
-opt_prefix <- "MCM2_NatGen_test"
-
-opt_outdir <- "/maps/projects/dan1/people/whq695/projects/glseq_runs/MCM2_NatGen_test/glseq/plots"
+opt_outdir <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/plot_test/mod_test"
 
 opt_rpm_cutoff <- 0.3
 
@@ -268,7 +255,7 @@ if (!HAS_OKSEQ) {
   if (!HAS_IZ) {
     stop("[", Sys.time(), "] Please provide either valid Okazaki RFD file or Initiation Zone bed file")
   } else {
-    print("Okazaki file not found, using provided Initiation Zones")
+    warning("\n[", Sys.time(), "] Okazaki-seq file not found, using provided initiation zones file...")
     IZ.file <- opt_initiation_zones
   }
 } else {
@@ -276,7 +263,7 @@ if (!HAS_OKSEQ) {
 }
 
 if (!HAS_BLACKLIST) {
-  warning("[", Sys.time(), "] Blacklist file not provided or non-existant, it's recommended to use a blacklist")
+  warning("\n[", Sys.time(), "] Blacklist file not provided or non-existant, it is recommended to use a blacklist")
 }
 
 
@@ -299,13 +286,14 @@ print(paste("RPM cutoff:",opt_rpm_cutoff))
 ```{r}
 
 cls <- c("seqnames","start","end", # Coordinates of bin
-         "fwd_counts","rev_counts",              # Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+         "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
          "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
-         "RFD_raw","RFD_smooth",          # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+         "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
          "RFD_deriv",              # Value of the derivative of the partition at this bin
          "score",                  # not used
          "zero_deriv")             # second derivative at this bin
 
+blacklist_gr <- GRanges()
 if (HAS_BLACKLIST) {
   blacklist_df <- read_tsv(opt_blacklist, col_select = c(1:3), col_names = c("seqnames","start","end"), show_col_types = FALSE)
   blacklist_gr <- makeGRangesFromDataFrame(blacklist_df, starts.in.df.are.0based = TRUE)
@@ -326,14 +314,15 @@ if (HAS_CHROM_SIZES) {
 
 if (HAS_OKSEQ) {
   
-  message("\n[", Sys.time(), "] Reading the OK-seq RFD file...")
+  ok_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(OK_file))
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Reading OK-seq RFD file...")
   OK_df <- read_tsv(OK_file, col_names = cls, show_col_types = FALSE)
 
   if (ncol(OK_df) != 12) {
-    stop("[", Sys.time(), "] ERROR: The OK-seq RFD file is not in the correct format (ncol != 12)")
+    stop("[", Sys.time(), "] (", ok_base_name, ") ERROR: The OK-seq RFD file is not in the correct format (ncol != 12)")
   }
 
-  message("\n[", Sys.time(), "] Removing OK-seq bins within excluded chromosomes or outside of chrom_sizes...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins within excluded chromosomes or outside of chrom_sizes...")
   OK_df <- OK_df %>%
     dplyr::filter(!seqnames %in% chrom_excl,
                   seqnames %in% names(chrom_sizes)) %>%
@@ -342,7 +331,7 @@ if (HAS_OKSEQ) {
            sample = "OK-seq",
            sample_type = "OK-seq")
 
-  message("\n[", Sys.time(), "] Converting the start positions of the OK-seq bins to 1-based...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Converting the start positions of the OK-seq bins to 1-based...")
   OK_gr <- makeGRangesFromDataFrame(OK_df,
                                     seqinfo = chrom_sizes,
                                     keep.extra.columns = TRUE,
@@ -352,48 +341,84 @@ if (HAS_OKSEQ) {
   # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
   OK_gr$interval <- paste0(seqnames(OK_gr), ":", start(OK_gr), "-", end(OK_gr))
   
-  message("\n[", Sys.time(), "] Removing OK-seq bins that overlap a blacklisted region...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
-  message("\n[", Sys.time(), "] Keeping only OK-seq bins with sufficient coverage...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with sufficient coverage...")
   OK_gr_tmp <- subset(OK_gr, RPM >= RPM_cutoff)
 
-  message("\n[", Sys.time(), "] Keeping only OK-seq bins with a RFD zero derivative above the quantile threshold...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with a RFD zero derivative above the quantile threshold...")
   OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv,
                                                probs = opt_zero_deriv_quantile,
                                                na.rm = TRUE))]
   
-  message("\n[", Sys.time(), "] Calculating OK-seq bin size...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating OK-seq bin size...")
   OK_BIN_SIZE <- width(OK_gr)[1]
   
   # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials),
   # for initiation zones less than 3 bins apart, the bin with the highest RFD derivative is selected:
 
-  message("\n[", Sys.time(), "] Merging overlapping/adjacent OK-seq bins with a gap smaller than 3x bin size...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Merging overlapping/adjacent OK-seq bins with a gap smaller than 3x bin size...")
   OK_reduced_gr <- GenomicRanges::reduce(OK_gr_tmp,
                                      min.gapwidth = OK_BIN_SIZE * 3,
                                      with.revmap = TRUE)
 
   # For each set of merged bins,
-  message("\n[", Sys.time(), "] Keeping the OK-seq bin with the highest RFD derivative...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping the OK-seq bin with the highest RFD derivative...")
   filtered_data <- OK_gr_tmp[sapply(OK_reduced_gr$revmap, 
     function(x) { x[which.max(OK_gr_tmp$RFD_deriv[x])] })]
 
   # Set these bins as initiation zones
   OK_gr$IZ <- ifelse(OK_gr$interval %in% filtered_data$interval, TRUE, FALSE)
 
-  message("\n[", Sys.time(), "] The number of initiation zones after preprocessing is ", sum(OK_gr$IZ), ".")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after preprocessing is ", sum(OK_gr$IZ), ".")
   IZ_gr <- subset(OK_gr, IZ)
 
-} else {
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
   
-  message("\n[", Sys.time(), "] Loading initiation zones from file: ", opt_initiation_zones, "...")
+  # Get original start coordinate for each initiation zone 
+  IZ_gr$break_start <- start(IZ_gr)
+  
+  # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
+  IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
+  
+  # Finding the nearest resized initiation zone to each resized initiation zone
+  IZ_dist <- distanceToNearest(IZ_gr)
+  
+  # Removing overlapping resized initiation zones
+  IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
+  
+  message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")
+  
+  # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating RFD rates around initiation zones (100 kb upstream and 100 kb
+  downstream of each IZ) by averaging values within each bin position...")
+  
+  # Finding out which initiation zones overlap which OK-seq bins
+  overlap_pairs <- findOverlaps(IZ_gr, OK_gr)
+  
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Extracting the OK-seq bins that overlap with an initiation zone...")
+  RFD_gr <- OK_gr[subjectHits(overlap_pairs)]
+  
+  # Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
+  RFD_gr$break_ID <- IZ_gr$interval[queryHits(overlap_pairs)]
+  
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps...")
+  RFD_gr$dist <- start(RFD_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
+  
+  # Remove temporary variables
+  rm(OK_file, OK_gr, OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist, overlap_pairs)
+  
+} else {
+
+  iz_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_initiation_zones))
+  message("\n[", Sys.time(), "] (", iz_base_name, ") Reading initiation zones file...")
   IZ_df <- read_tsv(opt_initiation_zones,
                     col_select = c(1:3),
                     col_names = c("seqnames", "start", "end"),
                     show_col_types = FALSE)
 
-  message("\n[", Sys.time(), "] Removing initiation zones within excluded chromosomes or outside of chrom_sizes...")
+  message("\n[", Sys.time(), "] (", iz_base_name, ") Removing initiation zones within excluded chromosomes or outside of chrom_sizes...")
   IZ_gr <- IZ_df %>%
     filter(!seqnames %in% chrom_excl,
            seqnames %in% names(chrom_sizes)) %>%
@@ -403,42 +428,30 @@ if (HAS_OKSEQ) {
                              keep.extra.columns = TRUE,
                              starts.in.df.are.0based = TRUE)
 
+  # We copy the interval now and not before with dplyr because the start
+  # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
+  IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
+
+  message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
+  
+  # Get original start coordinate for each initiation zone 
+  IZ_gr$break_start <- start(IZ_gr)
+  
+  # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
+  IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
+  
+  # Finding the nearest resized initiation zone to each resized initiation zone
+  IZ_dist <- distanceToNearest(IZ_gr)
+  
+  # Removing overlapping resized initiation zones
+  IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
+  
+  message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")  
+  
+  # Remove temporary variables
+  rm(OK_file, OK_gr, OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist, overlap_pairs)
+  
 }
-
-message("\n[", Sys.time(), "] Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
-
-# Get original start coordinate for each initiation zone 
-IZ_gr$break_start <- start(IZ_gr)
-
-# Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
-IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
-
-# Finding the nearest resized initiation zone to each resized initiation zone
-IZ_dist <- distanceToNearest(IZ_gr)
-
-# Removing overlapping resized initiation zones
-IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
-
-message("\n[", Sys.time(), "] The number of initiation zones after filtering is: ", length(IZ_gr), ".")
-
-# As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
-message("\n[", Sys.time(), "] Calculating RFD rates around initiation zones (100 kb upstream and 100 kb
-downstream of each IZ) by averaging values within each bin position...")
-
-message("\n[", Sys.time(), "] Finding which initiation zones overlap which OK-seq bins...")
-overlap_pairs <- findOverlaps(IZ_gr, OK_gr)
-
-# Extracting the OK-seq bins that overlap with an initiation zone
-RFD_gr <- OK_gr[subjectHits(overlap_pairs)]
-
-# Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
-RFD_gr$break_ID <- IZ_gr$interval[queryHits(overlap_pairs)]
-
-# Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps
-RFD_gr$dist <- start(RFD_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
-
-# Remove temporary variables
-rm(OK_file, OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist, overlap_pairs)
 
 ```
 
@@ -450,21 +463,20 @@ partition_df <- c()
 
 for (type in names(part_files)) {
 
-  message("\n[", Sys.time(), "] Processing partition type: ", type, "...")
+  message("\n[", Sys.time(), "] Processing partition files of type: ", type, "...")
   
   for (file in part_files[[type]]) {
 
     base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(file))
-    message("\n[", Sys.time(), "] Processing partition file: ", base_name, "\n(", file, ")...")
 
-    message("\n[", Sys.time(), "] Reading partition file...")
+    message("\n[", Sys.time(), "] (", base_name, ") Reading partition file...")
     SCAR_df <- read_tsv(file, col_names = cls, show_col_types = FALSE)
     
     if (ncol(SCAR_df) != 12) {
       stop("[", Sys.time(), "] ERROR:", base_name, "is not a partition file format (ncol != 12)")
     }
 
-    message("\n[", Sys.time(), "] Removing partition bins within excluded chromosomes or outside of chromosome sizes...")
+    message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins within excluded chromosomes or outside of chromosome sizes...")
     SCAR_df <- SCAR_df %>%
       dplyr::filter(!seqnames %in% chrom_excl,
                     seqnames %in% names(chrom_sizes)) %>%
@@ -485,32 +497,32 @@ for (type in names(part_files)) {
     # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
     SCAR_gr$interval <- paste0(seqnames(SCAR_gr), ":", start(SCAR_gr), "-", end(SCAR_gr))    
       
-    message("\n[", Sys.time(), "] Removing partition bins that overlap a blacklisted region...")
+    message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins that overlap a blacklisted region...")
     SCAR_gr <- SCAR_gr[!overlapsAny(SCAR_gr, blacklist_gr, minoverlap = 1)]
       
     PART_BIN_SIZE <- width(SCAR_gr)[1]
-    message("\n[", Sys.time(), "] This partition's bin size is ", PART_BIN_SIZE, " bp.")
+    message("\n[", Sys.time(), "] (", base_name, ") This partition's bin size is ", PART_BIN_SIZE, " bp.")
 
     if (HAS_OKSEQ) {
       if (OK_BIN_SIZE != PART_BIN_SIZE) {
         stop("\n[", Sys.time(), "] ERROR: Bin size of", base_name,
              "(", PART_BIN_SIZE, "bp ) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, "bp ).\n")
       }
+    }
 
   # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
-  message("\n[", Sys.time(), "] Calculating partition rates around initiation zones (100 kb upstream and 100 kb
-  downstream of each IZ) by averaging values within each bin position...")
+  message("\n[", Sys.time(), "] (", base_name, ") Calculating partition rates around initiation zones (100 kb upstream and 100 kb downstream of each IZ) by averaging values within each bin position...")
   
-  message("\n[", Sys.time(), "] Finding which initiation zones overlap which OK-seq bins...")
+  # Finding out which initiation zones overlap which partition bins...
   overlap_pairs <- findOverlaps(IZ_gr, SCAR_gr)
-  
-  # Extracting the OK-seq bins that overlap with an initiation zone
+
+  message("\n[", Sys.time(), "] (", base_name, ") Extracting the partition bins that overlap with an initiation zone...")
   partition_gr <- SCAR_gr[subjectHits(overlap_pairs)]
   
-  # Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
+  # Adding to each partition bin the interval of the initiation zone with which it overlaps
   partition_gr$break_ID <- IZ_gr$interval[queryHits(overlap_pairs)]
   
-  # Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps
+  message("\n[", Sys.time(), "] (", base_name, ") Calculating the distance from each partition bin to the initiation zone with which it overlaps...")
   partition_gr$dist <- start(partition_gr) - IZ_gr$break_start[queryHits(overlap_pairs)]
   
   partition_df <- partition_df %>%
@@ -518,8 +530,8 @@ for (type in names(part_files)) {
 
   }
 
-  }
 }
+
 
 if (HAS_OKSEQ) {
 
@@ -598,6 +610,8 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color
           axis.title = element_text(size = 6),
           axis.text = element_text(size = 6),
           legend.text = element_text(size = 6),
+          legend.key.size = unit(0.3, "cm"),
+          legend.key = element_rect(color = NA, fill = NA),
           strip.background = element_blank(),
           aspect.ratio = 1,
           plot.caption = element_text(size = 6)) +
@@ -690,43 +704,47 @@ ggsave(filename = file.path(plots.dir, paste0(PREFIX, ".partition_plots_smooth.p
 
 ```{r}
 
-partition_df_flt <- partition_df %>%
-  filter(RPM >= RPM_cutoff,
-         !is.na(RFD_smooth)) %>%
-  dplyr::select(interval,  sample, sample_type, sample_facet, RFD_smooth)
+if (HAS_OKSEQ) {
 
-RFD_plot_df <- partition_df_flt %>%
-  group_by(interval, sample, sample_facet) %>%
-  summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
-  pivot_wider(names_from = sample, values_from = RFD_smooth) %>%
-  pivot_longer(cols = -c(interval, "OK-seq", sample_facet), names_to = "sample", values_to = "Partition") %>%
-  dplyr::rename(RFD = "OK-seq") %>%
-  mutate(sample = gsub("^scarseq_", "", sample))
+  partition_df_flt <- partition_df %>%
+    filter(RPM >= RPM_cutoff,
+           !is.na(RFD_smooth)) %>%
+    dplyr::select(interval,  sample, sample_type, sample_facet, RFD_smooth)
+  
+  RFD_plot_df <- partition_df_flt %>%
+    group_by(interval, sample, sample_facet) %>%
+    summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(names_from = sample, values_from = RFD_smooth) %>%
+    pivot_longer(cols = -c(interval, "OK-seq", sample_facet), names_to = "sample", values_to = "Partition") %>%
+    dplyr::rename(RFD = "OK-seq") %>%
+    mutate(sample = gsub("^scarseq_", "", sample))
+  
+  partition_scatter_plot <- RFD_plot_df %>%
+    ggplot(aes(x = RFD, y = Partition)) +
+    geom_hex(bins = 100) +
+    scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+    geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.5) +
+    geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.5) +
+    geom_smooth(se = FALSE, method = "lm", size = 0.3, color = "red") +
+    # add correlation and p-value to the plot
+    stat_cor(aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~")),
+             method = "spearman", size = 2.5,
+             cor.coef.name = c("rho")) +
+    theme_bw(base_size = 20, base_family = "Helvetica") +
+    facet_grid(sample ~ sample_facet, scales = "free", labeller = labeller(.cols = sample_labels)) +
+    theme_bw(base_family = "Helvetica") +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          legend.title = element_blank(),
+          axis.title = element_text(size = 6),
+          axis.text = element_text(size = 6),
+          legend.text = element_text(size = 6),
+          strip.background = element_blank(),
+          aspect.ratio = 1)
+  
+  partition_scatter_plot
 
-partition_scatter_plot <- RFD_plot_df %>%
-  ggplot(aes(x = RFD, y = Partition)) +
-  geom_hex(bins = 100) +
-  scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
-  geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.5) +
-  geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.5) +
-  geom_smooth(se = FALSE, method = "lm", size = 0.3, color = "red") +
-  # add correlation and p-value to the plot
-  stat_cor(aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~")),
-           method = "spearman", size = 2.5,
-           cor.coef.name = c("rho")) +
-  theme_bw(base_size = 20, base_family = "Helvetica") +
-  facet_grid(sample ~ sample_facet, scales = "free", labeller = labeller(.cols = sample_labels)) +
-  theme_bw(base_family = "Helvetica") +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.title = element_blank(),
-        axis.title = element_text(size = 6),
-        axis.text = element_text(size = 6),
-        legend.text = element_text(size = 6),
-        strip.background = element_blank(),
-        aspect.ratio = 1)
-
-partition_scatter_plot
+}
 
 ```
 
