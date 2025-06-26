@@ -7,7 +7,7 @@ include { EPIC2           } from '../../../modules/local/epic2/epic2/main'
 include { HOMER_ANNOTATEPEAKS      } from '../../../modules/nf-core/homer/annotatepeaks/main'
 include { FRIP_SCORE               } from '../../../modules/local/frip_score/main'
 include { MULTIQC_CUSTOM_PEAKS     } from '../../../modules/local/multiqc_custom_peaks/main'
-include { PLOT_MACS3_QC as PLOT_EPIC2_QC } from '../../../modules/local/plot_macs3_qc/main'
+//include { PLOT_MACS3_QC as PLOT_EPIC2_QC } from '../../../modules/local/plot_macs3_qc/main'
 include { PLOT_HOMER_ANNOTATEPEAKS } from '../../../modules/local/plot_homer_annotatepeaks/main'
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
@@ -44,11 +44,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     ch_bam_by_type.ips_with_control
         .combine(ch_bam_by_type.controls, by: 0)
         .mix(ch_bam_by_type.ips_wo_control)
-        .map { control_id, ip_meta, ip_bam, control_bam ->
-            def meta_clone = ip_meta.clone()
+        // this is: [ control_id, ip_meta, ip_bam, control_bam ]
+        // control_bam can be empty if we only have ips_wo_control  
+        .map { it ->
+            def meta_clone = it[1].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, ip_bam, control_bam ?: [] ]
+            [ meta_clone.id, meta_clone, it[2], it[3] ?: [] ]
         }
         .groupTuple()
         .map {
@@ -134,8 +136,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks          = Channel.empty()
-    ch_plot_epic2_qc_txt            = Channel.empty()
-    ch_plot_epic2_qc_pdf            = Channel.empty()
+    //ch_plot_epic2_qc_txt            = Channel.empty()
+    //ch_plot_epic2_qc_pdf            = Channel.empty()
     ch_plot_homer_annotatepeaks_txt = Channel.empty()
     ch_plot_homer_annotatepeaks_pdf = Channel.empty()
     ch_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -174,13 +176,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
             //
             // epic2 QC plots with R
             //
-            PLOT_EPIC2_QC (
-                ch_epic2_peaks_grouped,
-                is_narrow_peak
-            )
-            ch_plot_epic2_qc_txt = PLOT_EPIC2_QC.out.txt
-            ch_plot_epic2_qc_pdf = PLOT_EPIC2_QC.out.pdf
-            ch_versions = ch_versions.mix(PLOT_EPIC2_QC.out.versions)
+            // PLOT_EPIC2_QC (
+            //     ch_epic2_peaks_grouped,
+            //     is_narrow_peak
+            // )
+            // ch_plot_epic2_qc_txt = PLOT_EPIC2_QC.out.txt
+            // ch_plot_epic2_qc_pdf = PLOT_EPIC2_QC.out.pdf
+            // ch_versions = ch_versions.mix(PLOT_EPIC2_QC.out.versions)
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -223,8 +225,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     peak_count_multiqc           = MULTIQC_CUSTOM_PEAKS.out.count   // channel: [ val(meta), [ counts ] ]
     homer_annotatepeaks          = ch_homer_annotatepeaks           // channel: [ val(meta), [ txt ] ]
 
-    plot_epic2_qc_txt               = ch_plot_epic2_qc_txt             // channel: [ txt ]
-    plot_epic2_qc_pdf               = ch_plot_epic2_qc_pdf             // channel: [ pdf ]
+    //plot_epic2_qc_txt               = ch_plot_epic2_qc_txt             // channel: [ txt ]
+    //plot_epic2_qc_pdf               = ch_plot_epic2_qc_pdf             // channel: [ pdf ]
 
     plot_homer_annotatepeaks_txt = ch_plot_homer_annotatepeaks_txt  // channel: [ txt ]
     plot_homer_annotatepeaks_pdf = ch_plot_homer_annotatepeaks_pdf  // channel: [ pdf ]

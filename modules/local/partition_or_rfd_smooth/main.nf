@@ -1,4 +1,4 @@
-process PARTITION_SMOOTH {
+process PARTITION_OR_RFD_SMOOTH {
     tag "$meta.id"
     label 'process_low_memory'
 
@@ -8,6 +8,7 @@ process PARTITION_SMOOTH {
         'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
+    val partition_or_rfd
     tuple val(meta), path(f_tab), path(r_tab)
     val radius
     val dradius
@@ -24,7 +25,8 @@ process PARTITION_SMOOTH {
     def args  = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    partition_smooth.pl \\
+    partition_or_rfd_smooth.pl \\
+        $partition_or_rfd \\
         $f_tab \\
         $r_tab \\
         $radius \\

@@ -3,17 +3,23 @@
 # downloaded from https://github.com/grothlab/SCARseq_Pipeline/blob/main/libs/partition_smooth.pl
 
 ## usage:
-## ./RFD.pl F.tab R.tab radius dradius zradius
+## ./partition_or_RFD_smooth.pl RFD_or_partition F.tab R.tab radius dradius zradius
 
 use strict;
 use List::Util qw(sum);
 
-open(my $fin ,"$ARGV[0]") or die $!;
-open(my $rin, "$ARGV[1]") or die $!;
+my $RFD_or_partition = $ARGV[0];
+if ($RFD_or_partition ne "RFD" && $RFD_or_partition ne "partition")
+{
+    die "Invalid argument: $RFD_or_partition. Use 'RFD' or 'partition'.\n";
+}
 
-my $radius = $ARGV[2];
-my $dradius = $ARGV[3];
-my $zradius = $ARGV[4];
+open(my $fin ,"$ARGV[1]") or die $!;
+open(my $rin, "$ARGV[2]") or die $!;
+
+my $radius = $ARGV[3];
+my $dradius = $ARGV[4];
+my $zradius = $ARGV[5];
 
 if ($dradius > $radius)
 {
@@ -52,7 +58,15 @@ while(my $fline = <$fin>)
     my @R = split(/\t/,$rline);
 
     ## calculate RFD
-    my $RFD = ($F[3] - $R[3])/($R[3] + $F[3]);
+    if ($RFD_or_partition eq "partition") {
+        # For partition signal (SCAR-seq), we use the formula:
+        # Partition = (F - R)/(F + R)
+        my $RFD = ($F[3] - $R[3])/($F[3] + $R[3]);
+    } else {
+        # For RFD signal (OK-seq), we use the formula:
+        # RFD = (R - F)/(R + F)
+        my $RFD = ($R[3] - $F[3])/($F[3] + $R[3]);
+    }
 
     ## Push new item values to the stacks
     push(@RFD_stack, $RFD);

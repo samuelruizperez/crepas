@@ -9,10 +9,10 @@ process CONSENRICH {
 
     input:
     tuple val(meta), path(treatment_bam), path(treatment_bai), path(control_bam), path(control_bai)
-    path chrom_sizes
-    path blacklist
-    path sparsebed
-    path active_regions
+    tuple val(meta2), path(chrom_sizes)
+    tuple val(meta3), path(blacklist)
+    tuple val(meta4), path(sparsebed)
+    tuple val(meta5), path(active_regions)
 
     output:
     tuple val(meta), path("*consenrich_output.tsv"),           emit: results
@@ -59,6 +59,21 @@ process CONSENRICH {
         Consenrich: \$(echo \$(Consenrich -h 2>&1) | sed 's/^Consenrich, version //; s/ .*\$//')
     END_VERSIONS
     """
-}
 
-// TODO: version parsing
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.consenrich_output.tsv
+    touch ${prefix}.consenrich_signal_track.bw
+    touch ${prefix}.consenrich_residuals_track.bw
+    touch ${prefix}.consenrich_eratio_track.bw
+    touch ${prefix}_consenrich_args.json
+    touch ${prefix}_consenrich_gain_log.tsv.gz
+    touch ${prefix}_consenrich_matrix.npz
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        Consenrich: \$(echo \$(Consenrich -h 2>&1) | sed 's/^Consenrich, version //; s/ .*\$//')
+    END_VERSIONS
+    """
+}

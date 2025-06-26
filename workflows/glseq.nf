@@ -129,6 +129,8 @@ workflow GLSEQ {
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
     ch_sparsebed     // channel: path(sparse.bed)
+    ch_active_regions // channel: path(active_regions.bed)
+    ch_rocco_params   // channel: path(params.csv)
     ch_initiation_zones // channel: path(initiation_zones)
     ch_bwa_index     // channel: path(bwa/index/)
     ch_bowtie2_index // channel: path(bowtie2/index)
@@ -791,7 +793,23 @@ workflow GLSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect{it[1]})
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
     }
-    
+
+    //
+    // MODULE: Calculate genome size with khmer
+    //
+
+    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
+    ch_effective_gsize                     = Channel.empty()
+    ch_subreadfeaturecounts_multiqc   = Channel.empty()
+    if (!params.macs_gsize) { // && need_macs_gsize) {
+        KHMER_UNIQUEKMERS (
+            ch_fasta,
+            params.read_length
+        )
+        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
+    }
+
     // Branch channels based on if input control is present
     ch_filtered_bam_bai
         .branch { meta, bam, bai ->
@@ -832,15 +850,18 @@ workflow GLSEQ {
         .collectFile( name: 'ch_ip_control_bam_bai_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
         
     //
-    // MODULE: Call consensus regions with Consenrich
+    // MODULE: Call consensus regions with Consenrich and ROCCO
     //
     if (!params.skip_consenrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER (
             ch_ip_control_bam_bai_merged_reps,
             ch_chrom_sizes_endo.first(),
-            ch_blacklist.map{ it[1] }.first(),
-            ch_sparsebed.map{ it[1] }.first(),
-            []
+            ch_blacklist.first(),
+            ch_sparsebed.first().ifEmpty([[:], []]),
+            ch_active_regions.first().ifEmpty([[:], []]),
+            ch_rocco_params.first(),
+            ch_effective_gsize.first()
+
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
     }
@@ -894,22 +915,6 @@ workflow GLSEQ {
         }
         .collectFile( name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug" )
 
-
-    //
-    // MODULE: Calculate genome size with khmer
-    //
-
-    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
-    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
-    ch_effective_gsize                     = Channel.empty()
-    ch_subreadfeaturecounts_multiqc   = Channel.empty()
-    if (!params.macs_gsize) { // && need_macs_gsize) {
-        KHMER_UNIQUEKMERS (
-            ch_fasta,
-            params.read_length
-        )
-        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
-    }
 
     // Create a channel with the effective genome fraction
     ch_chrom_sizes_endo

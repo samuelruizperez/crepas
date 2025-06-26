@@ -5,7 +5,7 @@ include { BEDTOOLS_MAKEWINDOWS                                      } from '../.
 include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '../../../modules/local/bedgraph_signal_minus_input/main'
-include { PARTITION_SMOOTH                                          } from '../../../modules/local/partition_smooth/main'
+include { PARTITION_OR_RFD_SMOOTH                                          } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                          } from '../../../modules/local/collect_partitions/main'
 include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
 include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
@@ -176,7 +176,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
 
 
     // RPM normalization factors
-    // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_smooth)
+    // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_or_rfd_smooth)
     ch_bwaob
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
@@ -301,14 +301,15 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     //
     // MODULE: Calculate partitions (RFD)
     //
-    PARTITION_SMOOTH (
+    PARTITION_OR_RFD_SMOOTH (
+        'partition',
         ch_norm_and_smi,
         params.scar_radius,
         params.scar_dradius,
         params.scar_zradius
     )
-    ch_rfd = PARTITION_SMOOTH.out.rfd
-    ch_versions = ch_versions.mix(PARTITION_SMOOTH.out.versions.first())
+    ch_rfd = PARTITION_OR_RFD_SMOOTH.out.rfd
+    ch_versions = ch_versions.mix(PARTITION_OR_RFD_SMOOTH.out.versions.first())
 
     // TODO: print for debugging
     ch_rfd
@@ -434,7 +435,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
     emit:
-    tab      = PARTITION_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
+    tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
     versions = ch_versions                    // channel: [ versions.yml ]
 }
 
