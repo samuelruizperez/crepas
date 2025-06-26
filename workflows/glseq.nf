@@ -857,8 +857,8 @@ workflow GLSEQ {
             ch_ip_control_bam_bai_merged_reps,
             ch_chrom_sizes_endo.first(),
             ch_blacklist.first(),
-            ch_sparsebed.first(),
-            ch_active_regions.first(),
+            ch_sparsebed.first().ifEmpty([[:], []]),
+            ch_active_regions.first().ifEmpty([[:], []]),
             ch_rocco_params.first(),
             ch_effective_gsize.first()
 
