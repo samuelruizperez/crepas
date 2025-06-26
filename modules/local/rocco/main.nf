@@ -10,7 +10,7 @@ process ROCCO {
     input:
     tuple val(meta), path(bams_or_bws), path(bamlist)
     tuple val(meta2), path(chrom_sizes)
-    tuple val(meta3), path(params)
+    tuple val(meta3), path(params_file)
     val effective_genome_size
 
     output:
@@ -30,7 +30,7 @@ process ROCCO {
     def bamlist_arg     = bamlist               ? "--bamlist_txt bamlist.txt" : ""
     def sizes_arg       = chrom_sizes           ? "--chrom_sizes_file ${chrom_sizes}" : ""
     def egsize_arg      = effective_genome_size ? "--effective_genome_size ${effective_genome_size}" : ""
-    def params_arg      = params                ? "--params ${params}" : ""
+    def params_arg      = params_file           ? "--params ${params_file}" : ""
     def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     echo "${bamlist_txt}" | tr ',' '\\n' > bamlist.txt
