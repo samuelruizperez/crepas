@@ -858,7 +858,7 @@ workflow GLSEQ {
             ch_chrom_sizes_endo.first(),
             ch_blacklist.first(),
             ch_sparsebed.first(),
-            [],
+            ch_active_regions.first(),
             ch_rocco_params.first(),
             ch_effective_gsize.first()
 
