@@ -25,15 +25,15 @@ process ROCCO {
     script:
     def args            = task.ext.args         ?: ""
     def prefix          = task.ext.prefix       ?: "${meta.id}"
-    def samples         = samples               ? "--input_files ${bams_or_bws.join(' ')}" : ""
+    def samples         = bams_or_bws           ? "--input_files ${bams_or_bws.join(' ')}" : ""
     def bamlist_txt     = bamlist               ? "${bamlist.join(',')}" : ""
-    def bamlist_arg     = bamlist               ? "--bamlist_txt bamlist.txt" : ""
+    def bamlist_arg     = bamlist               ? "--bamlist_txt ${prefix}.bamlist.txt" : ""
     def sizes_arg       = chrom_sizes           ? "--chrom_sizes_file ${chrom_sizes}" : ""
     def egsize_arg      = effective_genome_size ? "--effective_genome_size ${effective_genome_size}" : ""
     def params_arg      = params_file           ? "--params ${params_file}" : ""
     def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
-    echo "${bamlist_txt}" | tr ',' '\\n' > bamlist.txt
+    echo "${bamlist_txt}" | tr ',' '\\n' > ${prefix}.bamlist.txt
 
     rocco \\
         ${args} \\
