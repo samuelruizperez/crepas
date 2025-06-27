@@ -27,7 +27,7 @@ process ROCCO {
     def prefix          = task.ext.prefix       ?: "${meta.id}"
     def samples         = bams_or_bws           ? "--input_files ${bams_or_bws.join(' ')}" : ""
     def bamlist_txt     = bamlist               ? "${bamlist.join(',')}" : ""
-    def bamlist_arg     = bamlist               ? "--bamlist_txt ${prefix}.bamlist.txt" : ""
+    def bamlist_arg     = bamlist               ? "--narrowPeak --bamlist_txt ${prefix}.bamlist.txt" : ""
     def sizes_arg       = chrom_sizes           ? "--chrom_sizes_file ${chrom_sizes}" : ""
     def egsize_arg      = effective_genome_size ? "--effective_genome_size ${effective_genome_size}" : ""
     def params_arg      = params_file           ? "--params ${params_file}" : ""
