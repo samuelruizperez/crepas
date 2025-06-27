@@ -905,7 +905,8 @@ workflow GLSEQ {
     
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) }
+    //ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
@@ -945,6 +946,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
     //
+    ch_epic2_peaks = Channel.empty()
     ch_epic2_frip_multiqc = Channel.empty()
     ch_epic2_peak_count_multiqc = Channel.empty()
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -963,6 +965,7 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_epic2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
         ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
         ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
         ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
@@ -1032,6 +1035,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
     //
+    ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
@@ -1046,6 +1050,7 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect{it[1]})
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect{it[1]})
@@ -1126,8 +1131,8 @@ workflow GLSEQ {
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),
-            BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
-            BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),            
+            ch_epic2_peaks.collect{it[1]}.ifEmpty([]),
+            ch_genrich_peaks.collect{it[1]}.ifEmpty([]),            
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect{it[1]}.ifEmpty([]),
             ch_macs3_consensus_txt_lib.collect{it[1]}.ifEmpty([])
