@@ -104,19 +104,18 @@ def check_samplesheet(file_in, file_out):
                 sys.exit(1)
 
             ## Check exp_type
-            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq", "ChIP-exo"]:
-                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', 'chorseq', or 'ChIP-exo'!", "Line", line)
+            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq", "ChIP-exo", "OK-seq"]:
+                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', 'chorseq', 'ChIP-exo', or 'OK-seq'!", "Line", line)
                 sys.exit(1)
 
-            # strandedness should only be specified for scarseq
-            if strandedness and exp_type != "scarseq":
-                print_error("Strandedness should only be specified for scarseq samples!", "Line", line)
-                sys.exit(1)
-
-            ## Check strandedness is either 'forward' or 'reverse'
-            if strandedness and strandedness not in ["forward", "reverse"]:
-                print_error("Strandedness not 'forward' or 'reverse'!", "Line", line)
-                sys.exit(1)
+            # strandedness needs to  be specified for scarseq or OK-seq samples
+            if exp_type in ["scarseq", "OK-seq"]:
+                if not strandedness:
+                    print_error("Strandedness must be specified (only) for scarseq or OK-seq samples!", "Line", line)
+                    sys.exit(1)
+                if strandedness not in ["forward", "reverse"]:
+                    print_error("Strandedness should be either 'forward' or 'reverse'!", "Line", line)
+                    sys.exit(1)
 
             ## Check antibody and control columns have valid values
             if antibody:
