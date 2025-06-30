@@ -15,7 +15,8 @@ process ROCCO {
 
     output:
     tuple val(meta), path("*.bed"),                             emit: bed
-    tuple val(meta), path("*.counts.tsv"),    optional:true,    emit: narrow_peak
+    tuple val(meta), path("*.counts.tsv"),    optional:true,    emit: counts
+    tuple val(meta), path("*.narrowPeak"),    optional:true,    emit: narrow_peak
     tuple val(meta), path("*.mps"),           optional:true,    emit: model_mps
     path "versions.yml",                                        emit: versions
 
@@ -59,6 +60,7 @@ process ROCCO {
     """
     touch ${prefix}.bed
     touch ${prefix}.counts.tsv
+    touch ${prefix}.narrowPeak
     touch ${prefix}.mps
     touch ${prefix}.bamlist.txt
 
