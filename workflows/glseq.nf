@@ -952,7 +952,7 @@ workflow GLSEQ {
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_chrom_sizes_endo.first(),
@@ -1038,7 +1038,7 @@ workflow GLSEQ {
     ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta.first(),
             ch_gtf.map{ it[1] }.first(),
             ch_blacklist.map{ it[1] }.first(),
@@ -1083,7 +1083,7 @@ workflow GLSEQ {
 
 
     ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type == 'scarseq' }
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['scarseq', 'OK-seq'] }
 
     // Make ch_chrom_sizes_endo empty if there are no scarseq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_SCAR_PARTITIONS
