@@ -131,7 +131,9 @@ opt_scarminusinput_partition_file <- c(
 
 opt_strandedinput_partition_file <- NULL
 
-opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+
+opt_okazaki_file <- "/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
+#opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
 opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
@@ -139,7 +141,7 @@ opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_mus
 
 opt_chrom_sizes <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/genome/GRCm39.primary_assembly.genome.fa.sizes"
 
-opt_prefix <- "LEONIE_TEST"
+opt_prefix <- "LEONIE_TEST_2"
 
 opt_outdir <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/plot_test/mod_test"
 
@@ -382,6 +384,9 @@ if (HAS_OKSEQ) {
   # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
   IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
   
+  # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
+  IZ_gr <- trim(IZ_gr)
+  
   # Finding the nearest resized initiation zone to each resized initiation zone
   IZ_dist <- distanceToNearest(IZ_gr)
   
@@ -439,6 +444,9 @@ if (HAS_OKSEQ) {
   
   # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
   IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
+
+  # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
+  IZ_gr <- trim(IZ_gr)
   
   # Finding the nearest resized initiation zone to each resized initiation zone
   IZ_dist <- distanceToNearest(IZ_gr)
@@ -527,6 +535,9 @@ for (type in names(part_files)) {
   
   partition_df <- partition_df %>%
     bind_rows(as_tibble(partition_gr))
+  
+  message("\n[", Sys.time(), "] (", base_name, ") Finished processing partition file.")
+
 
   }
 
