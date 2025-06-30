@@ -58,14 +58,15 @@ while(my $fline = <$fin>)
     my @R = split(/\t/,$rline);
 
     ## calculate RFD
+    my $RFD;
     if ($RFD_or_partition eq "partition") {
         # For partition signal (SCAR-seq), we use the formula:
         # Partition = (F - R)/(F + R)
-        my $RFD = ($F[3] - $R[3])/($F[3] + $R[3]);
+        $RFD = ($F[3] - $R[3])/($F[3] + $R[3]);
     } else {
         # For RFD signal (OK-seq), we use the formula:
         # RFD = (R - F)/(R + F)
-        my $RFD = ($R[3] - $F[3])/($F[3] + $R[3]);
+        $RFD = ($R[3] - $F[3])/($F[3] + $R[3]);
     }
 
     ## Push new item values to the stacks
