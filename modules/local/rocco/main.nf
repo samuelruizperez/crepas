@@ -8,7 +8,7 @@ process ROCCO {
         'community.wave.seqera.io/library/bedtools_deeptoolsintervals_pybedtools_samtools_pruned:4e193f772646372f' }"
 
     input:
-    tuple val(meta), path(bams_or_bws), path(bamlist)
+    tuple val(meta), path(bams_or_bws), path(bamlist), path(bailist)
     tuple val(meta2), path(chrom_sizes)
     tuple val(meta3), path(params_file)
     val effective_genome_size

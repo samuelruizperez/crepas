@@ -49,15 +49,15 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
         .map { meta, ch_csr_signal, ip_bams, ip_bais, control_bams, control_bais ->
             // TODO: check if ip_bams and control_bams should be interleaved or
             //       in the same order as in consenrich. Here we just mix them:
-            [ meta, ch_csr_signal, ip_bams + control_bams ]
+            [ meta, ch_csr_signal, ip_bams + control_bams, ip_bais + control_bais ]
         }
         .set { ch_csr_signal_bamlist }
 
 
     // TODO: Print for debugging
     ch_csr_signal_bamlist
-        .map { meta, ch_csr_signal, bamlist ->
-            "${meta}\t${ch_csr_signal}\t${bamlist}"
+        .map { meta, ch_csr_signal, bamlist, bailist ->
+            "${meta}\t${ch_csr_signal}\t${bamlist}\t${bailist}"
         }
         .collectFile( name: 'ch_csr_signal_bamlist.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER" )
 
