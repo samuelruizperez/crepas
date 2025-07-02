@@ -29,29 +29,29 @@ process COLLECT_PARTITIONS {
     def sort_cmd = "| LC_ALL=C sort --parallel=$task.cpus $buffer -k1,1 -k2,2n"
 
     """
-    awk '
-        FNR==NR { win[\$4]=\$1"\\t"\$2"\\t"\$3; next }
-        FILENAME==ARGV[2] { bwaob_fwd[\$1]=\$4; next }
-        FILENAME==ARGV[3] { bwaob_rev[\$1]=\$4; next }
-        FILENAME==ARGV[4] { norm_fwd[\$1]=\$4; next }
-        FILENAME==ARGV[5] { norm_rev[\$1]=\$4; next }
-        FILENAME==ARGV[6] { rfd[\$1]=\$2"\\t"\$3"\\t"\$4"\\t"\$5"\\t"\$6; next }
-        END {
-            for (key in win) {
-                if (bwaob_fwd[key] > 0 && bwaob_rev[key] > 0) {
-                    print win[key] "\\t" bwaob_fwd[key] "\\t" bwaob_rev[key] "\\t" norm_fwd[key] "\\t" norm_rev[key] "\\t" rfd[key]
-                }
-            }
-        }
-    ' ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
-    ${sort_cmd} \\
+    # Check that all input files have the same number of lines
+    n1=\$(wc -l < ${windows})
+    n2=\$(wc -l < ${bwaob_fwd})
+    n3=\$(wc -l < ${bwaob_rev})
+    n4=\$(wc -l < ${norm_or_smi_fwd})
+    n5=\$(wc -l < ${norm_or_smi_rev})
+    n6=\$(wc -l < ${rfd})
+    if [ \$n1 -ne \$n2 ] || [ \$n1 -ne \$n3 ] || [ \$n1 -ne \$n4 ] || [ \$n1 -ne \$n5 ] || [ \$n1 -ne \$n6 ]; then
+        echo "Error: Input files have different number of lines" >&2
+        exit 1
+    fi
+
+    # Paste columns and filter for bwaob_fwd > 0 and bwaob_rev > 0
+    paste ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
+    | awk '\$8 > 0 && \$14 > 0' \\
+    | cut -f -3,8,14,20,26,30- \\
+    | ${sort_cmd} \\
     > ${prefix}.tsv
 
     # Making bedGraph
-    awk '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
+    awk '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$24 }' \\
     ${prefix}.tsv \\
     > ${prefix}.bdg
-
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
