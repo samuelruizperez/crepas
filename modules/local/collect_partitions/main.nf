@@ -45,11 +45,11 @@ process COLLECT_PARTITIONS {
     paste ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
     | awk '\$8 > 0 && \$14 > 0' \\
     | cut -f -3,8,14,20,26,30- \\
-    | ${sort_cmd} \\
+    ${sort_cmd} \\
     > ${prefix}.tsv
 
     # Making bedGraph
-    awk '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$24 }' \\
+    awk '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
     ${prefix}.tsv \\
     > ${prefix}.bdg
 
