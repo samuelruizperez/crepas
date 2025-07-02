@@ -123,27 +123,30 @@ opt <- parser$parse_args()
 opt_scar_partition_file <- NULL
 
 opt_scarminusinput_partition_file <- c(
-  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
-  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043_2/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043_2/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_DMSO_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043_2/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me0_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv",
+  "/home/whq695/datadir/projects/glseq_runs/LKO_exp043_2/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/scarseq_SCAR1_557_dTAG_H4K20me2_T0_REP1.mLb.mkD.flT1.flT3.rpm.smi.partition.w1000.s30.d30.z1.tsv"
+  
 )
 
 opt_strandedinput_partition_file <- NULL
 
 
-opt_okazaki_file <- "/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
-#opt_okazaki_file <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/rfd_files/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+#opt_okazaki_file <- "/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq/output/chromap/mergedLibrary/scarseq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
+opt_okazaki_file <- "/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/output/chromap/mergedLibrary/OK-seq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv"
 
-opt_initiation_zones <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
+opt_initiation_zones <- NULL
+  
+#"/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/external_data/Replication/Okazaki_seq/bed_files/OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz"
 
-opt_blacklist <- "/maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm39/annotations/blacklists/GRCm39.ExcludeRanges.Boyle.Excludable_v2.bed.gz"
+opt_blacklist <- "/home/whq695/Groth_group/shared/references/Mus_musculus/GRCm38/annotations/blacklists/bed/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz"
 
-opt_chrom_sizes <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/output/genome/GRCm39.primary_assembly.genome.fa.sizes"
+opt_chrom_sizes <- "/home/whq695/Groth_group/shared/references/Mus_musculus/GRCm38/genome/chrom_sizes/GRCm38.primary_assembly.genome.chrom.sizes"
 
-opt_prefix <- "LEONIE_TEST_2"
+opt_prefix <- "LEONIE_TEST_mm10_1"
 
-opt_outdir <- "/home/whq695/datadir/projects/glseq_runs/LKO_exp043/glseq/plot_test/mod_test"
+opt_outdir <- "/maps/projects/dan1/people/whq695/projects/glseq_runs/LKO_exp043_2/plots"
 
 opt_rpm_cutoff <- 0.3
 
@@ -759,4 +762,242 @@ if (HAS_OKSEQ) {
 
 ```
 
+Testing
 
+```{r}
+
+library(tidyverse)
+library(RColorBrewer)
+library(ggpubr)
+
+# read each of the files and compare their 4th column
+
+file1 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/output/chromap/mergedLibrary/OK-seq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv",
+  col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+file2 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/output/chromap/mergedLibrary/OK-seq/6_partitions/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed", col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+file3 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/output/chromap/mergedLibrary/OK-seq/6_partitions/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed", col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+
+# add suffix to the column names to distinguish them, except for the first three columns
+colnames(file1)[4:12] <- paste0(colnames(file1)[4:12], ".file1")
+colnames(file2)[4:12] <- paste0(colnames(file2)[4:12], ".file2")
+colnames(file3)[4:12] <- paste0(colnames(file3)[4:12], ".file3")
+
+# merge the three files by the first three columns
+merged_df <- file1 %>% full_join(file2, by = c("seqnames", "start", "end")) %>%
+  full_join(file3, by = c("seqnames", "start", "end"))
+
+
+# transform measures "fwd_counts","rev_counts","fwd_RPM","rev_RPM" to log10
+merged_df <- merged_df %>%
+  mutate(across(starts_with("fwd_counts"), log10),
+        across(starts_with("rev_counts"), log10),
+        across(starts_with("fwd_RPM"), log10),
+         across(starts_with("rev_RPM"), log10))
+
+# First, pivot the merged_df to longer format for all columns except the join keys
+long_df <- merged_df %>%
+  pivot_longer(
+    cols = -c(seqnames, start, end),
+    names_to = c("measure", "file"),
+    names_sep = "\\.",
+    values_to = "value"
+  ) %>%
+  pivot_wider(
+    id_cols = c(seqnames, start, end, measure),
+    names_from = file,
+    values_from = value
+  )
+
+
+
+plot_1_vs_2 <- ggplot(long_df, aes(x = file1, y = file2)) +
+  geom_hex(bins = 50) +
+  scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(x = "OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv",
+       y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed") +
+  stat_cor(method = "spearman", size = 3,
+           label.x.npc = "left", label.y.npc = "top") +
+  theme_bw(base_family = "Helvetica") +
+  theme(axis.title = element_text(size = 6),
+        aspect.ratio = 1) +
+  facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/plots/ok_seq_mm10_comparison_1_vs_2.png",
+       plot = plot_1_vs_2, width = 20, height = 20, units = "cm", dpi = 300)
+
+plot_1_vs_3 <- ggplot(long_df, aes(x = file1, y = file3)) +
+    geom_hex(bins = 50) +
+    scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+    geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+    geom_abline(slope = 1, intercept = 0, color = "red") +
+    labs(x = "OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv",
+         y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed") +
+    stat_cor(method = "spearman", size = 3,
+             label.x.npc = "left", label.y.npc = "top") +
+    theme_bw(base_family = "Helvetica") +
+    theme(axis.title = element_text(size = 6),
+          aspect.ratio = 1) +
+    facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/plots/ok_seq_mm10_comparison_1_vs_3.png",
+       plot = plot_1_vs_3, width = 20, height = 20, units = "cm", dpi = 300)
+
+
+
+plot_2_vs_3 <- ggplot(long_df, aes(x = file2, y = file3)) +
+    geom_hex(bins = 50) +
+    scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+    geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+    geom_abline(slope = 1, intercept = 0, color = "red") +
+    labs(x = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed",
+         y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm38_SE_smooth_results_w1000_s30_d30_z1.bed") +
+    theme_bw(base_family = "Helvetica") +
+    theme(axis.title = element_text(size = 6),
+          aspect.ratio = 1) +
+    stat_cor(method = "spearman", size = 3,
+             label.x.npc = "left", label.y.npc = "top") +
+    facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm10/plots/ok_seq_mm10_comparison_2_vs_3.png",
+       plot = plot_2_vs_3, width = 20, height = 20, units = "cm", dpi = 300)
+
+```
+
+
+
+```{r}
+
+library(tidyverse)
+library(RColorBrewer)
+library(ggpubr)
+
+# read each of the files and compare their 4th column
+
+file1 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/output/chromap/mergedLibrary/OK-seq/6_partitions/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv",
+  col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+
+file2 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/output/chromap/mergedLibrary/OK-seq/6_partitions/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz", col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+
+file3 <- read_tsv("/home/whq695/datadir/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/output/chromap/mergedLibrary/OK-seq/6_partitions/OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz", col_names = c("seqnames","start","end", # Coordinates of bin
+    "fwd_counts","rev_counts",# Forward (fwd_counts) and Reverse (rev_counts) raw counts in bin
+    "fwd_RPM","rev_RPM",      # Forward (fwd_RPM) and Reverse (rev_RPM) RPMs in bin
+    "RFD_raw","RFD_smooth",   # Partition scores computed with raw (RFD_raw) and smoothed (RFD_smooth) RPMs
+    "RFD_deriv",              # Value of the derivative of the partition at this bin
+    "score",                  # not used
+    "zero_deriv"))
+
+# add suffix to the column names to distinguish them, except for the first three columns
+colnames(file1)[4:12] <- paste0(colnames(file1)[4:12], ".file1")
+colnames(file2)[4:12] <- paste0(colnames(file2)[4:12], ".file2")
+colnames(file3)[4:12] <- paste0(colnames(file3)[4:12], ".file3")
+
+# merge the three files by the first three columns
+merged_df <- file1 %>% full_join(file2, by = c("seqnames", "start", "end")) %>%
+  full_join(file3, by = c("seqnames", "start", "end"))
+
+# transform measures "fwd_counts","rev_counts","fwd_RPM","rev_RPM" to log10
+merged_df <- merged_df %>%
+  mutate(across(starts_with("fwd_counts"), log10),
+         across(starts_with("rev_counts"), log10),
+         across(starts_with("fwd_RPM"), log10),
+         across(starts_with("rev_RPM"), log10))
+
+# First, pivot the merged_df to longer format for all columns except the join keys
+long_df <- merged_df %>%
+  pivot_longer(
+    cols = -c(seqnames, start, end),
+    names_to = c("measure", "file"),
+    names_sep = "\\.",
+    values_to = "value"
+  ) %>%
+  pivot_wider(
+    id_cols = c(seqnames, start, end, measure),
+    names_from = file,
+    values_from = value
+  )
+
+plot_1_vs_2 <- ggplot(long_df, aes(x = file1, y = file2)) +
+  geom_hex(bins = 50) +
+  scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(x = "OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv",
+       y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz") +
+  stat_cor(method = "spearman", size = 3,
+           label.x.npc = "left", label.y.npc = "top") +
+  theme_bw(base_family = "Helvetica") +
+  theme(axis.title = element_text(size = 6),
+        aspect.ratio = 1) +
+  facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/plots/ok_seq_mm39_comparison_1_vs_2.png",
+       plot = plot_1_vs_2, width = 20, height = 20, units = "cm", dpi = 300)
+
+plot_1_vs_3 <- ggplot(long_df, aes(x = file1, y = file3)) +
+    geom_hex(bins = 50) +
+    scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+    geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+    geom_abline(slope = 1, intercept = 0, color = "red") +
+    labs(x = "OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.rfd.w1000.s30.d30.z1.tsv",
+         y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz") +
+    stat_cor(method = "spearman", size = 3,
+             label.x.npc = "left", label.y.npc = "top") +
+    theme_bw(base_family = "Helvetica") +
+    theme(axis.title = element_text(size = 6),
+          aspect.ratio = 1) +
+    facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/plots/ok_seq_mm39_comparison_1_vs_3.png",
+       plot = plot_1_vs_3, width = 20, height = 20, units = "cm", dpi = 300)
+
+plot_2_vs_3 <- ggplot(long_df, aes(x = file2, y = file3)) +
+    geom_hex(bins = 50) +
+    scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
+    geom_smooth(method = "lm", se = FALSE, color = "blue", size = 0.3) +
+    geom_abline(slope = 1, intercept = 0, color = "red") +
+    labs(x = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz",
+         y = "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.uniq.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed.gz") +
+    theme_bw(base_family = "Helvetica") +
+    theme(axis.title = element_text(size = 6),
+          aspect.ratio = 1) +
+    stat_cor(method = "spearman", size = 3,
+             label.x.npc = "left", label.y.npc = "top") +
+    facet_wrap(~measure, scales = "free")
+
+ggsave(filename = "/maps/projects/dan1/people/whq695/projects/glseq_runs/ok_seq_SRR7535256/glseq_mm39/plots/ok_seq_mm39_comparison_2_vs_3.png",
+       plot = plot_2_vs_3, width = 20, height = 20, units = "cm", dpi = 300)
+
+
+```
