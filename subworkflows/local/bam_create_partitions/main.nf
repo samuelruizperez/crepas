@@ -12,7 +12,7 @@ include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } fr
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
-workflow BAM_CREATE_SCAR_PARTITIONS {
+workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
@@ -20,7 +20,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
     rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
-
+    smooth_radius
+    derivative_radius
+    zero_crossing_radius
 
     main:
 
@@ -313,9 +315,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     //
     PARTITION_OR_RFD_SMOOTH (
         ch_part_norm_and_smi,
-        params.scar_radius,
-        params.scar_dradius,
-        params.scar_zradius
+        smooth_radius,
+        derivative_radius,
+        zero_crossing_radius
     )
     ch_rfd = PARTITION_OR_RFD_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_OR_RFD_SMOOTH.out.versions.first())

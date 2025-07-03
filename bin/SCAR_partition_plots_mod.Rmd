@@ -546,11 +546,12 @@ for (type in names(part_files)) {
 
 }
 
-
 if (HAS_OKSEQ) {
 
   # Expand RFD_gr for each unique sample_facet in partition_mean_df
   sample_facets <- unique(partition_df$sample_facet)
+  # if sample_facets is empty (there are no SCAR partitions, just OK-seq):
+  sample_facets <- ifelse(is.null(sample_facets), "OK-seq", sample_facets)
   
   expanded_RFD <- tidyr::expand_grid(
     as_tibble(RFD_gr),

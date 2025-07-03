@@ -895,49 +895,45 @@
                 }
             }
         },
-        "scarseq_analysis_options": {
-            "title": "SCAR-seq analysis options",
+        "partition_and_rfd_analysis_options": {
+            "title": "SCAR-seq (partition) and OK-seq (RFD) analysis options",
             "type": "object",
             "fa_icon": "fas fa-dna",
-            "description": "Options to adjust SCAR-seq analysis criteria.",
+            "description": "Options to adjust SCAR-seq and OK-seq analysis criteria.",
             "properties": {
-                "scar_slop": {
-                    "type": "integer",
-                    "default": 0
-                },
-                "scar_window_size": {
+                "partition_window_size": {
                     "type": "integer",
                     "default": 1000
                 },
-                "scar_step_size": {
+                "partition_step_size": {
                     "type": "integer",
                     "default": 1000
                 },
-                "scar_radius": {
+                "smooth_radius": {
                     "type": "integer",
                     "default": 30
                 },
-                "scar_dradius": {
+                "derivative_radius": {
                     "type": "integer",
                     "default": 30
                 },
-                "scar_zradius": {
+                "zero_crossing_radius": {
                     "type": "integer",
                     "default": 1
                 },
-                "scar_cpm_cutoff": {
+                "partition_cpm_cutoff": {
                     "type": "number",
                     "default": 0.3
                 },
-                "scar_plot_range": {
+                "partition_plot_range": {
                     "type": "integer",
                     "default": 100
                 },
-                "scar_exclude_chromosomes": {
+                "partition_exclude_chromosomes": {
                     "type": "string",
                     "default": "chrX,chrY,chrM"
                 },
-                "save_scarseq_intermeds": {
+                "save_partition_intermeds": {
                     "type": "boolean"
                 }
             }
@@ -1104,7 +1100,7 @@
             "$ref": "#/definitions/process_skipping_options"
         },
         {
-            "$ref": "#/definitions/scarseq_analysis_options"
+            "$ref": "#/definitions/partition_and_rfd_analysis_options"
         },
         {
             "$ref": "#/definitions/institutional_config_options"

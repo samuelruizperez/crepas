@@ -31,7 +31,7 @@ include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                  } from '../sub
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                  } from '../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
-include { BAM_CREATE_SCAR_PARTITIONS } from '../subworkflows/local/bam_create_scar_partitions/main'
+include { BAM_CREATE_PARTITIONS } from '../subworkflows/local/bam_create_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
@@ -1086,7 +1086,7 @@ workflow GLSEQ {
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['scarseq', 'OK-seq'] }
 
     // Make ch_chrom_sizes_endo empty if there are no scarseq samples
-    // This is to avoid unnecessarily running modules in the BAM_CREATE_SCAR_PARTITIONS
+    // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
     ch_chrom_sizes_endo
         .combine(ch_filtered_bam_ss)
         .first()
@@ -1097,19 +1097,21 @@ workflow GLSEQ {
         .set { ch_chrom_sizes_endo_ss }
 
     //
-    // SUBWORKFLOW: SCAR-seq analysis: partitioning of reads
+    // SUBWORKFLOW: SCAR-seq and OK-seq analysis: partitioning of reads
     //
-    //https://github.com/nextflow-io/nextflow/issues/1052
-    ch_scar_smooth = Channel.empty()
-    BAM_CREATE_SCAR_PARTITIONS (
+    ch_partition_smooth = Channel.empty()
+    BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo_ss.first(),
         ch_blacklist.first(),
         ch_initiation_zones.first(),
-        params.rpm_use_flT2_total
+        params.rpm_use_flT2_total,
+        params.smooth_radius,
+        params.derivative_radius,
+        params.zero_crossing_radius
     )
-    ch_scar_smooth = BAM_CREATE_SCAR_PARTITIONS.out.tab
-    ch_versions = ch_versions.mix(BAM_CREATE_SCAR_PARTITIONS.out.versions)
+    ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
+    ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)
 
     //
     // SUBWORKFLOW: Create SAMtools summary table
