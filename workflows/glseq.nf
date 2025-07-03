@@ -557,11 +557,11 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Allocation of multimappers
     //
-    if (params.allocate_n_multimappers && params.allocation_method != 'chromap') {
+    if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
         BAM_ALLOCATE_MULTIMAPPERS_ENDO (
             ch_filtered_bam,
             ch_fasta,
-            params.allocation_method
+            params.multimap_allocation_method
         )
         ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bam
         ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bai
@@ -578,7 +578,7 @@ workflow GLSEQ {
             BAM_ALLOCATE_MULTIMAPPERS_EXO (
                 ch_filtered_exo_bam,
                 ch_fasta,
-                params.allocation_method
+                params.multimap_allocation_method
             )
             ch_filtered_exo_bam         = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
             ch_filtered_exo_index       = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
@@ -623,63 +623,67 @@ workflow GLSEQ {
     )
     ch_filtered_bam     = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index   = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
+    ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
     ch_versions         = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
-    //
-    // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
-    //
-    // TODO: the same blacklist is used for both the endogenous and exogenous BAM files
-    BAM_FILTER_SAMBAMBA_FLT3 (
-        ch_filtered_bam.join(ch_filtered_index, by: 0),
-        ch_filtered_bed.first(),
-        ch_fasta.first()
-    )
-    ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
-    ch_filtered_index       = BAM_FILTER_SAMBAMBA_FLT3.out.bai
-    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats)
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats.collect{it[1]})
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat.collect{it[1]})
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect{it[1]})
-    ch_versions             = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
-     //
-    // MODULE: Extract total mapped reads from flagstats
-    //
-    BAM_FLAGSTAT_MAPPED_FLT3 (
-        BAM_FILTER_SAMBAMBA_FLT3.out.flagstat
-    )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT3.out.versions)
+    if (!params.skip_flT3) {
+        //
+        // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
+        //
+        // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
+        BAM_FILTER_SAMBAMBA_FLT3 (
+            ch_filtered_bam.join(ch_filtered_index, by: 0),
+            ch_filtered_bed.first(),
+            ch_fasta.first()
+        )
+        ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
+        ch_filtered_index       = BAM_FILTER_SAMBAMBA_FLT3.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect{it[1]})
+        ch_versions             = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
-    // Extract the total mapped reads from the text file
-    BAM_FLAGSTAT_MAPPED_FLT3.out.txt
-        .map {
-            meta, total ->
-                [ meta, total.splitCsv(header:false)[0][0] ]
-        }
-        .set { ch_flT3_total }
+        //
+        // MODULE: Extract total mapped reads from flagstats
+        //
+        BAM_FLAGSTAT_MAPPED_FLT3 (
+            BAM_FILTER_SAMBAMBA_FLT3.out.flagstat
+        )
+        ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT3.out.versions)
 
-    // Add the total_mapped_reads to the bams' and bais' metas
-    ch_filtered_bam
-        .combine(ch_filtered_index, by: 0)
-        .map {
-            meta, bam, bai ->
-                [ meta, bam, bai ]
-        }
-        .combine(ch_flT3_total, by: 0)
-        .map {
-            meta, bam, bai, total ->
-                meta_clone = meta.clone()
-                meta_clone.flT3_total_mapped_reads = total.toDouble()
-                [ meta_clone, bam, bai ]
-        }
-        .set { ch_filtered_bam_bai }
+        // Extract the total mapped reads from the text file
+        BAM_FLAGSTAT_MAPPED_FLT3.out.txt
+            .map {
+                meta, total ->
+                    [ meta, total.splitCsv(header:false)[0][0] ]
+            }
+            .set { ch_flT3_total }
 
-    ch_filtered_bam_bai
-        .map {
-            meta, bam, bai ->
-                [ meta, bam ] 
-        }
-        .set { ch_filtered_bam } 
+        // Add the total_mapped_reads to the bams' and bais' metas
+        ch_filtered_bam
+            .combine(ch_filtered_index, by: 0)
+            .map {
+                meta, bam, bai ->
+                    [ meta, bam, bai ]
+            }
+            .combine(ch_flT3_total, by: 0)
+            .map {
+                meta, bam, bai, total ->
+                    meta_clone = meta.clone()
+                    meta_clone.flT3_total_mapped_reads = total.toDouble()
+                    [ meta_clone, bam, bai ]
+            }
+            .set { ch_filtered_bam_bai }
+
+        ch_filtered_bam_bai
+            .map {
+                meta, bam, bai ->
+                    [ meta, bam ] 
+            }
+            .set { ch_filtered_bam }
+    }
 
     //
     // MODULE: Picard post alignment QC
@@ -1129,7 +1133,7 @@ workflow GLSEQ {
     if (!params.skip_igv) {
         IGV (
             params.aligner,
-            params.allocate_n_multimappers ? params.allocation_method == 'chromap' ? 'chromap_allocation' : params.allocation_method + '/' : '',
+            params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'chromap_allocation' : params.multimap_allocation_method + '/' : '',
             params.narrow_peak ? 'narrow_peak' : 'broad_peak',
             ch_fasta.map{ it[1] },
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect{it[1]}.ifEmpty([]),

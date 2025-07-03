@@ -463,15 +463,9 @@
             "fa_icon": "fas fa-dice-d20",
             "description": "Options to adjust multimapper allocation criteria.",
             "properties": {
-                "allocate_n_multimappers": {
-                    "type": "integer",
-                    "description": "Max number of multimappers to allocate. Must be equal or smaller than `--map_n_multimappers`.",
-                    "fa_icon": "fas fa-dice-d20"
-                },
-                "allocation_method": {
+                "multimap_allocation_method": {
                     "type": "string",
-                    "default": "allo",
-                    "description": "Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`.",
+                    "description": "Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`. Not setting this parameter means that multimappers will not be allocated (the default).",
                     "fa_icon": "fas fa-dice-d20",
                     "enum": ["allo", "chromap", "mmr"]
                 },
@@ -506,6 +500,20 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the alignment shifting (only done on ATAC-seq data).",
                     "fa_icon": "fas fa-save"
+                }
+            }
+        },
+        "filtering_options": {
+            "title": "Filtering options",
+            "type": "object",
+            "fa_icon": "fas fa-filter",
+            "description": "Options to adjust filtering criteria for BAM files.",
+            "properties": {
+                "skip_flT3": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the flT3 filtering step (filtering by mapping quality, which also removes multimapping reads in most cases).",
+                    "fa_icon": "fas fa-filter"
                 }
             }
         },
@@ -1086,6 +1094,9 @@
         },
         {
             "$ref": "#/definitions/alignment_shifting_options"
+        },
+        {
+            "$ref": "#/definitions/filtering_options"
         },
         {
             "$ref": "#/definitions/coverage_and_normalization_options"

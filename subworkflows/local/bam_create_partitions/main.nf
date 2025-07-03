@@ -183,7 +183,7 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
+            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
