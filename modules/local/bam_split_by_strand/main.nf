@@ -29,7 +29,7 @@ process BAM_SPLIT_BY_STRAND {
     """
         samtools view \\
             --threads ${task.cpus-1} \\
-            --exclude-flags 16 \\
+            --exclude-flags 20 \\
             --with-header \\
             --bam \\
             --output ${prefix}.forward.bam \\
@@ -52,7 +52,7 @@ process BAM_SPLIT_BY_STRAND {
     """
         samtools view \\
             --threads ${task.cpus-1} \\
-            --exclude-flags 16 \\
+            --exclude-flags 20 \\
             --with-header \\
             --bam \\
             --output ${prefix}.reverse.bam \\
