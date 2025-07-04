@@ -89,13 +89,17 @@ if (is.null(opt$exogenous_genome_name)) {
                   pivot_wider(
                     names_from = stat,
                     values_from = value
-                  ) %>%
-                  mutate(
-                    # Add a new column for flT1_multimapping_reads
-                    flT1_multimapping_reads = flT1_raw_total_sequences - flT3_raw_total_sequences) %>%
-                  # move flT1_multimapping_reads after last column with flT1 in the name
-                  relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
-                  
+                  )
+
+  # If there is flT3_raw_total_sequences column, use it to calculate flT1_multimapping_reads
+  if (any(grepl("flT3_raw_total_sequences", colnames(tmp)))) {
+    tmp <- tmp %>%
+          mutate(
+            # Add a new column for flT1_multimapping_reads
+            flT1_multimapping_reads = flT1_raw_total_sequences - flT3_raw_total_sequences) %>%
+          # move flT1_multimapping_reads after last column with flT1 in the name
+          relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
+  }                
 
 } else {
 
@@ -151,26 +155,28 @@ if (is.null(opt$exogenous_genome_name)) {
                       values_from = value
                     ) 
 
-  actual_flt2_rts_colname <- paste0(opt$endogenous_genome_name, "_flT2_raw_total_sequences")
-  actual_flt2_mmr_colname <- paste0(opt$endogenous_genome_name, "_flT2_multimapping_reads")
-  actual_flt3_rts_colname <- paste0(opt$endogenous_genome_name, "_flT3_raw_total_sequences")
+  # If there is flT3_raw_total_sequences column, use it to calculate flT1_multimapping_reads
+  if (any(grepl("flT3_raw_total_sequences", colnames(tmp)))) {
+    actual_flt2_rts_colname <- paste0(opt$endogenous_genome_name, "_flT2_raw_total_sequences")
+    actual_flt2_mmr_colname <- paste0(opt$endogenous_genome_name, "_flT2_multimapping_reads")
+    actual_flt3_rts_colname <- paste0(opt$endogenous_genome_name, "_flT3_raw_total_sequences")
 
-  # add new flT1_multimapping_reads or flT2_multimapping_reads column
-  if (any(grepl(actual_flt2_rts_colname, colnames(tmp)))) {
-    tmp <- tmp %>%
-      mutate(!!sym(actual_flt2_mmr_colname) := !!sym(actual_flt2_rts_colname) - !!sym(actual_flt3_rts_colname)) %>%
-      # move flT2_multimapping_reads after last column with flT2 in the name
-      relocate(!!sym(actual_flt2_mmr_colname), .after = tail(grep("flT2", colnames(tmp[-which(colnames(tmp) == actual_flt2_mmr_colname)])), n = 1))
-  } else if (any(grepl("flT1_raw_total_sequences", colnames(tmp)))) {
-    tmp <- tmp %>%
-      mutate(flT1_multimapping_reads = flT1_raw_total_sequences - !!sym(actual_flt3_rts_colname)) %>%
-      # move flT1_multimapping_reads after last column with flT1 in the name
-      relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
-  } else {
-    warning("No valid columns found for flT1 or flT2 multimapping reads.")
-    stop("Processing cannot continue without valid columns.")
+    # add new flT1_multimapping_reads or flT2_multimapping_reads column
+    if (any(grepl(actual_flt2_rts_colname, colnames(tmp)))) {
+      tmp <- tmp %>%
+        mutate(!!sym(actual_flt2_mmr_colname) := !!sym(actual_flt2_rts_colname) - !!sym(actual_flt3_rts_colname)) %>%
+        # move flT2_multimapping_reads after last column with flT2 in the name
+        relocate(!!sym(actual_flt2_mmr_colname), .after = tail(grep("flT2", colnames(tmp[-which(colnames(tmp) == actual_flt2_mmr_colname)])), n = 1))
+    } else if (any(grepl("flT1_raw_total_sequences", colnames(tmp)))) {
+      tmp <- tmp %>%
+        mutate(flT1_multimapping_reads = flT1_raw_total_sequences - !!sym(actual_flt3_rts_colname)) %>%
+        # move flT1_multimapping_reads after last column with flT1 in the name
+        relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
+    } else {
+      warning("No valid columns found for flT1 or flT2 multimapping reads.")
+      stop("Processing cannot continue without valid columns.")
+    }
   }
-
 }
 
 # write the processed table to a file
