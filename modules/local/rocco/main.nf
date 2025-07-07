@@ -8,13 +8,14 @@ process ROCCO {
         'community.wave.seqera.io/library/bedtools_deeptoolsintervals_pybedtools_samtools_pruned:4e193f772646372f' }"
 
     input:
-    tuple val(meta), path(bams_or_bws), path(bamlist)
+    tuple val(meta), path(bams_or_bws), path(bamlist), path(bailist)
     tuple val(meta2), path(chrom_sizes)
     tuple val(meta3), path(params_file)
     val effective_genome_size
 
     output:
     tuple val(meta), path("*.bed"),                             emit: bed
+    tuple val(meta), path("*.counts.tsv"),    optional:true,    emit: counts
     tuple val(meta), path("*.narrowPeak"),    optional:true,    emit: narrow_peak
     tuple val(meta), path("*.mps"),           optional:true,    emit: model_mps
     path "versions.yml",                                        emit: versions
@@ -58,6 +59,7 @@ process ROCCO {
     def VERSION = '1.6.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     touch ${prefix}.bed
+    touch ${prefix}.counts.tsv
     touch ${prefix}.narrowPeak
     touch ${prefix}.mps
     touch ${prefix}.bamlist.txt
