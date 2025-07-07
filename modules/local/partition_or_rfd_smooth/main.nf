@@ -8,8 +8,7 @@ process PARTITION_OR_RFD_SMOOTH {
         'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
-    val partition_or_rfd
-    tuple val(meta), path(f_tab), path(r_tab)
+    tuple val(meta), val(partition_or_rfd), path(f_tab), path(r_tab)
     val radius
     val dradius
     val zradius

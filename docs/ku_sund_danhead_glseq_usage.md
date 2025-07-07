@@ -254,6 +254,25 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
   /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/indices/<aligner>/
   ```
 
+> [!WARNING]
+> For Bowtie2, make sure that there is only one set of index files in the directory/tar specified with `--bowtie2_index`.
+> If there are multiple sets of index files (e.g., two `*.1.bt2` files), the pipeline will throw an error. For example,
+> the following index files would cause an error:
+> ```
+> /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/indices/bowtie2_2.5.4_index
+> ├── GRCm38.primary_assembly.genome.1.bt2
+> ├── GRCm38.primary_assembly.genome.2.bt2
+> ├── GRCm38.primary_assembly.genome.3.bt2
+> ├── GRCm38.primary_assembly.genome.4.bt2
+> ├── GRCm38.primary_assembly.genome.rev.1.bt2
+> ├── GRCm38.primary_assembly.genome.rev.2.bt2
+> ├── GRCm38.primary_assembly.mito_only.1.bt2
+> ├── GRCm38.primary_assembly.mito_only.2.bt2
+> ├── GRCm38.primary_assembly.mito_only.3.bt2
+> ├── GRCm38.primary_assembly.mito_only.4.bt2
+> ├── GRCm38.primary_assembly.mito_only.rev.1.bt2
+> └── GRCm38.primary_assembly.mito_only.rev.2.bt2
+
 - Genome FASTA files are inputted using the `--fasta` parameter, and can be found at:
 
   ```

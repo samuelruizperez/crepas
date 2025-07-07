@@ -12,7 +12,7 @@ include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } fr
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
-workflow BAM_CREATE_SCAR_PARTITIONS {
+workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
@@ -20,7 +20,9 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
     rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
-
+    smooth_radius
+    derivative_radius
+    zero_crossing_radius
 
     main:
 
@@ -181,7 +183,7 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() }) {
+            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -298,15 +300,24 @@ workflow BAM_CREATE_SCAR_PARTITIONS {
         }
         .collectFile( name: '13_scar_ch_norm_and_smi.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug")
 
+
+    // Create channel: [ val(meta), val(partition_or_rfd), [ f_tab ], [ r_tab ] ]
+    ch_norm_and_smi
+        .map { meta, bdg_fwd, bdg_rev ->
+            // 'partition' is for scarseq and 'rfd' for OK-seq
+            def partition_or_rfd = meta.exp_type == 'scarseq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
+            [ meta, partition_or_rfd, bdg_fwd, bdg_rev ]
+        }
+        .set { ch_part_norm_and_smi }
+
     //
     // MODULE: Calculate partitions (RFD)
     //
     PARTITION_OR_RFD_SMOOTH (
-        'partition',
-        ch_norm_and_smi,
-        params.scar_radius,
-        params.scar_dradius,
-        params.scar_zradius
+        ch_part_norm_and_smi,
+        smooth_radius,
+        derivative_radius,
+        zero_crossing_radius
     )
     ch_rfd = PARTITION_OR_RFD_SMOOTH.out.rfd
     ch_versions = ch_versions.mix(PARTITION_OR_RFD_SMOOTH.out.versions.first())
