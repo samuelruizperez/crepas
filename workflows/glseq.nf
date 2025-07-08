@@ -733,7 +733,7 @@ workflow GLSEQ {
             ch_fai.first(),
             params.genome,
             params.spikein_genome,
-            params.bam_downsampling_method
+            params.bam_downsampling_method,
             params.downsampling_endo_threshold,
             params.downsampling_exo_threshold,
             params.dSp_use_flT2_total
