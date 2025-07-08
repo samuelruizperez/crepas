@@ -163,8 +163,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map_mod
         .map { meta, bdg ->
             def meta_clone = meta.clone()
+            // If it was downsampled before, we want to use dSp_total_mapped_reads
+            if (meta_clone.dSp_total_mapped_reads) {
+                meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
             // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+            } else if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -207,7 +211,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome.exo, by: [0,1])
             .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
-                if (srpm_use_flT2_total && meta_clone.antibody in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads) {
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (exo_meta.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / exo_meta.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (srpm_use_flT2_total && meta_clone.antibody in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else {
@@ -289,7 +298,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome_control, by: [0,1])
             .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
-                    if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !exo_ip_meta.flT3_total_mapped_reads) {
+                    // If it was downsampled before, we want to use dSp_total_mapped_reads
+                    if (exo_ip_meta.dSp_total_mapped_reads) {
+                        meta_clone.norm_factor_val = (1e6 / exo_ip_meta.dSp_total_mapped_reads) * (exo_control_meta.dSp_total_mapped_reads / endo_control_meta.dSp_total_mapped_reads)
+                        meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                    // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                    } else if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !exo_ip_meta.flT3_total_mapped_reads) {
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT2_total_mapped_reads) * (exo_control_meta.flT2_total_mapped_reads / endo_control_meta.flT2_total_mapped_reads)
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                     } else {
@@ -319,7 +333,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bdg ->
                 def meta_clone = meta.clone()
-                if (cisrpm_use_flT2_total && meta.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (meta_clone.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (cisrpm_use_flT2_total && meta.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else {
@@ -492,8 +511,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                // if meta.antibody is in the list of antibodies to use flT2_total_mapped_reads or flT1_total_mapped_reads for RPM normalization, otherwise use flT3_total_mapped_reads
-                if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (meta_clone.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                     if (meta_clone.flT2_total_mapped_reads) {
                         meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'

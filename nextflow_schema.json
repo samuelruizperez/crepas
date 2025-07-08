@@ -594,10 +594,28 @@
             "properties": {
                 "bam_downsampling_method": {
                     "type": "string",
-                    "description": "Method to downsample BAM files. Only option currently is `min_by_type`. Leave empty to disable downsampling.",
-                    "help_text": "The `min_by_type` method will downsample each input BAM file to the minimum total mapped reads across all input BAM files, and will downsample each ChIP file to the minimum total mapped reads across all ChIP files. Currently, this downsampling method does not differentiate between samples/inputs of different experiment types (e.g., ChIP-seq vs. ChOR-seq).",
+                    "description": "Method to downsample BAM files. Leave empty to disable downsampling.",
+                    "help_text": "The `min_endo_across` method will downsample all IPs and inputs of the same antibody to the minimum number of endogenous reads across all IPs and inputs of the same antibody. The `min_exo_across` method will downsample all IPs and inputs of the same antibody to the minimum number of exogenous reads across all IPs and inputs of the same antibody. The `min_endo_by_type` method will downsample all IPs to the minimum number of endogenous reads across all IPs of the same antibody, and all the inputs to the minimum number of endogenous reads across all inputs of the same antibody. The `min_exo_by_type` method will downsample all IPs to the minimum number of exogenous reads across all IPs of the same antibody, and all the inputs to the minimum number of exogenous reads across all inputs of the same antibody.",
                     "fa_icon": "fas fa-compress-arrows-alt",
-                    "enum": ["min_by_type"]
+                    "enum": ["min_endo_across", "min_exo_across", "min_endo_by_type", "min_exo_by_type"]
+                },
+                "downsampling_endo_threshold": {
+                    "type": "integer",
+                    "default": 10000000,
+                    "description": "Threshold of endogenous mapped reads for downsampling. For downsampling methods that search for the minimum endogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped endogenous reads should be the minimum number above the `downsampling_endo_threshold`. If there are no totals above this threshold, then the (true) minimum is used.",
+                    "fa_icon": "fas fa-compress-arrows-alt"
+                },
+                "downsampling_exo_threshold": {
+                    "type": "integer",
+                    "default": 300000,
+                    "description": "Threshold of exogenous mapped reads for downsampling. For downsampling methods that search for the minimum exogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped exogenous reads should be the minimum number above the `downsampling_exogenous_threshold`. If there are no totals above this threshold, then the (true) minimum is used.",
+                    "fa_icon": "fas fa-compress-arrows-alt"
+                },
+                "dSp_use_flT2_total": {
+                    "type": "string",
+                    "default": "H3K9me3,H3K27me3",
+                    "description": "Comma-separated list of histone marks for which downsampling probabilities should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for downsampling probability calculation.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "bam_downsampling_strategy": {
                     "type": "string",

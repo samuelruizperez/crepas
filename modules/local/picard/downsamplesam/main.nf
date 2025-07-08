@@ -36,21 +36,32 @@ process PICARD_DOWNSAMPLESAM {
 
     if ("$reads" == "${prefix}.${suffix}") error "Input and output names are the same, use \"task.ext.prefix\" to disambiguate!"
 
-    """
-    picard \\
-        -Xmx${avail_mem}M \\
-        DownsampleSam \\
-        $args \\
-        --INPUT $reads \\
-        --OUTPUT ${prefix}.${suffix} \\
-        $reference \\
-        --METRICS_FILE ${prefix}.DownsampleSam.metrics.txt
+    if (meta.downsampling_prob < 1) {
+        """
+        picard \\
+            -Xmx${avail_mem}M \\
+            DownsampleSam \\
+            $args \\
+            --INPUT $reads \\
+            --OUTPUT ${prefix}.${suffix} \\
+            $reference \\
+            --METRICS_FILE ${prefix}.DownsampleSam.metrics.txt
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | grep -o 'Version:.*' | cut -f2- -d:)
-    END_VERSIONS
-    """
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | grep -o 'Version:.*' | cut -f2- -d:)
+        END_VERSIONS
+        """
+    } else {
+        """
+        ln -s $reads ${prefix}.${suffix}
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | grep -o 'Version:.*' | cut -f2- -d:)
+        END_VERSIONS
+        """
+    }
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"

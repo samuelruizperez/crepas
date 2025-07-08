@@ -723,6 +723,32 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.versions.first())
     }
 
+    if (params.bam_downsampling_method) {
+        //
+        // SUBWORKFLOW: Downsample ChIP and input control BAM files
+        //
+        BAM_DOWNSAMPLE (
+            ch_filtered_bam_bai,
+            ch_fasta.first(),
+            ch_fai.first(),
+            params.genome,
+            params.spikein_genome,
+            params.bam_downsampling_method
+            params.downsampling_endo_threshold,
+            params.downsampling_exo_threshold,
+            params.dSp_use_flT2_total
+        )
+        ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
+        ch_filtered_index = BAM_DOWNSAMPLE.out.bai
+        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect{it[1]})
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect{it[1]})
+        ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
+    }
+
+
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
     //
@@ -777,26 +803,6 @@ workflow GLSEQ {
     ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }
     ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
 
-
-    if (params.bam_downsampling_method) {
-        //
-        // SUBWORKFLOW: Downsample IP and control BAM files
-        //
-        BAM_DOWNSAMPLE (
-            ch_filtered_bam_bai,
-            ch_fasta.first(),
-            ch_fai.first(),
-            params.bam_downsampling_method
-        )
-        ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
-        ch_filtered_index = BAM_DOWNSAMPLE.out.bai
-        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect{it[1]})
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect{it[1]})
-        ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
-    }
 
     //
     // MODULE: Calculate genome size with khmer
