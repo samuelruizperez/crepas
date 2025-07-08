@@ -59,7 +59,7 @@ workflow BAM_DOWNSAMPLE {
             .mix( ch_bam_bai_genome_type.endo_ip )
             .map { control_id, meta, bam, bai ->
                 // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
                     def total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     def total = meta.flT3_total_mapped_reads
@@ -148,7 +148,7 @@ workflow BAM_DOWNSAMPLE {
             .mix( ch_bam_bai_genome_type.exo_ip )
             .map { control_id, meta, bam, bai ->
                 // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
                     def total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     def total = meta.flT3_total_mapped_reads
@@ -236,7 +236,7 @@ workflow BAM_DOWNSAMPLE {
             .mix( ch_bam_bai_genome_type.endo_ip )
             .map { control_id, meta, bam, bai ->
                 // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
                     def total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     def total = meta.flT3_total_mapped_reads
@@ -326,7 +326,7 @@ workflow BAM_DOWNSAMPLE {
             .mix( ch_bam_bai_genome_type.exo_ip )
             .map { control_id, meta, bam, bai ->
                 // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
                     def total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     def total = meta.flT3_total_mapped_reads
@@ -466,4 +466,3 @@ workflow BAM_DOWNSAMPLE {
 
     versions = ch_versions                                           // channel: [ versions.yml ]
 }
-
