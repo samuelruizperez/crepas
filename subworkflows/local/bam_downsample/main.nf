@@ -192,7 +192,10 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample_genome = exo_meta.downsampling_ref_sample_genome
                 [ meta_clone.id, meta_clone, endo_bam, endo_bai ]
             }
-            .mix( ch_bam_bai_exo )
+            set { ch_bam_bai_endo }
+
+        ch_bam_bai_exo
+            .mix( ch_bam_bai_endo )
             // Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
@@ -278,7 +281,10 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample_genome = endo_meta.downsampling_ref_sample_genome
                 [ meta_clone.id, meta_clone, exo_bam, exo_bai ]
             }
-            .mix( ch_bam_bai_endo )
+            .set { ch_bam_bai_exo }
+
+        ch_bam_bai_endo
+            .mix( ch_bam_bai_exo )
             // Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
@@ -366,7 +372,10 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample_genome = exo_meta.downsampling_ref_sample_genome
                 [ meta_clone.id, meta_clone, endo_bam, endo_bai ]
             }
-            .mix( ch_bam_bai_exo )
+            .set { ch_bam_bai_endo }
+
+        ch_bam_bai_exo
+            .mix( ch_bam_bai_endo )
             // Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
