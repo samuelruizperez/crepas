@@ -237,9 +237,9 @@ workflow BAM_DOWNSAMPLE {
             .map { control_id, meta, bam, bai ->
                 // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
                 if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
-                    def total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
+                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
-                    def total = meta.flT3_total_mapped_reads
+                    total = meta.flT3_total_mapped_reads
                 }
                 [ meta.exp_type, meta.antibody, meta.is_control, total, meta, bam, bai ]
             }
