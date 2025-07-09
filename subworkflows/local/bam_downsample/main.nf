@@ -77,7 +77,7 @@ workflow BAM_DOWNSAMPLE {
                 // These two lines are just to keep track of the dSp reference sample
                 def min_endo_id = metas[totals.indexOf(min_endo)].id
                 def min_endo_genome = metas[totals.indexOf(min_endo)].genome
-                def downsampling_ref_total_key = metas.find { it[totals.indexOf(min_endo)] }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it.value == min_endo }.key
                 [ exp_type, antibody, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais ]
             }
             // transpose back
@@ -169,7 +169,7 @@ workflow BAM_DOWNSAMPLE {
                 // These two lines are just to keep track of the dSp reference sample
                 def min_exo_id = metas[totals.indexOf(min_exo)].id
                 def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas.find { it[totals.indexOf(min_exo)] }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it.value == min_exo }.key
                 [ exp_type, antibody, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais ]
             }
             // transpose back
@@ -262,7 +262,7 @@ workflow BAM_DOWNSAMPLE {
                 def min_endo_id = metas[totals.indexOf(min_endo)].id
                 def min_endo_genome = metas[totals.indexOf(min_endo)].genome
                 // get the key name of the meta item from which we got the min_endo (e.g. "flT3_total_mapped_reads")
-                def downsampling_ref_total_key = metas.find { it[totals.indexOf(min_endo)] }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it.value == min_endo }.key
                 [ exp_type, antibody, is_control, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais ]
             }
             // transpose back
@@ -357,7 +357,7 @@ workflow BAM_DOWNSAMPLE {
                 // These two lines are just to keep track of the dSp reference sample
                 def min_exo_id = metas[totals.indexOf(min_exo)].id
                 def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas.find { it[totals.indexOf(min_exo)] }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it.value == min_exo }.key
                 [ exp_type, antibody, is_control, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais ]
             }
             // transpose back
