@@ -821,31 +821,37 @@ workflow GLSEQ {
 
     // Branch channels based on if input control is present
     ch_filtered_bam_bai
-        .branch { meta, bam, bai ->
+        .map { meta, bam, bai ->
+            // samples can have meta.antibody, while controls can have meta.control_of_antibody (if downsampling was performed)
+            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            [ meta, antibody_to_use, bam, bai ]
+        }
+        .branch { meta, antibody, bam, bai ->
             ips_with_control: meta.control
-                return [ meta.control, meta, [ bam ], [ bai ] ]
+                return [ meta.control, antibody, meta, [ bam ], [ bai ] ]
             ips_wo_control: !meta.control && !meta.is_control
-                return [ meta.id, meta, [ bam ], [ bai ] ]
+                return [ meta.id, antibody, meta, [ bam ], [ bai ] ]
             controls: !meta.control && meta.is_control
-                return [ meta.id, [ bam ], [ bai ] ]
+                return [ meta.id, antibody, [ bam ], [ bai ] ]
         }
         .set { ch_bam_by_type }
 
     // Create channel for Consenrich: [ meta, [ip_bams_merged_reps], [ip_bais_merged_reps], [control_bams_merged_reps], [control_bais_merged_reps] ]
     ch_bam_by_type.ips_with_control
-        .combine(ch_bam_by_type.controls, by: 0)
+        .combine(ch_bam_by_type.controls, by: [0, 1])
         .mix(ch_bam_by_type.ips_wo_control)
-        // this is: [ control_id, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
+        // this is: [ control_id, antibody, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
         // control_bam and control_bai can be empty if we only have ips_wo_control
         .map { it ->
-            def meta_clone = it[1].clone()
+            def meta_clone = it[2].clone()
             meta_clone.id = meta_clone.id - ~/_REP\d+$/
             meta_clone.control = meta_clone.control - ~/_REP\d+$/
-            [ meta_clone.id, meta_clone, it[2], it[3], it[4] ?: [], it[5] ?: [] ]
+            [ meta_clone.id, it[1], meta_clone, it[3], it[4], it[5] ?: [], it[6] ?: [] ]
         }
-        .groupTuple()
+        // We group by the id and the antibody (some inputs can be duplicated to act as reference for different antibodies)
+        .groupTuple(by: [0,1])
         .map {
-            id, metas, ip_bams, ip_bais, control_bams, control_bais ->
+            id, antibody, metas, ip_bams, ip_bais, control_bams, control_bais ->
                 [ metas[0], ip_bams.flatten(), ip_bais.flatten(), control_bams.flatten(), control_bais.flatten() ]
         }
         .set { ch_ip_control_bam_bai_merged_reps }
@@ -879,9 +885,11 @@ workflow GLSEQ {
     // Create channel for deepTools plotFingerprint: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
     //
     ch_bam_by_type.ips_with_control
-        .combine(ch_bam_by_type.controls, by: 0)
+        .combine(ch_bam_by_type.controls, by: [0, 1])
         .mix(ch_bam_by_type.ips_wo_control)
-        .map { it -> [ it[1], it[2] + (it[4] ?: []), it[3] + (it[5] ?: []) ] }
+        // this is: [ control_id, antibody, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
+        // control_bam and control_bai can be empty if we only have ips_wo_control
+        .map { it -> [ it[2], it[3] + (it[5] ?: []), it[4] + (it[6] ?: []) ] }
         .set { ch_ip_control_bam_bai }
     
     // TODO: Print to file for debuggin

@@ -49,23 +49,26 @@ workflow BAM_DOWNSAMPLE {
             .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
             .map { control_id, endo_control_meta, endo_control_bam, endo_control_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
                 def meta_clone = endo_control_meta.clone()
-                meta_clone.antibody = endo_ip_meta.antibody
+                meta_clone.control_of_antibody = endo_ip_meta.antibody
                 [ control_id, meta_clone, endo_control_bam, endo_control_bai ]
             }
-            // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
-            // Because we don't need the same input downsampled in the same way for multiple times
+            // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
+            // Because we don't need the same input downsampled in the same way for multiple samples
             .unique()
             // Now we mix the control and ip channels to evaluate them together below 
             .mix( ch_bam_bai_genome_type.endo_ip )
             .map { control_id, meta, bam, bai ->
                 def total
-                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2 or flT1, otherwise use flT3
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     total = meta.flT3_total_mapped_reads
                 }
-                [ meta.exp_type, meta.antibody, total, meta, bam, bai ]
+                [ meta.exp_type, antibody_to_use, total, meta, bam, bai ]
             }
             // Thus, this groups ChIPs and inputs together by experiment type and antibody
             .groupTuple(by: [0,1])
@@ -98,7 +101,7 @@ workflow BAM_DOWNSAMPLE {
             // Now we copy the downsampling probability (by meta.id) to the exogenous bams and bais,
             // since we want the ratio of endo and exo reads in each sample to stay the same after downsampling
             ch_bam_bai_endo
-                .join(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_control), by: 0)
+                .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_control), by: 0)
                 .map { id, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
                     def meta_clone = exo_meta.clone()
                     meta_clone.downsampling_prob = endo_meta.downsampling_prob
@@ -106,16 +109,18 @@ workflow BAM_DOWNSAMPLE {
                     meta_clone.downsampling_ref_sample = endo_meta.downsampling_ref_sample
                     meta_clone.downsampling_ref_sample_genome = endo_meta.downsampling_ref_sample_genome
                     meta_clone.downsampling_ref_total_key = endo_meta.downsampling_ref_total_key
+                    // propagate control_of_antibody if present (i.e., in controls)
+                    if (endo_meta.containsKey('control_of_antibody')) {
+                        meta_clone.control_of_antibody = endo_meta.control_of_antibody
+                    }
                     [ meta_clone.id, meta_clone, exo_bam, exo_bai ]
                 }
                 .set { ch_bam_bai_exo }
 
             ch_bam_bai_endo
                 .mix( ch_bam_bai_exo )
-                // Omitted: Remove the antibody from the control metas
                 .map { id, meta, bam, bai ->
                     def meta_clone = meta.clone()
-                    //meta_clone.antibody = meta.is_control ? null : meta.antibody
                     [ meta_clone + [ downsampling_method: 'min_endo_across' ], bam, bai ]
                 }
                 .set { ch_bam_bai_to_ds }
@@ -142,23 +147,26 @@ workflow BAM_DOWNSAMPLE {
             .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
             .map { control_id, exo_control_meta, exo_control_bam, exo_control_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
                 def meta_clone = exo_control_meta.clone()
-                meta_clone.antibody = exo_ip_meta.antibody
+                meta_clone.control_of_antibody = exo_ip_meta.antibody
                 [ control_id, meta_clone, exo_control_bam, exo_control_bai ]
             }
-            // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
+            // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple times
             .unique()
             // Now we mix the control and ip channels to evaluate them together below
             .mix( ch_bam_bai_genome_type.exo_ip )
             .map { control_id, meta, bam, bai ->
                 def total
-                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     total = meta.flT3_total_mapped_reads
                 }
-                [ meta.exp_type, meta.antibody, total, meta, bam, bai ]
+                [ meta.exp_type, antibody_to_use, total, meta, bam, bai ]
             }
             // Thus, this groups ChIPs and inputs together by experiment type and antibody
             .groupTuple(by: [0,1])
@@ -190,7 +198,7 @@ workflow BAM_DOWNSAMPLE {
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_exo
-            .join(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_control), by: 0)
+            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_control), by: 0)
             .map { id, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.downsampling_prob = exo_meta.downsampling_prob
@@ -198,16 +206,18 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample = exo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = exo_meta.downsampling_ref_sample_genome
                 meta_clone.downsampling_ref_total_key = exo_meta.downsampling_ref_total_key
+                // propagate control_of_antibody if present (i.e., in controls)
+                if (exo_meta.containsKey('control_of_antibody')) {
+                    meta_clone.control_of_antibody = exo_meta.control_of_antibody
+                }
                 [ meta_clone.id, meta_clone, endo_bam, endo_bai ]
             }
             set { ch_bam_bai_endo }
 
         ch_bam_bai_exo
             .mix( ch_bam_bai_endo )
-            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_exo_across' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }
@@ -234,23 +244,26 @@ workflow BAM_DOWNSAMPLE {
             .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
             .map { control_id, endo_control_meta, endo_control_bam, endo_control_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
                 def meta_clone = endo_control_meta.clone()
-                meta_clone.antibody = endo_ip_meta.antibody
+                meta_clone.control_of_antibody = endo_ip_meta.antibody
                 [ control_id, meta_clone, endo_control_bam, endo_control_bai ]
             }
-            // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
-            // Because we don't need the same input downsampled in the same way for multiple times
+            // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
+            // Because we don't need the same input downsampled in the same way for multiple samples
             .unique()
             // Now we mix the control and ip channels to evaluate them together below
             .mix( ch_bam_bai_genome_type.endo_ip )
             .map { control_id, meta, bam, bai ->
                 def total
-                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     total = meta.flT3_total_mapped_reads
                 }
-                [ meta.exp_type, meta.antibody, meta.is_control, total, meta, bam, bai ]
+                [ meta.exp_type, antibody_to_use, meta.is_control, total, meta, bam, bai ]
             }
             // Thus, this groups ChIPs and inputs together by experiment type, antibody and whether control or not
             .groupTuple(by: [0,1,2])
@@ -284,7 +297,7 @@ workflow BAM_DOWNSAMPLE {
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_endo
-            .join(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_control), by: 0)
+            .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_control), by: 0)
             .map { id, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
                 def meta_clone = exo_meta.clone()
                 meta_clone.downsampling_prob = endo_meta.downsampling_prob
@@ -292,20 +305,21 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample = endo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = endo_meta.downsampling_ref_sample_genome
                 meta_clone.downsampling_ref_total_key = endo_meta.downsampling_ref_total_key
+                // propagate control_of_antibody if present (i.e., in controls)
+                if (endo_meta.containsKey('control_of_antibody')) {
+                    meta_clone.control_of_antibody = endo_meta.control_of_antibody
+                }
                 [ meta_clone.id, meta_clone, exo_bam, exo_bai ]
             }
             .set { ch_bam_bai_exo }
 
         ch_bam_bai_endo
             .mix( ch_bam_bai_exo )
-            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_endo_by_type' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }
-
 
 
     // 'min_exo_by_type' downsamples all ChIPs (both endo and exo) to the minimum number of exogenous reads among the ChIPs, and all inputs to the minimum number of exogenous reads among the inputs.
@@ -329,23 +343,26 @@ workflow BAM_DOWNSAMPLE {
             .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
             .map { control_id, exo_control_meta, exo_control_bam, exo_control_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
                 def meta_clone = exo_control_meta.clone()
-                meta_clone.antibody = exo_ip_meta.antibody
+                meta_clone.control_of_antibody = exo_ip_meta.antibody
                 [ control_id, meta_clone, exo_control_bam, exo_control_bai ]
             }
-            // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
+            // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple times
             .unique()
             // Now we mix the control and ip channels to evaluate them together below
             .mix( ch_bam_bai_genome_type.exo_ip )
             .map { control_id, meta, bam, bai ->
                 def total
-                // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                if (dSp_use_flT2_total && meta.antibody in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads) {
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
                     total = meta.flT3_total_mapped_reads
                 }
-                [ meta.exp_type, meta.antibody, meta.is_control, total, meta, bam, bai ]
+                [ meta.exp_type, antibody_to_use, meta.is_control, total, meta, bam, bai ]
             }
             // Thus, this groups ChIPs and inputs together by experiment type, antibody and whether control or not
             .groupTuple(by: [0,1,2])
@@ -379,7 +396,7 @@ workflow BAM_DOWNSAMPLE {
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_exo
-            .join(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_control), by: 0)
+            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_control), by: 0)
             .map { id, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.downsampling_prob = exo_meta.downsampling_prob
@@ -387,16 +404,18 @@ workflow BAM_DOWNSAMPLE {
                 meta_clone.downsampling_ref_sample = exo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = exo_meta.downsampling_ref_sample_genome
                 meta_clone.downsampling_ref_total_key = exo_meta.downsampling_ref_total_key
+                // propagate control_of_antibody if present (i.e., in controls)
+                if (exo_meta.containsKey('control_of_antibody')) {
+                    meta_clone.control_of_antibody = exo_meta.control_of_antibody
+                }
                 [ meta_clone.id, meta_clone, endo_bam, endo_bai ]
             }
             .set { ch_bam_bai_endo }
 
         ch_bam_bai_exo
             .mix( ch_bam_bai_endo )
-            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_exo_by_type' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }
