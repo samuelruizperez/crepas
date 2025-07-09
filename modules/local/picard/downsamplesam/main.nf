@@ -8,7 +8,7 @@ process PICARD_DOWNSAMPLESAM {
         'biocontainers/picard:3.2.0--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads), path(index)
     tuple val(meta2), path(fasta)
     tuple val(meta3), path(fai)
 
