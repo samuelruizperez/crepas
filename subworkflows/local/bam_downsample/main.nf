@@ -112,10 +112,10 @@ workflow BAM_DOWNSAMPLE {
 
             ch_bam_bai_endo
                 .mix( ch_bam_bai_exo )
-                // Remove the antibody from the control metas
+                // Omitted: Remove the antibody from the control metas
                 .map { id, meta, bam, bai ->
                     def meta_clone = meta.clone()
-                    meta_clone.antibody = meta.is_control ? null : meta.antibody
+                    //meta_clone.antibody = meta.is_control ? null : meta.antibody
                     [ meta_clone + [ downsampling_method: 'min_endo_across' ], bam, bai ]
                 }
                 .set { ch_bam_bai_to_ds }
@@ -204,10 +204,10 @@ workflow BAM_DOWNSAMPLE {
 
         ch_bam_bai_exo
             .mix( ch_bam_bai_endo )
-            // Remove the antibody from the control metas
+            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                meta_clone.antibody = meta.is_control ? null : meta.antibody
+                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_exo_across' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }
@@ -298,10 +298,10 @@ workflow BAM_DOWNSAMPLE {
 
         ch_bam_bai_endo
             .mix( ch_bam_bai_exo )
-            // Remove the antibody from the control metas
+            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                meta_clone.antibody = meta.is_control ? null : meta.antibody
+                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_endo_by_type' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }
@@ -393,10 +393,10 @@ workflow BAM_DOWNSAMPLE {
 
         ch_bam_bai_exo
             .mix( ch_bam_bai_endo )
-            // Remove the antibody from the control metas
+            // Omitted: Remove the antibody from the control metas
             .map { id, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                meta_clone.antibody = meta.is_control ? null : meta.antibody
+                //meta_clone.antibody = meta.is_control ? null : meta.antibody
                 [ meta_clone + [ downsampling_method: 'min_exo_by_type' ], bam, bai ]
             }
             .set { ch_bam_bai_to_ds }

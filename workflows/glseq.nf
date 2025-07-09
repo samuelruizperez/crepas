@@ -725,7 +725,7 @@ workflow GLSEQ {
 
     if (params.bam_downsampling_method) {
         //
-        // SUBWORKFLOW: Downsample ChIP and input control BAM files
+        // SUBWORKFLOW: Downsample IP and input control BAM files
         //
         BAM_DOWNSAMPLE (
             ch_filtered_bam_bai,
@@ -747,7 +747,6 @@ workflow GLSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect{it[1]})
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
     }
-
 
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
