@@ -183,7 +183,14 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+            // samples have meta.antibody, while input controls have meta.control_of_antibody
+            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            // If the sample was downsampled before, we want to use dSp_total_mapped_reads
+            if (meta_clone.dSp_total_mapped_reads) {
+                meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+            // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2 or flT1, otherwise use flT3
+            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -226,19 +233,24 @@ workflow BAM_CREATE_PARTITIONS {
 
     // for each of the strands, subtract the input from the sample
     ch_norm
-        .branch { meta, bdg ->
+        .map { meta, bdg ->
+            // samples can have meta.antibody, while controls can have meta.control_of_antibody (if downsampling was performed)
+            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            [ meta, antibody_to_use, bdg ]
+        }
+        .branch { meta, antibody, bdg ->
             scar_with_input: meta.control
-                return [ meta.control, meta.strand, meta, bdg ]
+                return [ meta.control, antibody, meta.strand, meta, bdg ]
             input: !meta.control && meta.is_control
-                return [ meta.id, meta.strand, bdg ]
+                return [ meta.id, antibody, meta.strand, bdg ]
         }
         .set { ch_norm_by_type }
 
     // create channel: [ val(meta), [ scar_bdg ], [ input_bdg ] ]
     ch_norm_by_type
         .scar_with_input
-        .combine(ch_norm_by_type.input, by: [0, 1]) // combine by id and strand
-        .map { input_id, strand, scar_meta, scar_bdg, input_bdg ->
+        .combine(ch_norm_by_type.input, by: [0, 1, 2]) // combine by id, antibody, and strand
+        .map { input_id, antibody, strand, scar_meta, scar_bdg, input_bdg ->
             def meta_clone = scar_meta.clone()
                 meta_clone.signal_minus_input = true
                 [ meta_clone, scar_bdg, input_bdg ]

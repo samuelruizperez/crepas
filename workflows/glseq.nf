@@ -1102,6 +1102,7 @@ workflow GLSEQ {
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['scarseq', 'OK-seq'] }
 
+    // TODO: remove when optional inputs to subworkflows are implemented
     // Make ch_chrom_sizes_endo empty if there are no scarseq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
     ch_chrom_sizes_endo
