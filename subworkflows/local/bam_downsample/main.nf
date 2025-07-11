@@ -55,8 +55,11 @@ workflow BAM_DOWNSAMPLE {
             // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple samples
             .unique()
+            .set { ch_bam_bai_endo_control }
+
+        ch_bam_bai_genome_type.endo_ip
             // Now we mix the control and ip channels to evaluate them together below 
-            .mix( ch_bam_bai_genome_type.endo_ip )
+            .mix(ch_bam_bai_endo_control)
             .map { control_id, meta, bam, bai ->
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
@@ -153,8 +156,11 @@ workflow BAM_DOWNSAMPLE {
             // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple times
             .unique()
+            .set { ch_bam_bai_exo_control }
+
+        ch_bam_bai_genome_type.exo_ip
             // Now we mix the control and ip channels to evaluate them together below
-            .mix( ch_bam_bai_genome_type.exo_ip )
+            .mix( ch_bam_bai_exo_control )
             .map { control_id, meta, bam, bai ->
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
@@ -250,8 +256,11 @@ workflow BAM_DOWNSAMPLE {
             // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple samples
             .unique()
+            .set { ch_bam_bai_endo_control }
+        
+        ch_bam_bai_genome_type.endo_ip
             // Now we mix the control and ip channels to evaluate them together below
-            .mix( ch_bam_bai_genome_type.endo_ip )
+            .mix( ch_bam_bai_endo_control )
             .map { control_id, meta, bam, bai ->
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
@@ -349,8 +358,11 @@ workflow BAM_DOWNSAMPLE {
             // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
             // Because we don't need the same input downsampled in the same way for multiple times
             .unique()
+            .set { ch_bam_bai_exo_control }
+
+        ch_bam_bai_genome_type.exo_ip
             // Now we mix the control and ip channels to evaluate them together below
-            .mix( ch_bam_bai_genome_type.exo_ip )
+            .mix( ch_bam_bai_exo_control )
             .map { control_id, meta, bam, bai ->
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
