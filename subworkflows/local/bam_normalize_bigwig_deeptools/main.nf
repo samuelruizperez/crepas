@@ -145,7 +145,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .control
         // Downsampled files already have control_of_antibody, so we use it here to combine accordingly
         .map { meta, bdg -> [ meta.id, meta.control_of_antibody, meta, bdg ]}
-        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta.control_of_antibody, meta, bdg ] }, by: [0,1])
+        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta.antibody, meta, bdg ] }, by: [0,1])
         // If files were not dowsampled, now we copy the meta.antibody to the control_of_antibody, otherwise,
         // this has no effect:
         .map { control_id, antibody, control_meta, control_bdg, ip_meta, ip_bdg ->
