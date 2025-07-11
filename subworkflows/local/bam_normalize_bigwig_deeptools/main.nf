@@ -143,9 +143,11 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map_type
         // First, modify the controls' metas to add their corresponding ChIP's antibody
         .control
-        .map { meta, bdg -> [ meta.id, meta, bdg ] }
-        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta, bdg ] }, by: 0)
-        // Temporarily put the meta.antibody in the control meta
+        // Downsampled files already have control_of_antibody, so we use it here to combine accordingly
+        .map { meta, bdg -> [ meta.id, meta.control_of_antibody, meta, bdg ]}
+        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta.control_of_antibody, meta, bdg ] }, by: 0)
+        // If files were not dowsampled, now we copy the meta.antibody to the control_of_antibody, otherwise,
+        // this has no effect:
         .map { control_id, control_meta, control_bdg, ip_meta, ip_bdg ->
                 def meta_clone = control_meta.clone()
                 meta_clone.control_of_antibody = ip_meta.antibody
