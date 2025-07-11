@@ -438,11 +438,11 @@
                 }
             }
         },
-        "spikein_normalization_options": {
-            "title": "Spike-in normalization options",
+        "spikein_options": {
+            "title": "Spike-in options",
             "type": "object",
             "fa_icon": "fas fa-dna",
-            "description": "Options to adjust spike-in splitting and normalization criteria.",
+            "description": "Options to adjust spike-in splitting criteria.",
             "properties": {
                 "spikein_genome": {
                     "type": "string",
@@ -1105,7 +1105,7 @@
             "$ref": "#/definitions/alignment_options"
         },
         {
-            "$ref": "#/definitions/spikein_normalization_options"
+            "$ref": "#/definitions/spikein_options"
         },
         {
             "$ref": "#/definitions/multimapper_allocation_options"
