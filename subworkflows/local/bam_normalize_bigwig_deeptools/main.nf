@@ -143,15 +143,17 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map_type
         // First, modify the controls' metas to add their corresponding ChIP's antibody
         .control
-        .map { meta, bdg -> [ meta.id, meta, bdg ] }
-        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta, bdg ] }, by: 0)
-        // Temporarily put the meta.antibody in the control meta
-        .map { control_id, control_meta, control_bdg, ip_meta, ip_bdg ->
+        // Downsampled files already have control_of_antibody, so we use it here to combine accordingly
+        .map { meta, bdg -> [ meta.id, meta.control_of_antibody, meta, bdg ]}
+        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta.antibody, meta, bdg ] }, by: [0,1])
+        // If files were not dowsampled, now we copy the meta.antibody to the control_of_antibody, otherwise,
+        // this has no effect:
+        .map { control_id, antibody, control_meta, control_bdg, ip_meta, ip_bdg ->
                 def meta_clone = control_meta.clone()
-                meta_clone.antibody = ip_meta.antibody
+                meta_clone.control_of_antibody = ip_meta.antibody
                 [ meta_clone, control_bdg ]
         }
-        // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
+        // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
         // Because we don't need the same input normalized in the same way several times
         .unique()
         // Now we mix the control and ip channels to evaluate them together below
@@ -163,8 +165,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map_mod
         .map { meta, bdg ->
             def meta_clone = meta.clone()
-            // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-            if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+            // samples have meta.antibody, while input controls have meta.control_of_antibody
+            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            // If it was downsampled before, we want to use dSp_total_mapped_reads
+            if (meta_clone.dSp_total_mapped_reads) {
+                meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+            // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -195,7 +203,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     if (!skip_srpm) {
         ch_bdg_map_mod
             .map { meta, bdg ->
-                    [ meta.id, meta.antibody, meta, bdg ]
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                [ meta.id, antibody_to_use, meta, bdg ]
             }
             .branch { id, antibody, meta, bdg ->
                 endo: meta.genome == genome
@@ -207,7 +217,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome.exo, by: [0,1])
             .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
-                if (srpm_use_flT2_total && meta_clone.antibody in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads) {
+                def antibody_to_use = meta_clone.antibody ?: meta_clone.control_of_antibody
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (exo_meta.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / exo_meta.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (srpm_use_flT2_total && antibody_to_use in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else {
@@ -236,13 +252,15 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_ip_cisrpm = Channel.empty()
     ch_bdg_control_cisrpm = Channel.empty()
     ch_bdg_cisrpm = Channel.empty()
-    // if (spikein_genome) is needed, otherwise cisrpm will be attempted for
+    // "if (spikein_genome)" is needed, otherwise cisrpm will be attempted for
     // controls, and this will fail, since there is no flT2_total_mapped_reads
     if (spikein_genome && !skip_cisrpm) {
         // Split BAMs by genome (endo and exo) and by type (ip and control)
         ch_bdg_map_mod
             .map { meta, bdg ->
-                [ meta.id, meta.antibody, meta, bdg ]
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                [ meta.id, antibody_to_use, meta, bdg ]
             }
             .branch { id, antibody, meta, bdg ->
                 endo_ip: meta.genome == genome && !meta.is_control
@@ -272,7 +290,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_bdg_genome_type.endo_control
             .combine(ch_bdg_genome_type.exo_control, by: [0,1])
             .map { control_id, control_antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
-                [ endo_control_meta.id, endo_control_meta.antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
+                [ endo_control_meta.id, endo_control_meta.control_of_antibody, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ]
             }
             .set { ch_bdg_genome_control }
         
@@ -289,7 +307,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .combine(ch_bdg_genome_control, by: [0,1])
             .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_control_meta, endo_control_bdg, exo_control_meta, exo_control_bdg ->
                     def meta_clone = endo_ip_meta.clone()
-                    if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !exo_ip_meta.flT3_total_mapped_reads) {
+                    // If it was downsampled before, we want to use dSp_total_mapped_reads
+                    if (exo_ip_meta.dSp_total_mapped_reads) {
+                        meta_clone.norm_factor_val = (1e6 / exo_ip_meta.dSp_total_mapped_reads) * (exo_control_meta.dSp_total_mapped_reads / endo_control_meta.dSp_total_mapped_reads)
+                        meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                    // if meta.antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                    } else if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !exo_ip_meta.flT3_total_mapped_reads) {
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT2_total_mapped_reads) * (exo_control_meta.flT2_total_mapped_reads / endo_control_meta.flT2_total_mapped_reads)
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                     } else {
@@ -319,7 +342,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bdg ->
                 def meta_clone = meta.clone()
-                if (cisrpm_use_flT2_total && meta.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (meta_clone.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if meta.control_of_antibody is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (cisrpm_use_flT2_total && meta.control_of_antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else {
@@ -381,7 +409,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 // ips_without_control: !meta.control && !meta.is_control
                 //     return [ meta, bdg ]
                 controls: !meta.control && meta.is_control
-                    return [ meta.id, meta.antibody, bdg ]
+                    return [ meta.id, meta.control_of_antibody, bdg ]
             }
             .set { ch_bdg_ip_control_cisrpm }
 
@@ -475,7 +503,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             // Temporarily put the meta.antibody in the control meta
             .map { control_id, control_meta, control_bam, control_bai, ip_meta, ip_bam, ip_bai ->
                     def meta_clone = control_meta.clone()
-                    meta_clone.antibody = ip_meta.antibody
+                    meta_clone.control_of_antibody = ip_meta.antibody
                     [ meta_clone, control_bam, control_bai ]
             }
             // remove duplicates based on control_meta and filename (basically the control_meta.antibody we added above)
@@ -492,8 +520,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                // if meta.antibody is in the list of antibodies to use flT2_total_mapped_reads or flT1_total_mapped_reads for RPM normalization, otherwise use flT3_total_mapped_reads
-                if (rpm_use_flT2_total && meta.antibody in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+                // samples have meta.antibody, while input controls have meta.control_of_antibody
+                def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+                // If it was downsampled before, we want to use dSp_total_mapped_reads
+                if (meta_clone.dSp_total_mapped_reads) {
+                    meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
+                    meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
+                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
+                } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                     if (meta_clone.flT2_total_mapped_reads) {
                         meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'

@@ -22,10 +22,12 @@ parser$add_argument("-s","--summary_table", action = "store",
 
 parser$add_argument("-g","--endogenous_genome_name", action = "store",
                     type = "character",
+                    default = "GRCh38",
                     help = "Name of the endogenous genome [required]")
 
 parser$add_argument("-e","--exogenous_genome_name", action = "store",
                     type = "character",
+                    default = "dm6",
                     help = "Name of the exogenous (spike-in) genome if applicable [optional]")
 
 parser$add_argument("-n", "--prefix", action = "store",
@@ -129,15 +131,15 @@ if (is.null(opt$exogenous_genome_name)) {
                                 gsub("\\.flT3$", paste0(".", opt$endogenous_genome_name, "_flT3"), ID), ID),
                     ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
                                 gsub("\\.flT3$", paste0(".", opt$exogenous_genome_name, "_flT3"), ID), ID),
-                    ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
-                                gsub("\\.dSp$", paste0(".", opt$endogenous_genome_name, "_dSp"), ID), ID),
-                    ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
-                                gsub("\\.dSp$", paste0(".", opt$exogenous_genome_name, "_dSp"), ID), ID),
+                    ID = ifelse(grepl(paste0("\\.", opt$endogenous_genome_name, "\\."), ID),
+                          gsub("\\.dSp(.*)$", paste0(".", opt$endogenous_genome_name, "_dSp\\1"), ID), ID),
+                    ID = ifelse(grepl(paste0("\\.", opt$exogenous_genome_name, "\\."), ID),
+                          gsub("\\.dSp(.*)$", paste0(".", opt$exogenous_genome_name, "_dSp\\1"), ID), ID),
                     # split ID by ".", processing_step is the last element
                     processing_step = gsub(".*\\.", "", ID),
                     processing_step = fct_relevel(processing_step, rev(unique(processing_step))),
                     sample = gsub("\\..*$", "", ID)) %>%
-                    select(-ID) %>%
+                    dplyr::select(-ID) %>%
                     # First, pivot the data to long format for easier reshaping
                     pivot_longer(
                       cols = -c(sample, processing_step),
@@ -148,7 +150,7 @@ if (is.null(opt$exogenous_genome_name)) {
                     arrange(processing_step) %>%
                     # Create new column names by combining processing_step and stat
                     mutate(stat = paste(processing_step, stat, sep = "_")) %>%
-                    select(-processing_step) %>%
+                    dplyr::select(-processing_step) %>%
                     # Pivot back to wide format
                     pivot_wider(
                       names_from = stat,
