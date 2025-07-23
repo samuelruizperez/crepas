@@ -809,7 +809,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Counting reads in transposable elements
     //
     ch_te_counts = Channel.empty()
-    if (!skip_te_counting) {
+    if (!params.skip_te_counting) {
         TE_COUNTING (
             ch_filtered_bam,
             ch_tecount_genic_index,
