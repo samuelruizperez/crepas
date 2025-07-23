@@ -27,13 +27,14 @@ workflow TE_COUNTING {
         ch_bam,
         ch_fasta.first()
     )
+    ch_bam_sorted = SAMTOOLS_SORT.out.bam
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     //
     // MODULE: Count reads in transposable elements (TEs) at the subfamily level
     //
     TECOUNT (
-        ch_bam,
+        ch_bam_sorted,
         ch_tecount_genic_index,
         ch_tecount_te_index
     )
@@ -45,7 +46,7 @@ workflow TE_COUNTING {
     ch_telocal_counts = Channel.empty()
     if (!skip_telocal) {
         TELOCAL (
-            ch_bam,
+            ch_bam_sorted,
             ch_tecount_genic_index,
             ch_telocal_te_index
         )
