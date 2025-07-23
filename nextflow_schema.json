@@ -638,6 +638,51 @@
                 }
             }
         },
+        "tecounting_options": {
+            "title": "TE counting options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options to adjust transposable element (TE) counting criteria.",
+            "properties": {
+                "skip_te_counting": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip transposable element (TE) counting.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_telocal_te_counting": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip local TE counting.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "tecounting_mode": {
+                    "type": "string",
+                    "default": "multi",
+                    "description": "Method to use for TE counting.",
+                    "fa_icon": "fas fa-dna",
+                    "enum": ["multi", "uniq"]
+                },
+                "tecount_genic_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to the gene index file (.Ind) for counting with TEcount or TElocal.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "tecount_te_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to the TE index file (.Ind) for counting with TEcount.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "telocal_te_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to the TE index file (.locInd) for local TE counting with TElocal.",
+                    "fa_icon": "fas fa-dna"
+                }
+            }
+        },
         "peak_calling_options": {
             "title": "Peak calling options",
             "type": "object",
@@ -1121,6 +1166,9 @@
         },
         {
             "$ref": "#/definitions/downsampling_options"
+        },
+        {
+            "$ref": "#/definitions/tecounting_options"
         },
         {
             "$ref": "#/definitions/peak_calling_options"

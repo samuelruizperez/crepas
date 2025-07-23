@@ -138,6 +138,9 @@ workflow GLSEQ {
     ch_star_index    // channel: path(star/index/)
     ch_hisat2_index  // channel: path(hisat2/index)
     ch_splicesites   // channel: path(splicesites)
+    ch_tecount_genic_index // channel: val(meta), path(tecount_genic_index.Ind)
+    ch_tecount_te_index // channel: val(meta), path(tecount_te_index.Ind)
+    ch_telocal_te_index // channel: val(meta), path(telocal_te_index.locInd)
 
     main:
     ch_multiqc_files = Channel.empty()
@@ -802,6 +805,23 @@ workflow GLSEQ {
     ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }
     ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
 
+    //
+    // SUBWORKFLOW: Counting reads in transposable elements
+    //
+    ch_te_counts = Channel.empty()
+    if (!skip_te_counting) {
+        TE_COUNTING (
+            ch_filtered_bam,
+            ch_tecount_genic_index,
+            ch_tecount_te_index,
+            ch_telocal_te_index,
+            params.skip_telocal
+
+        )
+        ch_tecount_counts = TE_COUNTING.out.tecount_counts
+        ch_telocal_counts = TE_COUNTING.out.telocal_counts
+        ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
+    }
 
     //
     // MODULE: Calculate genome size with khmer

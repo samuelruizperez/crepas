@@ -75,7 +75,10 @@ workflow GROTHLAB_GLSEQ {
         params.chromap_index,
         params.star_index,
         params.hisat2_index,
-        params.splicesites
+        params.splicesites,
+        params.tecount_genic_index,
+        params.tecount_te_index,
+        params.telocal_te_index
     )
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
@@ -106,7 +109,10 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.chromap_index,
         PREPARE_GENOME.out.star_index,
         PREPARE_GENOME.out.hisat2_index,
-        PREPARE_GENOME.out.splicesites
+        PREPARE_GENOME.out.splicesites,
+        PREPARE_GENOME.out.tecount_genic_index,
+        PREPARE_GENOME.out.tecount_te_index,
+        PREPARE_GENOME.out.telocal_te_index
     )
 
     emit:

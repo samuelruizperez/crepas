@@ -17,7 +17,10 @@ include {
     UNTAR as UNTAR_BOWTIE2_INDEX
     UNTAR as UNTAR_STAR_INDEX
     UNTAR as UNTAR_CHROMAP_INDEX
-    UNTAR as UNTAR_HISAT2_INDEX  } from '../../../modules/nf-core/untar/main'
+    UNTAR as UNTAR_HISAT2_INDEX
+    UNTAR as UNTAR_TECOUNT_GENIC_INDEX
+    UNTAR as UNTAR_TECOUNT_TE_INDEX
+    UNTAR as UNTAR_TELOCAL_TE_INDEX    } from '../../../modules/nf-core/untar/main'
 
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
@@ -52,6 +55,9 @@ workflow PREPARE_GENOME {
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
     splicesites        //    file: /path/to/splicesites.txt
+    tecount_genic_index //    file: /path/to/tecount_genic_index.Ind
+    tecount_te_index   //    file: /path/to/tecount_te_index.Ind
+    telocal_te_index   //    file: /path/to/telocal_te_index.locInd
 
 
     main:
@@ -331,7 +337,37 @@ workflow PREPARE_GENOME {
             ch_hisat2_index = HISAT2_BUILD ( ch_fasta.map { [ [:], it ] }, ch_gtf.map { [ [:], it ] }, ch_splicesites.map { [ [:], it ] } ).index.map { it[1] }
             ch_versions     = ch_versions.mix(HISAT2_BUILD.out.versions)
         }
-    } 
+    }
+
+    ch_tecount_genic_index = Channel.empty()
+    if (tecount_genic_index) {
+        if (tecount_genic_index.endsWith('.tar.gz')) {
+            ch_tecount_genic_index = UNTAR_TECOUNT_GENIC_INDEX ( [ [:], tecount_genic_index ] ).untar
+            ch_versions  = ch_versions.mix(UNTAR_TECOUNT_GENIC_INDEX.out.versions)
+        } else {
+            ch_tecount_genic_index = Channel.of( [ [id:'tecount_genic_index'], file(tecount_genic_index) ] )
+        }
+    }
+
+    ch_tecount_te_index = Channel.empty()
+    if (tecount_te_index) {
+        if (tecount_te_index.endsWith('.tar.gz')) {
+            ch_tecount_te_index = UNTAR_TECOUNT_TE_INDEX ( [ [:], tecount_te_index ] ).untar
+            ch_versions  = ch_versions.mix(UNTAR_TECOUNT_TE_INDEX.out.versions)
+        } else {
+            ch_tecount_te_index = Channel.of( [ [id:'tecount_te_index'], file(tecount_te_index) ] )
+        }
+    }
+
+    ch_telocal_te_index = Channel.empty()
+    if (telocal_te_index) {
+        if (telocal_te_index.endsWith('.tar.gz')) {
+            ch_telocal_te_index = UNTAR_TELOCAL_TE_INDEX ( [ [:], telocal_te_index ] ).untar
+            ch_versions  = ch_versions.mix(UNTAR_TELOCAL_TE_INDEX.out.versions)
+        } else {
+            ch_telocal_te_index = Channel.of( [ [id:'telocal_te_index'], file(telocal_te_index) ] )
+        }
+    }
 
     emit:
     fasta         = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
@@ -354,5 +390,8 @@ workflow PREPARE_GENOME {
     star_index    = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index  = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
     splicesites   = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
+    tecount_genic_index = ch_tecount_genic_index //    channel: [ val(meta), [ tecount_genic_index.Ind ]]
+    tecount_te_index   = ch_tecount_te_index     //    channel: [ val(meta), [ tecount_te_index.Ind ]]
+    telocal_te_index   = ch_telocal_te_index     //    channel: [ val(meta), [ telocal_te_index.locInd ]]
     versions      = ch_versions.ifEmpty(null) //    channel: [ versions.yml ]
 }
