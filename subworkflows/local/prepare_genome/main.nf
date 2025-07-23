@@ -10,7 +10,11 @@ include {
     GUNZIP as GUNZIP_SPARSEBED
     GUNZIP as GUNZIP_ACTIVE_REGIONS
     GUNZIP as GUNZIP_ROCCO_PARAMS
-    GUNZIP as GUNZIP_BLACKLIST } from '../../../modules/nf-core/gunzip/main'
+    GUNZIP as GUNZIP_BLACKLIST
+    GUNZIP as GUNZIP_TECOUNT_GENIC_INDEX
+    GUNZIP as GUNZIP_TECOUNT_TE_INDEX
+    GUNZIP as GUNZIP_TELOCAL_TE_INDEX
+    } from '../../../modules/nf-core/gunzip/main'
 
 include {
     UNTAR as UNTAR_BWA_INDEX
@@ -18,9 +22,7 @@ include {
     UNTAR as UNTAR_STAR_INDEX
     UNTAR as UNTAR_CHROMAP_INDEX
     UNTAR as UNTAR_HISAT2_INDEX
-    UNTAR as UNTAR_TECOUNT_GENIC_INDEX
-    UNTAR as UNTAR_TECOUNT_TE_INDEX
-    UNTAR as UNTAR_TELOCAL_TE_INDEX    } from '../../../modules/nf-core/untar/main'
+    } from '../../../modules/nf-core/untar/main'
 
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
@@ -341,9 +343,9 @@ workflow PREPARE_GENOME {
 
     ch_tecount_genic_index = Channel.empty()
     if (tecount_genic_index) {
-        if (tecount_genic_index.endsWith('.tar.gz')) {
-            ch_tecount_genic_index = UNTAR_TECOUNT_GENIC_INDEX ( [ [:], tecount_genic_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_TECOUNT_GENIC_INDEX.out.versions)
+        if (tecount_genic_index.endsWith('.gz')) {
+            ch_tecount_genic_index = GUNZIP_TECOUNT_GENIC_INDEX ( [ [:], tecount_genic_index ] ).gunzip
+            ch_versions  = ch_versions.mix(GUNZIP_TECOUNT_GENIC_INDEX.out.versions)
         } else {
             ch_tecount_genic_index = Channel.of( [ [id:'tecount_genic_index'], file(tecount_genic_index) ] )
         }
@@ -351,9 +353,9 @@ workflow PREPARE_GENOME {
 
     ch_tecount_te_index = Channel.empty()
     if (tecount_te_index) {
-        if (tecount_te_index.endsWith('.tar.gz')) {
-            ch_tecount_te_index = UNTAR_TECOUNT_TE_INDEX ( [ [:], tecount_te_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_TECOUNT_TE_INDEX.out.versions)
+        if (tecount_te_index.endsWith('.gz')) {
+            ch_tecount_te_index = GUNZIP_TECOUNT_TE_INDEX ( [ [:], tecount_te_index ] ).gunzip
+            ch_versions  = ch_versions.mix(GUNZIP_TECOUNT_TE_INDEX.out.versions)
         } else {
             ch_tecount_te_index = Channel.of( [ [id:'tecount_te_index'], file(tecount_te_index) ] )
         }
@@ -361,9 +363,9 @@ workflow PREPARE_GENOME {
 
     ch_telocal_te_index = Channel.empty()
     if (telocal_te_index) {
-        if (telocal_te_index.endsWith('.tar.gz')) {
-            ch_telocal_te_index = UNTAR_TELOCAL_TE_INDEX ( [ [:], telocal_te_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_TELOCAL_TE_INDEX.out.versions)
+        if (telocal_te_index.endsWith('.gz')) {
+            ch_telocal_te_index = GUNZIP_TELOCAL_TE_INDEX ( [ [:], telocal_te_index ] ).gunzip
+            ch_versions  = ch_versions.mix(GUNZIP_TELOCAL_TE_INDEX.out.versions)
         } else {
             ch_telocal_te_index = Channel.of( [ [id:'telocal_te_index'], file(telocal_te_index) ] )
         }
