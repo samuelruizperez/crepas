@@ -650,7 +650,7 @@
                     "description": "Skip transposable element (TE) counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_telocal_te_counting": {
+                "skip_telocal": {
                     "type": "boolean",
                     "default": false,
                     "description": "Skip local TE counting.",

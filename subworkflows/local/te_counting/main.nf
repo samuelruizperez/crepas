@@ -41,20 +41,22 @@ workflow TE_COUNTING {
     //
     // MODULE: Count reads in transposable elements (TEs) at the instance (location) level
     //
+    ch_telocal_counts = Channel.empty()
     if (!skip_telocal) {
         TELOCAL (
             ch_bam,
             ch_tecount_genic_index,
             ch_telocal_te_index
         )
+        ch_telocal_counts = TELOCAL.out.counts
         ch_versions = ch_versions.mix(TELOCAL.out.versions.first())
     }
-
+    
 
     emit:
 
     tecount_counts     = TECOUNT.out.counts    // channel: [ te_counts.tsv ]
-    telocal_counts     = TELOCAL.out.counts    // channel: [ te_local_counts.tsv ]
+    telocal_counts     = ch_telocal_counts    // channel: [ te_local_counts.tsv ]
     
     versions    = ch_versions               // channel: [ versions.yml ]
 }
