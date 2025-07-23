@@ -813,6 +813,7 @@ workflow GLSEQ {
     if (!params.skip_te_counting) {
         TE_COUNTING (
             ch_filtered_bam,
+            ch_fasta,
             ch_tecount_genic_index,
             ch_tecount_te_index,
             ch_telocal_te_index,
