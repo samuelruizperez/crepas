@@ -20,12 +20,13 @@ process SAMBAMBA_SORT {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def memory = task.memory ? "--memory-limit ${task.memory.toGiga() - 0.1} GB" : ''
+    def memory = task.memory ? "--memory-limit ${task.memory.toGiga() - 0.1}GB" : ''
     """
     sambamba \\
         sort \\
         --nthreads $task.cpus \\
         $memory \\
+        --tmpdir ./ \\
         --out ${prefix}.bam \\
         $bam
 
