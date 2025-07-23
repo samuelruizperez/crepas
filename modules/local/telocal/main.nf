@@ -25,7 +25,7 @@ process TELOCAL {
      TElocal \\
         ${args} \\
         --verbose 3 \\
-        ${bam} \\
+        --BAM ${bam} \\
         --GTF ${genic_gtf_or_index} \\
         --TE ${locInd} \\
         --project ${prefix}

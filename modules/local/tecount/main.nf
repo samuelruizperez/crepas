@@ -25,7 +25,7 @@ process TECOUNT {
      TEcount \\
         ${args} \\
         --verbose 3 \\
-        ${bam} \\
+        --BAM ${bam} \\
         --GTF ${genic_gtf_or_index} \\
         --TE ${te_gtf_or_index} \\
         --project ${prefix} \\
