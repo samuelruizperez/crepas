@@ -656,10 +656,10 @@
                     "description": "Skip local TE counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "tecounting_mode": {
+                "te_counting_mode": {
                     "type": "string",
                     "default": "multi",
-                    "description": "Method to use for TE counting.",
+                    "description": "Method to use for TE counting. See [TEcount's documentation](https://github.com/mhammell-laboratory/TEtranscripts?tab=readme-ov-file#usage-1) for more details.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["multi", "uniq"]
                 },
