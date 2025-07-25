@@ -697,44 +697,23 @@ workflow GLSEQ {
             .set { ch_filtered_index }
     }
 
-    //
-    // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
-    //
-    BAM_FILTER_BLACKLIST (
-        ch_filtered_bam.join(ch_filtered_index, by: 0),
-        ch_filtered_bed.first(),
-        ch_fasta.first()
-    )
-    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
-    ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
-
-           
-    BAM_FILTER_BLACKLIST.out
-        .bam
-        .join(BAM_FILTER_BLACKLIST.out.bai, by: 0)
-        // If blacklist filtering is not performed, use previous ch_filtered_bam
-        // (see https://community.seqera.io/t/how-can-i-assign-a-default-channel-to-another-channel-if-it-s-empty-while-retaining-its-original-content-when-it-s-not-empty-considering-the-default-value-is-also-a-channel/1435/3)
-        .collect(flat: false)
-        .concat(ch_filtered_bam_bai.toList())
-        .first()
-        .flatMap()
-        .set { ch_filtered_bam_bai }
-
-    ch_filtered_bam_bai
-        .map {
-            meta, bam, bai ->
-                [ meta, bam ] 
-        }
-        .set { ch_filtered_bam }
-
-    ch_filtered_bam_bai
-        .map {
-            meta, bam, bai ->
-                [ meta, bai ]
-        }
-        .set { ch_filtered_index }
-
+    if (params.blacklist) {
+        //
+        // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
+        //
+        BAM_FILTER_BLACKLIST (
+            ch_filtered_bam.join(ch_filtered_index, by: 0),
+            ch_filtered_bed.first(),
+            ch_fasta.first()
+        )
+        ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam
+        ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai
+        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
+        ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
+    
+    }
 
     //
     // MODULE: Picard post alignment QC
