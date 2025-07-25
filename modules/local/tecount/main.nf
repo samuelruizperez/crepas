@@ -29,7 +29,7 @@ process TECOUNT {
         --GTF ${genic_gtf_or_index} \\
         --TE ${te_gtf_or_index} \\
         --project ${prefix} \\
-        --outdir ./ \\
+        --outdir ./
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
