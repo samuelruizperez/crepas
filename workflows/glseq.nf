@@ -37,6 +37,7 @@ include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../
 include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
+include { BAM_FILTER_BLACKLIST                    } from '../subworkflows/local/bam_filter_blacklist/main'
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
 include { TE_COUNTING                            } from '../subworkflows/local/te_counting/main'
@@ -407,7 +408,7 @@ workflow GLSEQ {
     //
     BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
-        ch_filtered_bed.first(),
+        Channel.of([[:], []]), // empty channel to skip blacklist filtering
         ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
@@ -469,7 +470,7 @@ workflow GLSEQ {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
             ch_fasta.first(),
-            ch_filtered_bed.first(),
+            Channel.of([[:], []]), // empty channel to skip blacklist filtering
             params.genome,
             params.spikein_genome
         )
@@ -638,7 +639,7 @@ workflow GLSEQ {
         // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
         BAM_FILTER_SAMBAMBA_FLT3 (
             ch_filtered_bam.join(ch_filtered_index, by: 0),
-            ch_filtered_bed.first(),
+            Channel.of([[:], []]), // empty channel to skip blacklist filtering
             ch_fasta.first()
         )
         ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
@@ -687,7 +688,53 @@ workflow GLSEQ {
                     [ meta, bam ] 
             }
             .set { ch_filtered_bam }
+
+        ch_filtered_bam_bai
+            .map {
+                meta, bam, bai ->
+                    [ meta, bai ]
+            }
+            .set { ch_filtered_index }
     }
+
+    //
+    // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
+    //
+    BAM_FILTER_BLACKLIST (
+        ch_filtered_bam.join(ch_filtered_index, by: 0),
+        ch_filtered_bed.first(),
+        ch_fasta.first()
+    )
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
+    ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
+
+           
+    BAM_FILTER_BLACKLIST.out
+        .bam
+        .join(BAM_FILTER_BLACKLIST.out.bai, by: 0)
+        // If blacklist filtering is not performed, use previous ch_filtered_bam
+        // (see https://community.seqera.io/t/how-can-i-assign-a-default-channel-to-another-channel-if-it-s-empty-while-retaining-its-original-content-when-it-s-not-empty-considering-the-default-value-is-also-a-channel/1435/3)
+        .collect(flat: false)
+        .concat(ch_filtered_bam_bai.toList())
+        .first()
+        .flatMap()
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam_bai
+        .map {
+            meta, bam, bai ->
+                [ meta, bam ] 
+        }
+        .set { ch_filtered_bam }
+
+    ch_filtered_bam_bai
+        .map {
+            meta, bam, bai ->
+                [ meta, bai ]
+        }
+        .set { ch_filtered_index }
+
 
     //
     // MODULE: Picard post alignment QC
@@ -801,7 +848,7 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
     }
 
-    // Here we remove the exogenous samples from the filtered_bam_bai channel
+    // Removing the exogenous samples from the filtered_bam_bai channel
     ch_filtered_bam = ch_filtered_bam.filter { it[0].genome == params.genome }
     ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }
     ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
@@ -814,6 +861,9 @@ workflow GLSEQ {
         TE_COUNTING (
             ch_filtered_bam,
             ch_fasta,
+            // Name sorting is required if blacklist filtering was skipped or downsampling was performed
+            //(!params.skip_blacklist_flT && !params.bam_downsampling_method) ? true : false, // skip_name_sorting
+            false,
             ch_tecount_genic_index,
             ch_tecount_te_index,
             ch_telocal_te_index,
@@ -830,7 +880,7 @@ workflow GLSEQ {
     //
 
     // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
-    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
+    // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_effective_gsize                     = Channel.empty()
     ch_subreadfeaturecounts_multiqc   = Channel.empty()
     if (!params.macs_gsize) { // && need_macs_gsize) {

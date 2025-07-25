@@ -23,7 +23,10 @@ workflow BAM_SPIKEIN_SPLIT {
 
     // split BAMs by spike-in genome
     BAM_SPLIT_BY_GENOME_ENDO(ch_bam, spikein_genome, genome, true)
+    ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_ENDO.out.versions.first())
+
     BAM_SPLIT_BY_GENOME_EXO(ch_bam, spikein_genome, spikein_genome, false)
+    ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_EXO.out.versions.first())
 
     // add genome as meta field
     ch_bam_endo = BAM_SPLIT_BY_GENOME_ENDO.out.bam.map { [ it[0] + [ genome: genome ], it[1] ] }
@@ -36,14 +39,13 @@ workflow BAM_SPIKEIN_SPLIT {
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     SAMBAMBA_VIEW(ch_bam_bai, ch_bed)
+    ch_versions = ch_versions.mix(SAMBAMBA_VIEW.out.versions)
 
     // TODO: I would need to separate the genome fasta, right now both endo and exo stats
     // are analyzed with the same (main) genome
     // either way, this has no effect on BAM output (https://bioinformatics.stackexchange.com/a/4218)
     BAM_SORT_STATS_SAMTOOLS(SAMBAMBA_VIEW.out.bam, ch_fasta)
-
-    ch_versions = ch_versions.mix(SAMBAMBA_VIEW.out.versions,
-                    BAM_SORT_STATS_SAMTOOLS.out.versions)
+    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
     emit:
 

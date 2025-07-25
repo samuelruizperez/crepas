@@ -11,6 +11,7 @@ workflow TE_COUNTING {
     take:
     ch_bam
     ch_fasta
+    skip_name_sort // boolean: skip name sorting of BAM files
     ch_tecount_genic_index
     ch_tecount_te_index
     ch_telocal_te_index
@@ -20,21 +21,24 @@ workflow TE_COUNTING {
 
     ch_versions = Channel.empty()
 
-    //
-    // MODULE: Sort BAM files (name sort order)
-    //
-    SAMTOOLS_SORT (
-        ch_bam,
-        ch_fasta.first()
-    )
-    ch_bam_sorted = SAMTOOLS_SORT.out.bam
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
+
+    if (!skip_name_sort) {
+        //
+        // MODULE: Sort BAM files (name sort order)
+        //
+        SAMTOOLS_SORT (
+            ch_bam,
+            ch_fasta.first()
+        )
+        ch_bam = SAMTOOLS_SORT.out.bam
+        ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
+    }
 
     //
     // MODULE: Count reads in transposable elements (TEs) at the subfamily level
     //
     TECOUNT (
-        ch_bam_sorted,
+        ch_bam,
         ch_tecount_genic_index,
         ch_tecount_te_index
     )
@@ -46,7 +50,7 @@ workflow TE_COUNTING {
     ch_telocal_counts = Channel.empty()
     if (!skip_telocal) {
         TELOCAL (
-            ch_bam_sorted,
+            ch_bam,
             ch_tecount_genic_index,
             ch_telocal_te_index
         )
