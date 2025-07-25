@@ -34,14 +34,14 @@ workflow BAM_FILTER_BLACKLIST {
 
     // Separate single-end and paired-end BAM files (SE do not have orphans)
     ch_filtered_bam
-        .branch { bam, meta ->
+        .branch { meta, bam ->
             se: meta.single_end
             pe: !meta.single_end
         }
         .set { ch_filtered_bam }
 
     ch_filtered_index
-        .branch { bam, meta ->
+        .branch { meta, bam ->
             se: meta.single_end
             pe: !meta.single_end
         }

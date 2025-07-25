@@ -408,7 +408,7 @@ workflow GLSEQ {
     //
     BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
-        Channel.of([[:], []]), // empty channel to skip blacklist filtering
+        Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
         ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
@@ -470,7 +470,7 @@ workflow GLSEQ {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
             ch_fasta.first(),
-            Channel.of([[:], []]), // empty channel to skip blacklist filtering
+            Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
             params.genome,
             params.spikein_genome
         )
@@ -639,7 +639,7 @@ workflow GLSEQ {
         // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
         BAM_FILTER_SAMBAMBA_FLT3 (
             ch_filtered_bam.join(ch_filtered_index, by: 0),
-            Channel.of([[:], []]), // empty channel to skip blacklist filtering
+            Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
             ch_fasta.first()
         )
         ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
