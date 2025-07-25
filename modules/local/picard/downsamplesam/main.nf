@@ -54,7 +54,9 @@ process PICARD_DOWNSAMPLESAM {
         """
     } else {
         """
-        ln -s $reads ${prefix}.${suffix}
+
+        # To avoid "File exists" error, use '-f'
+        ln -sf $reads ${prefix}.${suffix}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
