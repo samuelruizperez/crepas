@@ -27,6 +27,7 @@ workflow BAM_FILTER_BLACKLIST {
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.bai
+    ch_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
     ch_multiqc_files = BAM_FILTER_SAMBAMBA.out.stats.collect{it[1]}
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.flagstat.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect{it[1]})
@@ -46,6 +47,13 @@ workflow BAM_FILTER_BLACKLIST {
             pe: !meta.single_end
         }
         .set { ch_filtered_index }
+
+    ch_flagstat
+        .branch { meta, flagstat ->
+            se: meta.single_end
+            pe: !meta.single_end
+        }
+        .set { ch_flagstat }
 
     //
     // MODULE: Sort BAM files by query name
@@ -82,9 +90,7 @@ workflow BAM_FILTER_BLACKLIST {
     // Mixing SE and PE (removed orphans) files
     ch_filtered_bam = ch_filtered_bam.se.mix(BAM_SORT_STATS_SAMTOOLS.out.bam)
     ch_filtered_index = ch_filtered_index.se.mix(BAM_SORT_STATS_SAMTOOLS.out.bai)
-    ch_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat)
-    ch_stats = BAM_FILTER_SAMBAMBA.out.stats.mix(BAM_SORT_STATS_SAMTOOLS.out.stats)
-    ch_idxstats = BAM_FILTER_SAMBAMBA.out.idxstats.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats)
+    ch_flagstat = ch_flagstat.se.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat)
 
     //
     // MODULE: Extract total mapped reads from flagstats
@@ -133,13 +139,22 @@ workflow BAM_FILTER_BLACKLIST {
         .set { ch_filtered_index }
 
 
+    // TODO: save for debugging
+    ch_filtered_bam_bai
+        .map {
+            meta, bam, bai ->
+                "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile( name: 'ch_filtered_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_FILTER_BLACKLIST" )
+
+
     emit:
 
     bam             = ch_filtered_bam   // channel: [ val(meta), [ bam ] ]
     bai             = ch_filtered_index // channel: [ val(meta), [ bai ] ]
-    stats           = ch_stats          // channel: [ val(meta), [ stats ] ]
-    flagstat        = ch_flagstat       // channel: [ val(meta), [ flagstat ] ]
-    idxstats        = ch_idxstats       // channel: [ val(meta), [ idxstats ] ]
+    stats           = BAM_FILTER_SAMBAMBA.out.stats.mix(BAM_SORT_STATS_SAMTOOLS.out.stats)          // channel: [ val(meta), [ stats ] ]
+    flagstat        = BAM_FILTER_SAMBAMBA.out.flagstat.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat)       // channel: [ val(meta), [ flagstat ] ]
+    idxstats        = BAM_FILTER_SAMBAMBA.out.idxstats.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats)       // channel: [ val(meta), [ idxstats ] ]
     multiqc_files   = ch_multiqc_files  // channel: [ val(meta), [ multiqc_files ] ]
     versions        = ch_versions       // channel: [ versions.yml ]
 }
