@@ -21,11 +21,26 @@ workflow BAM_SPIKEIN_SPLIT {
     main:
     ch_versions = Channel.empty()
 
-    // split BAMs by spike-in genome
-    BAM_SPLIT_BY_GENOME_ENDO(ch_bam, spikein_genome, genome, true)
+    //
+    // MODULE: split BAMs by spike-in genome (keep endogenous)
+    //
+    BAM_SPLIT_BY_GENOME_ENDO (
+        ch_bam,
+        genome,
+        spikein_genome,
+        'endo'
+    )
     ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_ENDO.out.versions.first())
 
-    BAM_SPLIT_BY_GENOME_EXO(ch_bam, spikein_genome, spikein_genome, false)
+    //
+    // MODULE: split BAMs by spike-in genome (keep exogenous)
+    //
+    BAM_SPLIT_BY_GENOME_EXO (
+        ch_bam,
+        genome,
+        spikein_genome,
+        'exo'
+    )
     ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_EXO.out.versions.first())
 
     // add genome as meta field
