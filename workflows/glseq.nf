@@ -631,7 +631,6 @@ workflow GLSEQ {
     ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
     ch_versions         = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
-
     if (!params.skip_flT3) {
         //
         // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
