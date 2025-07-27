@@ -378,7 +378,6 @@ workflow PREPARE_GENOME {
     chrom_sizes            = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
     chrom_sizes_exo        = ch_chrom_sizes_exo       //    channel: [ val(meta), [ genome_exo.sizes ]]
-    scaffolds              = ch_scaffolds              //    channel: [ scaffolds ]
     filtered_bed           = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist              = ch_blacklist              //    channel: [  blacklist.bed ]
     sparsebed              = ch_sparsebed              //    channel: [ val(meta), [ sparsebed.bed ]]
