@@ -12,6 +12,7 @@ include {
     GUNZIP as GUNZIP_ROCCO_PARAMS
     GUNZIP as GUNZIP_BLACKLIST
     GUNZIP as GUNZIP_TECOUNT_GENIC_INDEX
+    GUNZIP as GUNZIP_TE_GTF
     GUNZIP as GUNZIP_TECOUNT_TE_INDEX
     GUNZIP as GUNZIP_TELOCAL_TE_INDEX
     } from '../../../modules/nf-core/gunzip/main'
@@ -346,8 +347,8 @@ workflow PREPARE_GENOME {
         } else {
             // Generate TEcount TE index from GTF
             if (te_gtf.endsWith('.gz')) {
-                ch_te_gtf = GUNZIP_te_gtf ( [ [:], te_gtf ] ).gunzip
-                ch_versions = ch_versions.mix(GUNZIP_TECOUNT_TE_GTF.out.versions)
+                ch_te_gtf = GUNZIP_TE_GTF ( [ [:], te_gtf ] ).gunzip
+                ch_versions = ch_versions.mix(GUNZIP_TE_GTF.out.versions)
             } else {
                 ch_te_gtf = Channel.of( [ [:], file(te_gtf) ] )
             }
