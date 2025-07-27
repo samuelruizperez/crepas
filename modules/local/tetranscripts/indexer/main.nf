@@ -12,7 +12,7 @@ process TETRANSCRIPTS_INDEXER {
     val index_type
 
     output:
-    tuple val(meta), path("*.Ind"),   emit: index
+    tuple val(meta), path("*.ind"),   emit: index
     path "versions.yml",              emit: versions
 
     when:
