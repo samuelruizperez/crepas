@@ -663,22 +663,28 @@
                     "fa_icon": "fas fa-dna",
                     "enum": ["multi", "uniq"]
                 },
-                "tecount_genic_index": {
+                "te_counting_gene_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the gene index file (.Ind) for counting with TEcount or TElocal.",
+                    "description": "Path to the pre-built gene index file (.Ind) for counting with TEcount or TElocal.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "te_gtf": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to the TE GTF file for counting with TEcount or TElocal. If not provided, this file will be used to generate a TE index suitable for TEcount or TElocal.",
                     "fa_icon": "fas fa-dna"
                 },
                 "tecount_te_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the TE index file (.Ind) for counting with TEcount.",
+                    "description": "Path to the prebuilt TE index file (.Ind) for counting with TEcount.",
                     "fa_icon": "fas fa-dna"
                 },
                 "telocal_te_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the TE index file (.locInd) for local TE counting with TElocal.",
+                    "description": "Path to the TE index file (.locInd) for local (instance) TE counting with TElocal.",
                     "fa_icon": "fas fa-dna"
                 }
             }

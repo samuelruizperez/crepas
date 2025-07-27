@@ -140,7 +140,7 @@ workflow GLSEQ {
     ch_star_index    // channel: path(star/index/)
     ch_hisat2_index  // channel: path(hisat2/index)
     ch_splicesites   // channel: path(splicesites)
-    ch_tecount_genic_index // channel: val(meta), path(tecount_genic_index.Ind)
+    ch_te_counting_gene_index // channel: val(meta), path(te_counting_gene_index.Ind)
     ch_tecount_te_index // channel: val(meta), path(tecount_te_index.Ind)
     ch_telocal_te_index // channel: val(meta), path(telocal_te_index.locInd)
 
@@ -842,7 +842,7 @@ workflow GLSEQ {
             // Name sorting is required if blacklist filtering was skipped or downsampling was performed
             //(!params.skip_blacklist_flT && !params.bam_downsampling_method) ? true : false, // skip_name_sorting
             false,
-            ch_tecount_genic_index,
+            ch_te_counting_gene_index,
             ch_tecount_te_index,
             ch_telocal_te_index,
             params.skip_telocal

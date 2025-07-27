@@ -2,6 +2,7 @@ process TECOUNT {
     tag "$meta.id"
     label 'process_medium'
 
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/tetranscripts:2.2.3--pyh7cba7a3_0':
         'quay.io/biocontainers/tetranscripts:2.2.3--pyh7cba7a3_0' }"
@@ -24,7 +25,6 @@ process TECOUNT {
     """
      TEcount \\
         ${args} \\
-        --verbose 3 \\
         --BAM ${bam} \\
         --GTF ${genic_gtf_or_index} \\
         --TE ${te_gtf_or_index} \\
