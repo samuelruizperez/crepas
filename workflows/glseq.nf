@@ -127,7 +127,6 @@ workflow GLSEQ {
     ch_chrom_sizes   // channel: path(chrom.sizes)
     ch_chrom_sizes_endo // path(chrom.sizes.endo)
     ch_chrom_sizes_exo
-    ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
     ch_sparsebed     // channel: path(sparse.bed)
