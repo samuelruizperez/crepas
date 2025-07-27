@@ -104,7 +104,6 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.chrom_sizes,
         PREPARE_GENOME.out.chrom_sizes_endo,
         PREPARE_GENOME.out.chrom_sizes_exo,
-        PREPARE_GENOME.out.scaffolds,
         PREPARE_GENOME.out.filtered_bed,
         PREPARE_GENOME.out.blacklist,
         PREPARE_GENOME.out.sparsebed,
