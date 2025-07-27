@@ -82,6 +82,7 @@ workflow GROTHLAB_GLSEQ {
         params.splicesites,
         params.initiation_zones,
         params.skip_te_counting,
+        params.skip_telocal,
         params.te_counting_gene_index,
         params.te_gtf,
         params.tecount_te_index,

@@ -67,6 +67,7 @@ workflow PREPARE_GENOME {
     splicesites        //    file: /path/to/splicesites.txt
     initiation_zones   //    file: /path/to/initiation_zones.bed
     skip_te_counting   //    boolean: skip TE counting
+    skip_telocal    //    boolean: skip TElocal indexing
     te_counting_gene_index //    file: /path/to/te_counting_gene_index.Ind
     te_gtf     //    file: /path/to/te_gtf.gtf
     tecount_te_index   //    file: /path/to/tecount_te_index.Ind
@@ -356,17 +357,19 @@ workflow PREPARE_GENOME {
             ch_versions = ch_versions.mix(TETRANSCRIPTS_INDEXER_TE.out.versions)
         }
 
-        // Handle TElocal TE index (independent of TEcount TE index)
-        if (telocal_te_index) {
-            if (telocal_te_index.endsWith('.gz')) {
-                ch_telocal_te_index = GUNZIP_TELOCAL_TE_INDEX ( [ [:], telocal_te_index ] ).gunzip
-                ch_versions = ch_versions.mix(GUNZIP_TELOCAL_TE_INDEX.out.versions)
-            } else {
-                ch_telocal_te_index = Channel.of( [ [id:'telocal_te_index'], file(telocal_te_index) ] )
+        if (!skip_telocal) {
+            // Handle TElocal TE index (independent of TEcount TE index)
+            if (telocal_te_index) {
+                if (telocal_te_index.endsWith('.gz')) {
+                    ch_telocal_te_index = GUNZIP_TELOCAL_TE_INDEX ( [ [:], telocal_te_index ] ).gunzip
+                    ch_versions = ch_versions.mix(GUNZIP_TELOCAL_TE_INDEX.out.versions)
+                } else {
+                    ch_telocal_te_index = Channel.of( [ [id:'telocal_te_index'], file(telocal_te_index) ] )
+                }
+            } else if (te_gtf) {
+                ch_telocal_te_index = TELOCAL_INDEXER ( ch_te_gtf, 'TE' ).index
+                ch_versions = ch_versions.mix(TELOCAL_INDEXER.out.versions)
             }
-        } else if (te_gtf) {
-            ch_telocal_te_index = TELOCAL_INDEXER ( ch_te_gtf, 'TE' ).index
-            ch_versions = ch_versions.mix(TELOCAL_INDEXER.out.versions)
         }
     }
 
