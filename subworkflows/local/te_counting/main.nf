@@ -4,7 +4,7 @@
 
 include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
 include { TECOUNT }                 from '../../../modules/local/tecount/main'
-include { TELOCAL }                 from '../../../modules/local/telocal/main'
+include { TELOCAL }                 from '../../../modules/local/telocal/telocal/main'
 
 workflow TE_COUNTING {
 
