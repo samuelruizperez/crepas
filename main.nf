@@ -80,6 +80,7 @@ workflow GROTHLAB_GLSEQ {
         params.star_index,
         params.hisat2_index,
         params.splicesites,
+        params.initiation_zones,
         params.skip_te_counting,
         params.te_counting_gene_index,
         params.te_gtf,

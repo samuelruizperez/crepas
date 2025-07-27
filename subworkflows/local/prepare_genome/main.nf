@@ -64,6 +64,7 @@ workflow PREPARE_GENOME {
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
     splicesites        //    file: /path/to/splicesites.txt
+    initiation_zones   //    file: /path/to/initiation_zones.bed
     skip_te_counting   //    boolean: skip TE counting
     te_counting_gene_index //    file: /path/to/te_counting_gene_index.Ind
     te_gtf     //    file: /path/to/te_gtf.gtf
