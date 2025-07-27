@@ -365,7 +365,7 @@ workflow PREPARE_GENOME {
                 ch_telocal_te_index = Channel.of( [ [id:'telocal_te_index'], file(telocal_te_index) ] )
             }
         } else if (te_gtf) {
-            ch_telocal_te_index = TELOCAL_INDEXER ( te_gtf, 'TE' ).index
+            ch_telocal_te_index = TELOCAL_INDEXER ( ch_te_gtf, 'TE' ).index
             ch_versions = ch_versions.mix(TELOCAL_INDEXER.out.versions)
         }
     }
