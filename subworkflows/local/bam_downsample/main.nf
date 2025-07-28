@@ -64,12 +64,12 @@ workflow BAM_DOWNSAMPLE {
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2 or flT1, otherwise use flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                // if antibody_to_use is in the list of antibodies or there is no flT3 or flTbl, use flT2 or flT1, otherwise use flTbl or flT3
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
-                    total = meta.flT3_total_mapped_reads
+                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
                 }
                 [ meta.exp_type, antibody_to_use, total, meta, bam, bai ]
             }
@@ -165,12 +165,12 @@ workflow BAM_DOWNSAMPLE {
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
-                    total = meta.flT3_total_mapped_reads
+                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
                 }
                 [ meta.exp_type, antibody_to_use, total, meta, bam, bai ]
             }
@@ -265,12 +265,12 @@ workflow BAM_DOWNSAMPLE {
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
-                    total = meta.flT3_total_mapped_reads
+                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
                 }
                 [ meta.exp_type, antibody_to_use, meta.is_control, total, meta, bam, bai ]
             }
@@ -367,12 +367,12 @@ workflow BAM_DOWNSAMPLE {
                 def total
                 // samples have meta.antibody, while input controls have meta.control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2_total_mapped_reads or flT1_total_mapped_reads, otherwise use flT3_total_mapped_reads
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || !meta.flT3_total_mapped_reads
+                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 } else {
-                    total = meta.flT3_total_mapped_reads
+                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
                 }
                 [ meta.exp_type, antibody_to_use, meta.is_control, total, meta, bam, bai ]
             }

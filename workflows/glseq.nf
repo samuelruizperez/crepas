@@ -37,8 +37,10 @@ include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO } from '../
 include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER } from '../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
 include { BAM_SHIFT_READS            } from '../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                    } from '../subworkflows/local/samtools_stats_summary/main'
+include { BAM_FILTER_BLACKLIST                    } from '../subworkflows/local/bam_filter_blacklist/main'
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS           } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                            } from '../subworkflows/local/bam_downsample/main'
+include { TE_COUNTING                            } from '../subworkflows/local/te_counting/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,7 +127,6 @@ workflow GLSEQ {
     ch_chrom_sizes   // channel: path(chrom.sizes)
     ch_chrom_sizes_endo // path(chrom.sizes.endo)
     ch_chrom_sizes_exo
-    ch_scaffolds     // channel: val(scaffolds)
     ch_filtered_bed  // channel: path(filtered.bed)
     ch_blacklist     // channel: path(blacklist.bed)
     ch_sparsebed     // channel: path(sparse.bed)
@@ -138,6 +139,9 @@ workflow GLSEQ {
     ch_star_index    // channel: path(star/index/)
     ch_hisat2_index  // channel: path(hisat2/index)
     ch_splicesites   // channel: path(splicesites)
+    ch_te_counting_gene_index // channel: val(meta), path(te_counting_gene_index.Ind)
+    ch_tecount_te_index // channel: val(meta), path(tecount_te_index.Ind)
+    ch_telocal_te_index // channel: val(meta), path(telocal_te_index.locInd)
 
     main:
     ch_multiqc_files = Channel.empty()
@@ -403,7 +407,7 @@ workflow GLSEQ {
     //
     BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
-        ch_filtered_bed.first(),
+        Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
         ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
@@ -465,7 +469,7 @@ workflow GLSEQ {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
             ch_fasta.first(),
-            ch_filtered_bed.first(),
+            Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
             params.genome,
             params.spikein_genome
         )
@@ -626,7 +630,6 @@ workflow GLSEQ {
     ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
     ch_versions         = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
-
     if (!params.skip_flT3) {
         //
         // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
@@ -634,7 +637,7 @@ workflow GLSEQ {
         // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
         BAM_FILTER_SAMBAMBA_FLT3 (
             ch_filtered_bam.join(ch_filtered_index, by: 0),
-            ch_filtered_bed.first(),
+            Channel.of([[:], []]).first(), // empty channel to skip blacklist filtering
             ch_fasta.first()
         )
         ch_filtered_bam         = BAM_FILTER_SAMBAMBA_FLT3.out.bam
@@ -683,6 +686,31 @@ workflow GLSEQ {
                     [ meta, bam ] 
             }
             .set { ch_filtered_bam }
+
+        ch_filtered_bam_bai
+            .map {
+                meta, bam, bai ->
+                    [ meta, bai ]
+            }
+            .set { ch_filtered_index }
+    }
+
+    if (params.blacklist) {
+        //
+        // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
+        //
+        BAM_FILTER_BLACKLIST (
+            ch_filtered_bam.join(ch_filtered_index, by: 0),
+            ch_filtered_bed.first(),
+            ch_fasta.first()
+        )
+        ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam
+        ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai
+        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
+        ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
+    
     }
 
     //
@@ -797,18 +825,39 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
     }
 
-    // Here we remove the exogenous samples from the filtered_bam_bai channel
+    // Removing the exogenous samples from the filtered_bam_bai channel
     ch_filtered_bam = ch_filtered_bam.filter { it[0].genome == params.genome }
     ch_filtered_index = ch_filtered_index.filter { it[0].genome == params.genome }
     ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it[0].genome == params.genome }
 
+    //
+    // SUBWORKFLOW: Counting reads in transposable elements
+    //
+    ch_te_counts = Channel.empty()
+    if (!params.skip_te_counting) {
+        TE_COUNTING (
+            ch_filtered_bam,
+            ch_fasta,
+            // Name sorting is required if blacklist filtering was skipped or downsampling was performed
+            //(!params.skip_blacklist_flT && !params.bam_downsampling_method) ? true : false, // skip_name_sorting
+            false,
+            ch_te_counting_gene_index,
+            ch_tecount_te_index,
+            ch_telocal_te_index,
+            params.skip_telocal
+
+        )
+        ch_tecount_counts = TE_COUNTING.out.tecount_counts
+        ch_telocal_counts = TE_COUNTING.out.telocal_counts
+        ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
+    }
 
     //
     // MODULE: Calculate genome size with khmer
     //
 
     // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
-    // this is an ugly workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
+    // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_effective_gsize                     = Channel.empty()
     ch_subreadfeaturecounts_multiqc   = Channel.empty()
     if (!params.macs_gsize) { // && need_macs_gsize) {
