@@ -51,7 +51,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
             meta, bams, bais ->
                 "${meta}\t${bams}\t${bais}"
         }
-        .collectFile( name: 'ch_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/debug/BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER" )
+        .collectFile( name: 'ch_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER" )
 
     //
     // MODULE: Preprocess BAM files for MACE peak caller
