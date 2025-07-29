@@ -12,7 +12,7 @@ workflow TE_COUNTING {
     ch_bam
     ch_fasta
     skip_name_sort // boolean: skip name sorting of BAM files
-    ch_tecount_genic_index
+    ch_te_counting_gene_index
     ch_tecount_te_index
     ch_telocal_te_index
     skip_telocal
@@ -39,7 +39,7 @@ workflow TE_COUNTING {
     //
     TECOUNT (
         ch_bam,
-        ch_tecount_genic_index,
+        ch_te_counting_gene_index,
         ch_tecount_te_index
     )
     ch_versions = ch_versions.mix(TECOUNT.out.versions.first())
@@ -51,7 +51,7 @@ workflow TE_COUNTING {
     if (!skip_telocal) {
         TELOCAL (
             ch_bam,
-            ch_tecount_genic_index,
+            ch_te_counting_gene_index,
             ch_telocal_te_index
         )
         ch_telocal_counts = TELOCAL.out.counts

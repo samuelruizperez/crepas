@@ -190,17 +190,16 @@ workflow PREPARE_GENOME {
     // Create chromosome sizes file
     //
     CUSTOM_GETCHROMSIZES ( ch_fasta )
-    ch_chrom_sizes = CUSTOM_GETCHROMSIZES.out.sizes
+    ch_chrom_sizes_endo = CUSTOM_GETCHROMSIZES.out.sizes
     ch_fai         = CUSTOM_GETCHROMSIZES.out.fai
     ch_versions    = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
 
     //
     // Create endogenous genome chromosome sizes file
     //
-    ch_chrom_sizes_endo = ch_chrom_sizes
     ch_chrom_sizes_exo = Channel.empty()
     if (spikein_genome) {
-        CHROM_SIZES_SPIKEIN_SPLIT ( ch_chrom_sizes, spikein_genome, genome )
+        CHROM_SIZES_SPIKEIN_SPLIT ( ch_chrom_sizes_endo, spikein_genome, genome )
         ch_chrom_sizes_endo = CHROM_SIZES_SPIKEIN_SPLIT.out.endo_sizes.map { [ it[0] + [ genome: genome ], it[1] ] }
         ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
         ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
@@ -212,7 +211,7 @@ workflow PREPARE_GENOME {
     ch_genome_filtered_bed = Channel.empty()
 
     GENOME_BLACKLIST_REGIONS (
-        ch_chrom_sizes,
+        ch_chrom_sizes_endo,
         // if second element of tuple is empty, use [] as input for GENOME_BLACKLIST_REGIONS
         ch_blacklist.map{ it[1] }.ifEmpty([])
     )
@@ -264,7 +263,7 @@ workflow PREPARE_GENOME {
         if (chromap_index) {
             if (chromap_index.endsWith('.tar.gz')) {
                 ch_chromap_index = UNTAR_CHROMAP_INDEX ( [ [:], chromap_index ] ).untar
-                ch_versions  = ch_versions.mix(UNTAR.out.versions)
+                ch_versions  = ch_versions.mix(UNTAR_CHROMAP_INDEX.out.versions)
             } else {
                 ch_chromap_index = Channel.of( [ [:], file(chromap_index) ] )
             }
@@ -379,7 +378,6 @@ workflow PREPARE_GENOME {
     fai                    = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
     gtf                    = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
-    chrom_sizes            = ch_chrom_sizes            //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
     chrom_sizes_exo        = ch_chrom_sizes_exo       //    channel: [ val(meta), [ genome_exo.sizes ]]
     filtered_bed           = ch_genome_filtered_bed    //    channel: [ val(meta), [ *.include_regions.bed ]]

@@ -21,7 +21,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     ch_peak_count_header_multiqc      // channel: [ header_file ]
     ch_frip_score_multiqc             // channel: [ header_file ]
     ch_peak_annotation_header_multiqc // channel: [ header_file ]
-    is_narrow_peak                    // boolean: true/false
     skip_peak_annotation              // boolean: true/false
     skip_peak_qc                      // boolean: true/false
 
@@ -162,21 +161,21 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
 
             // Create channels: [ meta, [ peaks ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
-            ch_epic2_peaks
-                .map {
-                    meta, peaks ->
-                        [ meta.exp_type, meta.genome, peaks ]
-                }
-                .groupTuple(by: [0, 1])
-                .map {
-                    exp_type, genome, peaks ->
-                        def meta_new = [:]
-                        meta_new.id = exp_type
-                        meta_new.exp_type = exp_type
-                        meta_new.genome = genome
-                        [ meta_new, peaks ]
-                }
-                .set { ch_epic2_peaks_grouped }
+            // ch_epic2_peaks
+            //     .map {
+            //         meta, peaks ->
+            //             [ meta.exp_type, meta.genome, peaks ]
+            //     }
+            //     .groupTuple(by: [0, 1])
+            //     .map {
+            //         exp_type, genome, peaks ->
+            //             def meta_new = [:]
+            //             meta_new.id = exp_type
+            //             meta_new.exp_type = exp_type
+            //             meta_new.genome = genome
+            //             [ meta_new, peaks ]
+            //     }
+            //     .set { ch_epic2_peaks_grouped }
             
             //
             // epic2 QC plots with R
