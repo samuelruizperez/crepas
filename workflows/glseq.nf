@@ -11,6 +11,7 @@ include {
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2 ;
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
 } from '../modules/local/bam_flagstat_mapped/main'
+include { EDD } from '../modules/local/edd/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -108,7 +109,8 @@ workflow GLSEQ {
     ch_star_index             // channel: path(star/index/)
     ch_hisat2_index           // channel: path(hisat2/index)
     ch_splicesites            // channel: path(splicesites)
-    ch_te_counting_gene_index // channel: val(meta), path(te_counting_gene_index.Ind)
+    ch_tecount_gene_index // channel: val(meta), path(tecount_gene_index.Ind)
+    ch_telocal_gene_index // channel: val(meta), path(telocal_gene_index.Ind)
     ch_tecount_te_index       // channel: val(meta), path(tecount_te_index.Ind)
     ch_telocal_te_index       // channel: val(meta), path(telocal_te_index.locInd)
 
@@ -815,8 +817,9 @@ workflow GLSEQ {
             ch_filtered_bam,
             ch_fasta,
             false,
-            ch_te_counting_gene_index,
+            ch_tecount_gene_index,
             ch_tecount_te_index,
+            ch_telocal_gene_index,
             ch_telocal_te_index,
             params.skip_telocal,
         )
@@ -996,6 +999,18 @@ workflow GLSEQ {
     }
 
 
+    if (!params.skip_edd) {
+        //
+        // MODULE: Call peaks with EDD
+        //
+        EDD (
+            ch_ip_control_bam_cs,
+            ch_chrom_sizes_endo.first(),
+            ch_blacklist.first()
+        )
+        ch_versions = ch_versions.mix(EDD.out.versions.first())
+    }
+
     //
     // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
     //
@@ -1004,7 +1019,6 @@ workflow GLSEQ {
         ch_fasta.map { it[1] }.first(),
         ch_gtf.map { it[1] }.first(),
         ch_chrom_sizes_endo.first(),
-        ch_blacklist.first(),
         ch_effective_gsize.first(),
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
@@ -1013,7 +1027,6 @@ workflow GLSEQ {
         params.narrow_peak,
         params.skip_peak_annotation,
         params.skip_peak_qc,
-        params.skip_edd,
         params.skip_bdgcmp,
     )
     ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it[1] })
@@ -1087,13 +1100,11 @@ workflow GLSEQ {
             ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
             ch_fasta.first(),
             ch_gtf.map { it[1] }.first(),
-            ch_blacklist.map { it[1] }.first(),
             ch_chrom_sizes_endo.first(),
             ".annotatePeaks.txt",
             ch_mace_peak_count_header,
             ch_mace_frip_score_header,
             ch_mace_peak_annotation_header,
-            params.narrow_peak,
             params.skip_peak_annotation,
             params.skip_peak_qc,
         )

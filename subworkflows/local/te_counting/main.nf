@@ -1,7 +1,6 @@
 //
 // Counting reads in transposable elements (TEs)
 //
-
 include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
 include { TECOUNT }                 from '../../../modules/local/tecount/main'
 include { TELOCAL }                 from '../../../modules/local/telocal/telocal/main'
@@ -12,8 +11,9 @@ workflow TE_COUNTING {
     ch_bam
     ch_fasta
     skip_name_sort // boolean: skip name sorting of BAM files
-    ch_te_counting_gene_index
+    ch_tecount_gene_index
     ch_tecount_te_index
+    ch_telocal_gene_index
     ch_telocal_te_index
     skip_telocal
 
@@ -39,7 +39,7 @@ workflow TE_COUNTING {
     //
     TECOUNT (
         ch_bam,
-        ch_te_counting_gene_index,
+        ch_tecount_gene_index,
         ch_tecount_te_index
     )
     ch_versions = ch_versions.mix(TECOUNT.out.versions.first())
@@ -51,7 +51,7 @@ workflow TE_COUNTING {
     if (!skip_telocal) {
         TELOCAL (
             ch_bam,
-            ch_te_counting_gene_index,
+            ch_telocal_gene_index,
             ch_telocal_te_index
         )
         ch_telocal_counts = TELOCAL.out.counts

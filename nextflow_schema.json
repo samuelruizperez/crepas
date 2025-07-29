@@ -663,10 +663,16 @@
                     "fa_icon": "fas fa-dna",
                     "enum": ["multi", "uniq"]
                 },
-                "te_counting_gene_index": {
+                "tecount_gene_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the pre-built gene index file (.Ind) for counting with TEcount or TElocal.",
+                    "description": "Path to the prebuilt gene index file (.ind) for counting with TEcount. If not provided, this file in `--gtf` will be used to generate a gene index suitable for TEcount.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "telocal_gene_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to the prebuilt gene index file (.ind) for counting with TElocal. If not provided, this file in `--gtf` will be used to generate a gene index suitable for TElocal.",
                     "fa_icon": "fas fa-dna"
                 },
                 "te_gtf": {
@@ -678,13 +684,13 @@
                 "tecount_te_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the prebuilt TE index file (.Ind) for counting with TEcount.",
+                    "description": "Path to the prebuilt TE index file (.ind) for counting with TEcount. If not provided, this file in `--te_gtf` will be used to generate a TE index suitable for TEcount.",
                     "fa_icon": "fas fa-dna"
                 },
                 "telocal_te_index": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to the TE index file (.locInd) for local (instance) TE counting with TElocal.",
+                    "description": "Path to the prebuilt TE index file (.locInd) for local (instance) TE counting with TElocal. If not provided, this file in `--te_gtf` will be used to generate a TE index suitable for TElocal.",
                     "fa_icon": "fas fa-dna"
                 }
             }

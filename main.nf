@@ -83,7 +83,8 @@ workflow GROTHLAB_GLSEQ {
         params.initiation_zones,
         params.skip_te_counting,
         params.skip_telocal,
-        params.te_counting_gene_index,
+        params.tecount_gene_index,
+        params.telocal_gene_index,
         params.te_gtf,
         params.tecount_te_index,
         params.telocal_te_index
@@ -116,7 +117,8 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.star_index,
         PREPARE_GENOME.out.hisat2_index,
         PREPARE_GENOME.out.splicesites,
-        PREPARE_GENOME.out.te_counting_gene_index,
+        PREPARE_GENOME.out.tecount_gene_index,
+        PREPARE_GENOME.out.telocal_gene_index,
         PREPARE_GENOME.out.tecount_te_index,
         PREPARE_GENOME.out.telocal_te_index
     )
