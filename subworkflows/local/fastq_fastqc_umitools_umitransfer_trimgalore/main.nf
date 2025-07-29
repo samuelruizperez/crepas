@@ -134,6 +134,10 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
             .map { meta, read, num_reads -> [ meta, num_reads ] }
             .set { trim_read_count }
 
+        htrim_unpaired   = Channel.empty()
+        htrim_html       = Channel.empty()
+        htrim_zip        = Channel.empty()
+        htrim_log        = Channel.empty()
         htrim_reads = trim_reads
         if (hardtrim3_length || hardtrim5_length) {
             TRIMGALORE_HARDTRIM (trim_reads)
