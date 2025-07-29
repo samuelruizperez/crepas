@@ -676,16 +676,36 @@ workflow GLSEQ {
     }
 
     if (params.blacklist) {
+
+        // Separating endogenous and exogenous samples
+        // TODO: could add a param "exo_blacklist" to use a different blacklist
+        // for exogenous samples instead of skipping them
+        ch_filtered_bam_bai
+            .branch { meta, bam, bai ->
+                endo: meta.genome == params.genome
+                exo: meta.genome == params.spikein_genome
+            }
+            .set { ch_flt_bam_bai_by_genome }
+
+        ch_flt_bam_bai_by_genome
+            .exo
+            .map { meta, bam, bai ->
+                def meta_clone = meta.clone()
+                meta_clone.flTbl_total_mapped_reads = meta.flT3_total_mapped_reads
+                [meta_clone, bam, bai]
+            }
+            .set { ch_flt_bam_bai_by_genome_exo }
+   
         //
         // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
         //
         BAM_FILTER_BLACKLIST(
-            ch_filtered_bam.join(ch_filtered_index, by: 0),
+            ch_flt_bam_bai_by_genome.endo,
             ch_filtered_bed.first(),
             ch_fasta.first(),
         )
-        ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam
-        ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai
+        ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
+        ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
         ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
