@@ -2,7 +2,6 @@
  * Filter BAM file
  */
 
-include { SAMTOOLS_INDEX } from '../../../modules/nf-core/samtools/index/main'
 include { SAMBAMBA_VIEW }            from '../../../modules/local/sambamba/view/main'
 include { BAM_SORT_STATS_SAMTOOLS  } from '../../../subworkflows/nf-core/bam_sort_stats_samtools'
 

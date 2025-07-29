@@ -735,11 +735,22 @@
                 },
                 "macs_extsize": {
                     "type": "integer",
+                    "description": "Used to extend reads in 5'->3' direction to fix-sized fragments when processing ATAC-seq data, for which MACS3 bypasses building the shifting model (`--nomodel`). See [MACS3 documentation](https://macs3-project.github.io/MACS/docs/callpeak.html) for more details.",
                     "default": 200
                 },
                 "macs_slocal": {
                     "type": "integer",
-                    "default": 1500
+                    "default": 1500,
+                    "description": "Size of the small local region around peak regions to calculate the maximum lambda as local lambda.",
+                    "help_text": "By default, MACS3 considers 1000 bp for small local region (`--slocal`). You can tweak this according to your project. Remember that if the region is set too small, a sharp spike in the input data may kill a significant peak. See [MACS3 documentation](https://macs3-project.github.io/MACS/docs/callpeak.html) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "macs_llocal": {
+                    "type": "integer",
+                    "default": 10000,
+                    "description": "Size of the large local region around peak regions to calculate the maximum lambda as local lambda.",
+                    "help_text": "By default, MACS3 considers 10000 bp for large local region (`--llocal`) which captures the bias from a long-range effect like an open chromatin domain. You can tweak this according to your project. See [MACS3 documentation](https://macs3-project.github.io/MACS/docs/callpeak.html) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "save_macs_pileup": {
                     "type": "boolean",
