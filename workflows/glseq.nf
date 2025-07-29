@@ -845,7 +845,7 @@ workflow GLSEQ {
             ch_tecount_te_index,
             ch_telocal_gene_index,
             ch_telocal_te_index,
-            params.skip_telocal,
+            params.skip_telocal
         )
         ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
     }
