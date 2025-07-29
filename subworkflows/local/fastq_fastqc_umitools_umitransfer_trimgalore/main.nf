@@ -171,5 +171,5 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     htrim_zip         // channel: [ val(meta), [ zip ] ]
     htrim_log         // channel: [ val(meta), [ txt ] ]
 
-    versions = ch_versions.ifEmpty(null) // channel: [ versions.yml ]
+    versions = ch_versions // channel: [ versions.yml ]
 }
