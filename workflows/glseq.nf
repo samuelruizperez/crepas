@@ -691,7 +691,11 @@ workflow GLSEQ {
             .exo
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                meta_clone.flTbl_total_mapped_reads = meta.flT3_total_mapped_reads
+                if (meta_clone.flT3_total_mapped_reads) {
+                    meta_clone.flTbl_total_mapped_reads = meta.flT3_total_mapped_reads
+                } else {
+                    meta_clone.flTbl_total_mapped_reads = meta.flT2_total_mapped_reads
+                }
                 [meta_clone, bam, bai]
             }
             .set { ch_flt_bam_bai_by_genome_exo }
