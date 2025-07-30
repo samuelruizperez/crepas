@@ -4,44 +4,44 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { IGV                                                         } from '../modules/local/igv/main'
-include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS                         } from '../modules/local/multiqc_custom_phantompeakqualtools/main'
+include { IGV                                                         } from '../../modules/local/igv/main'
+include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS                         } from '../../modules/local/multiqc_custom_phantompeakqualtools/main'
 include {
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT1 ;
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2 ;
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
-} from '../modules/local/bam_flagstat_mapped/main'
-include { EDD } from '../modules/local/edd/main'
+} from '../../modules/local/bam_flagstat_mapped/main'
+include { EDD } from '../../modules/local/edd/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { paramsSummaryMap                                            } from 'plugin/nf-validation'
-include { paramsSummaryMultiqc                                        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML                                      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText                                      } from '../subworkflows/local/utils_grothlab_glseq_pipeline'
-include { INPUT_CHECK                                                 } from '../subworkflows/local/input_check/main'
+include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
+include { INPUT_CHECK                                                 } from '../../subworkflows/local/input_check/main'
 include {
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1 ;
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
-} from '../subworkflows/local/bam_filter_sambamba/main'
-include { BAM_SPIKEIN_SPLIT                                           } from '../subworkflows/local/bam_spikein_split/main'
-include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                       } from '../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
-include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
-include { BAM_CREATE_PARTITIONS                                       } from '../subworkflows/local/bam_create_partitions/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO  } from '../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER                 } from '../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
-include { BAM_SHIFT_READS                                             } from '../subworkflows/local/bam_shift_reads/main'
-include { SAMTOOLS_STATS_SUMMARY                                      } from '../subworkflows/local/samtools_stats_summary/main'
-include { BAM_FILTER_BLACKLIST                                        } from '../subworkflows/local/bam_filter_blacklist/main'
-include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                              } from '../subworkflows/local/bam_normalize_bigwig_deeptools/main'
-include { BAM_DOWNSAMPLE                                              } from '../subworkflows/local/bam_downsample/main'
-include { TE_COUNTING                                                 } from '../subworkflows/local/te_counting/main'
+} from '../../subworkflows/local/bam_filter_sambamba/main'
+include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
+include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
+include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
+include { BAM_CREATE_PARTITIONS                                       } from '../../subworkflows/local/bam_create_partitions/main'
+include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO  } from '../../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER                 } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
+include { BAM_SHIFT_READS                                             } from '../../subworkflows/local/bam_shift_reads/main'
+include { SAMTOOLS_STATS_SUMMARY                                      } from '../../subworkflows/local/samtools_stats_summary/main'
+include { BAM_FILTER_BLACKLIST                                        } from '../../subworkflows/local/bam_filter_blacklist/main'
+include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                              } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
+include { BAM_DOWNSAMPLE                                              } from '../../subworkflows/local/bam_downsample/main'
+include { TE_COUNTING                                                 } from '../../subworkflows/local/te_counting/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,33 +53,33 @@ include { TE_COUNTING                                                 } from '..
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { SAMTOOLS_INDEX                                              } from '../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_COLLATE                                            } from '../modules/nf-core/samtools/collate/main'
-include { PICARD_MERGESAMFILES                                        } from '../modules/nf-core/picard/mergesamfiles/main'
-include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../modules/nf-core/picard/collectmultiplemetrics/main'
-include { PRESEQ_LCEXTRAP                                             } from '../modules/nf-core/preseq/lcextrap/main'
-include { PHANTOMPEAKQUALTOOLS                                        } from '../modules/nf-core/phantompeakqualtools/main'
-include { DEEPTOOLS_COMPUTEMATRIX                                     } from '../modules/nf-core/deeptools/computematrix/main'
-include { DEEPTOOLS_PLOTPROFILE                                       } from '../modules/nf-core/deeptools/plotprofile/main'
-include { DEEPTOOLS_PLOTHEATMAP                                       } from '../modules/nf-core/deeptools/plotheatmap/main'
-include { DEEPTOOLS_PLOTFINGERPRINT                                   } from '../modules/nf-core/deeptools/plotfingerprint/main'
-include { KHMER_UNIQUEKMERS                                           } from '../modules/nf-core/khmer/uniquekmers/main'
-include { MULTIQC                                                     } from '../modules/nf-core/multiqc/main'
+include { SAMTOOLS_INDEX                                              } from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_COLLATE                                            } from '../../modules/nf-core/samtools/collate/main'
+include { PICARD_MERGESAMFILES                                        } from '../../modules/nf-core/picard/mergesamfiles/main'
+include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
+include { PRESEQ_LCEXTRAP                                             } from '../../modules/nf-core/preseq/lcextrap/main'
+include { PHANTOMPEAKQUALTOOLS                                        } from '../../modules/nf-core/phantompeakqualtools/main'
+include { DEEPTOOLS_COMPUTEMATRIX                                     } from '../../modules/nf-core/deeptools/computematrix/main'
+include { DEEPTOOLS_PLOTPROFILE                                       } from '../../modules/nf-core/deeptools/plotprofile/main'
+include { DEEPTOOLS_PLOTHEATMAP                                       } from '../../modules/nf-core/deeptools/plotheatmap/main'
+include { DEEPTOOLS_PLOTFINGERPRINT                                   } from '../../modules/nf-core/deeptools/plotfingerprint/main'
+include { KHMER_UNIQUEKMERS                                           } from '../../modules/nf-core/khmer/uniquekmers/main'
+include { MULTIQC                                                     } from '../../modules/nf-core/multiqc/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
 
-// include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
-include { FASTQ_ALIGN_BWA                                             } from '../subworkflows/nf-core/fastq_align_bwa'
-include { FASTQ_ALIGN_BOWTIE2                                         } from '../subworkflows/nf-core/fastq_align_bowtie2'
-include { FASTQ_ALIGN_CHROMAP                                         } from '../subworkflows/nf-core/fastq_align_chromap'
-include { FASTQ_ALIGN_STAR                                            } from '../subworkflows/nf-core/fastq_align_star'
-include { FASTQ_ALIGN_HISAT2                                          } from '../subworkflows/nf-core/fastq_align_hisat2'
-include { BAM_MARKDUPLICATES_PICARD                                   } from '../subworkflows/nf-core/bam_markduplicates_picard'
-include { BAM_DEDUP_UMI                                               } from '../subworkflows/nf-core/bam_dedup_umi'
-include { BAM_STATS_SAMTOOLS                                          } from '../subworkflows/nf-core/bam_stats_samtools'
-include { BAM_SORT_STATS_SAMTOOLS                                     } from '../subworkflows/nf-core/bam_sort_stats_samtools'
+// include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
+include { FASTQ_ALIGN_BWA                                             } from '../../subworkflows/nf-core/fastq_align_bwa'
+include { FASTQ_ALIGN_BOWTIE2                                         } from '../../subworkflows/nf-core/fastq_align_bowtie2'
+include { FASTQ_ALIGN_CHROMAP                                         } from '../../subworkflows/nf-core/fastq_align_chromap'
+include { FASTQ_ALIGN_STAR                                            } from '../../subworkflows/nf-core/fastq_align_star'
+include { FASTQ_ALIGN_HISAT2                                          } from '../../subworkflows/nf-core/fastq_align_hisat2'
+include { BAM_MARKDUPLICATES_PICARD                                   } from '../../subworkflows/nf-core/bam_markduplicates_picard'
+include { BAM_DEDUP_UMI                                               } from '../../subworkflows/nf-core/bam_dedup_umi'
+include { BAM_STATS_SAMTOOLS                                          } from '../../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_SORT_STATS_SAMTOOLS                                     } from '../../subworkflows/nf-core/bam_sort_stats_samtools'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

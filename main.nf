@@ -43,9 +43,9 @@ params.macs_gsize             = getMacsGsize(params)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { GLSEQ                   } from './workflows/glseq'
-include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome/main'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_glseq_pipeline/main'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_glseq_pipeline/main'
+include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_glseq_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_glseq_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
