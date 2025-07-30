@@ -53,7 +53,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     MACE_PREPROCESSOR(
         ch_bam_merged_reps,
-        ch_chrom_sizes,
+        ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(MACE_PREPROCESSOR.out.versions.first())
 
@@ -75,7 +75,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
 
     UCSC_WIGTOBIGWIG(
         ch_wig,
-        ch_chrom_sizes.map { it[1] },
+        ch_chrom_sizes.map { it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_WIGTOBIGWIG.out.versions.first())
 
@@ -99,7 +99,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     MACE_MACE(
         ch_bw,
-        ch_chrom_sizes,
+        ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(MACE_MACE.out.versions.first())
 
@@ -146,7 +146,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     MULTIQC_CUSTOM_PEAKS(
         ch_bam_peak_frip,
         ch_peak_count_header_multiqc,
-        ch_frip_score_multiqc,
+        ch_frip_score_multiqc
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
@@ -163,7 +163,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         HOMER_ANNOTATEPEAKS(
             ch_mace_peaks,
             ch_fasta.map { it[1] },
-            ch_gtf,
+            ch_gtf
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
@@ -210,7 +210,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
             PLOT_HOMER_ANNOTATEPEAKS(
                 ch_homer_annotatepeaks_grouped,
                 ch_peak_annotation_header_multiqc,
-                annotate_peaks_suffix,
+                annotate_peaks_suffix
             )
             ch_plot_homer_annotatepeaks_txt = PLOT_HOMER_ANNOTATEPEAKS.out.txt
             ch_plot_homer_annotatepeaks_pdf = PLOT_HOMER_ANNOTATEPEAKS.out.pdf

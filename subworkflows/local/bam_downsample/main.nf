@@ -425,7 +425,7 @@ workflow BAM_DOWNSAMPLE {
     PICARD_DOWNSAMPLESAM(
         ch_bam_bai_to_ds,
         ch_fasta,
-        ch_fai,
+        ch_fai
     )
     ch_ds_bam = PICARD_DOWNSAMPLESAM.out.bam
     ch_versions = ch_versions.mix(PICARD_DOWNSAMPLESAM.out.versions)
@@ -444,7 +444,7 @@ workflow BAM_DOWNSAMPLE {
     //
     BAM_STATS_SAMTOOLS(
         ch_ds_bam.join(ch_ds_index, by: 0),
-        ch_fasta,
+        ch_fasta
     )
     ch_ds_flagstat = BAM_STATS_SAMTOOLS.out.flagstat
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)

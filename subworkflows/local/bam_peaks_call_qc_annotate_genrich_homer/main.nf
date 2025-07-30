@@ -30,7 +30,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     SAMTOOLS_SORT(
         ch_bam,
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
@@ -76,7 +76,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     //
     GENRICH(
         ch_ip_control_bam_merged_reps,
-        ch_blacklist,
+        ch_blacklist
     )
     ch_versions = ch_versions.mix(GENRICH.out.versions.first())
 
@@ -123,7 +123,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     MULTIQC_CUSTOM_PEAKS(
         ch_bam_peak_frip,
         ch_peak_count_header_multiqc,
-        ch_frip_score_multiqc,
+        ch_frip_score_multiqc
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
@@ -140,7 +140,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         HOMER_ANNOTATEPEAKS(
             ch_gr_peaks,
             ch_fasta.map { it[1] },
-            ch_gtf,
+            ch_gtf
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
@@ -168,7 +168,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
             //
             PLOT_GENRICH_QC(
                 ch_gr_peaks_grouped,
-                is_narrow_peak,
+                is_narrow_peak
             )
             ch_plot_gr_qc_txt = PLOT_GENRICH_QC.out.txt
             ch_plot_gr_qc_pdf = PLOT_GENRICH_QC.out.pdf
@@ -195,7 +195,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
             PLOT_HOMER_ANNOTATEPEAKS(
                 ch_homer_annotatepeaks_grouped,
                 ch_peak_annotation_header_multiqc,
-                annotate_peaks_suffix,
+                annotate_peaks_suffix
             )
             ch_plot_homer_annotatepeaks_txt = PLOT_HOMER_ANNOTATEPEAKS.out.txt
             ch_plot_homer_annotatepeaks_pdf = PLOT_HOMER_ANNOTATEPEAKS.out.pdf

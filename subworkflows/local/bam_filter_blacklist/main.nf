@@ -23,7 +23,7 @@ workflow BAM_FILTER_BLACKLIST {
     BAM_FILTER_SAMBAMBA(
         ch_bam_index,
         ch_whitelist_bed.first(),
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.bai
@@ -60,7 +60,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     SAMTOOLS_SORT(
         ch_filtered_bam.pe,
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_filtered_bam_pe = SAMTOOLS_SORT.out.bam
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
@@ -70,7 +70,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     BAM_REMOVE_ORPHANS(
         ch_filtered_bam_pe,
-        true,
+        true
     )
     ch_versions = ch_versions.mix(BAM_REMOVE_ORPHANS.out.versions.first())
 
@@ -79,7 +79,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     BAM_SORT_STATS_SAMTOOLS(
         BAM_REMOVE_ORPHANS.out.bam,
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.stats.collect { it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat.collect { it[1] })

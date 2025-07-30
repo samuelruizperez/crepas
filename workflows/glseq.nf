@@ -151,7 +151,7 @@ workflow GLSEQ {
     //
     INPUT_CHECK(
         ch_input,
-        params.seq_center,
+        params.seq_center
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
@@ -167,7 +167,7 @@ workflow GLSEQ {
         params.umi_discard_read,
         params.min_trimmed_reads,
         params.hardtrim5_length,
-        params.hardtrim3_length,
+        params.hardtrim3_length
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect { it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect { it[1] })
@@ -184,7 +184,7 @@ workflow GLSEQ {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             ch_bwa_index,
             params.sort_bam,
-            ch_fasta.map { it[1] }.first(),
+            ch_fasta.map { it[1] }.first()
         )
         ch_genome_bam = FASTQ_ALIGN_BWA.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BWA.out.bai
@@ -205,7 +205,7 @@ workflow GLSEQ {
             ch_bowtie2_index.first(),
             params.save_unaligned,
             params.sort_bam,
-            ch_fasta.first(),
+            ch_fasta.first()
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BOWTIE2.out.bai
@@ -227,7 +227,7 @@ workflow GLSEQ {
             [],
             [],
             [],
-            [],
+            []
         )
 
         ch_genome_bam = FASTQ_ALIGN_CHROMAP.out.bam
@@ -251,7 +251,7 @@ workflow GLSEQ {
             params.seq_platform ?: '',
             params.seq_center ?: '',
             ch_fasta.first(),
-            Channel.of([[:], []]),
+            Channel.of([[:], []])
         )
         ch_genome_bam = FASTQ_ALIGN_STAR.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_STAR.out.bai
@@ -269,7 +269,7 @@ workflow GLSEQ {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             ch_hisat2_index.first(),
             ch_splicesites.first(),
-            ch_fasta.first(),
+            ch_fasta.first()
         )
         ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
@@ -311,7 +311,7 @@ workflow GLSEQ {
 
     BAM_STATS_SAMTOOLS(
         ch_merged_bam_bai,
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect { it[1] })
@@ -347,7 +347,7 @@ workflow GLSEQ {
             params.get_dedup_stats,
             false,
             ch_transcriptome_bam,
-            ch_transcriptome_fasta,
+            ch_transcriptome_fasta
         )
         ch_dedup_bam = BAM_DEDUP_UMI.out.bam
         ch_dedup_index = BAM_DEDUP_UMI.out.bai
@@ -368,7 +368,7 @@ workflow GLSEQ {
         BAM_MARKDUPLICATES_PICARD(
             ch_merged_bam,
             ch_fasta.first(),
-            ch_fai.first(),
+            ch_fai.first()
         )
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.bai
@@ -399,7 +399,7 @@ workflow GLSEQ {
     BAM_FILTER_SAMBAMBA_FLT1(
         ch_dedup_bam.join(ch_dedup_index, by: 0),
         Channel.of([[:], []]).first(),
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
@@ -460,7 +460,7 @@ workflow GLSEQ {
             ch_fasta.first(),
             Channel.of([[:], []]).first(),
             params.genome,
-            params.spikein_genome,
+            params.spikein_genome
         )
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
         ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
@@ -553,7 +553,7 @@ workflow GLSEQ {
         BAM_ALLOCATE_MULTIMAPPERS_ENDO(
             ch_filtered_bam,
             ch_fasta,
-            params.multimap_allocation_method,
+            params.multimap_allocation_method
         )
         ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bam
         ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bai
@@ -567,7 +567,7 @@ workflow GLSEQ {
             BAM_ALLOCATE_MULTIMAPPERS_EXO(
                 ch_filtered_exo_bam,
                 ch_fasta,
-                params.multimap_allocation_method,
+                params.multimap_allocation_method
             )
             ch_filtered_exo_bam = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
             ch_filtered_exo_index = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
@@ -608,7 +608,7 @@ workflow GLSEQ {
     //
     BAM_SHIFT_READS(
         ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
-        ch_fasta.first(),
+        ch_fasta.first()
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
@@ -623,7 +623,7 @@ workflow GLSEQ {
         BAM_FILTER_SAMBAMBA_FLT3(
             ch_filtered_bam.join(ch_filtered_index, by: 0),
             Channel.of([[:], []]).first(),
-            ch_fasta.first(),
+            ch_fasta.first()
         )
         ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT3.out.bam
         ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.bai
@@ -706,7 +706,7 @@ workflow GLSEQ {
         BAM_FILTER_BLACKLIST(
             ch_flt_bam_bai_by_genome.endo,
             ch_filtered_bed.first(),
-            ch_fasta.first(),
+            ch_fasta.first()
         )
         ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
         ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
@@ -723,7 +723,7 @@ workflow GLSEQ {
         PICARD_COLLECTMULTIPLEMETRICS(
             ch_filtered_bam_bai,
             ch_fasta.first(),
-            ch_fai.first(),
+            ch_fai.first()
         )
         ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it[1] })
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
@@ -746,7 +746,7 @@ workflow GLSEQ {
             PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: [0]),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
-            ch_spp_correlation_header,
+            ch_spp_correlation_header
         )
         ch_multiqc_files = ch_multiqc_files.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.nsc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.rsc.collect { it[1] })
@@ -767,7 +767,7 @@ workflow GLSEQ {
             params.bam_downsampling_method,
             params.downsampling_endo_threshold,
             params.downsampling_exo_threshold,
-            params.dSp_use_flT2_total,
+            params.dSp_use_flT2_total
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
         ch_filtered_index = BAM_DOWNSAMPLE.out.bai
@@ -795,7 +795,7 @@ workflow GLSEQ {
         params.skip_plot_profile,
         params.rpm_use_flT2_total,
         params.srpm_use_flT2_total,
-        params.cisrpm_use_flT2_total,
+        params.cisrpm_use_flT2_total
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -806,7 +806,7 @@ workflow GLSEQ {
         //
         DEEPTOOLS_COMPUTEMATRIX(
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1,
-            ch_gene_bed.map { it[1] }.first(),
+            ch_gene_bed.map { it[1] }.first()
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
 
@@ -861,7 +861,7 @@ workflow GLSEQ {
         // && need_macs_gsize) {
         KHMER_UNIQUEKMERS(
             ch_fasta,
-            params.read_length,
+            params.read_length
         )
         ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
     }
@@ -917,7 +917,7 @@ workflow GLSEQ {
             ch_sparsebed.first().ifEmpty([[:], []]),
             ch_active_regions.first().ifEmpty([[:], []]),
             ch_rocco_params.first(),
-            ch_effective_gsize.first(),
+            ch_effective_gsize.first()
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
     }
@@ -1013,7 +1013,7 @@ workflow GLSEQ {
             ch_epic2_frip_score_header,
             ch_epic2_peak_annotation_header,
             params.skip_peak_annotation,
-            params.skip_peak_qc,
+            params.skip_peak_qc
         )
         ch_epic2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
         ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
@@ -1051,7 +1051,7 @@ workflow GLSEQ {
         params.narrow_peak,
         params.skip_peak_annotation,
         params.skip_peak_qc,
-        params.skip_bdgcmp,
+        params.skip_bdgcmp
     )
     ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it[1] })
@@ -1081,7 +1081,7 @@ workflow GLSEQ {
             ch_deseq2_clustering_header,
             params.narrow_peak,
             params.skip_peak_annotation,
-            params.skip_deseq2_qc,
+            params.skip_deseq2_qc
         )
         ch_macs3_consensus_bed_lib = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
         ch_macs3_consensus_txt_lib = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
@@ -1107,7 +1107,7 @@ workflow GLSEQ {
             ch_gr_peak_annotation_header,
             params.narrow_peak,
             params.skip_peak_annotation,
-            params.skip_peak_qc,
+            params.skip_peak_qc
         )
         ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it[1] })
@@ -1130,7 +1130,7 @@ workflow GLSEQ {
             ch_mace_frip_score_header,
             ch_mace_peak_annotation_header,
             params.skip_peak_annotation,
-            params.skip_peak_qc,
+            params.skip_peak_qc
         )
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it[1] })
@@ -1165,7 +1165,7 @@ workflow GLSEQ {
         params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,
-        params.zero_crossing_radius,
+        params.zero_crossing_radius
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)
@@ -1176,7 +1176,7 @@ workflow GLSEQ {
     SAMTOOLS_STATS_SUMMARY(
         ch_samtools_stats_summary,
         params.genome,
-        params.spikein_genome ?: Channel.of([]),
+        params.spikein_genome ?: Channel.of([])
     )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
@@ -1194,7 +1194,7 @@ workflow GLSEQ {
             ch_genrich_peaks.collect { it[1] }.ifEmpty([]),
             BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect { it[1] }.ifEmpty([]),
             ch_macs3_consensus_bed_lib.collect { it[1] }.ifEmpty([]),
-            ch_macs3_consensus_txt_lib.collect { it[1] }.ifEmpty([]),
+            ch_macs3_consensus_txt_lib.collect { it[1] }.ifEmpty([])
         )
         ch_versions = ch_versions.mix(IGV.out.versions)
     }
@@ -1266,7 +1266,7 @@ workflow GLSEQ {
             ch_multiqc_custom_config.toList(),
             ch_multiqc_logo.toList(),
             [],
-            [],
+            []
         )
         ch_multiqc_report = MULTIQC.out.report
     }
