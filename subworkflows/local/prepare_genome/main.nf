@@ -11,7 +11,8 @@ include {
     GUNZIP as GUNZIP_ACTIVE_REGIONS
     GUNZIP as GUNZIP_ROCCO_PARAMS
     GUNZIP as GUNZIP_BLACKLIST
-    GUNZIP as GUNZIP_TECOUNT_GENIC_INDEX
+    GUNZIP as GUNZIP_TECOUNT_GENE_INDEX
+    GUNZIP as GUNZIP_TELOCAL_GENE_INDEX
     GUNZIP as GUNZIP_TE_GTF
     GUNZIP as GUNZIP_TECOUNT_TE_INDEX
     GUNZIP as GUNZIP_TELOCAL_TE_INDEX
@@ -330,8 +331,8 @@ workflow PREPARE_GENOME {
     if (!skip_te_counting) {
         if (tecount_gene_index) {
             if (tecount_gene_index.endsWith('.gz')) {
-                ch_tecount_gene_index = GUNZIP_TECOUNT_GENIC_INDEX ( [ [:], tecount_gene_index ] ).gunzip
-                ch_versions = ch_versions.mix(GUNZIP_TECOUNT_GENIC_INDEX.out.versions)
+                ch_tecount_gene_index = GUNZIP_TECOUNT_GENE_INDEX ( [ [:], tecount_gene_index ] ).gunzip
+                ch_versions = ch_versions.mix(GUNZIP_TECOUNT_GENE_INDEX.out.versions)
             } else {
                 ch_tecount_gene_index = Channel.of( [ [id:'tecount_gene_index'], file(tecount_gene_index) ] )
             }
@@ -360,8 +361,8 @@ workflow PREPARE_GENOME {
         if (!skip_telocal) {
             if (telocal_gene_index) {
                 if (telocal_gene_index.endsWith('.gz')) {
-                    ch_telocal_gene_index = GUNZIP_TELOCAL_TE_INDEX ( [ [:], telocal_gene_index ] ).gunzip
-                    ch_versions = ch_versions.mix(GUNZIP_TELOCAL_TE_INDEX.out.versions)
+                    ch_telocal_gene_index = GUNZIP_TELOCAL_GENE_INDEX ( [ [:], telocal_gene_index ] ).gunzip
+                    ch_versions = ch_versions.mix(GUNZIP_TELOCAL_GENE_INDEX.out.versions)
                 } else {
                     ch_telocal_gene_index = Channel.of( [ [id:'telocal_gene_index'], file(telocal_gene_index) ] )
                 }
