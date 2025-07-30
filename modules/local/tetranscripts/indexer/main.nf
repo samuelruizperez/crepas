@@ -34,7 +34,7 @@ process TETRANSCRIPTS_INDEXER {
 
     stub:
     """
-    touch TEtranscripts_index.Ind
+    touch TEtranscripts_index.ind
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

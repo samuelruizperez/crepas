@@ -32,8 +32,9 @@ process TELOCAL_INDEXER {
     """
 
     stub:
+    def suffix = index_type == 'gene' ? 'ind' : 'locInd'
     """
-    touch TEtranscripts_index.Ind
+    touch TElocal_index.${suffix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

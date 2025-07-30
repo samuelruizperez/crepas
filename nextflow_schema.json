@@ -736,7 +736,7 @@
                 "macs_extsize": {
                     "type": "integer",
                     "description": "Used to extend reads in 5'->3' direction to fix-sized fragments when processing ATAC-seq data, for which MACS3 bypasses building the shifting model (`--nomodel`). See [MACS3 documentation](https://macs3-project.github.io/MACS/docs/callpeak.html) for more details.",
-                    "default": 200
+                    "default": 150
                 },
                 "macs_slocal": {
                     "type": "integer",
@@ -775,7 +775,7 @@
                 },
                 "skip_bdgcmp": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip bdgcmp calculation with MACS3.",
                     "fa_icon": "fas fa-fast-forward"
                 },
@@ -798,7 +798,7 @@
                 },
                 "edd_fdr": {
                     "type": "number",
-                    "default": 0.05
+                    "default": 0.01
                 },
                 "genrich_narrow_gap": {
                     "type": "integer",
@@ -808,7 +808,7 @@
                 },
                 "genrich_broad_gap": {
                     "type": "integer",
-                    "default": 100,
+                    "default": 200,
                     "description": "Genrich broad gap parameter.",
                     "fa_icon": "fas fa-hand-scissors"
                 },
@@ -849,7 +849,7 @@
                 },
                 "skip_epic2": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip epic2 peak calling.",
                     "fa_icon": "fas fa-fast-forward"
                 },
@@ -860,7 +860,7 @@
                 },
                 "skip_mace": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip MACE peak calling.",
                     "fa_icon": "fas fa-fast-forward"
                 },
