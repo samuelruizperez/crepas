@@ -97,7 +97,7 @@ workflow GLSEQ {
     ch_gene_bed               // channel: path(gene.beds)
     ch_chrom_sizes_endo       // path(chrom.sizes.endo)
     ch_chrom_sizes_exo
-    ch_filtered_bed           // channel: path(filtered.bed)
+    ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
     ch_sparsebed              // channel: path(sparse.bed)
     ch_active_regions         // channel: path(active_regions.bed)
@@ -184,7 +184,7 @@ workflow GLSEQ {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             ch_bwa_index,
             params.sort_bam,
-            ch_fasta.map { it[1] }.first()
+            ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_BWA.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BWA.out.bai
@@ -198,14 +198,13 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Alignment with Bowtie2 & BAM QC
     //
-    // TODO: using first() to convert the tuple to a value channel and make it consumable
     if (params.aligner == 'bowtie2') {
         FASTQ_ALIGN_BOWTIE2(
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_bowtie2_index.first(),
+            ch_bowtie2_index,
             params.save_unaligned,
             params.sort_bam,
-            ch_fasta.first()
+            ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BOWTIE2.out.bai
@@ -222,8 +221,8 @@ workflow GLSEQ {
     if (params.aligner == 'chromap') {
         FASTQ_ALIGN_CHROMAP(
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_chromap_index.first(),
-            ch_fasta.first(),
+            ch_chromap_index,
+            ch_fasta,
             [],
             [],
             [],
@@ -245,13 +244,13 @@ workflow GLSEQ {
     if (params.aligner == 'star') {
         FASTQ_ALIGN_STAR(
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_star_index.first(),
-            ch_gtf.first(),
+            ch_star_index,
+            ch_gtf,
             true,
             params.seq_platform ?: '',
             params.seq_center ?: '',
-            ch_fasta.first(),
-            Channel.of([[:], []])
+            ch_fasta,
+            Channel.value([[:], []])
         )
         ch_genome_bam = FASTQ_ALIGN_STAR.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_STAR.out.bai
@@ -267,9 +266,9 @@ workflow GLSEQ {
     if (params.aligner == 'hisat2') {
         FASTQ_ALIGN_HISAT2(
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_hisat2_index.first(),
-            ch_splicesites.first(),
-            ch_fasta.first()
+            ch_hisat2_index,
+            ch_splicesites,
+            ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
@@ -311,7 +310,7 @@ workflow GLSEQ {
 
     BAM_STATS_SAMTOOLS(
         ch_merged_bam_bai,
-        ch_fasta.first()
+        ch_fasta
     )
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect { it[1] })
@@ -364,11 +363,10 @@ workflow GLSEQ {
         //
         // SUBWORKFLOW: Mark duplicates & filter BAM files
         //
-        // TODO: using first() to convert the tuple to a value channel and make it consumable
         BAM_MARKDUPLICATES_PICARD(
             ch_merged_bam,
-            ch_fasta.first(),
-            ch_fai.first()
+            ch_fasta,
+            ch_fai
         )
         ch_dedup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
         ch_dedup_index = BAM_MARKDUPLICATES_PICARD.out.bai
@@ -398,8 +396,8 @@ workflow GLSEQ {
     //
     BAM_FILTER_SAMBAMBA_FLT1(
         ch_dedup_bam.join(ch_dedup_index, by: 0),
-        Channel.of([[:], []]).first(),
-        ch_fasta.first()
+        Channel.value([[:], []]),
+        ch_fasta
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
@@ -457,8 +455,8 @@ workflow GLSEQ {
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT(
             ch_filtered_bam,
-            ch_fasta.first(),
-            Channel.of([[:], []]).first(),
+            ch_fasta,
+            Channel.value([[:], []]),
             params.genome,
             params.spikein_genome
         )
@@ -608,7 +606,7 @@ workflow GLSEQ {
     //
     BAM_SHIFT_READS(
         ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
-        ch_fasta.first()
+        ch_fasta
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
@@ -622,8 +620,8 @@ workflow GLSEQ {
         // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
         BAM_FILTER_SAMBAMBA_FLT3(
             ch_filtered_bam.join(ch_filtered_index, by: 0),
-            Channel.of([[:], []]).first(),
-            ch_fasta.first()
+            Channel.value([[:], []]),
+            ch_fasta
         )
         ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT3.out.bam
         ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.bai
@@ -705,8 +703,8 @@ workflow GLSEQ {
         //
         BAM_FILTER_BLACKLIST(
             ch_flt_bam_bai_by_genome.endo,
-            ch_filtered_bed.first(),
-            ch_fasta.first()
+            ch_whitelist,
+            ch_fasta
         )
         ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
         ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
@@ -722,8 +720,8 @@ workflow GLSEQ {
     if (!params.skip_picard_metrics) {
         PICARD_COLLECTMULTIPLEMETRICS(
             ch_filtered_bam_bai,
-            ch_fasta.first(),
-            ch_fai.first()
+            ch_fasta,
+            ch_fai
         )
         ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it[1] })
         ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
@@ -760,8 +758,8 @@ workflow GLSEQ {
         //
         BAM_DOWNSAMPLE(
             ch_filtered_bam_bai,
-            ch_fasta.first(),
-            ch_fai.first(),
+            ch_fasta,
+            ch_fai,
             params.genome,
             params.spikein_genome,
             params.bam_downsampling_method,
@@ -784,8 +782,8 @@ workflow GLSEQ {
     //
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS(
         ch_filtered_bam_bai,
-        ch_chrom_sizes_endo.first(),
-        ch_chrom_sizes_exo.first(),
+        ch_chrom_sizes_endo,
+        ch_chrom_sizes_exo,
         params.coverage_bin_size,
         params.genome,
         params.spikein_genome,
@@ -806,7 +804,7 @@ workflow GLSEQ {
         //
         DEEPTOOLS_COMPUTEMATRIX(
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1,
-            ch_gene_bed.map { it[1] }.first()
+            ch_gene_bed.map { it[1] }
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
 
@@ -872,12 +870,12 @@ workflow GLSEQ {
     if (!params.skip_consenrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER(
             ch_filtered_bam_bai,
-            ch_chrom_sizes_endo.first(),
-            ch_blacklist.first(),
-            ch_sparsebed.first().ifEmpty([[:], []]),
-            ch_active_regions.first().ifEmpty([[:], []]),
-            ch_rocco_params.first(),
-            ch_effective_gsize.first()
+            ch_chrom_sizes_endo,
+            ch_blacklist,
+            ch_sparsebed.ifEmpty([[:], []]),
+            ch_active_regions.ifEmpty([[:], []]),
+            ch_rocco_params,
+            ch_effective_gsize
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
     }
@@ -1004,10 +1002,10 @@ workflow GLSEQ {
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER(
             ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
-            ch_fasta.first(),
-            ch_gtf.map { it[1] }.first(),
-            ch_chrom_sizes_endo.first(),
-            ch_effective_gfraction.first(),
+            ch_fasta,
+            ch_gtf,
+            ch_chrom_sizes_endo,
+            ch_effective_gfraction,
             ".annotatePeaks.txt",
             ch_epic2_peak_count_header,
             ch_epic2_frip_score_header,
@@ -1029,8 +1027,8 @@ workflow GLSEQ {
         //
         EDD (
             ch_ip_control_bam_cs,
-            ch_chrom_sizes_endo.first(),
-            ch_blacklist.first()
+            ch_chrom_sizes_endo,
+            ch_blacklist
         )
         ch_versions = ch_versions.mix(EDD.out.versions.first())
     }
@@ -1040,10 +1038,10 @@ workflow GLSEQ {
     //
     BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER(
         ch_ip_control_bam_cs,
-        ch_fasta.map { it[1] }.first(),
-        ch_gtf.map { it[1] }.first(),
-        ch_chrom_sizes_endo.first(),
-        ch_effective_gsize.first(),
+        ch_fasta,
+        ch_gtf,
+        ch_chrom_sizes_endo,
+        ch_effective_gsize,
         "_peaks.annotatePeaks.txt",
         ch_peak_count_header,
         ch_frip_score_header,
@@ -1098,9 +1096,9 @@ workflow GLSEQ {
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER(
             ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
-            ch_fasta.first(),
-            ch_gtf.map { it[1] }.first(),
-            ch_blacklist.map { it[1] }.first(),
+            ch_fasta,
+            ch_gtf,
+            ch_blacklist,
             ".annotatePeaks.txt",
             ch_gr_peak_count_header,
             ch_gr_frip_score_header,
@@ -1122,9 +1120,9 @@ workflow GLSEQ {
     if (!params.skip_mace) {
         BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
             ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
-            ch_fasta.first(),
-            ch_gtf.map { it[1] }.first(),
-            ch_chrom_sizes_endo.first(),
+            ch_fasta,
+            ch_gtf,
+            ch_chrom_sizes_endo,
             ".annotatePeaks.txt",
             ch_mace_peak_count_header,
             ch_mace_frip_score_header,
@@ -1159,9 +1157,9 @@ workflow GLSEQ {
     ch_partition_smooth = Channel.empty()
     BAM_CREATE_PARTITIONS(
         ch_filtered_bam_ss,
-        ch_chrom_sizes_endo_ss.first(),
-        ch_blacklist.first(),
-        ch_initiation_zones.first(),
+        ch_chrom_sizes_endo_ss,
+        ch_blacklist,
+        ch_initiation_zones,
         params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,
@@ -1176,7 +1174,7 @@ workflow GLSEQ {
     SAMTOOLS_STATS_SUMMARY(
         ch_samtools_stats_summary,
         params.genome,
-        params.spikein_genome ?: Channel.of([])
+        params.spikein_genome ?: Channel.value([])
     )
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 

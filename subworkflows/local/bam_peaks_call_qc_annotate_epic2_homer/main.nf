@@ -173,7 +173,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
         HOMER_ANNOTATEPEAKS (
             ch_epic2_peaks,
             ch_fasta.map{ it[1] },
-            ch_gtf
+            ch_gtf.map{ it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
