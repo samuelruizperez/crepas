@@ -30,7 +30,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     SAMTOOLS_SORT(
         ch_bam,
-        ch_fasta.first()
+        ch_fasta
     )
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 

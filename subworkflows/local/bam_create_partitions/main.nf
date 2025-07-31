@@ -164,7 +164,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     BIGTOOLS_BIGWIGAVERAGEOVERBED (
         ch_bigwig,
-        ch_windows.first()
+        ch_windows
     )
     ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
     ch_versions = ch_versions.mix(BIGTOOLS_BIGWIGAVERAGEOVERBED.out.versions.first())
