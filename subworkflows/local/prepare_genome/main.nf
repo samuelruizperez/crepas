@@ -154,6 +154,7 @@ workflow PREPARE_GENOME {
 
     //ch_blacklist = Channel.value( [ [id:'blacklist'], ch_dummy_file ] )
     // Uncompress blacklist file if required
+    ch_blacklist = Channel.empty()
     if (blacklist) {
         if (blacklist.endsWith('.gz')) {
             ch_blacklist = GUNZIP_BLACKLIST ( [ [id:'blacklist'], file(blacklist, checkIfExists: true) ] ).gunzip
@@ -164,6 +165,7 @@ workflow PREPARE_GENOME {
     }
 
     //ch_initiation_zones = Channel.value( [ [id:'initiation_zones'], ch_dummy_file ] )
+    ch_initiation_zones = Channel.empty()
     if (initiation_zones) {
         if (initiation_zones.endsWith('.gz')) {
             ch_initiation_zones = GUNZIP_INITIATION_ZONES ( [ [id:'initiation_zones'], file(initiation_zones, checkIfExists: true) ] ).gunzip
