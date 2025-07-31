@@ -34,22 +34,48 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     )
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
-    SAMTOOLS_SORT.out.bam.map { meta, bam ->
-        // samples can have meta.antibody, while controls can have meta.control_of_antibody (if downsampling was performed)
-        def antibody_to_use = meta.antibody ?: meta.control_of_antibody
-        [meta, antibody_to_use, bam]
-    }.branch { meta, antibody, bam ->
-        ips_with_control: meta.control
-        return [meta.control, antibody, meta, [bam]]
-        ips_wo_control: !meta.control && !meta.is_control
-        return [meta.id, antibody, meta, [bam]]
-        controls: !meta.control && meta.is_control
-        return [meta.id, antibody, [bam]]
-    }.set { ch_bam_by_type }
+    SAMTOOLS_SORT
+        .out
+        .bam
+        .branch { meta, bam ->
+            ips_with_control: meta.control
+                return [meta.control, meta.antibody, meta, bam]
+            ips_wo_control: !meta.control && !meta.is_control
+                return [meta.id, meta.antibody, meta, bam]
+            controls: !meta.control && meta.is_control
+                return [meta.id, meta, bam]
+        }
+        .set { ch_bam_by_type }
+
+        // For non-downsampled files, duplicate input controls for each antibody 
+        ch_bam_by_type
+            .controls
+            .branch { id, meta, bam ->
+                dsp: meta.control_of_antibody && meta.dSp_total_mapped_reads
+                    return [id, meta.control_of_antibody, meta, bam]
+                not_dsp: !meta.control_of_antibody && !meta.dSp_total_mapped_reads
+                    return [id, meta, bam]
+            }
+            .set { ch_bam_controls }
+        
+        ch_bam_controls
+            .not_dsp
+            .combine(ch_bam_by_type.ips_with_control, by: 0) // combine by control id only
+            .map { control_id, control_meta, control_bam, ip_antibody, ip_meta, ip_bam ->
+                def meta_clone = control_meta.clone()
+                meta_clone.control_of_antibody = ip_antibody
+                [ control_id, meta_clone.control_of_antibody, meta_clone, control_bam ]
+            }
+            .unique()
+            .set { ch_bam_controls_not_dsp }
 
     // Create channel: [ meta, [ip_bams_merged_reps], [control_bams_merged_reps] ]
-    ch_bam_by_type.ips_with_control
-        .combine(ch_bam_by_type.controls, by: [0, 1])
+    ch_bam_by_type
+        .ips_with_control
+        .combine(ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp), by: [0, 1])
+        .map { control_id, antibody, ip_meta, ip_bam, control_meta, control_bam ->
+            [ control_id, antibody, ip_meta, ip_bam, control_bam ]
+        }
         .mix(ch_bam_by_type.ips_wo_control)
         .map { it ->
             def meta_clone = it[2].clone()

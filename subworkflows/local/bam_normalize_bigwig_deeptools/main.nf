@@ -136,28 +136,44 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map
         .branch { meta, bdg ->
             ip: !meta.is_control
+                return [ meta.control, meta.antibody, meta, bdg ]
             control: meta.is_control
         }
         .set { ch_bdg_map_type }
 
+    // For non-downsampled files, duplicate input controls for each antibody
     ch_bdg_map_type
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        .control
-        // Downsampled files already have control_of_antibody, so we use it here to combine accordingly
-        .map { meta, bdg -> [ meta.id, meta.control_of_antibody, meta, bdg ]}
-        .combine(ch_bdg_map_type.ip.map { meta, bdg -> [ meta.control, meta.antibody, meta, bdg ] }, by: [0,1])
-        // If files were not dowsampled, now we copy the meta.antibody to the control_of_antibody, otherwise,
-        // this has no effect:
-        .map { control_id, antibody, control_meta, control_bdg, ip_meta, ip_bdg ->
-                def meta_clone = control_meta.clone()
-                meta_clone.control_of_antibody = ip_meta.antibody
-                [ meta_clone, control_bdg ]
+        .branch { meta, bdg ->
+            dsp: meta.control_of_antibody && meta.dSp_total_mapped_reads
+                return [ meta.id, meta.control_of_antibody, meta, bdg ]
+            not_dsp: !meta.control_of_antibody && !meta.dSp_total_mapped_reads
+                return [ meta.id, meta, bdg ]
         }
-        // remove duplicates based on meta_clone and filename (basically the meta_clone.control_of_antibody we added above)
-        // Because we don't need the same input normalized in the same way several times
+        .set { ch_bdg_map_controls }
+
+    // Probably not needed, but just in case:
+    // For downsampled files, use existing control_of_antibody
+    //  ch_bdg_map_controls
+    //     .dsp
+    //     .combine(ch_bdg_map_type.ip, by: [0,1]) // combine by control_id and antibody
+    //     .map { control_id, antibody, control_meta, control_bdg, ip_meta, ip_bdg ->
+    //         [ control_meta, control_bdg ]
+    //     }
+    //     .set { ch_controls_dsp }
+
+    ch_bdg_map_controls.not_dsp
+        .combine(ch_bdg_map_type.ip, by: 0) // combine by control_id only
+        .map { control_id, control_meta, control_bdg, ip_antibody, ip_meta, ip_bdg ->
+            def meta_clone = control_meta.clone()
+            meta_clone.control_of_antibody = ip_antibody
+            [ meta_clone, control_bdg ]
+        }
         .unique()
-        // Now we mix the control and ip channels to evaluate them together below
-        .mix(ch_bdg_map_type.ip)
+        .set { ch_controls_not_dsp }
+
+    ch_bdg_map_controls.dsp
+        .mix(ch_controls_not_dsp)
+        .mix(ch_bdg_map_type.ip.map { control_id, antibody, meta, bdg -> [ meta, bdg ] })
         .set { ch_bdg_map_mod }
 
     // RPM normalization factors
