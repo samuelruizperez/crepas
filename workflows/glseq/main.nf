@@ -928,7 +928,7 @@ workflow GLSEQ {
         }
         .mix(ch_bam_bai_by_type.ips_wo_control)
         // ips_wo_control do not have control_bam (it[5]) and control_bai (it[6])
-        .map { it -> [ it[2], [ it[3] ] + [ (it[5] ?: []) ], [ it[4] + (it[6] ?: []) ] ] }
+        .map { it -> [ it[2], [ it[3] ] + [ (it[5] ?: []) ], [ it[4] ] + [ (it[6] ?: []) ] ] }
         .set { ch_ip_control_bam_bai }
 
     // TODO: Print to file for debuggin
