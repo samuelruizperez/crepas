@@ -143,6 +143,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     // For non-downsampled files, duplicate input controls for each antibody
     ch_bdg_map_type
+        .control
         .branch { meta, bdg ->
             dsp: meta.control_of_antibody && meta.dSp_total_mapped_reads
                 return [ meta.id, meta.control_of_antibody, meta, bdg ]
@@ -161,7 +162,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     //     }
     //     .set { ch_controls_dsp }
 
-    ch_bdg_map_controls.not_dsp
+    ch_bdg_map_controls
+        .not_dsp
         .combine(ch_bdg_map_type.ip, by: 0) // combine by control_id only
         .map { control_id, control_meta, control_bdg, ip_antibody, ip_meta, ip_bdg ->
             def meta_clone = control_meta.clone()
