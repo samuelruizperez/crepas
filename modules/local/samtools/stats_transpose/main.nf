@@ -19,14 +19,16 @@ process SAMTOOLS_STATS_TRANSPOSE {
 
     script:
     def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
+    def args3 = task.ext.args3 ?: ''
     def prefix = task.ext.prefix ?: "${stats.baseName}.transposed"
     """
     basename=\$(basename ${stats} .stats)
 
-    grep ^SN ${stats} | cut -f 2-3 | sed 's/:\\t/\\t/' > ${prefix}.tmp
+    grep ${args} ^SN ${stats} | cut -f 2-3 | sed 's/:\\t/\\t/' > ${prefix}.tmp
     
     # transpose
-    awk '
+    awk ${args2} '
     BEGIN { FS=OFS="\\t" }
     {
         for (rowNr=1;rowNr<=NF;rowNr++) {
@@ -44,7 +46,7 @@ process SAMTOOLS_STATS_TRANSPOSE {
     }' ${prefix}.tmp > ${prefix}.tmp2
 
     # prepend column with ID as first row and the basename as second row
-    awk -v basename="\$basename" 'NR==1{print "ID\\t"\$0} NR==2{print basename"\\t"\$0} NR>2{print}' ${prefix}.tmp2 > ${prefix}.tsv
+    awk ${args3} -v basename="\$basename" 'NR==1{print "ID\\t"\$0} NR==2{print basename"\\t"\$0} NR>2{print}' ${prefix}.tmp2 > ${prefix}.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
