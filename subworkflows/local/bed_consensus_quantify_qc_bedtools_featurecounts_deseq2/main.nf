@@ -32,7 +32,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             meta, peaks ->
                 "${meta}\t${peaks}"
         }
-        .collectFile( name: 'ch_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'ch_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2" )
 
 
     // Create channels: [ meta , [ peaks ] ]
@@ -74,7 +74,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             meta, peaks ->
                 "${meta}\t${peaks}"
         }
-        .collectFile( name: 'antibody_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}" )
+        .collectFile( name: 'antibody_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2" )
 
     //
     // Generate consensus peaks across samples

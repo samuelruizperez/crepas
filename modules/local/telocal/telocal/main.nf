@@ -2,14 +2,15 @@ process TELOCAL {
     tag "$meta.id"
     label 'process_medium'
 
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://mhammelllab/telocal:latest':
+        'docker://mhammelllab/telocal:latest' :
         'docker://mhammelllab/telocal:latest' }"
 
     input:
     tuple val(meta), path(bam)
     tuple val(meta2), path(genic_gtf_or_index)
-    tuple val(meta3), path(locInd)
+    tuple val(meta3), path(te_gtf_or_index)
 
     output:
     tuple val(meta), path("*.cntTable"),                        emit: counts
@@ -26,7 +27,7 @@ process TELOCAL {
         ${args} \\
         --BAM ${bam} \\
         --GTF ${genic_gtf_or_index} \\
-        --TE ${locInd} \\
+        --TE ${te_gtf_or_index} \\
         --project ${prefix}
 
     cat <<-END_VERSIONS > versions.yml
