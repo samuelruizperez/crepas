@@ -18,10 +18,10 @@ process SAMTOOLS_IDXSTATS {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
+    # Note: --threads value represents *additional* CPUs to allocate (total CPUs = 1 + --threads).
     samtools \\
         idxstats \\
         --threads ${task.cpus-1} \\

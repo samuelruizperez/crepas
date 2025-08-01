@@ -15,27 +15,35 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-params.fasta            = getGenomeAttribute('fasta')
-params.bwa_index        = getGenomeAttribute('bwa')
-params.bowtie2_index    = getGenomeAttribute('bowtie2')
-params.chromap_index    = getGenomeAttribute('chromap')
-params.star_index       = getGenomeAttribute('star')
-params.hisat2_index     = getGenomeAttribute('hisat2')
-params.gtf              = getGenomeAttribute('gtf')
-params.gff              = getGenomeAttribute('gff')
-params.gene_bed         = getGenomeAttribute('gene_bed')
-params.blacklist        = getGenomeAttribute('blacklist')
-params.splicesites      = getGenomeAttribute('splicesites')
-params.initiation_zones = getGenomeAttribute('initiation_zones')
-params.macs_gsize       = getMacsGsize(params)
+params.fasta                  = getGenomeAttribute('fasta')
+params.bwa_index              = getGenomeAttribute('bwa')
+params.bowtie2_index          = getGenomeAttribute('bowtie2')
+params.chromap_index          = getGenomeAttribute('chromap')
+params.star_index             = getGenomeAttribute('star')
+params.hisat2_index           = getGenomeAttribute('hisat2')
+params.gtf                    = getGenomeAttribute('gtf')
+params.gff                    = getGenomeAttribute('gff')
+params.gene_bed               = getGenomeAttribute('gene_bed')
+params.blacklist              = getGenomeAttribute('blacklist')
+params.sparsebed              = getGenomeAttribute('sparsebed')
+params.active_regions         = getGenomeAttribute('active_regions')
+params.rocco_params           = getGenomeAttribute('rocco_params')
+params.splicesites            = getGenomeAttribute('splicesites')
+params.initiation_zones       = getGenomeAttribute('initiation_zones')
+params.tecount_gene_index = getGenomeAttribute('tecount_gene_index')
+params.telocal_gene_index = getGenomeAttribute('telocal_gene_index')
+params.te_gtf                 = getGenomeAttribute('te_gtf')
+params.tecount_te_index       = getGenomeAttribute('tecount_te_index')
+params.telocal_te_index       = getGenomeAttribute('telocal_te_index')
+params.macs_gsize             = getMacsGsize(params)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { GLSEQ                 } from './workflows/glseq'
-include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome/main'
+include { GLSEQ                   } from './workflows/glseq'
+include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_glseq_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_glseq_pipeline'
 
@@ -63,13 +71,24 @@ workflow GROTHLAB_GLSEQ {
         params.gtf,
         params.gff,
         params.blacklist,
+        params.sparsebed,
+        params.active_regions,
+        params.rocco_params,
         params.gene_bed,
         params.bwa_index,
         params.bowtie2_index,
         params.chromap_index,
         params.star_index,
         params.hisat2_index,
-        params.splicesites
+        params.splicesites,
+        params.initiation_zones,
+        params.skip_te_counting,
+        params.skip_telocal,
+        params.tecount_gene_index,
+        params.telocal_gene_index,
+        params.te_gtf,
+        params.tecount_te_index,
+        params.telocal_te_index
     )
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
@@ -85,19 +104,24 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.fai,
         PREPARE_GENOME.out.gtf,
         PREPARE_GENOME.out.gene_bed,
-        PREPARE_GENOME.out.chrom_sizes,
         PREPARE_GENOME.out.chrom_sizes_endo,
         PREPARE_GENOME.out.chrom_sizes_exo,
-        PREPARE_GENOME.out.scaffolds,
-        PREPARE_GENOME.out.filtered_bed,
+        PREPARE_GENOME.out.whitelist,
         PREPARE_GENOME.out.blacklist,
+        PREPARE_GENOME.out.sparsebed,
+        PREPARE_GENOME.out.active_regions,
+        PREPARE_GENOME.out.rocco_params,
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
         PREPARE_GENOME.out.star_index,
         PREPARE_GENOME.out.hisat2_index,
-        PREPARE_GENOME.out.splicesites
+        PREPARE_GENOME.out.splicesites,
+        PREPARE_GENOME.out.tecount_gene_index,
+        PREPARE_GENOME.out.telocal_gene_index,
+        PREPARE_GENOME.out.tecount_te_index,
+        PREPARE_GENOME.out.telocal_te_index
     )
 
     emit:

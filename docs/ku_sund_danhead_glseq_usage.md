@@ -2,14 +2,15 @@
 
 > [!IMPORTANT]
 > Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md](https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md)
-
-> [!IMPORTANT]
-> This is a guide tailored for users of the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/). For general usage instructions, please refer to the main [usage documentation](../docs/ku_sund_danhead_glseq_usage.md).
+>
+> This is a guide tailored for users of the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/). For general usage instructions, please refer to the main [usage documentation](../docs/usage.md).
 
 ## Table of Contents
 
 1. [Before running the pipeline for the first time](#before-running-the-pipeline-for-the-first-time)
 2. [Running the pipeline](#running-the-pipeline)
+    - [Running the pipeline interactively (*tmux* and *srun*)](#running-the-pipeline-interactively-tmux-and-srun)
+    - [Running the pipeline through an *SBATCH* job](#running-the-pipeline-through-an-sbatch-job)
     - [Running a pipeline test](#running-a-pipeline-test)
 3. [Reference genome files](#reference-genome-files)
 4. [Tips](#tips)
@@ -99,76 +100,9 @@
         }
     }
     ```
-
-<!-- 
----
-> [!WARNING]
-> **[Temporary fix]** The following issues involving the `SINGULARITY_TMPDIR` environment variable may occur when running the pipeline:
->
->    ```
->    javax.imageio.IIOException: Can't create cache file!
->
->    Caused by: java.nio.file.FileSystemException: /tmp/*.tmp: No space left on device
->
->    Fontconfig error: No writable cache directories
->    ```
->
->    To prevent these, one can set the `SINGULARITY_TMPDIR` environment variable to a temporary directory in the `/scratch` space. This is necessary because a default location for Singularity temporary files has not been set in the DAN System. This might be fixed in the future.
->
->    Open your `~/.bashrc` file in a text editor (e.g. `nano ~/.bashrc`) and add the following lines at the end of the file:
->
->    ```bash
-> ### Singularity env vars
-> export SINGULARITY_TMPDIR="/scratch/temp/${USER}/singularity-tmp"
-> export SINGULARITY_CACHEDIR="/projects/dan1/people/${USER}/cache/singularity"
-> mkdir -p $SINGULARITY_TMPDIR
-> mkdir -p $SINGULARITY_CACHEDIR
-> 
-> ### Matplotlib env vars
-> export MPLCONFIGDIR=/scratch/temp/${USER}/matplotlib
-> mkdir -p $MPLCONFIGDIR
->
-> ### Nextflow env vars
-> export NXF_OPTS="-Xms1g -Xmx4g"
-> export NXF_HOME=/projects/dan1/people/${USER}/cache/nxf-home
-> export NXF_SINGULARITY_CACHEDIR=/projects/dan1/people/${USER}/cache/nxf-singularity
-> export NXF_SINGULARITY_LIBRARYDIR=/projects/dan1/people/${USER}/cache/singularity/cache/
-> export NXF_REFGENIE_PATH=/maps/projects/dan1/apps/etc/refgenie_nfcore/nf-core/refgenie_genomes.config
-> export NXF_TEMP=/scratch/temp/${USER}/nxf
-> export NXF_WORK=/scratch/temp/${USER}/nxf/work
-> mkdir -p $NXF_HOME
-> mkdir -p $NXF_SINGULARITY_CACHEDIR
-> mkdir -p $NXF_SINGULARITY_LIBRARYDIR
->
-> if [ $HOSTNAME != "danhead01fl.unicph.domain" ]; then
->         if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
->                mkdir -p "/scratch/temp/${USER}/singularity-tmp"
->         fi
->         if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
->                 mkdir -p "/scratch/temp/${USER}/matplotlib"
->         fi
->         export TMPDIR=/scratch/temp/${USER}
-> fi
->
-> if [ -n "$SLURMD_NODENAME" ]; then
->         if [ "$SLURMD_NODENAME" != "danhead01fl" ]; then
->                 if [ ! -d "/scratch/temp/${USER}/singularity-tmp" ]; then
->                         mkdir -p "/scratch/temp/${USER}/singularity-tmp"
->                 fi
->                 if [ ! -d "/scratch/temp/${USER}/matplotlib" ]; then
->                         mkdir -p "/scratch/temp/${USER}/matplotlib"
->                 fi
->                 export TMPDIR=/scratch/temp/${USER}
->         fi
-> fi
-> ```
->    Then, close and reopen the terminal or run the following command to apply the changes:
->
->    ```bash
->    source ~/.bashrc
->    ``` -->
-
 ## Running the pipeline
+
+### Running the pipeline interactively (*tmux* and *srun*)
 
 1. Start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
@@ -220,10 +154,10 @@
     ```
 
 > [!TIP]
->  Include the `-work-dir` argument if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
+>  Include the `-work-dir` option if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
 
-<!-- > [!NOTE]
-> The [`ku_sund_danhead`](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md) [config profile](https://github.com/nf-core/configs/blob/master/conf/ku_sund_danhead.config) created by the DAN System administrators has set up [`cleanup = true`](https://www.nextflow.io/docs/stable/reference/config.html#unscoped-options) by default, which automatically deletes all files in the work directory on a "successful" completion of a run. However, this prevents the use of the `-resume` feature on subsequent executions of any pipeline run, and thus, a modified version ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)) with `cleanup = false` was created to facilitate the running and resuming of this pipeline. -->
+> [!WARNING]
+> When using the `-work-dir` option, make sure that the specified path is different from the `--outdir` path to prevent overwriting issues. Note that the work directory can nonetheless be a subdirectory within the output directory (e.g., `<path_to_output_directory>/work/`).
 
 7. You can now detach from the *tmux* session by pressing `Ctrl+b` and then `d`. You can reattach to the session later by running:
 
@@ -231,26 +165,82 @@
     tmux attach-session -t <session_name>
     ```
 
-### Running a pipeline test
+> [!TIP]
+> To be able to scroll through the output on the terminal inside *tmux*, press `Ctrl+b` and then `[` to enter copy mode. Now, you can scroll up and down using the arrow keys or `PgUp` and `PgDn`. To exit copy mode, press `q`. See the [*tmux* documentation](https://github.com/tmux/tmux/wiki/Getting-Started) for more information.
 
-You can test the correct functioning of any pipeline version by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+### Running the pipeline through an *SBATCH* job
 
-  - `local_test_scarseq`
-  - `local_test_chipseq`
-  - `local_test_atacseq`
-  - `local_test_chorseq`
-
-If you have not already, remember to start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, source your `.bashrc` file to load the environment variables, load the required ***modules***, and create an ***output directory*** for the test run as described in the previous steps.
-
-Now you can run a test by executing a command like the following:
+If you would prefer to submit the pipeline job to the queue rather than run an interactive session, then you do not need to start *tmux* or launch *srun*. Instead, you can create an *SBATCH* script file (e.g., `glseq_job.sh`) like the following:
 
 ```bash
+#!/bin/bash
+
+#SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+#SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=NONE            # email address to receive the notifications
+#SBATCH -c 1                        # number of requested cores for the Nextflow head job
+#SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
+#SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
+#SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+
+# Source the bashrc file to load the environment variables
+source ~/.bashrc
+
+# Load the required modules
+module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+
+# Create an output directory for the pipeline run if it does not exist
+mkdir -p <path_to_output_directory>
+cd <path_to_output_directory>
+
+# Run the pipeline
 nextflow run grothlab/glseq \
-  -r main \
-  -profile ku_sund_danhead_mod,local_test_scarseq \
-  --outdir <path_to_output_directory> \
-  -work-dir <path_to_output_directory>/work/
+    -r main \
+    -profile ku_sund_danhead_mod \
+    --input <path_to_input_samplesheet_csv> \
+    --with_umi \
+    --skip_umi_extract false \
+    --genome mm10 \
+    --spikein_genome dm6 \
+    --outdir <path_to_output_directory> \
+    -work-dir <path_to_output_directory>/work/
 ```
+
+Then, submit the job to the queue with:
+
+```bash
+sbatch glseq_job.sh
+```
+
+### Running a pipeline test
+
+You can test the correct functioning of any pipeline version (`-r <version>`) by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+
+  - `local_test_chipseq`
+  - `local_test_chipexo`
+  - `local_test_chorseq`
+  - `local_test_scarseq`
+  - `local_test_atacseq`
+
+To do so, you have two options:
+
+- Start a ***tmux*** session, launch a minimal interactive ***slurm*** job session, source your `.bashrc` file to load the environment variables, load the required ***modules***, and create an ***output directory*** for the test run as described in [Running the pipeline interactively (*tmux* and *srun*)](#running-the-pipeline-interactively-tmux-and-srun). Finally, run a test by executing a command like the following:
+
+    ```bash
+    nextflow run grothlab/glseq \
+    -r main \
+    -profile ku_sund_danhead_mod,local_test_scarseq \
+    --outdir <path_to_output_directory> \
+    -work-dir <path_to_output_directory>/work/
+    ```
+
+- Or you can create an ***SBATCH*** script file (e.g., `glseq_test_job.sh`) like the one shown in [Running the pipeline through a *SBATCH* job](#running-the-pipeline-through-an-sbatch-job). Just replace the `nextflow run` command accordingly, and submit the job to the queue with:
+
+    ```bash
+    sbatch glseq_test_job.sh
+    ```
+
+
 
 ## Reference genome files
 
@@ -263,6 +253,25 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
   ```
   /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/indices/<aligner>/
   ```
+
+> [!WARNING]
+> For Bowtie2, make sure that there is only one set of index files in the directory/tar specified with `--bowtie2_index`.
+> If there are multiple sets of index files (e.g., two `*.1.bt2` files), the pipeline will throw an error. For example,
+> the following index files would cause an error:
+> ```
+> /maps/projects/dan1/data/Groth_group/shared/references/Mus_musculus/GRCm38/indices/bowtie2_2.5.4_index
+> ├── GRCm38.primary_assembly.genome.1.bt2
+> ├── GRCm38.primary_assembly.genome.2.bt2
+> ├── GRCm38.primary_assembly.genome.3.bt2
+> ├── GRCm38.primary_assembly.genome.4.bt2
+> ├── GRCm38.primary_assembly.genome.rev.1.bt2
+> ├── GRCm38.primary_assembly.genome.rev.2.bt2
+> ├── GRCm38.primary_assembly.mito_only.1.bt2
+> ├── GRCm38.primary_assembly.mito_only.2.bt2
+> ├── GRCm38.primary_assembly.mito_only.3.bt2
+> ├── GRCm38.primary_assembly.mito_only.4.bt2
+> ├── GRCm38.primary_assembly.mito_only.rev.1.bt2
+> └── GRCm38.primary_assembly.mito_only.rev.2.bt2
 
 - Genome FASTA files are inputted using the `--fasta` parameter, and can be found at:
 

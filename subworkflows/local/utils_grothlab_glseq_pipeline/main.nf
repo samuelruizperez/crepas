@@ -11,16 +11,12 @@
 include { UTILS_NFVALIDATION_PLUGIN } from '../../../subworkflows/nf-core/utils_nfvalidation_plugin'
 include { UTILS_NFCORE_PIPELINE     } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE   } from '../../../subworkflows/nf-core/utils_nextflow_pipeline'
-include { paramsSummaryMap          } from 'plugin/nf-validation'
 include { completionEmail           } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { dashedLine                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-//include { nfCoreLogo                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { getWorkflowVersion        } from '../../nf-core/utils_nfcore_pipeline'
-
-include { logColours                } from '../../nf-core/utils_nfcore_pipeline'
+include { getWorkflowVersion        } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { logColours                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { imNotification            } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { workflowCitation          } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { paramsSummaryMap          } from 'plugin/nf-validation'
 
 /*
 ========================================================================================
@@ -53,7 +49,6 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    //pre_help_text = nfCoreLogo(monochrome_logs)
     pre_help_text = grothLabGlseqLogo(monochrome_logs)
     post_help_text = '\n' + workflowCitation() + '\n' + dashedLine(monochrome_logs)
     def String workflow_command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --genome GRCh37 --outdir <OUTDIR>"
@@ -150,12 +145,20 @@ def validateInputParameters() {
         macsGsizeWarn(log)
     }
 
+    if (params.umi_dedup_tool == 'umicollapse' && !['directional', 'adjacency', 'cluster'].contains(params.umi_grouping_method)) {
+        error("The '--umi_grouping_method' parameter must be set to 'directional', 'adjacency' or 'cluster' when using the 'umicollapse' UMI deduplication tool.")
+    }
+
     if (params.hardtrim3_length && params.hardtrim5_length) {
         error("Both '--hardtrim3_length' and '--hardtrim5_length' parameters have been provided. Please provide only one.")
     }
 
     if (!params.read_length && !params.macs_gsize) {
         error ("Both '--read_length' and '--macs_gsize' not specified! Please specify either to infer MACS3 genome size for peak calling.")
+    }
+
+    if (params.trim_q_cutoff && params.trim_nextseq) {
+        error("Both '--trim_q_cutoff' and '--trim_nextseq' parameters have been provided (or one is set by default and the other was provided on top). Please provide only one.")
     }
 
     // if --read_length and either hardtrim3_length or hardtrim5_length are provided, then check if they are equal
@@ -168,23 +171,16 @@ def validateInputParameters() {
         }
     }
 
-    if (params.allocate_n_multimappers) {
-        if (!params.map_n_multimappers || params.map_n_multimappers < params.allocate_n_multimappers) {
-            error("The '--map_n_multimappers' parameter must be equal or greater than the '--allocate_n_multimappers' parameter.")
-        }
-    
-        if (!['chromap', 'bowtie2'].contains(params.aligner)) {
-            error("Allocating multimapping reads requires the aligner to be set to 'chromap' or 'bowtie2'.")
-        }
-    
-        if (params.allocation_method == 'chromap' && params.aligner != 'chromap') {
-            error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
-        }
-    
-        if (params.allocation_method == 'chromap' && params.map_n_multimappers != params.allocate_n_multimappers) {
-            error("The '--map_n_multimappers' and '--allocate_n_multimappers' parameters must be equal when using the Chromap allocation method.")
+    if (params.map_n_multimappers) {
+        if (!['chromap', 'bowtie2', 'hisat2'].contains(params.aligner)) {
+            error("The '--map_n_multimappers' parameter requires the aligner to be set to 'chromap', 'bowtie2', or 'hisat2'.")
         }
     }
+
+    if (params.multimap_allocation_method == 'chromap' && params.aligner != 'chromap') {
+        error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
+    }
+    
 }
 
 //
@@ -242,8 +238,10 @@ def methodsDescriptionText(mqc_methods_yaml) {
         // Removing `https://doi.org/` to handle pipelines using DOIs vs DOI resolvers
         // Removing ` ` since the manifest.doi is a string and not a proper list
         def temp_doi_ref = ""
-        String[] manifest_doi = meta.manifest_map.doi.tokenize(",")
-        for (String doi_ref: manifest_doi) temp_doi_ref += "(doi: <a href=\'https://doi.org/${doi_ref.replace("https://doi.org/", "").replace(" ", "")}\'>${doi_ref.replace("https://doi.org/", "").replace(" ", "")}</a>), "
+        def manifest_doi = meta.manifest_map.doi.tokenize(",")
+        manifest_doi.each { doi_ref ->
+            temp_doi_ref += "(doi: <a href=\'https://doi.org/${doi_ref.replace("https://doi.org/", "").replace(" ", "")}\'>${doi_ref.replace("https://doi.org/", "").replace(" ", "")}</a>), "
+        }
         meta["doi_text"] = temp_doi_ref.substring(0, temp_doi_ref.length() - 2)
     } else meta["doi_text"] = ""
     meta["nodoi_text"] = meta.manifest_map.doi ? "" : "<li>If available, make sure to update the text to include the Zenodo DOI of version of the pipeline used. </li>"
@@ -314,4 +312,27 @@ ${colors.purple}  ${workflow.manifest.name} ${getWorkflowVersion()}${colors.rese
         ${dashedLine(monochrome_logs)}
         """.stripIndent()
     )
+}
+
+//
+// Return dashed line
+//
+def dashedLine(monochrome_logs=true) {
+    Map colors = logColours(monochrome_logs)
+    return "-${colors.dim}----------------------------------------------------${colors.reset}-"
+}
+
+//
+// Citation string for pipeline
+//
+def workflowCitation() {
+    def temp_doi_ref = ""
+    def manifest_doi = workflow.manifest.doi.tokenize(",")
+    // Handling multiple DOIs
+    // Removing `https://doi.org/` to handle pipelines using DOIs vs DOI resolvers
+    // Removing ` ` since the manifest.doi is a string and not a proper list
+    manifest_doi.each { doi_ref ->
+        temp_doi_ref += "  https://doi.org/${doi_ref.replace('https://doi.org/', '').replace(' ', '')}\n"
+    }
+    return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" + "* The pipeline\n" + temp_doi_ref + "\n" + "* The nf-core framework\n" + "  https://doi.org/10.1038/s41587-020-0439-x\n\n" + "* Software dependencies\n" + "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
 }
