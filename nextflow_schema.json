@@ -4,7 +4,7 @@
     "title": "grothlab/glseq pipeline parameters",
     "description": "grothlab/glseq is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
     "type": "object",
-    "definitions": {
+    "$defs": {
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
@@ -1178,58 +1178,58 @@
     },
     "allOf": [
         {
-            "$ref": "#/definitions/input_output_options"
+            "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/definitions/reference_genome_options"
+            "$ref": "#/$defs/reference_genome_options"
         },
         {
-            "$ref": "#/definitions/umi_extraction_and_deduplication_options"
+            "$ref": "#/$defs/umi_extraction_and_deduplication_options"
         },
         {
-            "$ref": "#/definitions/adapter_trimming_options"
+            "$ref": "#/$defs/adapter_trimming_options"
         },
         {
-            "$ref": "#/definitions/hard_trimming_options"
+            "$ref": "#/$defs/hard_trimming_options"
         },
         {
-            "$ref": "#/definitions/alignment_options"
+            "$ref": "#/$defs/alignment_options"
         },
         {
-            "$ref": "#/definitions/spikein_options"
+            "$ref": "#/$defs/spikein_options"
         },
         {
-            "$ref": "#/definitions/multimapper_allocation_options"
+            "$ref": "#/$defs/multimapper_allocation_options"
         },
         {
-            "$ref": "#/definitions/alignment_shifting_options"
+            "$ref": "#/$defs/alignment_shifting_options"
         },
         {
-            "$ref": "#/definitions/filtering_options"
+            "$ref": "#/$defs/filtering_options"
         },
         {
-            "$ref": "#/definitions/coverage_and_normalization_options"
+            "$ref": "#/$defs/coverage_and_normalization_options"
         },
         {
-            "$ref": "#/definitions/downsampling_options"
+            "$ref": "#/$defs/downsampling_options"
         },
         {
-            "$ref": "#/definitions/tecounting_options"
+            "$ref": "#/$defs/tecounting_options"
         },
         {
-            "$ref": "#/definitions/peak_calling_options"
+            "$ref": "#/$defs/peak_calling_options"
         },
         {
-            "$ref": "#/definitions/process_skipping_options"
+            "$ref": "#/$defs/process_skipping_options"
         },
         {
-            "$ref": "#/definitions/partition_and_rfd_analysis_options"
+            "$ref": "#/$defs/partition_and_rfd_analysis_options"
         },
         {
-            "$ref": "#/definitions/institutional_config_options"
+            "$ref": "#/$defs/institutional_config_options"
         },
         {
-            "$ref": "#/definitions/generic_options"
+            "$ref": "#/$defs/generic_options"
         }
     ],
     "properties": {

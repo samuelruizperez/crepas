@@ -16,7 +16,7 @@ include { EDD } from '../../modules/local/edd/main'
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { paramsSummaryMap                                            } from 'plugin/nf-validation'
+include { paramsSummaryMap                                            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
@@ -139,12 +139,6 @@ workflow GLSEQ {
     ch_deseq2_pca_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
     ch_deseq2_clustering_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
-    // Save AWS IGenomes file containing annotation version
-    def anno_readme = params.genomes[params.genome]?.readme
-    if (anno_readme && file(anno_readme).exists()) {
-        file("${params.outdir}/genome/").mkdirs()
-        file(anno_readme).copyTo("${params.outdir}/genome/")
-    }
 
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files

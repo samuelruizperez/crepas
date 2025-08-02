@@ -108,40 +108,40 @@ def check_samplesheet(file_in, file_out):
                 print_error("Sample entry has not been specified!", "Line", line)
 
             ## Check FastQ file extension
-            for fastq in [fastq_1, fastq_2, fastq_umi]:
-                if fastq:
-                    if fastq.find(" ") != -1:
-                        print_error("FastQ file contains spaces!", "Line", line)
-                    if not fastq.endswith(".fastq.gz") and not fastq.endswith(".fq.gz"):
-                        print_error(
-                            "FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",
-                            "Line",
-                            line,
-                        )
-            ## Check replicate column is integer
-            if not replicate.isdecimal():
-                print_error("Replicate id not an integer!", "Line", line)
-                sys.exit(1)
+            # for fastq in [fastq_1, fastq_2, fastq_umi]:
+            #     if fastq:
+            #         if fastq.find(" ") != -1:
+            #             print_error("FastQ file contains spaces!", "Line", line)
+            #         if not fastq.endswith(".fastq.gz") and not fastq.endswith(".fq.gz"):
+            #             print_error(
+            #                 "FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",
+            #                 "Line",
+            #                 line,
+            #             )
+            # ## Check replicate column is integer
+            # if not replicate.isdecimal():
+            #     print_error("Replicate id not an integer!", "Line", line)
+            #     sys.exit(1)
 
-            ## Check exp_type
-            if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq", "ChIP-exo", "OK-seq"]:
-                print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', 'chorseq', 'ChIP-exo', or 'OK-seq'!", "Line", line)
-                sys.exit(1)
+            # ## Check exp_type
+            # if exp_type not in ["chipseq", "atacseq", "scarseq", "chorseq", "ChIP-exo", "OK-seq"]:
+            #     print_error("Experiment type not 'chipseq', 'atacseq', 'scarseq', 'chorseq', 'ChIP-exo', or 'OK-seq'!", "Line", line)
+            #     sys.exit(1)
 
             # strandedness needs to  be specified for scarseq or OK-seq samples
-            if exp_type in ["scarseq", "OK-seq"]:
-                if not strandedness:
-                    print_error("Strandedness must be specified (only) for scarseq or OK-seq samples!", "Line", line)
-                    sys.exit(1)
-                if strandedness not in ["forward", "reverse"]:
-                    print_error("Strandedness should be either 'forward' or 'reverse'!", "Line", line)
-                    sys.exit(1)
+            # if exp_type in ["scarseq", "OK-seq"]:
+            #     if not strandedness:
+            #         print_error("Strandedness must be specified (only) for scarseq or OK-seq samples!", "Line", line)
+            #         sys.exit(1)
+            #     if strandedness not in ["forward", "reverse"]:
+            #         print_error("Strandedness should be either 'forward' or 'reverse'!", "Line", line)
+            #         sys.exit(1)
 
             ## Check antibody and control columns have valid values
-            if antibody:
-                if antibody.find(" ") != -1:
-                    print(f"WARNING: Spaces have been replaced by underscores for antibody: {antibody}")
-                    antibody = antibody.replace(" ", "_")
+            # if antibody:
+            #     if antibody.find(" ") != -1:
+            #         print(f"WARNING: Spaces have been replaced by underscores for antibody: {antibody}")
+            #         antibody = antibody.replace(" ", "_")
             ## a control sample is no longer mandatory
                 # if not control:
                 #     print_error(
@@ -150,39 +150,39 @@ def check_samplesheet(file_in, file_out):
                 #         line,
                 #     )
 
-            if control:
-                if control.find(" ") != -1:
-                    print(f"WARNING: Spaces have been replaced by underscores for control: {control}")
-                    control = control.replace(" ", "_")
-                if not control_replicate.isdecimal():
-                    print_error("Control replicate id not an integer!", "Line", line)
-                    sys.exit(1)
-                control = "{}_REP{}".format(control, control_replicate)
-                if not antibody and exp_type == "chipseq":
-                    print_error(
-                        "Both antibody and control columns must be specified for ChIP-seq samples!",
-                        "Line",
-                        line,
-                    )
+            # if control:
+            #     if control.find(" ") != -1:
+            #         print(f"WARNING: Spaces have been replaced by underscores for control: {control}")
+            #         control = control.replace(" ", "_")
+            #     if not control_replicate.isdecimal():
+            #         print_error("Control replicate id not an integer!", "Line", line)
+            #         sys.exit(1)
+            #     control = "{}_REP{}".format(control, control_replicate)
+            #     if not antibody and exp_type == "chipseq":
+            #         print_error(
+            #             "Both antibody and control columns must be specified for ChIP-seq samples!",
+            #             "Line",
+            #             line,
+            #         )
 
             ## Auto-detect paired-end/single-end
-            sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control]
-            if sample and fastq_1 and fastq_2:  ## Paired-end short reads
-                sample_info = ["0", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
-            elif sample and fastq_1 and not fastq_2:  ## Single-end short reads
-                sample_info = ["1", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
-            else:
-                print_error("Invalid combination of columns provided!", "Line", line)
+            # sample_info = []  ## [single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control]
+            # if sample and fastq_1 and fastq_2:  ## Paired-end short reads
+            #     sample_info = ["0", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
+            # elif sample and fastq_1 and not fastq_2:  ## Single-end short reads
+            #     sample_info = ["1", fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, exp_type, strandedness, antibody, control]
+            # else:
+            #     print_error("Invalid combination of columns provided!", "Line", line)
 
             ## Check that all ATAC-seq samples are paired-end, otherwise the alignmentsieve step will fail
             if exp_type == "atacseq" and sample_info[0] == "1":
                 print_error("ATAC-seq samples must be paired-end for the alignmentsieve step to work!", "Line", line)
                 
-            ## Auto-detect UMI fastq file
-            if sample and fastq_umi:
-                sample_info.insert(1, "1")
-            else:
-                sample_info.insert(1, "0")
+            # ## Auto-detect UMI fastq file
+            # if sample and fastq_umi:
+            #     sample_info.insert(1, "1")
+            # else:
+            #     sample_info.insert(1, "0")
 
             ## Create sample mapping dictionary = {sample: [[ single_end, fastq_1, fastq_2, fastq_umi, okseq_part_file, replicate, antibody, control ]]}
             replicate = int(replicate)
