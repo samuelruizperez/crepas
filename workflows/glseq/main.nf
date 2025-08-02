@@ -890,13 +890,13 @@ workflow GLSEQ {
             ips_with_control: meta.control
                 return [meta.control, meta.antibody, meta, bam, bai]
             ips_wo_control: !meta.control && !meta.is_control
-                return [meta.id, meta.antibody, meta, bam, bai]
+                return [meta, bam, bai]
             controls: !meta.control && meta.is_control
                 return [meta.id, meta, bam, bai]
         }
         .set { ch_bam_bai_by_type }
 
-    // For non-downsampled files, duplicate input controls for each antibody 
+    // For non-downsampled files, copy input controls for each antibody 
     ch_bam_bai_by_type
         .controls
         .branch { id, meta, bam, bai ->
@@ -922,11 +922,8 @@ workflow GLSEQ {
         .ips_with_control
         .combine(ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp), by: [0,1])
         .map { control_id, antibody, ip_meta, ip_bam, ip_bai, control_meta, control_bam, control_bai ->
-            [ control_id, antibody, ip_meta, ip_bam, ip_bai, control_bam, control_bai ]
+            [ ip_meta, [ip_bam] + [control_bam], [ip_bai] + [control_bai] ]
         }
-        .mix(ch_bam_bai_by_type.ips_wo_control)
-        // ips_wo_control do not have control_bam (it[5]) and control_bai (it[6])
-        .map { it -> [ it[2], [ it[3] ] + [ (it[5] ?: []) ], [ it[4] ] + [ (it[6] ?: []) ] ] }
         .set { ch_ip_control_bam_bai }
 
     // TODO: Print to file for debuggin
@@ -949,6 +946,8 @@ workflow GLSEQ {
 
     // Create channels: [ meta, ip_bam, control_bam ]
     ch_ip_control_bam_bai
+        .mix(ch_bam_bai_by_type.ips_wo_control)
+        // ips_wo_control do not have control_bam
         .map { meta, bams, bais ->
             [meta, bams[0], (bams[1] ?: [])]
         }
