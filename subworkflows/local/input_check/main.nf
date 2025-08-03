@@ -51,7 +51,7 @@ workflow INPUT_CHECK {
     ch_fastq
         .map { it -> it[2].input_control }
         .unique()
-        .toList()
+        .collect()
         .map { it -> [it] } // unflatten
         .set { ch_ipcontrol_list }
     
@@ -60,10 +60,10 @@ workflow INPUT_CHECK {
 
     // Add meta.is_input_control to ch_fastq
     ch_fastq
-        //.combine(ch_ipcontrol_list)
-        .map { id, brep, meta, fastqs -> //, ipcontrol_list ->
+        .combine(ch_ipcontrol_list)
+        .map { id, brep, meta, fastqs, ipcontrol_list ->
             def meta_clone = meta.clone()
-            meta_clone.is_input_control = ch_ipcontrol_list.contains(meta.id)
+            meta_clone.is_input_control = ipcontrol_list.contains(meta.id)
             [ id, brep, meta_clone, fastqs ]
         }
         .set { ch_fastq }
@@ -95,14 +95,19 @@ workflow INPUT_CHECK {
     ch_fastq
         .map { it -> it[2].id }
         .unique()
-        .toList()
+        .collect()
         .map { it -> [it] } // unflatten
         .set { ch_sample_list }
 
     // Check that all input samples exist in meta.id
-    ch_fastq
-        .filter { it[2].is_input_control }
-        .map { it -> it[2].id }
+    ch_ipcontrol_list
+        .flatten()
+        .combine(ch_sample_list)
+        .map { ipcontrol_id ->
+            if (!ch_sample_list.contains(ipcontrol_id)) {
+                error("Please check input samplesheet -> Input control sample ${ipcontrol_id} does not exist in the samplesheet!")
+            }
+        }
 
 
 
