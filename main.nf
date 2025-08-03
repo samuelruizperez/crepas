@@ -95,10 +95,9 @@ workflow GROTHLAB_GLSEQ {
     //
     // WORKFLOW: Run grothlab/glseq workflow
     //
-    ch_input = Channel.value(file(params.input, checkIfExists: true))
-
-    GLSEQ(
-        ch_input,
+    ch_samplesheet = Channel.value(file(params.input, checkIfExists: true))
+    GLSEQ (
+        ch_samplesheet,
         ch_versions,
         PREPARE_GENOME.out.fasta,
         PREPARE_GENOME.out.fai,

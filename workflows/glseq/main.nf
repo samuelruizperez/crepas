@@ -16,11 +16,12 @@ include { EDD } from '../../modules/local/edd/main'
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
+include { samplesheetToList                } from 'plugin/nf-schema'
 include { paramsSummaryMap                                            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
-include { INPUT_CHECK                                                 } from '../../subworkflows/local/input_check/main'
+include { INPUT_CHECK                                                 } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
 include {
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1 ;
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
@@ -89,7 +90,7 @@ include { BAM_SORT_STATS_SAMTOOLS                                     } from '..
 
 workflow GLSEQ {
     take:
-    ch_input                  // channel: path(sample_sheet.csv)
+    ch_samplesheet                  // channel: path(sample_sheet.csv)
     ch_versions               // channel: [ path(versions.yml) ]
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
@@ -139,12 +140,41 @@ workflow GLSEQ {
     ch_deseq2_pca_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
     ch_deseq2_clustering_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
+    //
+    // Create channel from input file provided through params.input
+    //
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map {
+            meta, fastq_1, fastq_2, fastq_umi ->
+                def meta_clone = meta.clone()
+                if (!fastq_2) {
+                    meta_clone.single_end = true
+                    if (!fastq_umi) {
+                        meta_clone.sep_umi_fq = false
+                        return [ meta_clone, [ fastq_1 ] ]
+                    } else {
+                        meta_clone.sep_umi_fq = true
+                        return [ meta_clone, [ fastq_1, fastq_umi ] ]
+                    }
+                } else {
+                    meta_clone.single_end = false
+                    if (!fastq_umi) {
+                        meta_clone.sep_umi_fq = false
+                        return [ meta_clone, [ fastq_1, fastq_2 ] ]
+                    } else {
+                        meta_clone.sep_umi_fq = true
+                        return [ meta_clone, [ fastq_1, fastq_2, fastq_umi ] ]
+                    }
+                }
+        }
+        .set { ch_fastq }
 
     //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
+    // SUBWORKFLOW: Extra validation of input samplesheet
     //
-    INPUT_CHECK(
-        ch_input,
+    INPUT_CHECK (
+        ch_fastq,
         params.seq_center
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
@@ -153,7 +183,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Read QC and trim adapters
     //
     FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE(
-        INPUT_CHECK.out.reads,
+        INPUT_CHECK.out.fastq,
         params.skip_fastqc || params.skip_qc,
         params.with_umi,
         params.skip_umi_extract,

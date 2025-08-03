@@ -10,20 +10,19 @@
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "The sample identifier cannot contain spaces",
+                "errorMessage": "The sample identifier cannot contain spaces. It must be the same for all biological and technical replicates of the same sample.",
                 "meta": ["id"]
             },
             "biological_replicate": {
-                "type": "string",
+                "type": ["string", "integer"],
                 "pattern": "^\\S+$",
                 "errorMessage": "The biological replicate must be provided and cannot contain spaces. If you do not have biological replicates you can set the replicate value to the same number or string for all of your samples.",
                 "meta": ["brep"]
             },
             "technical_replicate": {
-                "type": "string",
+                "type": ["string", "integer"],
                 "pattern": "^\\S+$",
-                "errorMessage": "Technical replicate must be provided and cannot contain spaces. If you do not have technical replicates you can set the replicate value to the same number or string for all of your samples.",
-                "default": 1,
+                "errorMessage": "Technical replicate cannot contain spaces.",
                 "meta": ["trep"]
             },
             "input_control": {
@@ -33,10 +32,16 @@
                 "meta": ["input_control"]
             },
             "input_control_biological_replicate": {
-                "type": "integer",
-                "minimum": 1,
-                "errorMessage": "Input control biological replicate number must be an integer greater than or equal to 1",
-                "meta": ["input_control_replicate"]
+                "type": ["string", "integer"],
+                "pattern": "^\\S+$",
+                "errorMessage": "Input control biological replicate",
+                "meta": ["input_brep"]
+            },
+            "input_control_technical_replicate": {
+                "type": ["string", "integer"],
+                "pattern": "^\\S+$",
+                "errorMessage": "Input control technical replicate",
+                "meta": ["input_trep"]
             },
             "exp_type": {
                 "type": "string",
@@ -88,23 +93,10 @@
         },
         "required": ["sample", "fastq_1", "exp_type", "biological_replicate"],
         "dependentRequired": {
-            "input_control": ["input_control_replicate"],
-            "input_control_replicate": ["input_control"]
-        },
-        "allOf": [
-            {
-                "if": { "properties": { "exp_type": { "enum": ["SCAR-seq", "OK-seq"] } } },
-                "then": { "required": ["strandedness"] }
-            },
-            {
-                "if": {
-                    "allOf": [
-                        { "properties": { "exp_type": { "enum": ["ChIP-seq", "ChIP-exo"] } } },
-                        { "not": { "required": ["control"] } }
-                    ]
-                },
-                "then": { "required": ["antibody"] }
-            }
-        ]
+            "input_control": ["input_control_biological_replicate"],
+            "input_control_biological_replicate": ["input_control"],
+            "input_control_technical_replicate": ["input_control_biological_replicate", "technical_replicate"]
+
+        }
     }
 }
