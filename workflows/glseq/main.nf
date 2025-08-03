@@ -918,9 +918,11 @@ workflow GLSEQ {
         .unique()
         .set { ch_bam_controls_not_dsp }
 
+    ch_bam_controls = ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp)
+
     ch_bam_bai_by_type
         .ips_with_control
-        .combine(ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp), by: [0,1])
+        .combine(ch_bam_controls, by: [0,1])
         .map { control_id, antibody, ip_meta, ip_bam, ip_bai, control_meta, control_bam, control_bai ->
             [ ip_meta, [ip_bam] + [control_bam], [ip_bai] + [control_bai] ]
         }
@@ -945,8 +947,10 @@ workflow GLSEQ {
     }
 
     // Create channels: [ meta, ip_bam, control_bam ]
-    ch_ip_control_bam_bai
-        .mix(ch_bam_bai_by_type.ips_wo_control)
+    ch_bam_bai_by_type
+        .ips_wo_control
+        .map { meta, bam, bai -> [meta, [bam], [bai]] }
+        .mix(ch_ip_control_bam_bai)
         // ips_wo_control do not have control_bam
         .map { meta, bams, bais ->
             [meta, bams[0], (bams[1] ?: [])]
