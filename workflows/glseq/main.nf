@@ -311,13 +311,17 @@ workflow GLSEQ {
         .map { meta, bam ->
             def meta_clone = meta.clone()
             meta_clone.remove('read_group')
+            meta_clone.remove('trep')
             meta_clone.id = meta_clone.id.split('_')[0..-3].join('_')
+            if (meta_clone.input_control) {
+                meta_clone.input_control = meta_clone.input_control.split('_')[0..-3].join('_')
+            }
             def key = groupKey(meta_clone.id, meta_clone.trep_count) // trep_count defined in INPUT_CHECK subworkflow
             [key, meta_clone, bam]
         }
         .groupTuple(by: 0)
         .map { it ->
-            [it[1], it[2].flatten()]
+            [it[1][0], it[2].flatten()]
         }
         .set { ch_sort_bam }
 
@@ -334,7 +338,7 @@ workflow GLSEQ {
     SAMTOOLS_INDEX(
         ch_merged_bam
     )
-    ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: [0])
+    ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     BAM_STATS_SAMTOOLS(
@@ -770,7 +774,7 @@ workflow GLSEQ {
         // MODULE: MultiQC custom content for Phantompeaktools
         //
         MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS(
-            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: [0]),
+            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
             ch_spp_correlation_header
@@ -910,50 +914,50 @@ workflow GLSEQ {
     }
 
     //
-    // Create channel for downstream processes: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
+    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
     //
 
     // Branch channels based on if input control is present
     ch_filtered_bam_bai
         .branch { meta, bam, bai ->
-            ips_with_control: meta.control
-                return [meta.control, meta.antibody, meta, bam, bai]
-            ips_wo_control: !meta.control && !meta.is_control
+            ips_with_ipcontrol: meta.input_control
+                return [meta.input_control, meta.antibody, meta, bam, bai]
+            ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
                 return [meta, bam, bai]
-            controls: !meta.control && meta.is_control
+            ipcontrols: !meta.input_control && meta.is_input_control
                 return [meta.id, meta, bam, bai]
         }
         .set { ch_bam_bai_by_type }
 
-    // For non-downsampled files, copy input controls for each antibody 
+    // For non-downsampled files, copy input ipcontrols for each antibody 
     ch_bam_bai_by_type
-        .controls
+        .ipcontrols
         .branch { id, meta, bam, bai ->
-            dsp: meta.control_of_antibody && meta.dSp_total_mapped_reads
-                return [id, meta.control_of_antibody, meta, bam, bai]
-            not_dsp: !meta.control_of_antibody && !meta.dSp_total_mapped_reads
+            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
+                return [id, meta.input_control_of_antibody, meta, bam, bai]
+            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
                 return [id, meta, bam, bai]
         }
-        .set { ch_bam_controls }
+        .set { ch_bam_ipcontrols }
     
-    ch_bam_controls
+    ch_bam_ipcontrols
         .not_dsp
-        .combine(ch_bam_bai_by_type.ips_with_control, by: 0) // combine by control id only
-        .map { control_id, control_meta, control_bam, control_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
-            def meta_clone = control_meta.clone()
-            meta_clone.control_of_antibody = ip_antibody
-            [ control_id, meta_clone.control_of_antibody, meta_clone, control_bam, control_bai ]
+        .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
+        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
+            def meta_clone = ipcontrol_meta.clone()
+            meta_clone.input_control_of_antibody = ip_antibody
+            [ ipcontrol_id, meta_clone.input_control_of_antibody, meta_clone, ipcontrol_bam, ipcontrol_bai ]
         }
         .unique()
-        .set { ch_bam_controls_not_dsp }
+        .set { ch_bam_ipcontrols_not_dsp }
 
-    ch_bam_controls = ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp)
+    ch_bam_ipcontrols = ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp)
 
     ch_bam_bai_by_type
-        .ips_with_control
-        .combine(ch_bam_controls, by: [0,1])
-        .map { control_id, antibody, ip_meta, ip_bam, ip_bai, control_meta, control_bam, control_bai ->
-            [ ip_meta, [ip_bam] + [control_bam], [ip_bai] + [control_bai] ]
+        .ips_with_ipcontrol
+        .combine(ch_bam_ipcontrols, by: [0,1])
+        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
+            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
         }
         .set { ch_ip_control_bam_bai }
 
@@ -975,12 +979,12 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
-    // Create channels: [ meta, ip_bam, control_bam ]
+    // Create channels: [ meta, ip_bam, ipcontrol_bam ]
     ch_bam_bai_by_type
-        .ips_wo_control
+        .ips_wo_ipcontrol
         .map { meta, bam, bai -> [meta, [bam], [bai]] }
         .mix(ch_ip_control_bam_bai)
-        // ips_wo_control do not have control_bam
+        // ips_wo_ipcontrol do not have ipcontrol_bam
         .map { meta, bams, bais ->
             [meta, bams[0], (bams[1] ?: [])]
         }
@@ -990,12 +994,11 @@ workflow GLSEQ {
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
     ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
-    //ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'SCAR-seq' && it[0].exp_type != 'ChIP-exo' }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
-        .map { meta, ip_bam, control_bam ->
-            "${meta.id}\t${ip_bam}\t${control_bam}"
+        .map { meta, ip_bam, ipcontrol_bam ->
+            "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
         }
         .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
@@ -1096,7 +1099,7 @@ workflow GLSEQ {
     if (!params.skip_consensus_peaks) {
         // Create channels: [ antibody, [ ip_bams ] ]
         ch_ip_control_bam_cs
-            .map { meta, ip_bam, control_bam ->
+            .map { meta, ip_bam, ipcontrol_bam ->
                 [meta.antibody, ip_bam]
             }
             .groupTuple()

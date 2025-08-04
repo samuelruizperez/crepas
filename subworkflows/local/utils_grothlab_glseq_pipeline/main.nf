@@ -28,13 +28,13 @@ workflow PIPELINE_INITIALISATION {
 
     take:
     version           // boolean: Display version and exit
-    help              // boolean: Display help text
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
-    monochrome_logs   // boolean: Do not use coloured log outputs
     nextflow_cli_args //   array: List of positional nextflow CLI args
     outdir            //  string: The output directory where the results will be saved
 
     main:
+
+    ch_versions = Channel.empty()
 
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
@@ -61,12 +61,14 @@ workflow PIPELINE_INITIALISATION {
     UTILS_NFCORE_PIPELINE (
         nextflow_cli_args
     )
+
     //
     // Custom validation for pipeline parameters
     //
-    // commenting-out this is only a temporary fix to avoid
-    // the pipeline from failing due to missing genome in igenomes
-    //validateInputParameters()
+    validateInputParameters()
+
+    emit:
+    versions = ch_versions
 
 }
 
@@ -185,8 +187,8 @@ workflow INPUT_CHECK {
             if (meta.input_control) {
                 meta_clone.input_control = "${meta.exp_type}_${meta.input_control}_bRep_${meta.input_brep}_tRep_${meta.input_trep}"
             }
-            
-            def read_group = "\'@RG\\tID:${meta.id}\\tSM:${meta.id - ~/_tRep_.*$/}\\tPL:ILLUMINA\\tLB:${meta.id}\\tPU:1\'"
+
+            def read_group = "\'@RG\\tID:${meta_clone.id}\\tSM:${meta_clone.id - ~/_tRep_.*$/}\\tPL:ILLUMINA\\tLB:${meta_clone.id}\\tPU:1\'"
             if (ch_seq_center) {
                 read_group = "\'@RG\\tID:${meta_clone.id}\\tSM:${meta_clone.id - ~/_tRep_.*$/}\\tPL:ILLUMINA\\tLB:${meta_clone.id}\\tPU:1\\tCN:${ch_seq_center}\'"
             }
@@ -340,7 +342,15 @@ workflow PIPELINE_COMPLETION {
     //
     workflow.onComplete {
         if (email || email_on_fail) {
-            completionEmail(summary_params, email, email_on_fail, plaintext_email, outdir, monochrome_logs, multiqc_report.toList())
+            completionEmail(
+                summary_params,
+                email,
+                email_on_fail,
+                plaintext_email,
+                outdir,
+                monochrome_logs,
+                multiqc_report.toList(),
+            )
         }
 
         completionSummary(monochrome_logs)
@@ -365,7 +375,9 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputParameters() {
 
-    genomeExistsError()
+    // commenting-out this is only a temporary fix to avoid
+    // the pipeline from failing due to missing genome in igenomes
+    //genomeExistsError()
 
     if (!params.fasta) {
         error("Genome fasta file not specified with e.g. '--fasta genome.fa' or via a detectable config file.")
@@ -518,59 +530,4 @@ def macsGsizeWarn(log) {
         "  It will be auto-calculated by 'khmer unique-kmers.py' using the '--read_length' parameter.\n" +
         "  Explicitly provide '--macs_gsize macs3_genome_size' to change this behaviour.\n" +
         "==================================================================================="
-}
-
-
-def grothLabGlseqLogo(monochrome_logs = true) {
-    Map colors = logColours(monochrome_logs)
-    String.format(
-        """\n
-        ${dashedLine(monochrome_logs)}
-${colors.white}█████████████████████████████████████████████████████████████████████████████${colors.reset}
-${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
-${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
-${colors.white}█▌////██████╗/██████╗//██████╗/████████╗██╗//██╗██╗//////█████╗/██████╗////▐█${colors.reset}
-${colors.white}█▌///██╔════╝/██╔══██╗██╔═══██╗╚══██╔══╝██║//██║██║/////██╔══██╗██╔══██╗///▐█${colors.reset}
-${colors.white}█▌///██║//███╗██████╔╝██║///██║///██║///███████║██║/////███████║██████╔╝///▐█${colors.reset}
-${colors.white}█▌///██║///██║██╔══██╗██║///██║///██║///██╔══██║██║/////██╔══██║██╔══██╗///▐█${colors.reset}
-${colors.white}█▌///╚██████╔╝██║//██║╚██████╔╝///██║///██║//██║███████╗██║//██║██████╔╝///▐█${colors.reset}
-${colors.white}█▌////╚═════╝/╚═╝//╚═╝/╚═════╝////╚═╝///╚═╝//╚═╝╚══════╝╚═╝//╚═╝╚═════╝////▐█${colors.reset}
-${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
-${colors.white}█▌////////////////██████╗/██╗/////███████╗███████╗/██████╗/////////////////▐█${colors.reset}
-${colors.white}█▌///////////////██╔════╝/██║/////██╔════╝██╔════╝██╔═══██╗////////////////▐█${colors.reset}
-${colors.white}█▌///////////////██║//███╗██║/////███████╗█████╗//██║///██║////////////////▐█${colors.reset}
-${colors.white}█▌///////////////██║///██║██║/////╚════██║██╔══╝//██║▄▄/██║////////////////▐█${colors.reset}
-${colors.white}█▌///////////////╚██████╔╝███████╗███████║███████╗╚██████╔╝////////////////▐█${colors.reset}
-${colors.white}█▌////////////////╚═════╝/╚══════╝╚══════╝╚══════╝/╚══▀▀═╝/////////////////▐█${colors.reset}
-${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
-${colors.white}█▌/////////////////////////////////////////////////////////////////////////▐█${colors.reset}
-${colors.white}█████████████████████████████████████████████████████████████████████████████${colors.reset}
-
-${colors.purple}  ${workflow.manifest.name} ${getWorkflowVersion()}${colors.reset}
-        ${dashedLine(monochrome_logs)}
-        """.stripIndent()
-    )
-}
-
-//
-// Return dashed line
-//
-def dashedLine(monochrome_logs=true) {
-    Map colors = logColours(monochrome_logs)
-    return "-${colors.dim}----------------------------------------------------${colors.reset}-"
-}
-
-//
-// Citation string for pipeline
-//
-def workflowCitation() {
-    def temp_doi_ref = ""
-    def manifest_doi = workflow.manifest.doi.tokenize(",")
-    // Handling multiple DOIs
-    // Removing `https://doi.org/` to handle pipelines using DOIs vs DOI resolvers
-    // Removing ` ` since the manifest.doi is a string and not a proper list
-    manifest_doi.each { doi_ref ->
-        temp_doi_ref += "  https://doi.org/${doi_ref.replace('https://doi.org/', '').replace(' ', '')}\n"
-    }
-    return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" + "* The pipeline\n" + temp_doi_ref + "\n" + "* The nf-core framework\n" + "  https://doi.org/10.1038/s41587-020-0439-x\n\n" + "* Software dependencies\n" + "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
 }

@@ -16,7 +16,7 @@
             "biological_replicate": {
                 "type": ["string", "integer"],
                 "pattern": "^\\S+$",
-                "errorMessage": "The biological replicate must be provided and cannot contain spaces. If you do not have biological replicates you can set the replicate value to the same number or string for all of your samples.",
+                "errorMessage": "The biological replicate must be provided and cannot contain spaces. If you do not have biological replicates you can set the `biological_replicate` to any number or string for each of your samples.",
                 "meta": ["brep"]
             },
             "technical_replicate": {
