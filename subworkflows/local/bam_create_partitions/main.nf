@@ -316,8 +316,8 @@ workflow BAM_CREATE_PARTITIONS {
     // Create channel: [ val(meta), val(partition_or_rfd), [ f_tab ], [ r_tab ] ]
     ch_norm_and_smi
         .map { meta, bdg_fwd, bdg_rev ->
-            // 'partition' is for scarseq and 'rfd' for OK-seq
-            def partition_or_rfd = meta.exp_type == 'scarseq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
+            // 'partition' is for SCAR-seq and 'RFD' for OK-seq
+            def partition_or_rfd = meta.exp_type == 'SCAR-seq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
             [ meta, partition_or_rfd, bdg_fwd, bdg_rev ]
         }
         .set { ch_part_norm_and_smi }

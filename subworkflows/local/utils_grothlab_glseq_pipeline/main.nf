@@ -80,7 +80,7 @@ workflow PIPELINE_INITIALISATION {
 // List of cases to handle
 
 // 1. Value in `input_control` column must be present in the `sample` column
-// 2. strandedness must be specified for scarseq and OK-seq samples and must not be specified for other exp_types
+// 2. strandedness must be specified for SCAR-seq and OK-seq samples and must not be specified for other exp_types
 // 3. Antibody must be specified for ChIP-seq and ChIP-exo samples, but must not be specified if input_control is set or if exp_type is not ChIP-seq or ChIP-exo
 // 4. TODO: check that technical replicate is not duplicated within a biological replicate
 
@@ -281,7 +281,7 @@ workflow INPUT_CHECK {
         .filter { meta, fastqs, ipcontrol_list ->
             ipcontrol_list.contains(meta.input_control) || !meta.input_control
         }
-        // use map to check that meta.strandedness is set for scarseq and OK-seq samples
+        // use map to check that meta.strandedness is set for SCAR-seq and OK-seq samples
         .map { meta, fastqs, ipcontrol_list ->
             // Strandedness checks
             if (['SCAR-seq', 'OK-seq'].contains(meta.exp_type)) {

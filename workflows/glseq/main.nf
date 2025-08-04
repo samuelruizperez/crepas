@@ -610,18 +610,18 @@ workflow GLSEQ {
         .mix(ch_filtered_exo_index)
         .set { ch_filtered_index }
 
-    // Split the BAM and indexes into atacseq and other (for shifting)
+    // Split the BAM and indexes into 'ATAC-seq' and other (for shifting)
     ch_filtered_bam
         .branch { meta, bam ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
+            atacseq: meta.exp_type == 'ATAC-seq'
+            other: meta.exp_type != 'ATAC-seq'
         }
         .set { ch_filtered_bam }
 
     ch_filtered_index
         .branch { meta, index ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
+            atacseq: meta.exp_type == 'ATAC-seq'
+            other: meta.exp_type != 'ATAC-seq'
         }
         .set { ch_filtered_index }
 
@@ -876,7 +876,7 @@ workflow GLSEQ {
     // MODULE: Calculate genome size with khmer
     //
 
-    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // TODO: genome size is calculated with khmer even when not needed (no ChIP-seq samples)
     // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_effective_gsize = Channel.empty()
     if (!params.macs_gsize) {
@@ -984,8 +984,8 @@ workflow GLSEQ {
 
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) }
-    //ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
+    //ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'SCAR-seq' && it[0].exp_type != 'ChIP-exo' }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
@@ -1028,7 +1028,7 @@ workflow GLSEQ {
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER(
-            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -1122,7 +1122,7 @@ workflow GLSEQ {
     ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER(
-            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_blacklist,
@@ -1165,10 +1165,10 @@ workflow GLSEQ {
 
 
     ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['scarseq', 'OK-seq'] }
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
-    // Make ch_chrom_sizes_endo empty if there are no scarseq samples
+    // Make ch_chrom_sizes_endo empty if there are no SCAR-seq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
     ch_chrom_sizes_endo
         .combine(ch_filtered_bam_ss)

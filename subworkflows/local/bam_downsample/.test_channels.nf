@@ -1,17 +1,17 @@
 ch_bam_bai = channel.of(
 
-    [[ id: 'exp1_IP',    control: 'exp1_INPUT', genome: 'mm10', is_control: false, exp_type: 'chipseq', antibody: 'H3K27me3', total_mapped_reads: 900000 ], 'bam1.bam', 'bam1.bai' ],
-    [[ id: 'exp1_IP',    control: 'exp1_INPUT', genome: 'dm6',  is_control: false, exp_type: 'chipseq', antibody: 'H3K27me3', total_mapped_reads: 500000 ], 'bam2.bam', 'bam2.bai' ],
-    [[ id: 'exp1_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'chipseq', antibody: '',         total_mapped_reads: 1100000 ], 'bam3.bam', 'bam3.bai' ],
+    [[ id: 'exp1_IP',    control: 'exp1_INPUT', genome: 'mm10', is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27me3', total_mapped_reads: 900000 ], 'bam1.bam', 'bam1.bai' ],
+    [[ id: 'exp1_IP',    control: 'exp1_INPUT', genome: 'dm6',  is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27me3', total_mapped_reads: 500000 ], 'bam2.bam', 'bam2.bai' ],
+    [[ id: 'exp1_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'ChIP-seq', antibody: '',         total_mapped_reads: 1100000 ], 'bam3.bam', 'bam3.bai' ],
 
-    [[ id: 'exp1_INPUT', control: null,         genome: 'dm6',  is_control: true,  exp_type: 'chipseq', antibody: '',         total_mapped_reads: 600000  ], 'bam4.bam', 'bam4.bai' ],
-    [[ id: 'exp2_IP',    control: 'exp2_INPUT', genome: 'mm10', is_control: false, exp_type: 'chipseq', antibody: 'H3K27me3', total_mapped_reads: 700000 ], 'bam5.bam', 'bam5.bai' ],
-    [[ id: 'exp3_IP',    control: 'exp3_INPUT', genome: 'mm10', is_control: false, exp_type: 'chipseq', antibody: 'H3K27ac',  total_mapped_reads: 600000 ], 'bam6.bam', 'bam6.bai' ],
-    [[ id: 'exp3_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'chipseq', antibody: '',         total_mapped_reads: 850000 ], 'bam7.bam', 'bam7.bai' ],
-    [[ id: 'exp4_IP',    control: 'exp4_INPUT', genome: 'dm6',  is_control: false, exp_type: 'chipseq', antibody: 'H3K27me3', total_mapped_reads: 800000 ], 'bam8.bam', 'bam8.bai' ],
-    [[ id: 'exp4_INPUT', control: null,         genome: 'dm6',  is_control: true,  exp_type: 'chipseq', antibody: '',         total_mapped_reads: 900000 ], 'bam9.bam', 'bam9.bai' ],
-    [[ id: 'exp4_IP',    control: 'exp4_INPUT', genome: 'mm10', is_control: false, exp_type: 'chipseq', antibody: 'H3K27me3',  total_mapped_reads: 300000 ], 'bam10.bam', 'bam10.bai' ],
-    [[ id: 'exp4_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'chipseq', antibody: '',         total_mapped_reads: 400000 ], 'bam11.bam', 'bam11.bai' ]
+    [[ id: 'exp1_INPUT', control: null,         genome: 'dm6',  is_control: true,  exp_type: 'ChIP-seq', antibody: '',         total_mapped_reads: 600000  ], 'bam4.bam', 'bam4.bai' ],
+    [[ id: 'exp2_IP',    control: 'exp2_INPUT', genome: 'mm10', is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27me3', total_mapped_reads: 700000 ], 'bam5.bam', 'bam5.bai' ],
+    [[ id: 'exp3_IP',    control: 'exp3_INPUT', genome: 'mm10', is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27ac',  total_mapped_reads: 600000 ], 'bam6.bam', 'bam6.bai' ],
+    [[ id: 'exp3_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'ChIP-seq', antibody: '',         total_mapped_reads: 850000 ], 'bam7.bam', 'bam7.bai' ],
+    [[ id: 'exp4_IP',    control: 'exp4_INPUT', genome: 'dm6',  is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27me3', total_mapped_reads: 800000 ], 'bam8.bam', 'bam8.bai' ],
+    [[ id: 'exp4_INPUT', control: null,         genome: 'dm6',  is_control: true,  exp_type: 'ChIP-seq', antibody: '',         total_mapped_reads: 900000 ], 'bam9.bam', 'bam9.bai' ],
+    [[ id: 'exp4_IP',    control: 'exp4_INPUT', genome: 'mm10', is_control: false, exp_type: 'ChIP-seq', antibody: 'H3K27me3',  total_mapped_reads: 300000 ], 'bam10.bam', 'bam10.bai' ],
+    [[ id: 'exp4_INPUT', control: null,         genome: 'mm10', is_control: true,  exp_type: 'ChIP-seq', antibody: '',         total_mapped_reads: 400000 ], 'bam11.bam', 'bam11.bai' ]
 
 )
 
