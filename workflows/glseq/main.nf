@@ -311,14 +311,19 @@ workflow GLSEQ {
         .map { meta, bam ->
             def meta_clone = meta.clone()
             meta_clone.remove('read_group')
-            meta_clone.id = meta_clone.id.split('_')[0..-2].join('_')
-            [meta_clone, bam]
+            meta_clone.id = meta_clone.id.split('_')[0..-3].join('_')
+            def key = groupKey(meta_clone.id, meta_clone.trep_count) // trep_count defined in INPUT_CHECK subworkflow
+            [key, meta_clone, bam]
         }
         .groupTuple(by: 0)
         .map { it ->
-            [it[0], it[1].flatten()]
+            [it[1], it[2].flatten()]
         }
         .set { ch_sort_bam }
+
+    // TODO: print for debugging
+    ch_sort_bam.map { meta, bam -> "${meta}\t${bam}" }
+        .collectFile(name: 'ch_sort_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     PICARD_MERGESAMFILES(
         ch_sort_bam
