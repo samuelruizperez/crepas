@@ -285,22 +285,33 @@ workflow INPUT_CHECK {
         }
         // use map to check that meta.strandedness is set for SCAR-seq and OK-seq samples
         .map { meta, fastqs, ipcontrol_list ->
+            // Input controls checks
+            if (meta.is_input_control && meta.input_control) {
+                error("ERROR: Input control samples must not have an `input_control` value set. Check sample: ${meta.id}")
+            }
             // Strandedness checks
             if (['SCAR-seq', 'OK-seq'].contains(meta.exp_type)) {
-                if (!meta.strandedness)
+                if (!meta.strandedness) {
                     error("ERROR: Strandedness must be specified for SCAR-seq and OK-seq samples. Check sample: ${meta.id}")
+                }
             } else if (meta.strandedness) {
                 error("ERROR: Strandedness must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
             }
+            if ( meta.okseq_part_file && meta.exp_type != 'SCAR-seq' ) {
+                error("ERROR: OK-seq partition file must not be specified for samples other than SCAR-seq. Check sample: ${meta.id}")
+            }
             // Antibody checks
-            if (['ChIP-seq', 'ChIP-exo'].contains(meta.exp_type)) {
-                if (!meta.antibody && !meta.is_input_control)
-                    error("ERROR: Antibody must be specified for non-input ChIP-seq and ChIP-exo samples. Check sample: ${meta.id}")
+            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq'].contains(meta.exp_type)) {
+                if (!meta.antibody && !meta.is_input_control) {
+                    error("ERROR: Antibody must be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq samples. Check sample: ${meta.id}")
+                }
+                if (meta.antibody && meta.is_input_control) {
+                    error("ERROR: Antibody must not be specified for input control samples. Check sample: ${meta.id}")
+                }
             } else {
-                if (meta.antibody)
-                    error("ERROR: Antibody must not be specified for samples other than ChIP-seq and ChIP-exo. Check sample: ${meta.id}")
-                if (meta.input_control)
-                    error("ERROR: Antibody must not be specified for input control ChIP-seq and ChIP-exo samples. Check sample: ${meta.id}")
+                if (meta.antibody) {
+                    error("ERROR: Antibody must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq. Check sample: ${meta.id}")
+                }
             }
             return [ meta, fastqs ]
         }
