@@ -150,7 +150,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
     // count number of lines in the windows file
     ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions)
 
     // TODO: print for debugging
     ch_num_windows
@@ -183,8 +183,8 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            // samples have meta.antibody, while input controls have meta.control_of_antibody
-            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            // samples have meta.antibody, while input controls have meta.input_control_of_antibody
+            def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
             // If the sample was downsampled before, we want to use dSp_total_mapped_reads
             if (meta_clone.dSp_total_mapped_reads) {
                 meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
@@ -234,22 +234,22 @@ workflow BAM_CREATE_PARTITIONS {
     // for each of the strands, subtract the input from the sample
     ch_norm
         .map { meta, bdg ->
-            // samples can have meta.antibody, while controls can have meta.control_of_antibody (if downsampling was performed)
-            def antibody_to_use = meta.antibody ?: meta.control_of_antibody
+            // samples can have meta.antibody, while controls can have meta.input_control_of_antibody (if downsampling was performed)
+            def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
             [ meta, antibody_to_use, bdg ]
         }
         .branch { meta, antibody, bdg ->
-            scar_with_input: meta.control
-                return [ meta.control, antibody, meta.strand, meta, bdg ]
-            input: !meta.control && meta.is_control
+            scar_with_ipcontrol: meta.input_control
+                return [ meta.input_control, antibody, meta.strand, meta, bdg ]
+            ipcontrol: !meta.input_control && meta.is_input_control
                 return [ meta.id, antibody, meta.strand, bdg ]
         }
         .set { ch_norm_by_type }
 
     // create channel: [ val(meta), [ scar_bdg ], [ input_bdg ] ]
     ch_norm_by_type
-        .scar_with_input
-        .combine(ch_norm_by_type.input, by: [0, 1, 2]) // combine by id, antibody, and strand
+        .scar_with_ipcontrol
+        .combine(ch_norm_by_type.ipcontrol, by: [0, 1, 2]) // combine by id, antibody, and strand
         .map { input_id, antibody, strand, scar_meta, scar_bdg, input_bdg ->
             def meta_clone = scar_meta.clone()
                 meta_clone.signal_minus_input = true
@@ -316,8 +316,8 @@ workflow BAM_CREATE_PARTITIONS {
     // Create channel: [ val(meta), val(partition_or_rfd), [ f_tab ], [ r_tab ] ]
     ch_norm_and_smi
         .map { meta, bdg_fwd, bdg_rev ->
-            // 'partition' is for scarseq and 'rfd' for OK-seq
-            def partition_or_rfd = meta.exp_type == 'scarseq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
+            // 'partition' is for SCAR-seq and 'RFD' for OK-seq
+            def partition_or_rfd = meta.exp_type == 'SCAR-seq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
             [ meta, partition_or_rfd, bdg_fwd, bdg_rev ]
         }
         .set { ch_part_norm_and_smi }
@@ -407,22 +407,22 @@ workflow BAM_CREATE_PARTITIONS {
         .out
         .tsv
         .branch { meta, tsv ->
-            scar_with_input: !meta.is_control && !meta.signal_minus_input
-                return [ meta.control, meta, tsv ]
-            input: meta.is_control
+            scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input
+                return [ meta.input_control, meta, tsv ]
+            ipcontrol: meta.is_input_control
                 return [ meta.id, tsv ]
-            minusinput: meta.signal_minus_input
+            minusipcontrol: meta.signal_minus_input
                 return [ meta.id, tsv ]
         }
         .set { ch_partitions_by_type }
 
     ch_partitions_by_type
-        .scar_with_input
-        .combine(ch_partitions_by_type.input, by: 0) // this creates channel: [ input_id, meta_scar, scar_tsv, input_tsv ]
+        .scar_with_ipcontrol
+        .combine(ch_partitions_by_type.ipcontrol, by: 0) // this creates channel: [ input_id, meta_scar, scar_tsv, input_tsv ]
         .map { input_id, meta_scar, scar_tsv, input_tsv ->
             [ meta_scar.id, meta_scar, scar_tsv, input_tsv ]
         }
-        .combine(ch_partitions_by_type.minusinput, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
+        .combine(ch_partitions_by_type.minusipcontrol, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             def okseq = meta_scar.okseq_part_file ? file(meta_scar.okseq_part_file) : null
             [ meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ]

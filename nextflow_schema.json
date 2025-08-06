@@ -1,10 +1,10 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/grothlab/glseq/master/nextflow_schema.json",
     "title": "grothlab/glseq pipeline parameters",
     "description": "grothlab/glseq is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
     "type": "object",
-    "definitions": {
+    "$defs": {
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
@@ -16,8 +16,9 @@
                     "type": "string",
                     "format": "file-path",
                     "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
+                    "pattern": "^\\S+\\.(csv|tsv|yaml|json)$",
                     "schema": "assets/schema_input.json",
+                    "exists": true,
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).",
                     "fa_icon": "fas fa-file-csv"
@@ -100,7 +101,8 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.gff3?(\\.gz)?$",
                     "fa_icon": "fas fa-code-branch",
-                    "description": "Path to GFF3 annotation file."                },
+                    "description": "Path to GFF3 annotation file."
+                },
                 "bwa_index": {
                     "type": "string",
                     "description": "Path to directory or tar.gz archive for pre-built BWA index.",
@@ -285,7 +287,8 @@
                 "save_dedup_intermeds": {
                     "type": "boolean",
                     "description": "Save intermediate files from the UMI deduplication step.",
-                    "fa_icon": "fas fa-save"
+                    "fa_icon": "fas fa-save",
+                    "default": true
                 }
             }
         },
@@ -839,7 +842,8 @@
                 "skip_genrich": {
                     "type": "boolean",
                     "description": "Skip Genrich peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
                 },
                 "epic2_binsize": {
                     "type": "integer",
@@ -862,7 +866,8 @@
                 "skip_consenrich": {
                     "type": "boolean",
                     "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",
-                    "fa_icon": "fas fa-fast-forward"
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
                 },
                 "skip_mace": {
                     "type": "boolean",
@@ -887,12 +892,12 @@
                 },
                 "mace_qcut": {
                     "type": "number",
-                    "description": "phred scaled mapping quality threshhold to determine “uniqueness” of alignments. default=30. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "description": "phred scaled mapping quality threshhold to determine \u201cuniqueness\u201d of alignments. default=30. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
                     "fa_icon": "fas fa-dna"
                 },
                 "mace_norm_method": {
                     "type": "string",
-                    "description": "methods (“EM”, “AM”, “GM”, or “SNR”) used to consolidate replicates and reduce noise. “EM” = Entropy weighted mean, “AM”=Arithmetic mean, “GM”=Geometric mean, “SNR”=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "description": "methods (\u201cEM\u201d, \u201cAM\u201d, \u201cGM\u201d, or \u201cSNR\u201d) used to consolidate replicates and reduce noise. \u201cEM\u201d = Entropy weighted mean, \u201cAM\u201d=Arithmetic mean, \u201cGM\u201d=Geometric mean, \u201cSNR\u201d=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["EM", "AM", "GM", "SNR"]
                 },
@@ -1178,58 +1183,58 @@
     },
     "allOf": [
         {
-            "$ref": "#/definitions/input_output_options"
+            "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/definitions/reference_genome_options"
+            "$ref": "#/$defs/reference_genome_options"
         },
         {
-            "$ref": "#/definitions/umi_extraction_and_deduplication_options"
+            "$ref": "#/$defs/umi_extraction_and_deduplication_options"
         },
         {
-            "$ref": "#/definitions/adapter_trimming_options"
+            "$ref": "#/$defs/adapter_trimming_options"
         },
         {
-            "$ref": "#/definitions/hard_trimming_options"
+            "$ref": "#/$defs/hard_trimming_options"
         },
         {
-            "$ref": "#/definitions/alignment_options"
+            "$ref": "#/$defs/alignment_options"
         },
         {
-            "$ref": "#/definitions/spikein_options"
+            "$ref": "#/$defs/spikein_options"
         },
         {
-            "$ref": "#/definitions/multimapper_allocation_options"
+            "$ref": "#/$defs/multimapper_allocation_options"
         },
         {
-            "$ref": "#/definitions/alignment_shifting_options"
+            "$ref": "#/$defs/alignment_shifting_options"
         },
         {
-            "$ref": "#/definitions/filtering_options"
+            "$ref": "#/$defs/filtering_options"
         },
         {
-            "$ref": "#/definitions/coverage_and_normalization_options"
+            "$ref": "#/$defs/coverage_and_normalization_options"
         },
         {
-            "$ref": "#/definitions/downsampling_options"
+            "$ref": "#/$defs/downsampling_options"
         },
         {
-            "$ref": "#/definitions/tecounting_options"
+            "$ref": "#/$defs/tecounting_options"
         },
         {
-            "$ref": "#/definitions/peak_calling_options"
+            "$ref": "#/$defs/peak_calling_options"
         },
         {
-            "$ref": "#/definitions/process_skipping_options"
+            "$ref": "#/$defs/process_skipping_options"
         },
         {
-            "$ref": "#/definitions/partition_and_rfd_analysis_options"
+            "$ref": "#/$defs/partition_and_rfd_analysis_options"
         },
         {
-            "$ref": "#/definitions/institutional_config_options"
+            "$ref": "#/$defs/institutional_config_options"
         },
         {
-            "$ref": "#/definitions/generic_options"
+            "$ref": "#/$defs/generic_options"
         }
     ],
     "properties": {
@@ -1253,14 +1258,9 @@
             "type": "string",
             "default": "/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/"
         },
-        "validationFailUnrecognisedParams": {
-            "type": "boolean"
-        },
-        "validationLenientMode": {
-            "type": "boolean"
-        },
-        "validationShowHiddenParams": {
-            "type": "boolean"
+        "trace_report_suffix": {
+            "type": "string",
+            "default": "2025-08-03_12-45-27"
         }
     }
 }

@@ -16,11 +16,12 @@ include { EDD } from '../../modules/local/edd/main'
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { paramsSummaryMap                                            } from 'plugin/nf-validation'
+include { samplesheetToList                } from 'plugin/nf-schema'
+include { paramsSummaryMap                                            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
-include { INPUT_CHECK                                                 } from '../../subworkflows/local/input_check/main'
+include { INPUT_CHECK                                                 } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
 include {
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1 ;
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
@@ -89,7 +90,7 @@ include { BAM_SORT_STATS_SAMTOOLS                                     } from '..
 
 workflow GLSEQ {
     take:
-    ch_input                  // channel: path(sample_sheet.csv)
+    ch_samplesheet                  // channel: path(sample_sheet.csv)
     ch_versions               // channel: [ path(versions.yml) ]
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
@@ -139,18 +140,41 @@ workflow GLSEQ {
     ch_deseq2_pca_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
     ch_deseq2_clustering_header = Channel.value(file("${projectDir}/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
-    // Save AWS IGenomes file containing annotation version
-    def anno_readme = params.genomes[params.genome]?.readme
-    if (anno_readme && file(anno_readme).exists()) {
-        file("${params.outdir}/genome/").mkdirs()
-        file(anno_readme).copyTo("${params.outdir}/genome/")
-    }
+    //
+    // Create channel from input file provided through params.input
+    //
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map {
+            meta, fastq_1, fastq_2, fastq_umi ->
+                def meta_clone = meta.clone()
+                if (!fastq_2) {
+                    meta_clone.single_end = true
+                    if (!fastq_umi) {
+                        meta_clone.sep_umi_fq = false
+                        return [ meta_clone, [ fastq_1 ] ]
+                    } else {
+                        meta_clone.sep_umi_fq = true
+                        return [ meta_clone, [ fastq_1, fastq_umi ] ]
+                    }
+                } else {
+                    meta_clone.single_end = false
+                    if (!fastq_umi) {
+                        meta_clone.sep_umi_fq = false
+                        return [ meta_clone, [ fastq_1, fastq_2 ] ]
+                    } else {
+                        meta_clone.sep_umi_fq = true
+                        return [ meta_clone, [ fastq_1, fastq_2, fastq_umi ] ]
+                    }
+                }
+        }
+        .set { ch_fastq }
 
     //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
+    // SUBWORKFLOW: Extra validation of input samplesheet
     //
-    INPUT_CHECK(
-        ch_input,
+    INPUT_CHECK (
+        ch_fastq,
         params.seq_center
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
@@ -159,7 +183,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Read QC and trim adapters
     //
     FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE(
-        INPUT_CHECK.out.reads,
+        INPUT_CHECK.out.fastq,
         params.skip_fastqc || params.skip_qc,
         params.with_umi,
         params.skip_umi_extract,
@@ -287,14 +311,23 @@ workflow GLSEQ {
         .map { meta, bam ->
             def meta_clone = meta.clone()
             meta_clone.remove('read_group')
-            meta_clone.id = meta_clone.id.split('_')[0..-2].join('_')
-            [meta_clone, bam]
+            meta_clone.remove('trep')
+            meta_clone.id = meta_clone.id.split('_')[0..-3].join('_')
+            if (meta_clone.input_control) {
+                meta_clone.input_control = meta_clone.input_control.split('_')[0..-3].join('_')
+            }
+            def key = groupKey(meta_clone.id, meta_clone.trep_count) // trep_count defined in INPUT_CHECK subworkflow
+            [key, meta_clone, bam]
         }
         .groupTuple(by: 0)
         .map { it ->
-            [it[0], it[1].flatten()]
+            [it[1][0], it[2].flatten()]
         }
         .set { ch_sort_bam }
+
+    // TODO: print for debugging
+    ch_sort_bam.map { meta, bam -> "${meta}\t${bam}" }
+        .collectFile(name: 'ch_sort_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     PICARD_MERGESAMFILES(
         ch_sort_bam
@@ -305,7 +338,7 @@ workflow GLSEQ {
     SAMTOOLS_INDEX(
         ch_merged_bam
     )
-    ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: [0])
+    ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     BAM_STATS_SAMTOOLS(
@@ -586,18 +619,18 @@ workflow GLSEQ {
         .mix(ch_filtered_exo_index)
         .set { ch_filtered_index }
 
-    // Split the BAM and indexes into atacseq and other (for shifting)
+    // Split the BAM and indexes into 'ATAC-seq' and other (for shifting)
     ch_filtered_bam
         .branch { meta, bam ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
+            atacseq: meta.exp_type == 'ATAC-seq'
+            other: meta.exp_type != 'ATAC-seq'
         }
         .set { ch_filtered_bam }
 
     ch_filtered_index
         .branch { meta, index ->
-            atacseq: meta.exp_type == 'atacseq'
-            other: meta.exp_type != 'atacseq'
+            atacseq: meta.exp_type == 'ATAC-seq'
+            other: meta.exp_type != 'ATAC-seq'
         }
         .set { ch_filtered_index }
 
@@ -741,7 +774,7 @@ workflow GLSEQ {
         // MODULE: MultiQC custom content for Phantompeaktools
         //
         MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS(
-            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: [0]),
+            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
             ch_spp_correlation_header
@@ -852,7 +885,7 @@ workflow GLSEQ {
     // MODULE: Calculate genome size with khmer
     //
 
-    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // TODO: genome size is calculated with khmer even when not needed (no ChIP-seq samples)
     // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
     ch_effective_gsize = Channel.empty()
     if (!params.macs_gsize) {
@@ -881,50 +914,50 @@ workflow GLSEQ {
     }
 
     //
-    // Create channel for downstream processes: [ meta, [ ip_bam, control_bam ] [ ip_bai, control_bai ] ]
+    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
     //
 
     // Branch channels based on if input control is present
     ch_filtered_bam_bai
         .branch { meta, bam, bai ->
-            ips_with_control: meta.control
-                return [meta.control, meta.antibody, meta, bam, bai]
-            ips_wo_control: !meta.control && !meta.is_control
+            ips_with_ipcontrol: meta.input_control
+                return [meta.input_control, meta.antibody, meta, bam, bai]
+            ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
                 return [meta, bam, bai]
-            controls: !meta.control && meta.is_control
+            ipcontrols: !meta.input_control && meta.is_input_control
                 return [meta.id, meta, bam, bai]
         }
         .set { ch_bam_bai_by_type }
 
-    // For non-downsampled files, copy input controls for each antibody 
+    // For non-downsampled files, copy input ipcontrols for each antibody 
     ch_bam_bai_by_type
-        .controls
+        .ipcontrols
         .branch { id, meta, bam, bai ->
-            dsp: meta.control_of_antibody && meta.dSp_total_mapped_reads
-                return [id, meta.control_of_antibody, meta, bam, bai]
-            not_dsp: !meta.control_of_antibody && !meta.dSp_total_mapped_reads
+            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
+                return [id, meta.input_control_of_antibody, meta, bam, bai]
+            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
                 return [id, meta, bam, bai]
         }
-        .set { ch_bam_controls }
+        .set { ch_bam_ipcontrols }
     
-    ch_bam_controls
+    ch_bam_ipcontrols
         .not_dsp
-        .combine(ch_bam_bai_by_type.ips_with_control, by: 0) // combine by control id only
-        .map { control_id, control_meta, control_bam, control_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
-            def meta_clone = control_meta.clone()
-            meta_clone.control_of_antibody = ip_antibody
-            [ control_id, meta_clone.control_of_antibody, meta_clone, control_bam, control_bai ]
+        .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
+        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
+            def meta_clone = ipcontrol_meta.clone()
+            meta_clone.input_control_of_antibody = ip_antibody
+            [ ipcontrol_id, meta_clone.input_control_of_antibody, meta_clone, ipcontrol_bam, ipcontrol_bai ]
         }
         .unique()
-        .set { ch_bam_controls_not_dsp }
+        .set { ch_bam_ipcontrols_not_dsp }
 
-    ch_bam_controls = ch_bam_controls.dsp.mix(ch_bam_controls_not_dsp)
+    ch_bam_ipcontrols = ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp)
 
     ch_bam_bai_by_type
-        .ips_with_control
-        .combine(ch_bam_controls, by: [0,1])
-        .map { control_id, antibody, ip_meta, ip_bam, ip_bai, control_meta, control_bam, control_bai ->
-            [ ip_meta, [ip_bam] + [control_bam], [ip_bai] + [control_bai] ]
+        .ips_with_ipcontrol
+        .combine(ch_bam_ipcontrols, by: [0,1])
+        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
+            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
         }
         .set { ch_ip_control_bam_bai }
 
@@ -946,12 +979,12 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
-    // Create channels: [ meta, ip_bam, control_bam ]
+    // Create channels: [ meta, ip_bam, ipcontrol_bam ]
     ch_bam_bai_by_type
-        .ips_wo_control
+        .ips_wo_ipcontrol
         .map { meta, bam, bai -> [meta, [bam], [bai]] }
         .mix(ch_ip_control_bam_bai)
-        // ips_wo_control do not have control_bam
+        // ips_wo_ipcontrol do not have ipcontrol_bam
         .map { meta, bams, bais ->
             [meta, bams[0], (bams[1] ?: [])]
         }
@@ -960,13 +993,12 @@ workflow GLSEQ {
 
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) }
-    //ch_ip_control_bam_cs = ch_ip_control_bam.filter { it[0].exp_type != 'scarseq' && it[0].exp_type != 'ChIP-exo' }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
-        .map { meta, ip_bam, control_bam ->
-            "${meta.id}\t${ip_bam}\t${control_bam}"
+        .map { meta, ip_bam, ipcontrol_bam ->
+            "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
         }
         .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
@@ -1004,7 +1036,7 @@ workflow GLSEQ {
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER(
-            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -1067,7 +1099,7 @@ workflow GLSEQ {
     if (!params.skip_consensus_peaks) {
         // Create channels: [ antibody, [ ip_bams ] ]
         ch_ip_control_bam_cs
-            .map { meta, ip_bam, control_bam ->
+            .map { meta, ip_bam, ipcontrol_bam ->
                 [meta.antibody, ip_bam]
             }
             .groupTuple()
@@ -1098,7 +1130,7 @@ workflow GLSEQ {
     ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER(
-            ch_filtered_bam.filter { !(it[0].exp_type in ['scarseq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_blacklist,
@@ -1141,10 +1173,10 @@ workflow GLSEQ {
 
 
     ch_filtered_bam_ss = Channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['scarseq', 'OK-seq'] }
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
-    // Make ch_chrom_sizes_endo empty if there are no scarseq samples
+    // Make ch_chrom_sizes_endo empty if there are no SCAR-seq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
     ch_chrom_sizes_endo
         .combine(ch_filtered_bam_ss)
