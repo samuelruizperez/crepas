@@ -66,7 +66,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_chrom_sizes_endo
     )
     ch_windows_endo = BEDTOOLS_MAKEWINDOWS_ENDO.out.bed
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_ENDO.out.versions.first())
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_ENDO.out.versions)
 
     // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
     ch_bdg_raw
@@ -97,7 +97,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_chrom_sizes_exo
         )
         ch_windows_exo = BEDTOOLS_MAKEWINDOWS_EXO.out.bed
-        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_EXO.out.versions.first())
+        ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS_EXO.out.versions)
 
         // Create channel: [ val(meta_bdg_raw), windows, bdg_raw ]
         ch_bdg_raw

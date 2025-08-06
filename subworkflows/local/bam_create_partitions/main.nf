@@ -150,7 +150,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
     // count number of lines in the windows file
     ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions.first())
+    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions)
 
     // TODO: print for debugging
     ch_num_windows
