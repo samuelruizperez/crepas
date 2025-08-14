@@ -7,7 +7,6 @@
 ----------------------------------------------------------------------------------------
 */
 
-nextflow.enable.dsl = 2
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -17,7 +16,7 @@ nextflow.enable.dsl = 2
 
 params.fasta                  = getGenomeAttribute('fasta')
 params.bwa_index              = getGenomeAttribute('bwa')
-params.bowtie2_index          = getGenomeAttribute('bowtie2')
+params.bowtie2_index          = getGenomeAttribute('bowtie2_index')
 params.chromap_index          = getGenomeAttribute('chromap')
 params.star_index             = getGenomeAttribute('star')
 params.hisat2_index           = getGenomeAttribute('hisat2')
@@ -30,8 +29,8 @@ params.active_regions         = getGenomeAttribute('active_regions')
 params.rocco_params           = getGenomeAttribute('rocco_params')
 params.splicesites            = getGenomeAttribute('splicesites')
 params.initiation_zones       = getGenomeAttribute('initiation_zones')
-params.tecount_gene_index = getGenomeAttribute('tecount_gene_index')
-params.telocal_gene_index = getGenomeAttribute('telocal_gene_index')
+params.tecount_gene_index     = getGenomeAttribute('tecount_gene_index')
+params.telocal_gene_index     = getGenomeAttribute('telocal_gene_index')
 params.te_gtf                 = getGenomeAttribute('te_gtf')
 params.tecount_te_index       = getGenomeAttribute('tecount_te_index')
 params.telocal_te_index       = getGenomeAttribute('telocal_te_index')
@@ -61,7 +60,9 @@ workflow GROTHLAB_GLSEQ {
     main:
     ch_versions = Channel.empty()
 
-    // SUBWORKFLOW: Prepare genome files
+    //
+    // SUBWORKFLOW: Prepare reference genome files
+    //
     PREPARE_GENOME (
         params.genome,
         params.genomes,
@@ -183,9 +184,12 @@ def getGenomeAttribute(attribute) {
     if (params.genomes && params.genome && params.genomes.containsKey(params.genome)) {
         if (params.genomes[ params.genome ].containsKey(attribute)) {
             return params.genomes[ params.genome ][ attribute ]
+        } else {
+            return null
         }
+    } else {
+        return null
     }
-    return null
 }
 
 //
