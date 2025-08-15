@@ -514,6 +514,12 @@
                     "default": false,
                     "description": "Whether to skip the flT3 filtering step (filtering by mapping quality, which also removes multimapping reads in most cases).",
                     "fa_icon": "fas fa-filter"
+                },
+                "skip_flTbl": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the blacklist filtering step. This serves to skip the removal of blacklisted regions from the BAM files even if a blacklist BED file is provided.",
+                    "fa_icon": "fas fa-filter"
                 }
             }
         },

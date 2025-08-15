@@ -36,6 +36,7 @@ include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/ma
 include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
 include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
 include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
+include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
 
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
@@ -54,13 +55,14 @@ include {
 workflow PREPARE_GENOME {
     take:
     genome             //    string: genome name
-    genomes            //    map: genome attributes
     spikein_genome     //    string: spikein genome name
     prepare_tool_index //    string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
     blacklist          //    file: /path/to/blacklist.bed
+    read_length        //    integer: read length for khmer
+    macs_gsize         //    string: genome size for MACS2
     sparsebed          //    file: /path/to/sparsebed.bed
     active_regions     //    file: /path/to/active_regions.bed
     rocco_params       //    file: /path/to/rocco_params.yml
@@ -178,18 +180,7 @@ workflow PREPARE_GENOME {
     //
     // Uncompress gene BED annotation file or create from GTF if required
     //
-    // If --gtf is supplied along with --genome
-    // Make gene bed from supplied --gtf instead of using iGenomes one automatically
-    def make_bed = false
     if (!gene_bed) {
-        make_bed = true
-    } else if (genome && gtf) {
-        if (genomes[ genome ].gtf != gtf) {
-            make_bed = true
-        }
-    }
-
-    if (make_bed) {
         ch_gene_bed = GTF2BED ( ch_gtf ).bed
         ch_versions = ch_versions.mix(GTF2BED.out.versions)
     } else {
@@ -219,6 +210,47 @@ workflow PREPARE_GENOME {
         ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
         ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
     }
+
+    //
+    // MODULE: Calculate genome size with khmer
+    //
+
+    // TODO: genome size is calculated with khmer even when not needed (no chipseq samples)
+    // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
+    ch_effective_gsize = Channel.empty()
+    if (!macs_gsize) {
+        KHMER_UNIQUEKMERS (
+            ch_fasta,
+            read_length
+        )
+        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
+    }
+
+    // Create a channel with the effective genome fraction
+    ch_chrom_sizes_endo
+        .map { meta, bed ->
+            bed.splitCsv(header: false, sep: '\t')
+        }
+        .flatMap { bed ->
+            bed.collect { chr, size ->
+                [size.toLong()]
+            }
+        }
+        .sum()
+        .combine(ch_effective_gsize)
+        .map { size, egs ->
+            egs.toDouble() / size.toDouble()
+        }
+        .set { ch_effective_gfraction }
+
+    // TODO: Print to file for debuggin
+    ch_effective_gfraction
+        .map { egf ->
+            "${egf}"
+        }
+        .collectFile(name: 'ch_effective_gfraction.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/PREPARE_GENOME")
+
+
 
     //
     // Prepare genome intervals for filtering by removing regions in blacklist file
@@ -405,6 +437,8 @@ workflow PREPARE_GENOME {
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
     chrom_sizes_exo        = ch_chrom_sizes_exo       //    channel: [ val(meta), [ genome_exo.sizes ]]
+    effective_gsize         = ch_effective_gsize         //    channel: [ val(meta), [ effective_genome_size.txt ]]
+    effective_gfraction    = ch_effective_gfraction
     whitelist              = ch_whitelist    //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist              = ch_blacklist              //    channel: [  blacklist.bed ]
     sparsebed              = ch_sparsebed              //    channel: [ val(meta), [ sparsebed.bed ]]
