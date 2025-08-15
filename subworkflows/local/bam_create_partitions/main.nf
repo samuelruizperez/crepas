@@ -1,6 +1,7 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
+include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
@@ -122,12 +123,21 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
+    //
+    // MODULE: Sort the bedgraph so that it works with bedgraphtobigwig
+    //
+    BEDGRAPH_SORT (
+        BEDTOOLS_GENOMECOV.out.genomecov,
+        'bedgraph'
+    )
+    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
+
 
     //
     // MODULE: Convert bedgraph to bigwig
     //
     BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
-        BEDTOOLS_GENOMECOV.out.genomecov,
+        BEDGRAPH_SORT.out.sorted,
         ch_chrom_sizes
     )
     ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
