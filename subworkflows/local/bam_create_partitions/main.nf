@@ -8,7 +8,7 @@ include { BEDGRAPH_NORMALIZE                                            } from '
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                          } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                          } from '../../../modules/local/collect_partitions/main'
-include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
@@ -132,16 +132,15 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
-
     //
     // MODULE: Convert bedgraph to bigwig
     //
-    BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
+    UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
         BEDGRAPH_SORT.out.sorted,
-        ch_chrom_sizes
+        ch_chrom_sizes.map { it[1] }
     )
-    ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
-    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
+    ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
     // TODO: print for debugging
     ch_bigwig
