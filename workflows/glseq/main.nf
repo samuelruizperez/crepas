@@ -64,7 +64,6 @@ include { DEEPTOOLS_COMPUTEMATRIX                                     } from '..
 include { DEEPTOOLS_PLOTPROFILE                                       } from '../../modules/nf-core/deeptools/plotprofile/main'
 include { DEEPTOOLS_PLOTHEATMAP                                       } from '../../modules/nf-core/deeptools/plotheatmap/main'
 include { DEEPTOOLS_PLOTFINGERPRINT                                   } from '../../modules/nf-core/deeptools/plotfingerprint/main'
-include { KHMER_UNIQUEKMERS                                           } from '../../modules/nf-core/khmer/uniquekmers/main'
 include { MULTIQC                                                     } from '../../modules/nf-core/multiqc/main'
 
 //
@@ -98,6 +97,8 @@ workflow GLSEQ {
     ch_gene_bed               // channel: path(gene.beds)
     ch_chrom_sizes_endo       // path(chrom.sizes.endo)
     ch_chrom_sizes_exo
+    ch_effective_gsize        
+    ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
     ch_sparsebed              // channel: path(sparse.bed)
@@ -706,7 +707,13 @@ workflow GLSEQ {
             .set { ch_filtered_index }
     }
 
-    if (params.blacklist) {
+    ch_pre_flTbl_bam = Channel.empty()
+    ch_pre_flTbl_index = Channel.empty()
+    if (!params.skip_flTbl) {
+
+        // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
+        ch_pre_flTbl_bam = ch_filtered_bam
+        ch_pre_flTbl_index = ch_filtered_index
 
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
@@ -869,7 +876,8 @@ workflow GLSEQ {
     //
     if (!params.skip_te_counting) {
         TE_COUNTING(
-            ch_filtered_bam,
+            // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
+            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
             ch_fasta,
             false,
             ch_tecount_gene_index,
@@ -882,6 +890,8 @@ workflow GLSEQ {
     }
 
     //
+<<<<<<< HEAD
+=======
     // MODULE: Calculate genome size with khmer
     //
 
@@ -898,6 +908,7 @@ workflow GLSEQ {
     }
 
     //
+>>>>>>> origin/dev
     // SUBWORKFLOW: Call consensus regions with Consenrich and ROCCO
     //
     if (!params.skip_consenrich) {
@@ -1001,31 +1012,6 @@ workflow GLSEQ {
             "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
         }
         .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
-
-
-    // Create a channel with the effective genome fraction
-    ch_chrom_sizes_endo
-        .map { meta, bed ->
-            bed.splitCsv(header: false, sep: '\t')
-        }
-        .flatMap { bed ->
-            bed.collect { chr, size ->
-                [size.toLong()]
-            }
-        }
-        .sum()
-        .combine(ch_effective_gsize)
-        .map { size, egs ->
-            egs.toDouble() / size.toDouble()
-        }
-        .set { ch_effective_gfraction }
-
-    // TODO: Print to file for debuggin
-    ch_effective_gfraction
-        .map { egf ->
-            "${egf}"
-        }
-        .collectFile(name: 'ch_effective_gfraction.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
