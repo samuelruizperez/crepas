@@ -9,7 +9,7 @@ include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '
 include { PARTITION_OR_RFD_SMOOTH                                          } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                          } from '../../../modules/local/collect_partitions/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
@@ -460,11 +460,11 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // MODULE: Convert the final partition bedgraph to bigwig
     //
-    BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS (
+    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
         COLLECT_PARTITIONS.out.bdg,
-        ch_chrom_sizes
+        ch_chrom_sizes.map { it[1] }
     )
-    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
