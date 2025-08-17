@@ -1,14 +1,15 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
+include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                          } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                          } from '../../../modules/local/collect_partitions/main'
-include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
-include { BIGTOOLS_BEDGRAPHTOBIGWIG as BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/local/bigtools/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { PARTITION_PLOT                                      } from '../../../modules/local/partition_plot/main'
 
 
@@ -122,16 +123,24 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
+    //
+    // MODULE: Sort the bedgraph so that it works with bedgraphtobigwig
+    //
+    BEDGRAPH_SORT (
+        BEDTOOLS_GENOMECOV.out.genomecov,
+        'bedgraph'
+    )
+    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
     //
     // MODULE: Convert bedgraph to bigwig
     //
-    BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS (
-        BEDTOOLS_GENOMECOV.out.genomecov,
-        ch_chrom_sizes
+    UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
+        BEDGRAPH_SORT.out.sorted,
+        ch_chrom_sizes.map { it[1] }
     )
-    ch_bigwig = BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
-    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
+    ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
     // TODO: print for debugging
     ch_bigwig
@@ -451,11 +460,11 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // MODULE: Convert the final partition bedgraph to bigwig
     //
-    BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS (
+    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
         COLLECT_PARTITIONS.out.bdg,
-        ch_chrom_sizes
+        ch_chrom_sizes.map { it[1] }
     )
-    ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
