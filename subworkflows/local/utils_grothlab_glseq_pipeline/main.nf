@@ -425,15 +425,15 @@ def validateInputParameters() {
         error("Genome fasta file not specified with e.g. '--fasta genome.fa' or via a detectable config file.")
     }
 
-    if (!params.gtf && !params.gff) {
+    if (!params.gtf && !params.containsKey('gff')) {
         error("No GTF or GFF3 annotation specified! The pipeline requires at least one of these files.")
     }
 
-    if (params.gtf && params.gff) {
+    if (params.gtf && params.containsKey('gff')) {
         gtfGffWarn(log)
     }
 
-    if (!params.macs_gsize) {
+    if (!params.containsKey('macs_gsize')) {
         macsGsizeWarn(log)
     }
 
