@@ -2,10 +2,10 @@
 name: "bam_create_partitions"
 description: Splitting BAM files by strand, calculating coverage, normalizing and creating partitions (SCAR-seq and OK-seq)
 keywords:
-  - scarseq
-  - okseq
+  - SCAR-seq
+  - OK-seq
   - partition
-  - rfd
+  - RFD
 components:
   - bam_split_by_strand
   - samtools/index

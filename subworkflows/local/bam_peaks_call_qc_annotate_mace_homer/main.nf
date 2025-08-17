@@ -31,8 +31,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     ch_bam_bai
         .map { meta, bam, bai ->
             def meta_clone = meta.clone()
-            meta_clone.id = meta_clone.id - ~/_REP\d+$/
-            meta_clone.control = meta_clone.control - ~/_REP\d+$/
+            meta_clone.id = meta_clone.id - ~/_bRep_.*$/
+            meta_clone.input_control = meta_clone.input_control - ~/_bRep_.*$/
             [meta_clone.id, meta_clone, bam, bai]
         }
         .groupTuple()

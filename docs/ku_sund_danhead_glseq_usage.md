@@ -127,7 +127,7 @@
 4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
     ```bash
-    module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+    module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
     ```
 
 5. Create an output directory for your pipeline run if it does not exist and move into it:
@@ -187,7 +187,7 @@ If you would prefer to submit the pipeline job to the queue rather than run an i
 source ~/.bashrc
 
 # Load the required modules
-module load openjdk/20.0.0 nextflow/24.04.4 singularity/3.8.7
+module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
 
 # Create an output directory for the pipeline run if it does not exist
 mkdir -p <path_to_output_directory>
