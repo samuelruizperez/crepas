@@ -208,6 +208,14 @@
                     "hidden": true,
                     "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`.",
                     "default": true
+                },
+                "refgenie_ignore": {
+                    "type": "boolean",
+                    "description": "Whether to ignore the Refgenie reference genomes.",
+                    "fa_icon": "fas fa-ban",
+                    "hidden": true,
+                    "help_text": "Do not use the Refgenie reference genomes, even if loaded before through config files.",
+                    "default": true
                 }
             }
         },
