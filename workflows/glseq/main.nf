@@ -99,6 +99,8 @@ workflow GLSEQ {
     ch_chrom_sizes_exo
     ch_effective_gsize        
     ch_effective_gfraction
+    ch_effective_gsize        
+    ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
     ch_sparsebed              // channel: path(sparse.bed)
@@ -714,6 +716,13 @@ workflow GLSEQ {
         // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
         ch_pre_flTbl_bam = ch_filtered_bam
         ch_pre_flTbl_index = ch_filtered_index
+    ch_pre_flTbl_bam = Channel.empty()
+    ch_pre_flTbl_index = Channel.empty()
+    if (!params.skip_flTbl) {
+
+        // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
+        ch_pre_flTbl_bam = ch_filtered_bam
+        ch_pre_flTbl_index = ch_filtered_index
 
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
@@ -878,6 +887,8 @@ workflow GLSEQ {
         TE_COUNTING(
             // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
             ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
+            // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
+            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
             ch_fasta,
             false,
             ch_tecount_gene_index,
@@ -887,24 +898,6 @@ workflow GLSEQ {
             params.skip_telocal
         )
         ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
-    }
-
-    //
-<<<<<<< HEAD
-=======
-    // MODULE: Calculate genome size with khmer
-    //
-
-    // TODO: genome size is calculated with khmer even when not needed (no ChIP-seq samples)
-    // this is could be a workaround (https://github.com/nextflow-io/nextflow/discussions/5102#discussioncomment-9939140)
-    ch_effective_gsize = Channel.empty()
-    if (!params.macs_gsize) {
-        // && need_macs_gsize) {
-        KHMER_UNIQUEKMERS(
-            ch_fasta,
-            params.read_length
-        )
-        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
     }
 
     //
