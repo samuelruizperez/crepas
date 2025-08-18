@@ -422,7 +422,7 @@ workflow BAM_DOWNSAMPLE {
     //
     // MODULE: Downsample BAMs
     //
-    PICARD_DOWNSAMPLESAM(
+    PICARD_DOWNSAMPLESAM (
         ch_bam_bai_to_ds,
         ch_fasta,
         ch_fai
@@ -479,10 +479,10 @@ workflow BAM_DOWNSAMPLE {
         .set { ch_ds_bam_bai }
 
     emit:
-    bam      = ch_ds_bam_bai.map { meta, bam, bai -> [meta, bam] } // channel: [ val(meta), [ bam ] ]
-    bai      = ch_ds_bam_bai.map { meta, bam, bai -> [meta, bai] } // channel: [ val(meta), [ index ] ]
-    stats    = BAM_STATS_SAMTOOLS.out.stats // channel: [ val(meta), [ stats ] ]
-    flagstat = ch_ds_flagstat // channel: [ val(meta), [ flagstat ] ]
-    idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-    versions = ch_versions // channel: [ versions.yml ]
+    bam      = ch_ds_bam_bai.map { meta, bam, bai -> [ meta, bam ] } // channel: [ val(meta), [ bam ] ]
+    bai      = ch_ds_bam_bai.map { meta, bam, bai -> [ meta, bai ] } // channel: [ val(meta), [ index ] ]
+    stats    = BAM_STATS_SAMTOOLS.out.stats                          // channel: [ val(meta), [ stats ] ]
+    flagstat = ch_ds_flagstat                                        // channel: [ val(meta), [ flagstat ] ]
+    idxstats = BAM_STATS_SAMTOOLS.out.idxstats                       // channel: [ val(meta), [ idxstats ] ]
+    versions = ch_versions                                           // channel: [ versions.yml ]
 }

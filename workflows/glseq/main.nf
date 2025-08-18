@@ -754,6 +754,14 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
     }
 
+    // TODO: print for debugging
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile(name: 'ch_filtered_bam_bai_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+
+
     //
     // MODULE: Picard post alignment QC
     //
@@ -816,6 +824,13 @@ workflow GLSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect { it[1] })
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
     }
+
+    // TODO: print for debugging
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile(name: 'ch_filtered_bam_bai_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks

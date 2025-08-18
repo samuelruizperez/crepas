@@ -53,6 +53,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE_BINS.out.bedgraph
     ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINS.out.versions.first())
 
+    // TODO: print for debugging
+    ch_bdg_raw
+        .map { meta, bdg ->
+            "${meta}\t${bdg}"
+        }
+        .collectFile( name: 'ch_bdg_raw.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+
     // bamCoverage merges contiguous bins with the same coverage and there is no option to disable this.
     // See https://github.com/deeptools/deepTools/issues/907#issuecomment-576729674
     // Therefore, to get bins of equal size across the whole genome,
@@ -146,7 +153,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .ipcontrol
         .branch { meta, bdg ->
             dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
-                return [ meta.id, meta.input_control_of_antibody, meta, bdg ]
+                return [ meta, bdg ] // [ meta.id, meta.input_control_of_antibody, meta, bdg ]
             not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
                 return [ meta.id, meta, bdg ]
         }
@@ -177,6 +184,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .mix(ch_ipcontrols_not_dsp)
         .mix(ch_bdg_map_type.ip.map { ipcontrol_id, antibody, meta, bdg -> [ meta, bdg ] })
         .set { ch_bdg_map_mod }
+
+    // TODO: print for debugging
+    ch_bdg_map_mod
+        .map { meta, bdg ->
+            "${meta}\t${bdg}"
+        }
+        .collectFile( name: 'ch_bdg_map_mod.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     // RPM normalization factors
     ch_bdg_rpm = Channel.empty()
@@ -228,23 +242,46 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 [ meta.id, antibody_to_use, meta, bdg ]
             }
+            .tap { ch_tmp_debug0 }
             .branch { id, antibody, meta, bdg ->
                 endo: meta.genome == genome
                 exo: meta.genome == spikein_genome
             }
             .set { ch_bdg_genome }
 
+        // TODO: print for debugging
+        ch_tmp_debug0
+            .map { it ->
+                "${it}"
+            }
+            .collectFile( name: 'ch_tmp_debug0.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+
+        // TODO: print for debugging
+        ch_bdg_genome.endo
+            .map { it ->
+                "${it}"
+            }
+            .collectFile( name: 'ch_bdg_srpm_genome_endo.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+
+        // TODO: print for debugging
+        ch_bdg_genome.exo
+            .map { it ->
+                "${it}"
+            }
+            .collectFile( name: 'ch_bdg_srpm_genome_exo.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+
+
         ch_bdg_genome.endo
             .combine(ch_bdg_genome.exo, by: [0,1])
+            .tap { ch_tmp_debug1 }
             .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
-                def antibody_to_use = meta_clone.antibody ?: meta_clone.input_control_of_antibody
                 // If it was downsampled before, we want to use dSp_total_mapped_reads
                 if (exo_meta.dSp_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.dSp_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                } else if (srpm_use_flT2_total && antibody_to_use in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads && !exo_meta.flTbl_total_mapped_reads) {
+                // if antibody is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
+                } else if (srpm_use_flT2_total && antibody in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads && !exo_meta.flTbl_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else if (exo_meta.flTbl_total_mapped_reads) {
@@ -258,13 +295,22 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 [ meta_clone, endo_bdg ]
             }
             .set { ch_bdg_srpm }
+
+    // TODO: print for debugging
+    ch_tmp_debug1
+        .map { it ->
+                "${it}"
+        }
+        .collectFile( name: 'ch_tmp_debug1.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+
+
     }
+
 
     // TODO: print for debugging
     ch_bdg_srpm
-        .map {
-            meta, bdg ->
-                "${meta}\t${bdg}"
+        .map { it ->
+            "${it}"
         }
         .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
