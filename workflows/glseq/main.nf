@@ -707,13 +707,13 @@ workflow GLSEQ {
             .set { ch_filtered_index }
     }
 
-    ch_pre_flTbl_bam = Channel.empty()
-    ch_pre_flTbl_index = Channel.empty()
+    //ch_pre_flTbl_bam = Channel.empty()
+    //ch_pre_flTbl_index = Channel.empty()
     if (!params.skip_flTbl) {
 
         // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
-        ch_pre_flTbl_bam = ch_filtered_bam
-        ch_pre_flTbl_index = ch_filtered_index
+        //ch_pre_flTbl_bam = ch_filtered_bam
+        //ch_pre_flTbl_index = ch_filtered_index
 
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
@@ -892,7 +892,7 @@ workflow GLSEQ {
     if (!params.skip_te_counting) {
         TE_COUNTING(
             // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
-            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
+            ch_filtered_bam,//.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
             ch_fasta,
             false,
             ch_tecount_gene_index,
