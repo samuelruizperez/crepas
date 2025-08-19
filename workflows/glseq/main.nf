@@ -960,6 +960,14 @@ workflow GLSEQ {
 
     ch_bam_ipcontrols = ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp)
 
+    // This is to rejoin ch_filtered_bam_bai with controls with updated meta
+    ch_bam_bai_by_type.ips_wo_ipcontrol
+        .mix(ch_bam_ipcontrols.map { ipcontrol_id, antibody, meta, ipcontrol_bam, ipcontrol_bai -> [ meta, ipcontrol_bam, ipcontrol_bai ] })
+        .mix(ch_bam_bai_by_type.ips_with_ipcontrol.map { ipcontrol_id, antibody, meta, bam, bai -> [ meta, bam, bai ] })
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
+
     ch_bam_bai_by_type
         .ips_with_ipcontrol
         .combine(ch_bam_ipcontrols, by: [0,1])

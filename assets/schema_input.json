@@ -65,8 +65,8 @@
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^\\S+\\.(txt|tsv)\\.gz$",
-                "errorMessage": "GZIP-compressed text file for OK-seq RFD/partition cannot contain spaces and must have extension '.txt.gz' or '.tsv.gz'",
+                "pattern": "^\\S+\\.(txt|tsv|bed)\\.gz$",
+                "errorMessage": "GZIP-compressed text file for OK-seq RFD/partition cannot contain spaces and must have extension '.txt.gz', '.tsv.gz' or '.bed.gz'",
                 "meta": ["okseq_part_file"]
             },
             "fastq_1": {

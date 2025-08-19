@@ -259,7 +259,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_norm_by_type
         .scar_with_ipcontrol
         .combine(ch_norm_by_type.ipcontrol, by: [0, 1, 2]) // combine by id, antibody, and strand
-        .map { input_id, antibody, strand, scar_meta, scar_bdg, input_bdg ->
+        .map { ipcontrol_id, antibody, strand, scar_meta, scar_bdg, input_bdg ->
             def meta_clone = scar_meta.clone()
                 meta_clone.signal_minus_input = true
                 [ meta_clone, scar_bdg, input_bdg ]
@@ -427,8 +427,8 @@ workflow BAM_CREATE_PARTITIONS {
 
     ch_partitions_by_type
         .scar_with_ipcontrol
-        .combine(ch_partitions_by_type.ipcontrol, by: 0) // this creates channel: [ input_id, meta_scar, scar_tsv, input_tsv ]
-        .map { input_id, meta_scar, scar_tsv, input_tsv ->
+        .combine(ch_partitions_by_type.ipcontrol, by: 0) // this creates channel: [ ipcontrol_id, meta_scar, scar_tsv, input_tsv ]
+        .map { ipcontrol_id, meta_scar, scar_tsv, input_tsv ->
             [ meta_scar.id, meta_scar, scar_tsv, input_tsv ]
         }
         .combine(ch_partitions_by_type.minusipcontrol, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
