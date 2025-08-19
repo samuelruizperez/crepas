@@ -124,7 +124,7 @@ workflow INPUT_CHECK {
                 new_metas = metas.collect { meta ->
                     def meta_clone = meta.clone()
                     meta_clone.trep = trep_counter
-                    meta_clone.input_trep = meta_clone.trep
+                    meta_clone.input_trep = !meta.is_input_control ? meta_clone.trep : []
                     trep_counter += 1
                     return meta_clone
                 }
