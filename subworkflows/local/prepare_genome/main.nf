@@ -258,7 +258,7 @@ workflow PREPARE_GENOME {
     ch_whitelist = Channel.empty()
     GENOME_WHITELIST_REGIONS (
         ch_chrom_sizes_endo,
-        ch_blacklist.ifEmpty([[:], []])
+        ch_blacklist//.ifEmpty([[:], []])
     )
     ch_whitelist = GENOME_WHITELIST_REGIONS.out.bed
     ch_versions = ch_versions.mix(GENOME_WHITELIST_REGIONS.out.versions)
