@@ -434,7 +434,7 @@ def validateInputParameters() {
     }
 
     if (!params.skip_flTbl) {
-        if (!params.containsKey('blacklist')) {$
+        if (!params.containsKey('blacklist')) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
                 error("Blacklist filtering is enabled ('--skip_flTbl true'), a blacklist file ('--blacklist') has not been provided, and reference genomes are being ignored ('--refgenie_ignore true' and '--igenomes_ignore true').")
             } else if (!getGenomeAttribute('blacklist')) {
