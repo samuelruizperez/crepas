@@ -433,6 +433,18 @@ def validateInputParameters() {
         gtfGffWarn(log)
     }
 
+    if (!params.skip_flTbl) {
+        if (!params.containsKey('blacklist')) {$
+            if (params.refgenie_ignore && params.igenomes_ignore) {
+                error("Blacklist filtering is enabled ('--skip_flTbl true'), a blacklist file ('--blacklist') has not been provided, and reference genomes are being ignored ('--refgenie_ignore true' and '--igenomes_ignore true').")
+            } else if (!getGenomeAttribute('blacklist')) {
+                error("Blacklist filtering is enabled ('--skip_flTbl true') but no valid blacklist file has been found among reference genomes (iGenomes or Refgenie).")
+            }
+        } else {
+            error("Blacklist filtering is enabled ('--skip_flTbl true') but no valid blacklist file has been provided.")
+        }
+    }
+
     if (!params.containsKey('macs_gsize')) {
         macsGsizeWarn(log)
     }
