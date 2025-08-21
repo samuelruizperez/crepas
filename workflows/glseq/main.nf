@@ -738,6 +738,11 @@ workflow GLSEQ {
             }
             .set { ch_flt_bam_bai_by_genome_exo }
    
+        // TODO: print for debugging
+        ch_flt_bam_bai_by_genome.endo
+            .map { it -> "${it}"}
+            .collectFile(name: 'ch_flt_bam_bai_by_genome_endo_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+
         //
         // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
         //

@@ -11,7 +11,7 @@ process GENOME_WHITELIST_REGIONS {
 
     input:
     tuple val(meta), path(sizes)
-    path blacklist
+    tuple val(meta2), path(blacklist)
 
     output:
     tuple val(meta), path("*.bed")     , emit: bed
