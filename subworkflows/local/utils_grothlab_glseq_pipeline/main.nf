@@ -440,8 +440,7 @@ def validateInputParameters() {
             } else if (!getGenomeAttribute('blacklist')) {
                 error("Blacklist filtering is enabled ('--skip_flTbl false') but no valid blacklist file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
             }
-        } else {
-            error("Blacklist filtering is enabled ('--skip_flTbl false') but no valid blacklist file has been provided. You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
+        error("Blacklist filtering is enabled ('--skip_flTbl false') but no valid blacklist file has been provided. You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
         }
     }
 
