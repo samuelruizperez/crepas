@@ -436,12 +436,12 @@ def validateInputParameters() {
     if (!params.skip_flTbl) {
         if (!params.containsKey('blacklist')) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
-                error("Blacklist filtering is enabled ('--skip_flTbl true'), a blacklist file ('--blacklist') has not been provided, and reference genomes are being ignored ('--refgenie_ignore true' and '--igenomes_ignore true').")
+                error("Blacklist filtering is enabled ('--skip_flTbl false'), a blacklist file ('--blacklist') has not been provided, and reference genomes are being ignored ('--refgenie_ignore true' and '--igenomes_ignore true'). You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
             } else if (!getGenomeAttribute('blacklist')) {
-                error("Blacklist filtering is enabled ('--skip_flTbl true') but no valid blacklist file has been found among reference genomes (iGenomes or Refgenie).")
+                error("Blacklist filtering is enabled ('--skip_flTbl false') but no valid blacklist file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
             }
         } else {
-            error("Blacklist filtering is enabled ('--skip_flTbl true') but no valid blacklist file has been provided.")
+            error("Blacklist filtering is enabled ('--skip_flTbl false') but no valid blacklist file has been provided. You should set the pipeline to skip blacklist filtering ('--skip_flTbl') or provide a blacklist.")
         }
     }
 
