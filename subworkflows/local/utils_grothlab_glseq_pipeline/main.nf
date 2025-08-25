@@ -297,9 +297,6 @@ workflow INPUT_CHECK {
             } else if (meta.strandedness) {
                 error("ERROR: Strandedness must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
             }
-            if ( meta.okseq_part_file && meta.exp_type != 'SCAR-seq' ) {
-                error("ERROR: OK-seq partition file must not be specified for samples other than SCAR-seq. Check sample: ${meta.id}")
-            }
             // Antibody checks
             if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {

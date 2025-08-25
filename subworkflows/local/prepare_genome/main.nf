@@ -12,6 +12,7 @@ include {
     GUNZIP as GUNZIP_ROCCO_PARAMS
     GUNZIP as GUNZIP_BLACKLIST
     GUNZIP as GUNZIP_INITIATION_ZONES
+    GUNZIP as GUNZIP_OKSEQ_RFD_FILE
     GUNZIP as GUNZIP_SPLICESITES
     GUNZIP as GUNZIP_TECOUNT_GENE_INDEX
     GUNZIP as GUNZIP_TELOCAL_GENE_INDEX
@@ -73,6 +74,7 @@ workflow PREPARE_GENOME {
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
     splicesites        //    file: /path/to/splicesites.txt
+    okseq_rfd_file     //    file: /path/to/okseq_rfd_file.bed
     initiation_zones   //    file: /path/to/initiation_zones.bed
     skip_te_counting   //    boolean: skip TE counting
     skip_telocal    //    boolean: skip TElocal indexing
@@ -163,6 +165,16 @@ workflow PREPARE_GENOME {
             ch_versions  = ch_versions.mix(GUNZIP_BLACKLIST.out.versions)
         } else {
             ch_blacklist = Channel.value( [ [id:'blacklist'], file(blacklist, checkIfExists: true) ] )
+        }
+    }
+
+    ch_okseq_rfd_file = Channel.empty()
+    if (okseq_rfd_file) {
+        if (okseq_rfd_file.endsWith('.gz')) {
+            ch_okseq_rfd_file = GUNZIP_OKSEQ_RFD_FILE ( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] ).gunzip
+            ch_versions = ch_versions.mix(GUNZIP_OKSEQ_RFD_FILE.out.versions)
+        } else {
+            ch_okseq_rfd_file = Channel.value( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] )
         }
     }
 
@@ -436,23 +448,24 @@ workflow PREPARE_GENOME {
     gtf                    = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
-    chrom_sizes_exo        = ch_chrom_sizes_exo       //    channel: [ val(meta), [ genome_exo.sizes ]]
-    effective_gsize         = ch_effective_gsize         //    channel: [ val(meta), [ effective_genome_size.txt ]]
+    chrom_sizes_exo        = ch_chrom_sizes_exo        //    channel: [ val(meta), [ genome_exo.sizes ]]
+    effective_gsize        = ch_effective_gsize        //    channel: [ val(meta), [ effective_genome_size.txt ]]
     effective_gfraction    = ch_effective_gfraction
-    whitelist              = ch_whitelist    //    channel: [ val(meta), [ *.include_regions.bed ]]
+    whitelist              = ch_whitelist              //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist              = ch_blacklist              //    channel: [  blacklist.bed ]
     sparsebed              = ch_sparsebed              //    channel: [ val(meta), [ sparsebed.bed ]]
     active_regions         = ch_active_regions         //    channel: [ val(meta), [ active_regions.bed ]]
     rocco_params           = ch_rocco_params           //    channel: [ val(meta), [ rocco_params.yml ]]
-    initiation_zones       = ch_initiation_zones      //    channel: [ val(meta), [ initiation_zones.bed ]]
+    okseq_rfd_file         = ch_okseq_rfd_file         //    channel: [ val(meta), [ okseq_rfd_file.bed ]]
+    initiation_zones       = ch_initiation_zones       //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index              = ch_bwa_index              //    path: bwa/index/
     bowtie2_index          = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index          = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index           = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
     splicesites            = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
-    tecount_gene_index = ch_tecount_gene_index //    channel: [ val(meta), [ tecount_gene_index.Ind ]]
-    telocal_gene_index = ch_telocal_gene_index //    channel: [ val(meta), [ telocal_gene_index.Ind ]]
+    tecount_gene_index     = ch_tecount_gene_index     //    channel: [ val(meta), [ tecount_gene_index.Ind ]]
+    telocal_gene_index     = ch_telocal_gene_index     //    channel: [ val(meta), [ telocal_gene_index.Ind ]]
     tecount_te_index       = ch_tecount_te_index       //    channel: [ val(meta), [ tecount_te_index.Ind ]]
     telocal_te_index       = ch_telocal_te_index       //    channel: [ val(meta), [ telocal_te_index.locInd ]]
     versions               = ch_versions                //    channel: [ versions.yml ]

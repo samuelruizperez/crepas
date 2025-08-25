@@ -322,7 +322,7 @@ Initiation zone BED files are inputted using the `--initiation_zones` parameter,
 
 ### OK-seq partitions
 
-Okazaki fragment sequencing (OK-seq) partition BED files are inputted for each SCAR-seq sample through the [`okseq_part_file` column](#samplesheet-input) in the samplesheet, and can be found at:
+Okazaki fragment sequencing (OK-seq) partition BED files are inputted using the `--okseq_rfd_file` parameter, and can be found at:
 
 ```bash
 /maps/projects/dan1/data/Groth_group/shared/references/<organism>/<genome_version>/external_data/Replication/Okasaki_seq/rfd_files/OKseq_RFD_*.bed.gz

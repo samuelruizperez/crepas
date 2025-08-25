@@ -37,7 +37,6 @@ It has to be a comma-separated (`.csv`) file with with at least the `sample`, `b
 | `exp_type` | One of `ChIP-seq`, `ATAC-seq`, `SCAR-seq`, `ChOR-seq`, `ChIP-exo`, or `OK-seq` | `string` | true |
 | `strandedness` | Either `forward` or `reverse`: <br><br><ul><li>If the library was prepared using NGS indexed PentAdapter™ adapters (PentaBase ApS, Denmark), as in the [SCAR-seq paper](https://doi.org/10.1038/s41596-021-00585-3), set this to `forward`.</li><li>If the library was prepared using [xGen™ UDI-UMI Adapters](https://eu.idtdna.com/page/products/next-generation-sequencing/ngs-adapters-indexing-primers) (Integrated DNA Technologies, Inc.), the [insert strandedness is flipped](https://eu.idtdna.com/pages/support/faqs/can-the-xgen-unique-dual-index-umi-adapters-be-used-for-rna-seq), so set this to `reverse`.</li></ul><br>This field is only relevant for SCAR-seq and OK-seq; leave it empty for unstranded data (ChIP-seq, ChIP-exo, ChOR-seq, or ATAC-seq). | `string` |  |
 | `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. It should be empty in the case of input control rows. | `string` |  |
-| `okseq_part_file` | GZIP-compressed text file for OK-seq RFD/partition cannot contain spaces and must have extension `.txt.gz` or `.tsv.gz`. Only use for SCAR-seq data. Leave empty if OK-seq data is not available. | `string` (`file-path`) |  |
 | `fastq_1` | GZIP-compressed FastQ file for reads 1. Must have the extension `.fastq.gz` or `.fq.gz`. | `string` (`file-path`) | true |
 | `fastq_2` | GZIP-compressed FastQ file for reads 2. Must have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. | `string` (`file-path`) |  |
 | `fastq_umi` | GZIP-compressed FastQ file for UMI reads. Must have the extension `.fastq.gz` or `.fq.gz`. Leave empty if a separate UMI file is not available. | `string` (`file-path`) |  |
@@ -47,70 +46,46 @@ It has to be a comma-separated (`.csv`) file with with at least the `sample`, `b
 
 This is an example of a samplesheet for a ChIP-seq experiment with one condition and two biological replicates for each antibody:
 
-| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_bRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_H3K9me3_R2.fastq.gz | | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_H3K9me3_R2.fastq.gz | | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_H3K27ac_R2.fastq.gz | | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_H3K27ac_R2.fastq.gz | | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_bRep1_INPUT_R1.fastq.gz | condition_1_bRep1_INPUT_R3.fastq.gz | condition_1_bRep1_INPUT_R2.fastq.gz | | 1 | ChIP-seq | | | | |
-condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | ChIP-seq | | | | |
+| sample | fastq_1 | fastq_2 | fastq_umi | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_bRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_INPUT_R1.fastq.gz | condition_1_bRep1_INPUT_R3.fastq.gz | condition_1_bRep1_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
-
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,biological_replicate,exp_type,strandedness,antibody,control,input_control_biological_replicate
-condition_1_H3K9me3,condition_1_bRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_H3K9me3_R2.fastq.gz,,1,ChIP-seq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_H3K9me3_R2.fastq.gz,,2,ChIP-seq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_H3K27ac_R2.fastq.gz,,1,ChIP-seq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_H3K27ac_R2.fastq.gz,,2,ChIP-seq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,condition_1_bRep1_INPUT_R1.fastq.gz,condition_1_bRep1_INPUT_R3.fastq.gz,condition_1_bRep1_INPUT_R2.fastq.gz,,1,ChIP-seq,,,,
-condition_1_INPUT,condition_1_bRep2_INPUT_R1.fastq.gz,condition_1_bRep2_INPUT_R3.fastq.gz,condition_1_bRep2_INPUT_R2.fastq.gz,,2,ChIP-seq,,,,
-```
+> You can download this example samplesheet [here](../assets/samplesheets/ex1_multiBioRep_samplesheet.csv).
 
 ### Example 2: Multiple runs of the same library (technical replicates)
 
-Both the `sample` and `replicate` identifiers have to be the same when you have sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis.
-
-This is an example of a samplesheet for a ChIP-seq experiment with one condition, two biological replicates for each antibody, and two technical replicates for each biological replicate:
+Both the `sample` and `biological_replicate` identifiers have to be the same when you have sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis.
 
 > [!NOTE]
 > As shown below, the `technical_replicate` column is optional; if not provided for any specific biological replicate, the pipeline will assign an integer indentifier [1, 2, ...] to each technical replicate of that biological replicate. On the other hand, if you do want your technical-replicate-level output files to be named with a specific identifier, you should specify the `technical_replicate` column in the samplesheet.
 
-| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz | | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz | | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz | | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K9me3 | condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz | | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz | | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz | | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz | | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz | | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_bRep1_tRep1_INPUT_R1.fastq.gz | condition_1_bRep1_tRep1_INPUT_R3.fastq.gz | condition_1_bRep1_tRep1_INPUT_R2.fastq.gz | | 1 | ChIP-seq | | | | |
-| condition_1_INPUT | condition_1_bRep1_tRep2_INPUT_R1.fastq.gz | condition_1_bRep1_tRep2_INPUT_R3.fastq.gz | condition_1_bRep1_tRep2_INPUT_R2.fastq.gz | | 1 | ChIP-seq | | | | |
-| condition_1_INPUT | condition_1_bRep2_tRep1_INPUT_R1.fastq.gz | condition_1_bRep2_tRep1_INPUT_R3.fastq.gz | condition_1_bRep2_tRep1_INPUT_R2.fastq.gz | | 2 | ChIP-seq | | | | |
-| condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | ChIP-seq | | | | |
+
+This is an example of a samplesheet for a ChIP-seq experiment with one condition, two biological replicates for each antibody, and two technical replicates for each biological replicate:
+
+| sample | fastq_1 | fastq_2 | fastq_umi | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_tRep1_INPUT_R1.fastq.gz | condition_1_bRep1_tRep1_INPUT_R3.fastq.gz | condition_1_bRep1_tRep1_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep1_tRep2_INPUT_R1.fastq.gz | condition_1_bRep1_tRep2_INPUT_R3.fastq.gz | condition_1_bRep1_tRep2_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep1_INPUT_R1.fastq.gz | condition_1_bRep2_tRep1_INPUT_R3.fastq.gz | condition_1_bRep2_tRep1_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](../assets/samplesheets/ex2_multiTechRep_samplesheet.csv).
 
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,biological_replicate,exp_type,strandedness,antibody,input_control,input_control_biological_replicate
-condition_1_H3K9me3,condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz,,1,ChIP-seq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz,condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz,condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz,,1,ChIP-seq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz,condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz,condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz,,2,ChIP-seq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K9me3,condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz,,2,ChIP-seq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz,,1,ChIP-seq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz,condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz,condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz,,1,ChIP-seq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz,condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz,condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz,,2,ChIP-seq,,H3K27ac,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz,,2,ChIP-seq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,condition_1_bRep1_tRep1_INPUT_R1.fastq.gz,condition_1_bRep1_tRep1_INPUT_R3.fastq.gz,condition_1_bRep1_tRep1_INPUT_R2.fastq.gz,,1,ChIP-seq,,,,
-condition_1_INPUT,condition_1_bRep1_tRep2_INPUT_R1.fastq.gz,condition_1_bRep1_tRep2_INPUT_R3.fastq.gz,condition_1_bRep1_tRep2_INPUT_R2.fastq.gz,,1,ChIP-seq,,,,
-condition_1_INPUT,condition_1_bRep2_tRep1_INPUT_R1.fastq.gz,condition_1_bRep2_tRep1_INPUT_R3.fastq.gz,condition_1_bRep2_tRep1_INPUT_R2.fastq.gz,,2,ChIP-seq,,,,
-condition_1_INPUT,condition_1_bRep2_tRep2_INPUT_R1.fastq.gz,condition_1_bRep2_tRep2_INPUT_R3.fastq.gz,condition_1_bRep2_tRep2_INPUT_R2.fastq.gz,,2,ChIP-seq,,,,
-```
 
 ## Reference genome files
 
