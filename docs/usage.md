@@ -305,7 +305,7 @@ Options to adjust multimapper allocation criteria.
 | `save_allocation_intermeds` | Save the intermediate BAM files from the multimapper allocation step. | `boolean` | true |  |  |
 | `allocate_exogenous` | Whether to also allocate multimappers in the spike-in (exogenous) BAM files. | `boolean` | true |  |  |
 
-## Alignment shifting options
+#### Alignment shifting options
 
 Options to adjust alignment shifting criteria.
 
@@ -485,15 +485,52 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull grothlab/glseq
 ```
 
+
 ### Reproducibility
+
+#### Running a specific version of the pipeline (`-r`)
 
 It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
-<!-- First, go to the [nf-core/chipseq releases page](https://github.com/nf-core/chipseq/releases) and find the latest pipeline version - numeric only (eg. `2.0.0`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 2.0.0`. Of course, you can switch to another version by changing the number after the `-r` flag. -->
+To run a specific version of the pipeline, use the [`-r` option](https://www.nextflow.io/docs/latest/reference/cli.html). For example:
 
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
+- With a [release tag](https://github.com/grothlab/glseq/releases) from the pipeline's repository:
 
-To further assist in reproducbility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
+  ```bash
+  nextflow run grothlab/glseq \
+    -r 1.1.12
+  ```
+
+- With a [commit](https://github.com/grothlab/glseq/commits/dev/) ID (revision number) from the pipeline's repository:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r a6840348453bebe2cb49384f8522bbfb20d7087b
+  ```
+
+  You can also use the short version of the commit ID:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r a684034
+  ```
+- With a [git branch](https://github.com/grothlab/glseq/branches) from the pipeline's repository:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r dev
+  ```
+
+> [!NOTE]
+> In this last example, the pipeline will run with the latest **cached** version of the `dev` branch. Make sure to run `nextflow pull grothlab/glseq -r dev` before if you want to update the cached version.
+
+The version number you use will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
+
+#### Sharing and reusing parameter files (`-params-file`)
+
+To further assist in reproducibility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
+
+
 
 > [!TIP]
 > If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
@@ -589,7 +626,37 @@ Nextflow handles job submissions and supervises the running jobs. The Nextflow p
 The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
 
 Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
-Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
+
+Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs). For example, the nextflow head job can be submitted to `SLURM` by saving the following script:
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+#SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=NONE            # email address to receive the notifications
+#SBATCH -c 1                        # number of requested cores for the Nextflow head job
+#SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
+#SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
+#SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+
+# Create an output directory for the pipeline run if it does not exist
+mkdir -p <path_to_output_directory>
+cd <path_to_output_directory>
+
+# Run the pipeline
+nextflow run grothlab/glseq \
+    -r main \
+    -profile test_scarseq \
+    --outdir <path_to_output_directory>
+```
+And then, submitting the job to the queue with:
+
+```bash
+sbatch glseq_job.sh
+```
+> [!TIP]
+> We recommend providing 4 GB of RAM for the Nextflow head job. In the case of an `sbatch` script, this is specified with the `#SBATCH --mem=4gb` line. See [Optimizing Nextflow for HPC and cloud at scale](https://seqera.io/blog/optimizing-nextflow-for-hpc-and-cloud-at-scale/) for more details.
 
 ### Nextflow memory requirements
 
