@@ -8,9 +8,10 @@ process PARTITION_PLOT {
         'community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-ggpmisc_pruned:2c7c689513df97b4' }"
 
     input:
-    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput), path(okazaki)
+    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput)
     tuple val(meta2), path(blacklist)
-    tuple val(meta3), path(initiation_zones)
+    tuple val(meta3), path(okseq_rfd_file)
+    tuple val(meta4), path(initiation_zones)
 
     output:
     path "*.scatter_plots.pdf",             optional:true, emit: scatter_pdf
@@ -29,7 +30,7 @@ process PARTITION_PLOT {
     def scar_partition_arg = partition ? "--scar_partition_file $partition" : ''
     def scarminusinput_arg = scarminusinput ? "--scarminusinput_partition_file $scarminusinput" : ''
     def strandedinput_arg  = strandedinput ? "--strandedinput_partition_file $strandedinput" : ''
-    def okazaki_arg        = okazaki ? "--okazaki_file $okazaki" : ''
+    def okazaki_arg        = okseq_rfd_file ? "--okazaki_file $okseq_rfd_file" : ''
     def iz_arg             = initiation_zones ? "--initiation_zones $initiation_zones" : ''
     def blacklist_arg      = blacklist ? "--blacklist $blacklist" : ''
 

@@ -104,6 +104,7 @@ workflow GLSEQ {
     ch_sparsebed              // channel: path(sparse.bed)
     ch_active_regions         // channel: path(active_regions.bed)
     ch_rocco_params           // channel: path(params.csv)
+    ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
@@ -1189,7 +1190,8 @@ workflow GLSEQ {
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
-        ch_initiation_zones,
+        ch_okseq_rfd_file.ifEmpty([[:], []]),
+        ch_initiation_zones.ifEmpty([[:], []]),
         params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,

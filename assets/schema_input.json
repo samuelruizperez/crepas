@@ -45,8 +45,8 @@
             },
             "exp_type": {
                 "type": "string",
-                "enum": ["ChIP-seq", "ChOR-seq", "SCAR-seq", "ChIP-exo", "ATAC-seq", "OK-seq"],
-                "errorMessage": "Sequencing experiment type must be provided and be one of 'ChIP-seq', 'ChOR-seq', 'SCAR-seq', 'ChIP-exo', 'ATAC-seq' or 'OK-seq'",
+                "enum": ["ChIP-seq", "ChOR-seq", "SCAR-seq", "ChIP-exo", "ATAC-seq", "OK-seq", "CUT&RUN", "CUT&Tag", "TIP-seq"],
+                "errorMessage": "Sequencing experiment type must be provided and be one of: 'ChIP-seq', 'ChOR-seq', 'SCAR-seq', 'ChIP-exo', 'ATAC-seq', 'OK-seq', 'CUT&RUN', 'CUT&Tag', 'TIP-seq'",
                 "meta": ["exp_type"]
             },            
             "strandedness": {
@@ -60,14 +60,6 @@
                 "pattern": "^\\S+$",
                 "errorMessage": "Antibody entry cannot contain spaces",
                 "meta": ["antibody"]
-            },
-            "okseq_part_file": {
-                "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^\\S+\\.(txt|tsv|bed)\\.gz$",
-                "errorMessage": "GZIP-compressed text file for OK-seq RFD/partition cannot contain spaces and must have extension '.txt.gz', '.tsv.gz' or '.bed.gz'",
-                "meta": ["okseq_part_file"]
             },
             "fastq_1": {
                 "type": "string",

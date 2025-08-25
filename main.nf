@@ -56,6 +56,7 @@ workflow GROTHLAB_GLSEQ {
     def active_regions      = params.containsKey('active_regions') ? params.active_regions : (params.refgenie_ignore ? null : getGenomeAttribute('active_regions'))
     def rocco_params        = params.containsKey('rocco_params') ? params.rocco_params : (params.refgenie_ignore ? null : getGenomeAttribute('rocco_params'))
     def splicesites         = params.containsKey('splicesites') ? params.splicesites : (params.refgenie_ignore ? null : getGenomeAttribute('splicesites'))
+    def okseq_rfd_file      = params.containsKey('okseq_rfd_file') ? params.okseq_rfd_file : (params.refgenie_ignore ? null : getGenomeAttribute('okseq_rfd_file'))
     def initiation_zones    = params.containsKey('initiation_zones') ? params.initiation_zones : (params.refgenie_ignore ? null : getGenomeAttribute('initiation_zones'))
     def tecount_gene_index  = params.containsKey('tecount_gene_index') ? params.tecount_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_gene_index'))
     def telocal_gene_index  = params.containsKey('telocal_gene_index') ? params.telocal_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_gene_index'))
@@ -88,6 +89,7 @@ workflow GROTHLAB_GLSEQ {
         star_index,
         hisat2_index,
         splicesites,
+        okseq_rfd_file,
         initiation_zones,
         params.skip_te_counting,
         params.skip_telocal,
@@ -119,6 +121,7 @@ workflow GROTHLAB_GLSEQ {
         PREPARE_GENOME.out.sparsebed,
         PREPARE_GENOME.out.active_regions,
         PREPARE_GENOME.out.rocco_params,
+        PREPARE_GENOME.out.okseq_rfd_file,
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bowtie2_index,

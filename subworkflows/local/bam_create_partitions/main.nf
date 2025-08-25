@@ -19,6 +19,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_bam                  // channel: [ val(meta), [ bam ] ]
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
+    ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
     rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
     smooth_radius
@@ -427,22 +428,21 @@ workflow BAM_CREATE_PARTITIONS {
 
     ch_partitions_by_type
         .scar_with_ipcontrol
-        .combine(ch_partitions_by_type.ipcontrol, by: 0) // this creates channel: [ ipcontrol_id, meta_scar, scar_tsv, input_tsv ]
+        .combine(ch_partitions_by_type.ipcontrol, by: 0)
         .map { ipcontrol_id, meta_scar, scar_tsv, input_tsv ->
             [ meta_scar.id, meta_scar, scar_tsv, input_tsv ]
         }
-        .combine(ch_partitions_by_type.minusipcontrol, by: 0) // this creates channel: [ scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
+        .combine(ch_partitions_by_type.minusipcontrol, by: 0)
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
-            def okseq = meta_scar.okseq_part_file ? file(meta_scar.okseq_part_file) : null
-            [ meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ]
+            [ meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         }
         .set { ch_partitions_to_plot }
 
 
     // TODO: print for debugging
     ch_partitions_to_plot
-        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq ->
-            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq}"
+        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
+            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}"
         }
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
@@ -453,6 +453,7 @@ workflow BAM_CREATE_PARTITIONS {
     PARTITION_PLOT (
         ch_partitions_to_plot,
         ch_blacklist,
+        ch_okseq_rfd_file,
         ch_initiation_zones
     )
     ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
