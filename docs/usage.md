@@ -666,3 +666,72 @@ We recommend adding the following line to your environment to limit this (typica
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
+
+## Examples
+
+### Setting the environment
+
+Before analyzing any kind of data, we need to install or load Nextflow and a container runtime, as explained in the [Quick start section of the README](../README.md#quick-start).
+
+> [!NOTE]
+> In this case, we will use [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) to run a persistent terminal
+> session, [*slurm*](https://slurm.schedmd.com/documentation.html) to schedule jobs,
+> [*modules*](https://modules.readthedocs.io/en/latest/) to load Nextflow, and [*singularity*](https://sylabs.io/guides/3.0/user-guide/) to run the containerized software in the pipeline. However, these choices
+> may vary depending on your specific computing environment, so should check your local documentation.
+
+First, we start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
+
+  ```bash
+  tmux new-session -s glseq_example
+  ```
+
+Then we launch an interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+  ```bash
+  srun -c 1 --mem=4gb --time=0-08:00:00 --pty bash
+  ```
+
+Finally, we load the Nextflow and Singularity [*modules*](https://modules.readthedocs.io/en/latest/):
+
+```bash
+module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+```
+
+### Analyzing ChIP-seq data
+
+For this example, we will analyze a subset of the ChIP-seq data from the following article:
+
+> Flury, V., Reverón-Gómez, N., Alcaraz, N., Stewart-Morgan, K. R., Wenger, A., Klose, R. J., & Groth, A. (2023). Recycling of modified H2A-H2B provides short-term memory of chromatin states. Cell, 186(5), 1050-1065.e19. https://doi.org/10.1016/j.cell.2023.01.007
+
+
+#### Downloading the data
+
+Now we need to download the ChIP-seq data. We will do so using the [nf-core/fetchngs](https://nf-co.re/fetchngs/latest) pipeline, which works very well to fetch metadata and raw FastQ files from public databases.
+
+#### Running *glseq*
+
+
+
+#### Relevant parameters
+
+WIP
+
+### Analyzing ChOR-seq data
+
+WIP
+
+### Analyzing SCAR-seq data
+
+WIP
+
+### Analyzing ATAC-seq data
+
+WIP
+
+### Analyzing OK-seq data
+
+WIP
+
+### Analyzing ChIP-exo data
+
+WIP

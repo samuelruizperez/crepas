@@ -43,7 +43,7 @@ process PARTITION_PLOT {
         ${okazaki_arg} \\
         ${iz_arg} \\
         ${blacklist_arg} \\
-        ${chrom_sizes} \\
+        --chrom_sizes ${chrom_sizes} \\
         --prefix ${prefix} \\
         --outdir ./ \\
         ${args}
