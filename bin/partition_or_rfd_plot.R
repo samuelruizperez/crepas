@@ -535,7 +535,8 @@ partition_mean_df <- partition_df %>%
   ) %>%
   mutate(sample = gsub("^SCAR-seq_", "", sample))
 
-partition_mean_df
+message("\n[", Sys.time(), "] A glimpse of the partition mean data frame:")
+print(partition_mean_df)
 
 
 # ===============================================================================
@@ -565,9 +566,9 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color
               fill = "grey92", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
               fill = "grey92", inherit.aes = FALSE) +
-    geom_vline(xintercept = 0, color = "grey70", size = 0.3) +
-    geom_hline(yintercept = 0, color = "grey70", size = 0.3) +
-    geom_line(size = 0.3) +
+    geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_line(linewidth = 0.3) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
     ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
@@ -616,9 +617,9 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, co
               fill = "grey92", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
               fill = "grey92", inherit.aes = FALSE) +
-    geom_vline(xintercept = 0, color = "grey70", size = 0.3) +
-    geom_hline(yintercept = 0, color = "grey70", size = 0.3) +
-    geom_line(stat = "smooth", method = "gam", se = FALSE, size = 0.5) +
+    geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_line(stat = "smooth", method = "gam", se = FALSE, linewidth = 0.5) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
     ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
@@ -683,9 +684,9 @@ if (HAS_OKSEQ) {
     scale_fill_gradientn(colours = (brewer.pal(n = 9, name = "Blues")[2:8])) +
     geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.5) +
     geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.5) +
-    geom_smooth(se = FALSE, method = "lm", size = 0.3, color = "red") +
+    geom_smooth(se = FALSE, method = "lm", linewidth = 0.3, color = "red") +
     # add correlation and p-value to the plot
-    stat_cor(aes(label = paste(..r.label.., ..p.label.., sep = "~`,`~")),
+    stat_cor(aes(label = paste(after_stat(r.label), after_stat(p.label), sep = "~`,`~")),
              method = "spearman", size = 2.5,
              cor.coef.name = c("rho")) +
     theme_bw(base_size = 20, base_family = "Helvetica") +
