@@ -31,19 +31,25 @@ options(show.error.locations = TRUE)
 # }
 
 required.libs <- c("tidyverse","GenomicAlignments","GenomicFeatures", 
-                   "RColorBrewer","ggrepel","ggpubr","ggpmisc",
-                    "hexbin","argparse")
+           "RColorBrewer","ggrepel","ggpubr","ggpmisc",
+          "hexbin","argparse")
 
 unavailable.libs <- setdiff(required.libs, rownames(installed.packages()))
 if (length(unavailable.libs) > 0) {
-    BiocManager::install(unavailable.libs)
+  message("\n[", Sys.time(), "] Installing missing packages: ", paste(unavailable.libs, collapse = ", "))
+  BiocManager::install(unavailable.libs)
 }
 
-suppressPackageStartupMessages({
-  lapply(required.libs, FUN = function(x) {
-    do.call("require", list(x))
+message("\n[", Sys.time(), "] Loading required libraries...")
+for (lib in required.libs) {
+  message("[", Sys.time(), "] Loading library: ", lib)
+  suppressPackageStartupMessages({
+    if (!require(lib, character.only = TRUE)) {
+      stop("Failed to load library: ", lib)
+    }
   })
-})
+}
+message("[", Sys.time(), "] All libraries loaded successfully.")
 
 
 # ===============================================================================
@@ -134,7 +140,7 @@ HAS_INPUT <- FALSE
 if (!is.null(opt$scar_partition_file)) {
   for (file in opt$scar_partition_file) {
     if (!file.exists(file)) {
-      warning("Partition file not found: ", file)
+      stop("Partition file not found: ", file)
     } else {
       part_files[["SCAR"]] <- c(part_files[["SCAR"]], file)
       HAS_SCAR <- TRUE
@@ -146,7 +152,7 @@ if (!is.null(opt$scar_partition_file)) {
 if (!is.null(opt$scarminusinput_partition_file)) {
   for (file in opt$scarminusinput_partition_file) {
     if (!file.exists(file)) {
-      warning("SCAR input-correct file not found: ", file)
+      stop("SCAR input-corrected file not found: ", file)
     } else {
       part_files[["SCAR_Input_Corrected"]] <- c(part_files[["SCAR_Input_Corrected"]], file)
       HAS_SCARINPUT <- TRUE
@@ -158,7 +164,7 @@ if (!is.null(opt$scarminusinput_partition_file)) {
 if (!is.null(opt$strandedinput_partition_file)) {
   for (file in opt$strandedinput_partition_file) {
     if (!file.exists(file)) {
-      warning("Stranded input partition file not found: ", file)
+      stop("Stranded input partition file not found: ", file)
     } else {
       part_files[["strandedInput"]] <- c(part_files[["strandedInput"]], file)
       HAS_INPUT <- TRUE
@@ -233,7 +239,7 @@ if (!dir.exists(opt$outdir)) {
 
 # Check excluded chromosomes
 chrom_excl <- unique(unlist(strsplit(opt$exclude_chromosomes, ",")))
-warning("\n[", Sys.time(), "] Set to exclude the following chromosomes: ", paste(chrom_excl, collapse = ", "))
+message("\n[", Sys.time(), "] Set to exclude the following chromosomes: ", paste(chrom_excl, collapse = ", "))
 
 # Check other parameters
 PREFIX <- opt$prefix
