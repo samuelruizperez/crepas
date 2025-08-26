@@ -12,6 +12,7 @@ process PARTITION_PLOT {
     tuple val(meta2), path(blacklist)
     tuple val(meta3), path(okseq_rfd_file)
     tuple val(meta4), path(initiation_zones)
+    tuple val(meta5), path(chrom_sizes)
 
     output:
     path "*.scatter_plots.pdf",             optional:true, emit: scatter_pdf
@@ -42,6 +43,7 @@ process PARTITION_PLOT {
         ${okazaki_arg} \\
         ${iz_arg} \\
         ${blacklist_arg} \\
+        ${chrom_sizes} \\
         --prefix ${prefix} \\
         --outdir ./ \\
         ${args}
