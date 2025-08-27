@@ -476,8 +476,8 @@ for (type in names(part_files)) {
 
     if (HAS_OKSEQ) {
       if (OK_BIN_SIZE != PART_BIN_SIZE) {
-        stop("\n[", Sys.time(), "] ERROR: Bin size of", base_name,
-             "(", PART_BIN_SIZE, "bp ) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, "bp ).\n")
+        stop("\n[", Sys.time(), "] ERROR: Bin size of ", base_name,
+             "(", PART_BIN_SIZE, " bp) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, " bp).\n")
       }
     }
 
