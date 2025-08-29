@@ -279,7 +279,7 @@ workflow INPUT_CHECK {
     
     // filter ch_fastq to only include samples whose meta.input_control is in ch_ipcontrols 
     ch_fastq
-        .combine(ch_ipcontrols)
+        .combine(ch_ipcontrols.ifEmpty([[]]))
         .filter { meta, fastqs, ipcontrol_list ->
             ipcontrol_list.contains(meta.input_control) || !meta.input_control
         }
