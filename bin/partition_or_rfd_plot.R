@@ -148,23 +148,6 @@ opt_exclude_chromosomes <- opt$exclude_chromosomes
 opt_exclude_scaffolds <- opt$exclude_scaffolds
 opt_only_plot_within_iz <- opt$only_plot_wholly_within_iz
 
-#### TEMP
-opt_scar_partition_file <- "SCAR-seq_ABI_xSCAR_644_H3K9me3_DMSO_T0_bRep_1.mLb.dedup.flT1.GRCm39.flT2.flT3.flTbl.rmO.rpm.partition.w1000.s30.d30.z1.collect.tsv"
-opt_scarminusinput_partition_file <- "SCAR-seq_ABI_xSCAR_644_H3K9me3_DMSO_T0_bRep_1.mLb.dedup.flT1.GRCm39.flT2.flT3.flTbl.rmO.rpm.smi.partition.w1000.s30.d30.z1.collect.tsv"
-opt_strandedinput_partition_file <- "SCAR-seq_ABI_xStrandedInput_644_H3K9me3_DMSO_T0_bRep_1.mLb.dedup.flT1.GRCm39.flT2.flT3.flTbl.rmO.rpm.partition.w1000.s30.d30.z1.collect.tsv"
-#opt_okazaki_file <- "OKseq_RFD_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed"
-opt_initiation_zones <- "OKseq_Initiation_Zones_mESC_SRR7535256_r1_R1.csorted.nodup.GRCm38liftOver.GRCm39_SE_smooth_results_w1000_s30_d30_z1.bed"
-opt_blacklist <- "GRCm39.ExcludeRanges.Boyle.Excludable_v2.bed"
-opt_chrom_sizes <- "GRCm39_dm6.primary_assembly.genome.fa.GRCm39.sizes"
-opt_prefix <- "SCAR-seq_ABI_xSCAR_644_H3K9me3_DMSO_T0_bRep_1.mLb.dedup.flT1.GRCm39.flT2.flT3.flTbl.rmO.rpm.partition.w1000.s30.d30.z1.collect"
-opt_outdir <- "./test"
-opt_rpm_cutoff <- 0.3
-opt_zero_deriv_quantile <- 0.9
-opt_plot_range <- 100
-opt_exclude_chromosomes <- 'chrX,chrY,chrM'
-opt_exclude_scaffolds <- TRUE
-opt_only_plot_within_iz <- FALSE
-#### TEMP
 
 # ===============================================================================
 # Initialize partition files and flags
@@ -352,18 +335,6 @@ if (HAS_OKSEQ) {
   # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
   OK_gr$interval <- paste0(seqnames(OK_gr), ":", start(OK_gr), "-", end(OK_gr))
 
-  # OK_gr_gaps <- gaps(OK_gr, ignore.strand = TRUE)
-  # # Check that the OK-seq file contains all bins in chromosome
-  # if (length(OK_gr_gaps) > 0) {
-  #   warning("\n[", Sys.time(), "] (", ok_base_name, ") WARNING: The OK-seq RFD file contains gaps. Here is a glimpse of the gaps:")
-  #   print(OK_gr_gaps)
-  # }
-
-  # # for tmp, run gaps(OK_gr) and remove any range with sequenames %in% chrom_excl
-  # tmp <- gaps(OK_gr, ignore.strand = TRUE)
-  # tmp <- tmp[seqnames(tmp) %in% names(chrom_sizes)]
-
-
   message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
@@ -440,14 +411,6 @@ if (HAS_OKSEQ) {
     makeGRangesFromDataFrame(seqinfo = chrom_sizes,
                              keep.extra.columns = TRUE,
                              starts.in.df.are.0based = TRUE)
-
-  # TEMP
-  # IZ_gr_gaps <- gaps(IZ_gr, ignore.strand = TRUE)
-  # IZ_gr_tile_gaps <- unlist(tile(IZ_gr_gaps, width = 1000))
-  # IZ_gr_tile_gaps$sample <- "OK-seq"
-  # IZ_gr_tile_gaps$sample_type <- "OK-seq"
-  # IZ_gr <- sort(c(IZ_gr, IZ_gr_tile_gaps))
-  # TEMP
 
   # We copy the interval now and not before with dplyr because the start
   # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
@@ -550,27 +513,6 @@ for (type in names(part_files)) {
                                         seqinfo = chrom_sizes,
                                         keep.extra.columns = TRUE,
                                         starts.in.df.are.0based = TRUE)
-
-
-    # TEMP
-    # SCAR_gr_gaps <- gaps(SCAR_gr, ignore.strand = TRUE)
-    # SCAR_gr_tile_gaps <- unlist(tile(SCAR_gr_gaps, width = 1000))
-    # SCAR_gr_tile_gaps$IZ <- NA
-    # SCAR_gr_tile_gaps$fwd_counts <- 0
-    # SCAR_gr_tile_gaps$rev_counts <- 0
-    # SCAR_gr_tile_gaps$total_counts <- 0
-    # SCAR_gr_tile_gaps$fwd_RPM <- 0
-    # SCAR_gr_tile_gaps$rev_RPM <- 0
-    # SCAR_gr_tile_gaps$RPM <- 0
-    # SCAR_gr_tile_gaps$RFD_raw <- 0
-    # SCAR_gr_tile_gaps$RFD_smooth <- 0
-    # SCAR_gr_tile_gaps$score <- 0
-    # SCAR_gr_tile_gaps$zero_deriv <- NA
-    # SCAR_gr_tile_gaps$sample <- base_name
-    # SCAR_gr_tile_gaps$sample_type <- type
-    # SCAR_gr_tile_gaps$sample_facet <- type
-    # SCAR_gr <- sort(c(SCAR_gr, SCAR_gr_tile_gaps))
-    # TEMP
 
     # We copy the interval now and not before with dplyr because the start
     # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
@@ -689,10 +631,6 @@ line_colors <- sample_colors
 # ===============================================================================
 
 message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
-
-# TEMP: remove every sample, sample_type with "OK-seq"
-# partition_mean_df <- partition_mean_df %>%
-#   filter(!(sample == "OK-seq" | sample_type == "OK-seq"))
 
 raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
