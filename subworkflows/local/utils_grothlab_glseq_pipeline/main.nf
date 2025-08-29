@@ -222,7 +222,7 @@ workflow INPUT_CHECK {
 
     // Add meta.is_input_control to ch_fastq
     ch_fastq
-        .combine(ch_ipcontrol_list)
+        .combine(ch_ipcontrol_list.ifEmpty([[]]))// .ifEmpty([[]]) is to avoid empty ch_fastq if there are no input controls
         .map { meta, fastqs, ipcontrol_list ->
             def meta_clone = meta.clone()
             meta_clone.is_input_control = ipcontrol_list.contains(meta.id)

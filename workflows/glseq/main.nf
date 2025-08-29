@@ -172,6 +172,11 @@ workflow GLSEQ {
         }
         .set { ch_fastq }
 
+    // TODO: print for debugging
+    ch_fastq
+        .map { it -> "${it}" }
+        .collectFile(name: 'ch_fastq.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+
     //
     // SUBWORKFLOW: Extra validation of input samplesheet
     //
