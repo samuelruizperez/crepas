@@ -472,6 +472,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
 
     // Create channel: [ val(meta), [ ip_bdg ], [ ipcontrol_bdg ] ]
+    ch_bdg_all = ch_bdg_map_norm
     ch_bdg_ip_control_cisrpm = Channel.empty()
     if (!skip_cisrpmsoi) {
         ch_bdg_map_norm
