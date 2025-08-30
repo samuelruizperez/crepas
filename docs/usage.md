@@ -19,101 +19,73 @@
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated (`.csv`) file with with 11 columns and a header row as explained below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use the `--input` parameter to specify its location:
 
 ```bash
 --input <path_to_samplesheet_csv>
 ```
+It has to be a comma-separated (`.csv`) file with with at least the `sample`, `biological_replicate`, `exp_type` and `fastq_1` columns, and a header row as explained below. The columns can be provided in any order:
 
-| Column   | Description |
-| -------- | ----------- |
-| `sample` |  Custom sample name. This identifier should be identical when you have multiple replicates from the same experimental group; just increment the `replicate` identifier appropriately. The first replicate value for any given experimental group must be `1`. Avoid including the experiment type in this identifier, since it will be parsed from the `exp_type` column and prepended to the sample name by default. |
-| `fastq_1` | Full path to FastQ file for reads 1. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. |
-| `fastq_2` | Full path to FastQ file for reads 2. File has to be gzipped and have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. |
-| `fastq_umi` | The path to the corresponding UMI `.fastq` file for deduplication. Leave empty if a separate UMI file is not available. |
-| `okseq_part_file` | The path to the corresponding OK-seq partition file. Leave empty if OK-seq data is not available. Only for SCAR-seq data. |
-| `replicate` | Integer representing replicate number. This will be identical for re-sequenced libraries (technical replicates). Must start from `1..<number of replicates>`. |
-| `exp_type` | One of `chipseq`, `atacseq`, `scarseq`, `chorseq`. |
-| `strandedness` | Either `forward` or `reverse` (SCAR-seq) or leave empty for unstranded (ChIP-seq, ChOR-seq, ATAC-seq). |
-| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. Required when `control` is specified. |
-| `control` | This column should be the sample identifier for the controls for any given IP. This column together with the `control_replicate` column will set the corresponding control for each of the samples in the table. Required when `antibody` is specified. |
-| `control_replicate` | Integer representing replicate number for control sample. |
+| Column (header)   | Description | Type | Required |
+| -------- | ----------- | --------- | -------- |
+| `sample` |  Custom sample (or condition) name. This identifier must be the same for all biological and technical replicates of the same sample; just specify a `biological_replicate` appropriately. For output file naming purposes, the sequencing experiment type is parsed from the `exp_type` column and prepended to the `sample` identifier, so you should avoid including the experiment type as part of the `sample` name. It cannot contain spaces. | `string` | true |
+| `biological_replicate` | String or integer representing the biological replicate. This identifier should be identical for re-sequenced libraries (technical replicates). If you do not have biological replicates you can set the `biological_replicate` to any number or string for each of your samples. It cannot contain spaces. | `string` or `integer` | true |
+| `technical_replicate` | Identifier representing the technical replicate. It cannot contain spaces. | `string` or `integer` |  |
+| `input_control` | This column should contain the `sample` identifier of the corresponding input control for that sample. It should be empty if an input control is not available or in the case of input control rows. | `string` |  |
+| `input_control_biological_replicate` | String or integer representing the biological replicate of the corresponding input control sample. It should be empty in the case of input control rows. | `string` or `integer` |  |
+| `input_control_technical_replicate` | String or integer representing the technical replicate of the corresponding input control sample. It should be empty in the case of input control rows. | `string` or `integer` |  |
+| `exp_type` | One of `ChIP-seq`, `ATAC-seq`, `SCAR-seq`, `ChOR-seq`, `ChIP-exo`, or `OK-seq` | `string` | true |
+| `strandedness` | Either `forward` or `reverse`: <br><br><ul><li>If the library was prepared using NGS indexed PentAdapter™ adapters (PentaBase ApS, Denmark), as in the [SCAR-seq paper](https://doi.org/10.1038/s41596-021-00585-3), set this to `forward`.</li><li>If the library was prepared using [xGen™ UDI-UMI Adapters](https://eu.idtdna.com/page/products/next-generation-sequencing/ngs-adapters-indexing-primers) (Integrated DNA Technologies, Inc.), the [insert strandedness is flipped](https://eu.idtdna.com/pages/support/faqs/can-the-xgen-unique-dual-index-umi-adapters-be-used-for-rna-seq), so set this to `reverse`.</li></ul><br>This field is only relevant for SCAR-seq and OK-seq; leave it empty for unstranded data (ChIP-seq, ChIP-exo, ChOR-seq, or ATAC-seq). | `string` |  |
+| `antibody` | This column is required to separate the downstream consensus peak merging for different antibodies. It is not advisable to generate a consensus peak set across different antibodies especially if their binding patterns are inherently different e.g. narrow transcription factors and broad histone marks. It should be empty in the case of input control rows. | `string` |  |
+| `fastq_1` | GZIP-compressed FastQ file for reads 1. Must have the extension `.fastq.gz` or `.fq.gz`. | `string` (`file-path`) | true |
+| `fastq_2` | GZIP-compressed FastQ file for reads 2. Must have the extension `.fastq.gz` or `.fq.gz`. Leave empty for single-end data. | `string` (`file-path`) |  |
+| `fastq_umi` | GZIP-compressed FastQ file for UMI reads. Must have the extension `.fastq.gz` or `.fq.gz`. Leave empty if a separate UMI file is not available. | `string` (`file-path`) |  |
 
 
 ### Example 1: Multiple biological replicates
 
 This is an example of a samplesheet for a ChIP-seq experiment with one condition and two biological replicates for each antibody:
 
-| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_bRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_bRep1_INPUT_R1.fastq.gz | condition_1_bRep1_INPUT_R3.fastq.gz | condition_1_bRep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
-condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
+| sample | fastq_1 | fastq_2 | fastq_umi | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_bRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_INPUT_R1.fastq.gz | condition_1_bRep1_INPUT_R3.fastq.gz | condition_1_bRep1_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex1_multiBioRep_samplesheet.csv) or copy and save the cell below:
-
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-condition_1_H3K9me3,condition_1_bRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,condition_1_bRep1_INPUT_R1.fastq.gz,condition_1_bRep1_INPUT_R3.fastq.gz,condition_1_bRep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
-condition_1_INPUT,condition_1_bRep2_INPUT_R1.fastq.gz,condition_1_bRep2_INPUT_R3.fastq.gz,condition_1_bRep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
-```
+> You can download this example samplesheet [here](../assets/samplesheets/ex1_multiBioRep_samplesheet.csv).
 
 ### Example 2: Multiple runs of the same library (technical replicates)
 
-Both the `sample` and `replicate` identifiers have to be the same when you have sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis.
+Both the `sample` and `biological_replicate` identifiers have to be the same when you have sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will perform the alignments in parallel, and subsequently merge them before further analysis.
+
+> [!NOTE]
+> As shown below, the `technical_replicate` column is optional; if not provided for any specific biological replicate, the pipeline will assign an integer indentifier [1, 2, ...] to each technical replicate of that biological replicate. On the other hand, if you do want your technical-replicate-level output files to be named with a specific identifier, you should specify the `technical_replicate` column in the samplesheet.
+
 
 This is an example of a samplesheet for a ChIP-seq experiment with one condition, two biological replicates for each antibody, and two technical replicates for each biological replicate:
 
-| sample | fastq_1 | fastq_2 | fastq_umi | okseq_part_file | replicate | exp_type | strandedness | antibody | control | control_replicate |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| condition_1_H3K9me3 | condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz | | 1 | chipseq | | H3K9me3 | condition_1_INPUT | 1 |
-| condition_1_H3K9me3 | condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K9me3 | condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz | | 2 | chipseq | | H3K9me3 | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz | | 1 | chipseq | | H3K27ac | condition_1_INPUT | 1 |
-| condition_1_H3K27ac | condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_H3K27ac | condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz | | 2 | chipseq | | H3K27ac | condition_1_INPUT | 2 |
-| condition_1_INPUT | condition_1_bRep1_tRep1_INPUT_R1.fastq.gz | condition_1_bRep1_tRep1_INPUT_R3.fastq.gz | condition_1_bRep1_tRep1_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
-| condition_1_INPUT | condition_1_bRep1_tRep2_INPUT_R1.fastq.gz | condition_1_bRep1_tRep2_INPUT_R3.fastq.gz | condition_1_bRep1_tRep2_INPUT_R2.fastq.gz | | 1 | chipseq | | | | |
-| condition_1_INPUT | condition_1_bRep2_tRep1_INPUT_R1.fastq.gz | condition_1_bRep2_tRep1_INPUT_R3.fastq.gz | condition_1_bRep2_tRep1_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
-| condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | | 2 | chipseq | | | | |
+| sample | fastq_1 | fastq_2 | fastq_umi | biological_replicate | exp_type | strandedness | antibody | input_control | input_control_biological_replicate |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz | 1 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 1 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K9me3 | condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz | condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz | 2 | ChIP-seq | | H3K9me3 | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz | 1 | ChIP-seq | | H3K27ac | condition_1_INPUT | 1 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_H3K27ac | condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz | condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz | 2 | ChIP-seq | | H3K27ac | condition_1_INPUT | 2 |
+| condition_1_INPUT | condition_1_bRep1_tRep1_INPUT_R1.fastq.gz | condition_1_bRep1_tRep1_INPUT_R3.fastq.gz | condition_1_bRep1_tRep1_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep1_tRep2_INPUT_R1.fastq.gz | condition_1_bRep1_tRep2_INPUT_R3.fastq.gz | condition_1_bRep1_tRep2_INPUT_R2.fastq.gz | 1 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep1_INPUT_R1.fastq.gz | condition_1_bRep2_tRep1_INPUT_R3.fastq.gz | condition_1_bRep2_tRep1_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
+| condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex2_multiTechRep_samplesheet.csv) or copy and save the cell below:
+> You can download this example samplesheet [here](../assets/samplesheets/ex2_multiTechRep_samplesheet.csv).
 
-```csv
-sample,fastq_1,fastq_2,fastq_umi,okseq_part_file,replicate,exp_type,strandedness,antibody,control,control_replicate
-condition_1_H3K9me3,condition_1_bRep1_tRep1_H3K9me3_R1.fastq.gz,condition_1_bRep1_tRep1_H3K9me3_R3.fastq.gz,condition_1_bRep1_tRep1_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep1_tRep2_H3K9me3_R1.fastq.gz,condition_1_bRep1_tRep2_H3K9me3_R3.fastq.gz,condition_1_bRep1_tRep2_H3K9me3_R2.fastq.gz,,1,chipseq,,H3K9me3,condition_1_INPUT,1
-condition_1_H3K9me3,condition_1_bRep2_tRep1_H3K9me3_R1.fastq.gz,condition_1_bRep2_tRep1_H3K9me3_R3.fastq.gz,condition_1_bRep2_tRep1_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K9me3,condition_1_bRep2_tRep2_H3K9me3_R1.fastq.gz,condition_1_bRep2_tRep2_H3K9me3_R3.fastq.gz,condition_1_bRep2_tRep2_H3K9me3_R2.fastq.gz,,2,chipseq,,H3K9me3,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep1_tRep1_H3K27ac_R1.fastq.gz,condition_1_bRep1_tRep1_H3K27ac_R3.fastq.gz,condition_1_bRep1_tRep1_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep1_tRep2_H3K27ac_R1.fastq.gz,condition_1_bRep1_tRep2_H3K27ac_R3.fastq.gz,condition_1_bRep1_tRep2_H3K27ac_R2.fastq.gz,,1,chipseq,,H3K27ac,condition_1_INPUT,1
-condition_1_H3K27ac,condition_1_bRep2_tRep1_H3K27ac_R1.fastq.gz,condition_1_bRep2_tRep1_H3K27ac_R3.fastq.gz,condition_1_bRep2_tRep1_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
-condition_1_H3K27ac,condition_1_bRep2_tRep2_H3K27ac_R1.fastq.gz,condition_1_bRep2_tRep2_H3K27ac_R3.fastq.gz,condition_1_bRep2_tRep2_H3K27ac_R2.fastq.gz,,2,chipseq,,H3K27ac,condition_1_INPUT,2
-condition_1_INPUT,condition_1_bRep1_tRep1_INPUT_R1.fastq.gz,condition_1_bRep1_tRep1_INPUT_R3.fastq.gz,condition_1_bRep1_tRep1_INPUT_R2.fastq.gz,,1,chipseq,,,,
-condition_1_INPUT,condition_1_bRep1_tRep2_INPUT_R1.fastq.gz,condition_1_bRep1_tRep2_INPUT_R3.fastq.gz,condition_1_bRep1_tRep2_INPUT_R2.fastq.gz,,1,chipseq,,,,
-condition_1_INPUT,condition_1_bRep2_tRep1_INPUT_R1.fastq.gz,condition_1_bRep2_tRep1_INPUT_R3.fastq.gz,condition_1_bRep2_tRep1_INPUT_R2.fastq.gz,,2,chipseq,,,,
-condition_1_INPUT,condition_1_bRep2_tRep2_INPUT_R1.fastq.gz,condition_1_bRep2_tRep2_INPUT_R3.fastq.gz,condition_1_bRep2_tRep2_INPUT_R2.fastq.gz,,2,chipseq,,,,
-```
-
-### Example 3: Full design
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet.
-
-A final design file may look something like the one below. This is for two antibodies and associated controls, where the second replicate of the `WT_BCATENIN_IP` and `NAIVE_BCATENIN_IP` samples have been sequenced twice:
-
-> [!NOTE]
-> You can download this example samplesheet [here]() or copy and save the cell below:
 
 ## Reference genome files
 
@@ -244,6 +216,9 @@ Reference genome related files and options required for the workflow.
 | `initiation_zones` | Path to BED file containing initiation zones for SCAR-seq analysis. | `string` |  |  |  |
 | `macs_gsize` | Effective genome size parameter required by MACS3. <details><summary>Help</summary><small>[Effective genome size](https://github.com/taoliu/MACS#-g--gsize) parameter required by MACS3.</small></details>| `number` |  |  |  |
 | `blacklist` | Path to blacklist regions in BED format, used for filtering alignments. <details><summary>Help</summary><small>If provided, alignments that overlap with the regions in this file will be filtered out (see [ENCODE blacklists](https://sites.google.com/site/anshulkundaje/projects/blacklists)). The file should be in BED format.</small></details>| `string` |  |  |  |
+| `sparsebed` | Path to BED file with sparse segments for Consenrich. <details><summary>Help</summary><small>Defines the annotation file of 'sparse segments' (genomic regions) from the complement of an 'inflated' BED file of known active regions. See https://github.com/nolan-h-hamilton/Consenrich/blob/5e7f287d81ac4a9bc098ae29e825a5ded07af3b8/consenrich/consenrich.py#L58C54-L58C174</small></details>| `string` |  |  |  |
+| `active_regions` | Path to BED file with active regions for Consenrich. <details><summary>Help</summary><small>Defines the annotation file of 'active regions' (genomic regions) for Consenrich. See https://github.com/nolan-h-hamilton/Consenrich/blob/5e7f287d81ac4a9bc098ae29e825a5ded07af3b8/consenrich/consenrich.py#L67</small></details>| `string` |  |  |  |
+| `rocco_params` | Path to ROCCO parameters file. <details><summary>Help</summary><small>CSV file containing chromosome-specific optimization parameters. Each supported genome has a custom `--params` file packaged with ROCCO, but a custom file has to be manually passed to ROCCO within this pipeline. Consider using this argument to set chromosome-specific budget and gamma values custom to your data and preferences. See the [ROCCO documentation](https://nolan-h-hamilton.github.io/ROCCO/#rocco-constants) for more details.</small></details>| `string` |  |  |  |
 | `splicesites` | Path to splice sites file for HISAT2. <details><summary>Help</summary><small>If using HISAT2 as the aligner, you can provide a list of known splice sites, which HISAT2 makes use of to align reads with small anchors. If this file is not provided, it will be generated from the GTF file.</small></details>| `string` |  |  |  |
 | `save_reference` | If generated by the pipeline save the BWA index in the results directory. <details><summary>Help</summary><small>If the BWA index is generated by the pipeline use this parameter to save it to your results folder. These can then be used for future pipeline runs, reducing processing times.</small></details>| `boolean` | true |  |  |
 | `igenomes_base` | Directory / URL base for iGenomes references. | `string` | s3://ngi-igenomes/igenomes/ |  | true |
@@ -255,7 +230,7 @@ Options to adjust UMI extraction and deduplication criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `with_umi` | Set this parameter to enable UMI extraction and deduplication. | `boolean` | False |  |  |
+| `with_umi` | Set this parameter to enable UMI extraction and deduplication. | `boolean` | false |  |  |
 | `skip_umi_extract` | Skip UMI extraction step. <details><summary>Help</summary><small>Use this flag to skip the UMI extraction/transfer step. This is useful if you have already extracted UMIs from your data but want to run the deduplication</small></details>| `boolean` | true |  |  |
 | `umitools_extract_method` | UMI pattern to use. Can be either `string` (default) or `regex`. <details><summary>Help</summary><small>More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).<br></small></details>| `string` | string |  |  |
 | `umitools_bc_pattern` | The UMI barcode pattern to use e.g. 'NNNNNN' indicates that the first 6 nucleotides of the read are from the UMI. <details><summary>Help</summary><small>More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).</small></details>| `string` | NNNNNNNNN |  |  |
@@ -310,14 +285,14 @@ Options to adjust parameters and filtering criteria for read alignments.
 | `save_unaligned` | Where possible, save unaligned reads from either STAR or HISAT2 to the results directory. <details><summary>Help</summary><small>This may either be in the form of FastQ or BAM files depending on the options available for that particular tool.</small></details>| `boolean` |  |  |  |
 | `map_n_multimappers` | Number of multimappers to map. | `integer` |  |  |  |
 
-#### Spike-in normalization options
+#### Spike-in options
 
-Options to adjust spike-in splitting and normalization criteria.
+Options to adjust spike-in splitting criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
 | `spikein_genome` | Name of the spike-in genome (if used in the experiment). The spike-in (exogenous) chromosome names in the `--fasta` and `<aligner>_index` files should have the format `<chromosome_name>_<spikein_genome>`, e.g. `chr1_dm6`. | `string` |  |  |  |
-| `save_spikein_intermeds` | Save intermediate files during spike-in splitting and filtering of BAMs. These include the split and filtered BAM files before coordinate-sorting. | `boolean` | False |  |  |
+| `save_spikein_intermeds` | Save intermediate files during spike-in splitting and filtering of BAMs. These include the split and filtered BAM files before coordinate-sorting. | `boolean` | false |  |  |
 
 #### Multimapper allocation options
 
@@ -325,8 +300,7 @@ Options to adjust multimapper allocation criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `allocate_n_multimappers` | Max number of multimappers to allocate. Must be equal or smaller than `--map_n_multimappers`. | `integer` |  |  |  |
-| `allocation_method` | Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`. | `string` | allo |  |  |
+| `multimap_allocation_method` | Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`. Not setting this parameter means that multimappers will not be allocated (the default). | `string` |  |  |  |
 | `allo_mixed_cnn` | When using Allo for multimapper allocation, use the CNN trained on histone ChIP-seq datasets with mixed peaks, otherwise use the default (narrow). See [allo](https://github.com/seqcode/allo?tab=readme-ov-file#options) for more details. | `boolean` | true |  |  |
 | `save_allocation_intermeds` | Save the intermediate BAM files from the multimapper allocation step. | `boolean` | true |  |  |
 | `allocate_exogenous` | Whether to also allocate multimappers in the spike-in (exogenous) BAM files. | `boolean` | true |  |  |
@@ -337,7 +311,15 @@ Options to adjust alignment shifting criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `save_shifting_intermeds` | Whether to save the intermediate files from the alignment shifting (only done on ATAC-seq data). | `boolean` | False |  |  |
+| `save_shifting_intermeds` | Whether to save the intermediate files from the alignment shifting (only done on ATAC-seq data). | `boolean` | false |  |  |
+
+#### Filtering options
+
+Options to adjust filtering criteria for BAM files.
+
+| Parameter | Description | Type | Default | Required | Hidden |
+|-----------|-----------|-----------|-----------|-----------|-----------|
+| `skip_flT3` | Whether to skip the flT3 filtering step (filtering by mapping quality, which also removes multimapping reads in most cases). | `boolean` | false |  |  |
 
 #### Coverage and normalization options
 
@@ -345,16 +327,16 @@ Options to adjust coverage and normalization criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `skip_srpm` | Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | False |  |  |
-| `skip_cisrpm` | Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | False |  |  |
-| `skip_cisrpmsoi` | Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | False |  |  |
-| `soi_min_count` | Minimum number of reads required in a bin to be included in the signal over input (SOI) calculation. | `integer` | 1 |  |  |
+| `skip_srpm` | Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `skip_cisrpm` | Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `skip_cisrpmsoi` | Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `soi_min_count` | Minimum CISRPM value required in a bin to be included in the signal over input (SOI) calculation. | `integer` | 0 |  |  |
 | `coverage_extend_reads` | This parameter allows the extension of reads to fragment size. If set, each read is extended, without exception. <details><summary>Help</summary><small>Single-end: Requires a user specified value for the final fragment length. Reads that already exceed this fragment length will not be extended. Paired-end: Reads with mates are always extended to match the fragment size defined by the two read mates. Unmated reads, mate reads that map too far apart (>4x fragment length) or even map to different chromosomes are treated like single-end reads. The input of a fragment length value is optional. If no value is specified, it is estimated from the data (mean of the fragment size of all mate reads). Read the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-processing-options) for more details.</small></details>| `integer` | 250 |  |  |
 | `coverage_bin_size` | Size of the bins, in bases, for the output of the coverage calculation. | `integer` | 250 |  |  |
-| `rpm_use_flT2_total` | Comma-separated list of histone marks for which RPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
-| `srpm_use_flT2_total` | Comma-separated list of histone marks for which SRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
-| `cisrpm_use_flT2_total` | Comma-separated list of histone marks for which CISRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list and for input controls, the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
-| `save_coverage_intermeds` | Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format. | `boolean` | False |  |  |
+| `rpm_use_flT2_total` | Comma-separated list of histone marks for which RPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
+| `srpm_use_flT2_total` | Comma-separated list of histone marks for which SRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
+| `cisrpm_use_flT2_total` | Comma-separated list of histone marks for which CISRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation. | `string` | H3K9me3,H3K27me3 |  |  |
+| `save_coverage_intermeds` | Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format. | `boolean` | false |  |  |
 
 #### Downsampling options
 
@@ -362,7 +344,10 @@ Options to adjust downsampling criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `bam_downsampling_method` | Method to downsample BAM files. Only option currently is `min_by_type`. Leave empty to disable downsampling. <details><summary>Help</summary><small>The `min_by_type` method will downsample each input BAM file to the minimum total mapped reads across all input BAM files, and will downsample each ChIP file to the minimum total mapped reads across all ChIP files. Currently, this downsampling method does not differentiate between samples/inputs of different experiment types (e.g., ChIP-seq vs. ChOR-seq).</small></details>| `string` |  |  |  |
+| `bam_downsampling_method` | Method to downsample BAM files. Leave empty to disable downsampling. <details><summary>Help</summary><small>The `min_endo_across` method will downsample all IPs and inputs of the same antibody to the minimum number of endogenous reads across all IPs and inputs of the same antibody.<br>The `min_exo_across` method will downsample all IPs and inputs of the same antibody to the minimum number of exogenous reads across all IPs and inputs of the same antibody.<br>The `min_endo_by_type` method will downsample all IPs to the minimum number of endogenous reads across all IPs of the same antibody, and all the inputs to the minimum number of endogenous reads across all inputs of the same antibody.<br>The `min_exo_by_type` method will downsample all IPs to the minimum number of exogenous reads across all IPs of the same antibody, and all the inputs to the minimum number of exogenous reads across all inputs of the same antibody.</small></details>| `string` |  |  |  |
+| `downsampling_endo_threshold` | Threshold of endogenous mapped reads for downsampling. For downsampling methods that search for the minimum endogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped endogenous reads should be the minimum number above the `downsampling_endo_threshold`. If there are no totals above this threshold, then the (true) minimum is used. | `integer` | 10000000 |  |  |
+| `downsampling_exo_threshold` | Threshold of exogenous mapped reads for downsampling. For downsampling methods that search for the minimum exogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped exogenous reads should be the minimum number above the `downsampling_exogenous_threshold`. If there are no totals above this threshold, then the (true) minimum is used. | `integer` | 300000 |  |  |
+| `dSp_use_flT2_total` | Comma-separated list of histone marks for which downsampling probabilities should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list, the total mapped reads after flT3 will be used for downsampling probability calculation. | `string` | H3K9me3,H3K27me3 |  |  |
 | `bam_downsampling_strategy` | Strategy to downsample BAM files. See [Picard](https://gatk.broadinstitute.org/hc/en-us/articles/360036431292-DownsampleSam-Picard) for more details. | `string` | Chained |  |  |
 | `bam_downsampling_accuracy` | Accuracy of downsampling BAM files. See [Picard](https://gatk.broadinstitute.org/hc/en-us/articles/360036431292-DownsampleSam-Picard) for more details. | `number` | 1e-06 |  |  |
 | `save_downsampling_intermeds` | Save the intermediate BAM files from the downsampling step. | `boolean` | true |  |  |
@@ -373,7 +358,7 @@ Options to adjust peak calling criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `narrow_peak` | Whether to call narrow peaks with MACS3 and Genrich. Default is to call broad peaks. | `boolean` | False |  |  |
+| `narrow_peak` | Whether to call narrow peaks with MACS3 and Genrich. Default is to call broad peaks. | `boolean` | false |  |  |
 | `peak_cutoff_method` | Whether to use q-value or p-value as the cutoff for peak calling. | `string` | qvalue |  |  |
 | `narrow_cutoff` | Specifies narrow cutoff value (p-value or q-value) for MACS3 and Genrich peak calling. | `number` | 0.01 |  |  |
 | `broad_cutoff` | Specifies broad cutoff value (p-value or q-value) for MACS3 and Genrich peak calling. | `number` | 0.1 |  |  |
@@ -384,7 +369,8 @@ Options to adjust peak calling criteria.
 | `skip_peak_qc` | Skip MACS3 peak QC plot generation. | `boolean` |  |  |  |
 | `skip_peak_annotation` | Skip annotation of MACS3 and consensus peaks with HOMER. | `boolean` |  |  |  |
 | `skip_consensus_peaks` | Skip consensus peak generation, annotation and counting. | `boolean` |  |  |  |
-| `save_macs_pileup_intermeds` |  | `boolean` |  |  |  |
+| `skip_bdgcmp` | Skip bdgcmp calculation with MACS3. | `boolean` | false |  |  |
+| `save_macs_bdgcmp_intermeds` |  | `boolean` |  |  |  |
 | `skip_edd` |  | `boolean` | true |  |  |
 | `edd_bin_size` |  | `string` |  |  |  |
 | `edd_gap_penalty` |  | `string` |  |  |  |
@@ -392,7 +378,26 @@ Options to adjust peak calling criteria.
 | `edd_fdr` |  | `number` | 0.05 |  |  |
 | `genrich_narrow_gap` | Genrich narrow gap parameter. | `integer` | 100 |  |  |
 | `genrich_broad_gap` | Genrich broad gap parameter. | `integer` | 100 |  |  |
+| `save_genrich_pileup` | Instruct Genrich to save pileup files. | `boolean` | true |  |  |
+| `save_genrich_pvalues` | Instruct Genrich to save p-values. | `boolean` | true |  |  |
+| `save_genrich_intervals` | Instruct Genrich to save intervals. | `boolean` | true |  |  |
 | `skip_genrich` | Skip Genrich peak calling. | `boolean` |  |  |  |
+| `epic2_binsize` | Size of the windows to scan the genome in epic2. Bin size is the smallest possible island. | `integer` | 150 |  |  |
+| `epic2_fdr` | In epic2 peak calling, remove all islands with an FDR above this cutoff. | `number` | 0.01 |  |  |
+| `skip_epic2` | Skip epic2 peak calling. | `boolean` | false |  |  |
+| `skip_consenrich` | Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics). | `boolean` |  |  |  |
+| `skip_mace` | Skip MACE peak calling. | `boolean` | false |  |  |
+| `mace_kmer_size` | Set the k-mer size for MACE peak calling. Kmer size [6,12] to correct nucleotide composition bias. kmerSize < 0.5*read_length. Larger KmerSize might make program slower. Set kmerSize = 0 to turn off nucleotide compsition bias correction. default=6. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_bin` | Chromosome chunk size. Each chomosome will be cut into small chunks of this size. Decrease chunk size will save more RAM. default=100000 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_depth` | Reference reads count (default = 10 million). Sequencing depth will be normailzed to this number, so that wig files are comparable between replicates. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_qcut` | phred scaled mapping quality threshhold to determine “uniqueness” of alignments. default=30. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `number` |  |  |  |
+| `mace_norm_method` | methods (“EM”, “AM”, “GM”, or “SNR”) used to consolidate replicates and reduce noise. “EM” = Entropy weighted mean, “AM”=Arithmetic mean, “GM”=Geometric mean, “SNR”=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `string` |  |  |  |
+| `mace_pvalue` | Pvalue cutoff for border detection and subsequent border pairing. default=0.05. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `number` |  |  |  |
+| `mace_max_dist` | Maximum distance allowed for border pairing. default=100 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_fuzzy_size` | Peaks (i.e. borders) located closely within this window will be merged. default=5 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_window_size` | Background window size used to determine background signal level. default=100 (bp). See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `integer` |  |  |  |
+| `mace_signal_fold` | Minimum coverage signal used to build model (i.e. estimate optimal peak pair size). default=2.0. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details. | `number` |  |  |  |
+| `save_mace_intermeds` | Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format. | `boolean` | false |  |  |
 
 #### Process skipping options
 
@@ -412,22 +417,21 @@ Options to skip various steps within the workflow.
 | `skip_multiqc` | Skip MultiQC. | `boolean` |  |  |  |
 | `skip_qc` | Skip all QC steps except for MultiQC. | `boolean` |  |  |  |
 
-#### SCAR-seq analysis options
+#### SCAR-seq (partition) and OK-seq (RFD) analysis options
 
-Options to adjust SCAR-seq analysis criteria.
+Options to adjust SCAR-seq and OK-seq analysis criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `scar_slop` |  | `integer` | 0 |  |  |
-| `scar_window_size` |  | `integer` | 1000 |  |  |
-| `scar_step_size` |  | `integer` | 1000 |  |  |
-| `scar_radius` |  | `integer` | 30 |  |  |
-| `scar_dradius` |  | `integer` | 30 |  |  |
-| `scar_zradius` |  | `integer` | 1 |  |  |
-| `scar_cpm_cutoff` |  | `number` | 0.3 |  |  |
-| `scar_plot_range` |  | `integer` | 100 |  |  |
-| `scar_exclude_chromosomes` |  | `string` | chrX,chrY,chrM |  |  |
-| `save_scarseq_intermeds` |  | `boolean` |  |  |  |
+| `partition_window_size` |  | `integer` | 1000 |  |  |
+| `partition_step_size` |  | `integer` | 1000 |  |  |
+| `smooth_radius` |  | `integer` | 30 |  |  |
+| `derivative_radius` |  | `integer` | 30 |  |  |
+| `zero_crossing_radius` |  | `integer` | 1 |  |  |
+| `partition_cpm_cutoff` |  | `number` | 0.3 |  |  |
+| `partition_plot_range` |  | `integer` | 100 |  |  |
+| `partition_exclude_chromosomes` |  | `string` | chrX,chrY,chrM |  |  |
+| `save_partition_intermeds` |  | `boolean` |  |  |  |
 
 #### Institutional config options
 
@@ -473,7 +477,6 @@ Less common options for the pipeline, typically set in a config file.
 | `validationShowHiddenParams` |  | `boolean` |  |  |  |
 
 
-
 ### Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
@@ -482,15 +485,52 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull grothlab/glseq
 ```
 
+
 ### Reproducibility
+
+#### Running a specific version of the pipeline (`-r`)
 
 It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
-<!-- First, go to the [nf-core/chipseq releases page](https://github.com/nf-core/chipseq/releases) and find the latest pipeline version - numeric only (eg. `2.0.0`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 2.0.0`. Of course, you can switch to another version by changing the number after the `-r` flag. -->
+To run a specific version of the pipeline, use the [`-r` option](https://www.nextflow.io/docs/latest/reference/cli.html). For example:
 
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
+- With a [release tag](https://github.com/grothlab/glseq/releases) from the pipeline's repository:
 
-To further assist in reproducbility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
+  ```bash
+  nextflow run grothlab/glseq \
+    -r 1.1.12
+  ```
+
+- With a [commit](https://github.com/grothlab/glseq/commits/dev/) ID (revision number) from the pipeline's repository:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r a6840348453bebe2cb49384f8522bbfb20d7087b
+  ```
+
+  You can also use the short version of the commit ID:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r a684034
+  ```
+- With a [git branch](https://github.com/grothlab/glseq/branches) from the pipeline's repository:
+
+  ```bash
+  nextflow run grothlab/glseq \
+    -r dev
+  ```
+
+> [!NOTE]
+> In this last example, the pipeline will run with the latest **cached** version of the `dev` branch. Make sure to run `nextflow pull grothlab/glseq -r dev` before if you want to update the cached version.
+
+The version number you use will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
+
+#### Sharing and reusing parameter files (`-params-file`)
+
+To further assist in reproducibility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
+
+
 
 > [!TIP]
 > If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
@@ -586,7 +626,37 @@ Nextflow handles job submissions and supervises the running jobs. The Nextflow p
 The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
 
 Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
-Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
+
+Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs). For example, the nextflow head job can be submitted to `SLURM` by saving the following script:
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+#SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=NONE            # email address to receive the notifications
+#SBATCH -c 1                        # number of requested cores for the Nextflow head job
+#SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
+#SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
+#SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+
+# Create an output directory for the pipeline run if it does not exist
+mkdir -p <path_to_output_directory>
+cd <path_to_output_directory>
+
+# Run the pipeline
+nextflow run grothlab/glseq \
+    -r main \
+    -profile test_scarseq \
+    --outdir <path_to_output_directory>
+```
+And then, submitting the job to the queue with:
+
+```bash
+sbatch glseq_job.sh
+```
+> [!TIP]
+> We recommend providing 4 GB of RAM for the Nextflow head job. In the case of an `sbatch` script, this is specified with the `#SBATCH --mem=4gb` line. See [Optimizing Nextflow for HPC and cloud at scale](https://seqera.io/blog/optimizing-nextflow-for-hpc-and-cloud-at-scale/) for more details.
 
 ### Nextflow memory requirements
 
@@ -596,3 +666,72 @@ We recommend adding the following line to your environment to limit this (typica
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
+
+## Examples
+
+### Setting the environment
+
+Before analyzing any kind of data, we need to install or load Nextflow and a container runtime, as explained in the [Quick start section of the README](../README.md#quick-start).
+
+> [!NOTE]
+> In this case, we will use [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) to run a persistent terminal
+> session, [*slurm*](https://slurm.schedmd.com/documentation.html) to schedule jobs,
+> [*modules*](https://modules.readthedocs.io/en/latest/) to load Nextflow, and [*singularity*](https://sylabs.io/guides/3.0/user-guide/) to run the containerized software in the pipeline. However, these choices
+> may vary depending on your specific computing environment, so should check your local documentation.
+
+First, we start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
+
+  ```bash
+  tmux new-session -s glseq_example
+  ```
+
+Then we launch an interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+
+  ```bash
+  srun -c 1 --mem=4gb --time=0-08:00:00 --pty bash
+  ```
+
+Finally, we load the Nextflow and Singularity [*modules*](https://modules.readthedocs.io/en/latest/):
+
+```bash
+module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+```
+
+### Analyzing ChIP-seq data
+
+For this example, we will analyze a subset of the ChIP-seq data from the following article:
+
+> Flury, V., Reverón-Gómez, N., Alcaraz, N., Stewart-Morgan, K. R., Wenger, A., Klose, R. J., & Groth, A. (2023). Recycling of modified H2A-H2B provides short-term memory of chromatin states. Cell, 186(5), 1050-1065.e19. https://doi.org/10.1016/j.cell.2023.01.007
+
+
+#### Downloading the data
+
+Now we need to download the ChIP-seq data. We will do so using the [nf-core/fetchngs](https://nf-co.re/fetchngs/latest) pipeline, which works very well to fetch metadata and raw FastQ files from public databases.
+
+#### Running *glseq*
+
+
+
+#### Relevant parameters
+
+WIP
+
+### Analyzing ChOR-seq data
+
+WIP
+
+### Analyzing SCAR-seq data
+
+WIP
+
+### Analyzing ATAC-seq data
+
+WIP
+
+### Analyzing OK-seq data
+
+WIP
+
+### Analyzing ChIP-exo data
+
+WIP
