@@ -1069,28 +1069,30 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(EDD.out.versions.first())
     }
 
-    //
-    // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
-    //
-    BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER(
-        ch_ip_control_bam_cs,
-        ch_fasta,
-        ch_gtf,
-        ch_chrom_sizes_endo,
-        ch_effective_gsize,
-        "_peaks.annotatePeaks.txt",
-        ch_peak_count_header,
-        ch_frip_score_header,
-        ch_peak_annotation_header,
-        params.narrow_peak,
-        params.skip_peak_annotation,
-        params.skip_peak_qc,
-        params.skip_bdgcmp
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it[1] })
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it[1] })
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
-    ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
+    if (!params.skip_macs3) {
+        //
+        // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
+        //
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER(
+            ch_ip_control_bam_cs,
+            ch_fasta,
+            ch_gtf,
+            ch_chrom_sizes_endo,
+            ch_effective_gsize,
+            "_peaks.annotatePeaks.txt",
+            ch_peak_count_header,
+            ch_frip_score_header,
+            ch_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc,
+            params.skip_bdgcmp
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
+    }
 
     //
     //  Consensus peaks analysis
