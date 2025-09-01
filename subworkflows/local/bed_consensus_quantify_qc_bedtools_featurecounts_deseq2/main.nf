@@ -98,7 +98,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_antibody_peaks0
         .map {
             it ->
-                ""${it}"
+                "${it}"
         }
         .collectFile( name: 'ch_antibody_peaks1.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2" )
 
