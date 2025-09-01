@@ -56,8 +56,16 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         .map {
             antibody, exp_type, genome, groups, peaks ->
                 def meta_new = [:]
-                // if exp_type is atacseq, then id = exp_type, else id = exp_type + antibody
-                meta_new.id = exp_type == 'ATAC-seq' ? exp_type : exp_type + '_' + antibody
+                // Set meta_new.id based on exp_type and antibody presence
+                if (meta_new.antibody) {
+                    if (exp_type == 'ATAC-seq') {
+                        meta_new.id = exp_type
+                    } else {
+                        meta_new.id = exp_type + '_' + antibody
+                    }
+                } else {
+                    meta_new.id = exp_type + '_no_antibody'
+                }
                 meta_new.antibody = antibody
                 meta_new.exp_type = exp_type
                 meta_new.genome = genome
