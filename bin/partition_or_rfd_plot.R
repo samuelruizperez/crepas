@@ -120,12 +120,12 @@ parser$add_argument("-e", "--exclude_chromosomes", action = "store",
                     type = "character",
                     help = "Chromosomes to exclude from analyses, must be provided comma separated [default: chrX,chrY,chrM]")
 
-parser$add_argument("-", "--exclude_scaffolds", action = "store",
+parser$add_argument("-g", "--exclude_scaffolds", action = "store",
                     default = FALSE,
                     type = "logical",
                     help = "Whether to exclude scaffolds from analyses. Chromosomes whose name begins with 'chrUn' or contains a dot ('.') are considered scaffolds [default: FALSE]")
 
-parser$add_argument("-", "--only_plot_wholly_within_iz", action = "store",
+parser$add_argument("-w", "--only_plot_wholly_within_iz", action = "store",
                     default = FALSE,
                     type = "logical",
                     help = "When calculating the distance from each partition/RFD bin to the start of initiation zones, only consider bins that are wholly contained within the initiation zones [default: FALSE]")
