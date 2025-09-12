@@ -137,7 +137,7 @@
     cd <path_to_output_directory>
     ```
 
-6. Now you can run your own own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)). For example:
+6. Now you can run your own analysis under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)). For example:
 
     ```bash
     nextflow run grothlab/glseq \
