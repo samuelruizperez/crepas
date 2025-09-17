@@ -117,7 +117,7 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     rsync -av /maps/groupdir/${USER}$/SUN-CPR-Groth-Group-BigData/NGS/RUNS/completed/<run_id>/fastq/* <path_to_project_directory>/fastq/
     ```
 > [!TIP]  
-> This is not mandatory, you can keep your FASTQ files wherever you want (except the UCPH drives) as long as you provide the correct path in the input samplesheet file (see next step).
+> This is not mandatory, you can source your FASTQ files from wherever you want (except the UCPH drives) as long as you provide the correct path in the input samplesheet file (see next step).
 
 3. Now, create a subdirectory for the pipeline's input and output files:
 
@@ -172,13 +172,13 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
         -work-dir <path_to_project_directory>/output/work/
     ```
 
-> [!TIP]
->  Include the `-work-dir` option if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
+    > [!TIP]
+    >  Include the `-work-dir` option if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
 
-> [!WARNING]
-> When using the `-work-dir` option, make sure that the specified path is different from the `--outdir` path to prevent
-> overwriting issues. Note that, as in this template, the work directory can nonetheless be a subdirectory within the
-> output directory (e.g., `<path_to_project_directory>/output/work/`).
+    > [!WARNING]
+    > When using the `-work-dir` option, make sure that the specified path is different from the `--outdir` path to prevent
+    > overwriting issues. Note that, as in this template, the work directory can nonetheless be a subdirectory within the
+    > output directory (e.g., `<path_to_project_directory>/output/work/`).
 
     Then save the script to your project directory. For example, run:
 
