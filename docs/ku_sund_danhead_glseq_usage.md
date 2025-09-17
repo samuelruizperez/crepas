@@ -172,14 +172,6 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
         -work-dir <path_to_project_directory>/output/work/
     ```
 
-    > [!TIP]
-    >  Include the `-work-dir` option if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default.
-
-    > [!WARNING]
-    > When using the `-work-dir` option, make sure that the specified path is different from the `--outdir` path to prevent
-    > overwriting issues. Note that, as in this template, the work directory can nonetheless be a subdirectory within the
-    > output directory (e.g., `<path_to_project_directory>/output/work/`).
-
     Then save the script to your project directory. For example, run:
 
     ```bash
