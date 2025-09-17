@@ -9,8 +9,7 @@
 
 1. [Before running the pipeline for the first time](#before-running-the-pipeline-for-the-first-time)
 2. [Running the pipeline](#running-the-pipeline)
-    - [Running the pipeline through an *SBATCH* job (recommended way)](#running-the-pipeline-through-an-sbatch-job)
-    - [Running the pipeline interactively (*tmux* and *srun*)](#running-the-pipeline-interactively-tmux-and-srun)
+    - [Running the pipeline through an *SBATCH* job](#running-the-pipeline-through-an-sbatch-job)
     - [Running a pipeline test](#running-a-pipeline-test)
 3. [Reference genome files](#reference-genome-files)
 4. [Tips](#tips)
