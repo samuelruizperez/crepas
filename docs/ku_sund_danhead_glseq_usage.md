@@ -125,23 +125,13 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     mkdir -p /maps/projects/dan1/data/Groth_group/<your_initials>/project1/glseq/output/
     ```
 
-4. Create an **input samplesheet** formatted as described in the [Samplesheet input](../docs/usage.md#samplesheet-input) section of the usage documentation. You can use any text editor or Excel to do this.
+4. Create an **input samplesheet** formatted as described in the [Samplesheet input](../docs/usage.md#samplesheet-input) section of the usage documentation. You can use any text editor or Excel to do this. Then place the input samplesheet file in your `glseq/` directory.
 
-    Then place your input samplesheet file in your glseq directory. For example, run:
+5. Create a **parameter file** as described in the [Inputting parameters](#inputting-parameters) section of this document. Then place the parameter file in your `glseq/` directory.
 
-    ```bash
-    rsync -av <source_path>/project1_glseq_samplesheet.csv <path_to_project_directory>/glseq/
-    ```
+6. Choose the **version** of the pipeline you want to run; you will need to provide it in the next step. You can read the examples in the [Reproducibility](../docs/usage.md#reproducibility) section of the usage documentation or ask Samuel Ruiz-Pérez ([<samper@cancer.dk>](mailto:samper@cancer.dk)) for advice.
 
-5. Create a **parameter file** as described in the [Inputting parameters](#inputting-parameters) section of this document. Then place your parameter file in your glseq directory. For example, run:
-
-    ```bash
-    rsync -av <source_path>/project1_glseq_params.yaml <path_to_project_directory>/glseq/
-    ```
-
-6. Choose the **version** of the pipeline you want to run; you will need it in the next step. You can read the examples in the [Reproducibility](../docs/usage.md#reproducibility) section of the usage documentation or ask Samuel Ruiz-Pérez ([<samper@cancer.dk>](mailto:samper@cancer.dk)) for advice.
-
-7. Create an **SBATCH script** to submit the job to the DAN System queue. Use the following template, but remember to replace the placeholders (`<...>`) with your own paths and filenames (you should not need to change anything else):
+7. Create an **SBATCH script** to submit the job to the DAN System queue. Use the following template, but remember to replace the placeholders (`<...>`) with your own paths and filenames (you should not need to change anything else). Then place this script in your **project** directory.
 
     ```bash
     #!/bin/bash
@@ -172,11 +162,13 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
         -work-dir <path_to_project_directory>/output/work/
     ```
 
-    Then save the script to your project directory. For example, run:
+> [!NOTE]
+>  Include the `-work-dir` option if you want to save the work/temporary files in a specific directory to inspect them later. Otherwise, these files are saved in `/scratch/temp/${USER}/nxf/work` by default. Remember that in the DAN System the `scratch/` directory is local (accesible only) to each compute node, so to find the work files of a pipeline run, you would need first connect to the same node where that run was executed.
 
-    ```bash
-    rsync -av <source_path>/project1_glseq_sbatch.sh <path_to_project_directory>/glseq/project1_glseq_sbatch.sh
-    ```
+> [!WARNING]
+> When using the `-work-dir` option, make sure that the specified path is different from the `--outdir` path to prevent overwriting issues. Note that the work directory can nonetheless be a subdirectory within the output directory (e.g., `<path_to_project_directory>/output/work/`).
+
+
 
 7. Now run `ls -alh <path_to_project_directory>` to see your project directory structure, which should look something like this:
 
@@ -198,7 +190,7 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     sbatch project1_glseq_sbatch.sh
     ```
 
-9. You can always check the status of the pipeline run in the `.nextflow.log` file located in the output directory:
+9. You can always check the status of the pipeline run in the `.nextflow.log` file located in the `output/` directory:
 
     ```bash
     tail -f <path_to_project_directory>/glseq/output/.nextflow.log
@@ -459,7 +451,7 @@ The pipeline generates an IGV session file that can be opened in IGV to visualiz
 > - Make sure to install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
 > - From the Application Menu, click ***View*** > ***Command Palette...*** 
 > - Type and click `>Remote-SSH: Open SSH Configuration File...`
-> - Select your configuration file at `/Users/<your_username>/.ssh/config` and add the following:
+> - Select and open your configuration file at `/Users/<your_username>/.ssh/config` and add the following:
 >
 >   ```bash
 >     Host dangpu
@@ -498,9 +490,9 @@ The pipeline generates an IGV session file that can be opened in IGV to visualiz
 
 2. On the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/), navigate to the pipeline output directory and download the following files to your local computer:
 
-    - The coverage bigWig files located in `<path_to_output_directory>/<aligner>/mergedLibrary/*/genomecov/*.bigWig`.
-    - The consensus peaks BED files located in `<path_to_output_directory>/<aligner>/mergedLibrary/*/macs3/<peak_type>/consensus/<antibody>/*consensus_peaks.bed`.
-    - The genome FASTA and FASTA index (`.fai`) files located in `<path_to_output_directory>/genome/`.
+    - The coverage bigWig files located in `<path_to_project_directory>/output/<aligner>/mergedLibrary/*/genomecov/*.bigWig`.
+    - The consensus peaks BED files located in `<path_to_project_directory>/output/<aligner>/mergedLibrary/*/macs3/<peak_type>/consensus/<antibody>/*consensus_peaks.bed`.
+    - The genome FASTA and FASTA index (`.fai`) files located in `<path_to_project_directory>/output/genome/`.
 
 3. Open IGV on your local computer:
 - Go to the `Genomes` menu and select `Load Genome from File...` to load the genome FASTA file.
