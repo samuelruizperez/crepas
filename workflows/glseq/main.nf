@@ -918,6 +918,8 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call consensus regions with Consenrich and ROCCO
     //
+    ch_consenrich_tracks = Channel.empty()
+    ch_rocco_peaks = Channel.empty()
     if (!params.skip_consenrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER (
             ch_filtered_bam_bai,
@@ -928,6 +930,10 @@ workflow GLSEQ {
             ch_rocco_params,
             ch_effective_gsize
         )
+        ch_consenrich_tracks = BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_signal
+        ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_residuals)
+        ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_eratio)
+        ch_rocco_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.rocco_peaks
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.versions.first())
     }
 
@@ -1031,6 +1037,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
     //
+    ch_epic2_peaks = Channel.empty()
     ch_epic2_frip_multiqc = Channel.empty()
     ch_epic2_peak_count_multiqc = Channel.empty()
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -1048,13 +1055,14 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_epic2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
         ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
         ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
         ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
     }
 
-
+    ch_edd_peaks = Channel.empty()
     if (!params.skip_edd) {
         //
         // MODULE: Call peaks with EDD
@@ -1064,9 +1072,11 @@ workflow GLSEQ {
             ch_chrom_sizes_endo,
             ch_blacklist
         )
+        ch_edd_peaks = EDD.out.peaks
         ch_versions = ch_versions.mix(EDD.out.versions.first())
     }
 
+    ch_macs3_peaks = Channel.empty()
     if (!params.skip_macs3) {
         //
         // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
@@ -1086,6 +1096,7 @@ workflow GLSEQ {
             params.skip_peak_qc,
             params.skip_bdgcmp
         )
+        ch_macs3_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
@@ -1095,6 +1106,8 @@ workflow GLSEQ {
     //
     //  Consensus peaks analysis
     //
+    ch_consensus_bed = Channel.empty()
+    ch_consensus_txt = Channel.empty()
     if (!params.skip_consensus_peaks) {
         // Create channels: [ antibody, [ ip_bams ] ]
         ch_ip_control_bam_cs
@@ -1105,7 +1118,7 @@ workflow GLSEQ {
             .set { ch_antibody_bams }
 
         BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2(
-            BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks,
+            ch_macs3_peaks,
             ch_antibody_bams,
             ch_fasta.map { it[1] },
             ch_gtf.map { it[1] },
@@ -1114,7 +1127,9 @@ workflow GLSEQ {
             params.narrow_peak,
             params.skip_peak_annotation,
             params.skip_deseq2_qc
-        ) 
+        )
+        ch_consensus_bed = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
+        ch_consensus_txt = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.featurecounts_summary.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_pca_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_dists_multiqc.collect { it[1] })
@@ -1124,8 +1139,9 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
     //
+    ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER(
+        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
@@ -1138,6 +1154,7 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
@@ -1147,6 +1164,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
     //
+    ch_mace_peaks = Channel.empty()
     if (!params.skip_mace) {
         BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
             ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
@@ -1160,12 +1178,12 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
+        ch_mace_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
     }
-
 
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
@@ -1232,7 +1250,20 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks
+        ch_edd_peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/edd/" +
+                    "${peak.getName()}"
+                [meta, peak, outpath, "255,140,0"] // dark orange
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        ch_macs3_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1246,7 +1277,23 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
+        ch_consensus_bed
+            .mix(ch_consensus_txt)
+            .map { meta, bed ->
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/macs3/" +
+                    "${params.narrow_peak ? 'narrow_peak' : 'broad_peak'}" +
+                    "/consensus/${meta.id}" +
+                    "${bed.getName()}"
+                [meta, bed, outpath, "255,0,255"] // magenta
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        ch_genrich_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1260,7 +1307,7 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
+        ch_mace_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1273,7 +1320,7 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
+        ch_epic2_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1286,9 +1333,7 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_signal
-            .mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_residuals)
-            .mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_eratio)
+        ch_consenrich_tracks
             .map { meta, signal -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1301,7 +1346,7 @@ workflow GLSEQ {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.rocco_peaks
+        ch_rocco_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1310,22 +1355,6 @@ workflow GLSEQ {
                     "/consenrich/rocco/" +
                     "${peak.getName()}"
                 [meta, peak, outpath, "255,105,180"] // hot pink
-            }
-            .mix(ch_files_and_outpaths)
-            .set { ch_files_and_outpaths }
-
-        BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
-            .mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt)
-            .map { meta, bed ->
-                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
-                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
-                    "/${meta.exp_type}" +
-                    "${meta.downsampling_method ? '/downsampled' : ''}" +
-                    "/macs3/" +
-                    "${params.narrow_peak ? 'narrow_peak' : 'broad_peak'}" +
-                    "/consensus/${meta.id}" +
-                    "${bed.getName()}"
-                [meta, bed, outpath, "255,0,255"] // magenta
             }
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
