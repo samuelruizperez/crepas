@@ -1379,7 +1379,7 @@ workflow GLSEQ {
             .map { meta, fasta ->
                 def outpath = "${params.outdir}/genome/" +
                     "${fasta.getName()}"
-                [fasta, outpath, "139,69,19"] // saddle brown
+                [fasta, outpath]
             }
             .set { ch_fasta_outpath }
 
