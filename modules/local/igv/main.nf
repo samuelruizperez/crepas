@@ -7,7 +7,7 @@ process IGV {
         'biocontainers/python:3.8.3' }"
 
     input:
-    tuple path(files), val(outpaths), val(colors), stageAs: "?/*"
+    tuple path(files, stageAs: "?/*"), val(outpaths), val(colors)
     tuple path(fasta), val(fasta_outpath)
 
     output:
