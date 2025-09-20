@@ -3,8 +3,8 @@ process IGV {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/python:3.8.3':
-        'biocontainers/python:3.8.3' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c6/c6135cbef4e9b7044424e79d7edfc6a44bb0178174e24c3bd6e5fc1f742d1ecf/data':
+        'community.wave.seqera.io/library/coreutils_python:4f8a678b09a371d6' }"
 
     input:
     tuple path(files, stageAs: "?/*"), val(outpaths), val(colors)
@@ -20,7 +20,7 @@ process IGV {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "igv_session."
+    def prefix = task.ext.prefix ?: "igv_session"
     def outpath_list = outpaths.join(";")
     def color_list = colors.join(";")
     """
@@ -43,7 +43,7 @@ process IGV {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "igv_session."
+    def prefix = task.ext.prefix ?: "igv_session"
     """
     touch ${prefix}.files.txt
     touch ${prefix}.xml
