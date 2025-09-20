@@ -36,7 +36,7 @@ include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '..
 include { BAM_CREATE_PARTITIONS                                       } from '../../subworkflows/local/bam_create_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO  } from '../../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER                 } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER           } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
 include { BAM_SHIFT_READS                                             } from '../../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                                      } from '../../subworkflows/local/samtools_stats_summary/main'
 include { BAM_FILTER_BLACKLIST                                        } from '../../subworkflows/local/bam_filter_blacklist/main'
@@ -919,7 +919,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: Call consensus regions with Consenrich and ROCCO
     //
     if (!params.skip_consenrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER(
+        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER (
             ch_filtered_bam_bai,
             ch_chrom_sizes_endo,
             ch_blacklist,
@@ -928,7 +928,7 @@ workflow GLSEQ {
             ch_rocco_params,
             ch_effective_gsize
         )
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER.out.versions.first())
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.versions.first())
     }
 
     //
@@ -1031,7 +1031,6 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
     //
-    ch_epic2_peaks = Channel.empty()
     ch_epic2_frip_multiqc = Channel.empty()
     ch_epic2_peak_count_multiqc = Channel.empty()
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
@@ -1049,7 +1048,6 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
-        ch_epic2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
         ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
         ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
         ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
@@ -1097,8 +1095,6 @@ workflow GLSEQ {
     //
     //  Consensus peaks analysis
     //
-    ch_macs3_consensus_bed_lib = Channel.empty()
-    ch_macs3_consensus_txt_lib = Channel.empty()
     if (!params.skip_consensus_peaks) {
         // Create channels: [ antibody, [ ip_bams ] ]
         ch_ip_control_bam_cs
@@ -1118,9 +1114,7 @@ workflow GLSEQ {
             params.narrow_peak,
             params.skip_peak_annotation,
             params.skip_deseq2_qc
-        )
-        ch_macs3_consensus_bed_lib = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
-        ch_macs3_consensus_txt_lib = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
+        ) 
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.featurecounts_summary.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_pca_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_dists_multiqc.collect { it[1] })
@@ -1130,7 +1124,6 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
     //
-    ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER(
             ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
@@ -1145,7 +1138,6 @@ workflow GLSEQ {
             params.skip_peak_annotation,
             params.skip_peak_qc
         )
-        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
@@ -1220,18 +1212,151 @@ workflow GLSEQ {
     //
     // MODULE: Create IGV session
     //
+    ch_files_and_outpaths = Channel.empty()
     if (!params.skip_igv) {
-        IGV(
-            params.aligner,
-            params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'chromap_allocation' : params.multimap_allocation_method + '/' : '',
-            params.narrow_peak ? 'narrow_peak' : 'broad_peak',
-            ch_fasta.map { it[1] },
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo.collect { it[1] }.ifEmpty([]),
-            ch_epic2_peaks.collect { it[1] }.ifEmpty([]),
-            ch_genrich_peaks.collect { it[1] }.ifEmpty([]),
-            BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks.collect { it[1] }.ifEmpty([]),
-            ch_macs3_consensus_bed_lib.collect { it[1] }.ifEmpty([]),
-            ch_macs3_consensus_txt_lib.collect { it[1] }.ifEmpty([])
+
+        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1)
+            .map { meta, bw -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/coverage/" +
+                    "${meta.norm_factor_type}" +
+                    "${meta.signal_over_input ? '/cisrpm_soi' : ''}" +
+                    "/${bw.getName()}"
+
+                [meta, bw, outpath, "0,0,178"] // dark blue
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/macs3/" +
+                    "${params.narrow_peak ? 'narrow_peak' : 'broad_peak'}" +
+                    "/${peak.getName()}"
+                [meta, peak, outpath, "178,34,34"] // firebrick
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/genrich/" +
+                    "${params.narrow_peak ? 'narrow_peak' : 'broad_peak'}" +
+                    "/${peak.getName()}"
+                [meta, peak, outpath, "34,139,34"] // forest green
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/mace/" +
+                    "${peak.getName()}"
+                [meta, peak, outpath, "255,140,0"] // dark orange
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/epic2/" +
+                    "${peak.getName()}"
+                [meta, peak, outpath, "138,43,226"] // blue violet
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_signal
+            .mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_residuals)
+            .mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_eratio)
+            .map { meta, signal -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/consenrich/" +
+                    "${signal.getName()}"
+                [meta, signal, outpath, "255,20,147"] // deep pink
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.rocco_peaks
+            .map { meta, peak -> 
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/consenrich/rocco/" +
+                    "${peak.getName()}"
+                [meta, peak, outpath, "255,105,180"] // hot pink
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
+            .mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt)
+            .map { meta, bed ->
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                    "/${meta.exp_type}" +
+                    "${meta.downsampling_method ? '/downsampled' : ''}" +
+                    "/macs3/" +
+                    "${params.narrow_peak ? 'narrow_peak' : 'broad_peak'}" +
+                    "/consensus/${meta.id}" +
+                    "${bed.getName()}"
+                [meta, bed, outpath, "255,0,255"] // magenta
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        ch_gtf
+            .map { meta, gtf ->
+                def outpath = "${params.outdir}/genome/" +
+                    "${gtf.getName()}"
+                [meta, gtf, outpath, "0,128,0"] // green
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        // create channel: [ list_of_files, list_of_outpaths ]
+        ch_files_and_outpaths
+            .map { meta, file, outpath, color -> [1, file, outpath, color]}
+            .groupTuple()
+            .map { id, files, outpaths, colors -> [files, outpaths, colors]}
+            .set { ch_files_and_outpaths }
+
+        ch_fasta
+            .map { meta, fasta ->
+                def outpath = "${params.outdir}/genome/" +
+                    "${fasta.getName()}"
+                [fasta, outpath, "139,69,19"] // saddle brown
+            }
+            .set { ch_fasta_outpath }
+
+        IGV (
+            ch_files_and_outpaths,
+            ch_fasta_outpath            
         )
         ch_versions = ch_versions.mix(IGV.out.versions)
     }

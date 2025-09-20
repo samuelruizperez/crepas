@@ -3,7 +3,7 @@ include { CONSENRICH           } from '../../../modules/local/consenrich/main'
 include { ROCCO               } from '../../../modules/local/rocco/main'
 
 
-workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
+workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
     take:
     ch_bam_bai            // channel: [ val(meta), [ bam ], [ bai ] ]
     ch_chrom_sizes        // channel: [ val(meta), [ chrom_sizes ] ]
@@ -137,7 +137,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_HOMER {
 
     emit:
 
-    rocco_bed   = ROCCO.out.bed            // channel: [ val(meta), path(rocco_bed) ]
+    consenrich_signal       = CONSENRICH.out.signal_track   // channel: [ val(meta), path(consenrich_signal_track.bw) ]
+    consenrich_residuals    = CONSENRICH.out.residuals_track // channel
+    consenrich_eratio       = CONSENRICH.out.eratio_track   // channel: [ val(meta), path(consenrich_eratio_track.bw) ]
+    rocco_peaks             = ROCCO.out.bed            // channel: [ val(meta), path(rocco_bed) ]
 
     versions    = ch_versions              // channel: [ versions.yml ]
 }

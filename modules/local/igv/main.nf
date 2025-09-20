@@ -1,7 +1,5 @@
-/*
- * Create IGV session file
- */
 process IGV {
+    label 'process_single'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -9,47 +7,46 @@ process IGV {
         'biocontainers/python:3.8.3' }"
 
     input:
-    val aligner_dir
-    val allocation_method_dir
-    val peak_dir
-    path fasta
-    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/coverage/*")
-    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/epic2/${peak_dir}/*")
-    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/genrich/${peak_dir}/consensus/*")
-    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/*")
-    path ("${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/consensus/*")
-    path ("mappings/*")
+    tuple path(files), val(outpaths), val(colors)
+    tuple path(fasta), val(fasta_outpath)
 
     output:
-    path "*files.txt"  , emit: txt
-    path "*.xml"       , emit: xml
-    path fasta         , emit: fasta
+    path "*files.txt", emit: txt
+    path "*.xml", emit: xml
     path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
-    script: // scripts are bundled with the pipeline in grothlab/glseq/bin/
-    def consensus_dir = "${aligner_dir}/mergedLibrary/${allocation_method_dir}chipseq/macs3/${peak_dir}/consensus/"
+    script:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "igv_session."
+    def outpath_list = outpaths.join(";")
+    def color_list = colors.join(";")
     """
-    find * -type l -name "*.bigWig" -exec echo -e ""{}"\\t0,0,178" \\; > bigwig.igv.txt
-    find * -type l -name "*Peak" -exec echo -e ""{}"\\t0,0,178" \\; > peaks.igv.txt
-    
-    # This is so that the filename matches, due to the modification in modules.config
-    # in the first column of each line in peaks.igv.txt, replace the last occurrence of _peaks.broadPeak with .peaks.broadPeak
-    sed -i 's/_peaks.broadPeak/.peaks.broadPeak/' peaks.igv.txt
+    # save outpaths and colors to a tab-separated file with one line per file
+    paste \
+        <(echo "${outpath_list}" | tr ';' '\\n') \
+        <(echo "${color_list}" | tr ';' '\\n') \
+        > ${prefix}.files.txt
 
-    # Avoid error when consensus not produced
-    find * -type l -name "*.bed" -exec echo -e ""{}"\\t0,0,178" \\; | { grep "^$consensus_dir" || test \$? = 1; } > consensus.igv.txt
+    igv_files_to_session.py \
+        ${args} \
+        --file_list ${prefix}.files.txt \
+        --genome_fasta ${fasta_outpath} \
+        --xml_output ${prefix}.xml
 
-    if [ -d "mappings" ]; then
-        cat mappings/* > replace_paths.txt
-    else
-        touch replace_paths.txt
-    fi
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version | sed 's/Python //g')
+    END_VERSIONS
+    """
 
-    cat *.igv.txt > igv_files_orig.txt
-    igv_files_to_session.py igv_session.xml igv_files_orig.txt replace_paths.txt ../../genome/${fasta.getName()} --path_prefix '../../'
+    stub:
+    def prefix = task.ext.prefix ?: "igv_session."
+    """
+    touch ${prefix}.files.txt
+    touch ${prefix}.xml
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
