@@ -7,7 +7,7 @@ process IGV {
         'community.wave.seqera.io/library/coreutils_python:4f8a678b09a371d6' }"
 
     input:
-    tuple path(files, stageAs: "?/*"), val(outpaths), val(colors)
+    tuple path(files), val(outpaths), val(colors)
     tuple path(fasta), val(fasta_outpath)
 
     output:

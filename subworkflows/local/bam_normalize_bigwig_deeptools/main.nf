@@ -633,9 +633,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         )
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
-
-    } else {
-        ch_binsize1 = ch_bigwig_endo_rpm
     }
 
     emit:
