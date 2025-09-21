@@ -1069,7 +1069,7 @@ workflow GLSEQ {
         // SUBWORKFLOW: Call peaks with DANPOS2
         //
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_ip_control_bam_cs
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
         )
         ch_danpos2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.peaks
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
