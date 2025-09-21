@@ -49,7 +49,7 @@ process DANPOS2_DPEAK {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        DANPOS: \$(echo $(danpos.py dpeak -h 2>&1) | grep -oP 'danpos\s+\K[\d.]+' | head -1)
+        DANPOS: \$(echo \$(danpos.py dpeak -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
     END_VERSIONS
     """
 
@@ -60,7 +60,7 @@ process DANPOS2_DPEAK {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        DANPOS: \$(echo $(danpos.py dpeak -h 2>&1) | grep -oP 'danpos\s+\K[\d.]+' | head -1)
+        DANPOS: \$(echo \$(danpos.py dpeak -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
     END_VERSIONS
     """
 }
