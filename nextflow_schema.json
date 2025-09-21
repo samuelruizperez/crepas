@@ -27,7 +27,7 @@
                     "type": "integer",
                     "description": "Estimated fragment size used to extend single-end reads.",
                     "fa_icon": "fas fa-chart-area",
-                    "default": 150
+                    "default": 250
                 },
                 "seq_platform": {
                     "type": "string",
@@ -595,14 +595,14 @@
                 },
                 "coverage_extend_reads": {
                     "type": "integer",
-                    "default": 150,
+                    "default": 250,
                     "description": "This parameter allows the extension of reads to fragment size. If set, each read is extended, without exception.",
                     "help_text": "Single-end: Requires a user specified value for the final fragment length. Reads that already exceed this fragment length will not be extended. Paired-end: Reads with mates are always extended to match the fragment size defined by the two read mates. Unmated reads, mate reads that map too far apart (>4x fragment length) or even map to different chromosomes are treated like single-end reads. The input of a fragment length value is optional. If no value is specified, it is estimated from the data (mean of the fragment size of all mate reads). Read the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-processing-options) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "coverage_bin_size": {
                     "type": "integer",
-                    "default": 150,
+                    "default": 250,
                     "description": "Size of the bins, in bases, for the output of the coverage calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -782,7 +782,7 @@
                 "macs_extsize": {
                     "type": "integer",
                     "description": "Used to extend reads in 5'->3' direction to fix-sized fragments when processing ATAC-seq data, for which MACS3 bypasses building the shifting model (`--nomodel`). See [MACS3 documentation](https://macs3-project.github.io/MACS/docs/callpeak.html) for more details.",
-                    "default": 150
+                    "default": 250
                 },
                 "macs_slocal": {
                     "type": "integer",
@@ -890,7 +890,7 @@
                 },
                 "epic2_binsize": {
                     "type": "integer",
-                    "default": 150,
+                    "default": 250,
                     "description": "Size of the windows to scan the genome in epic2. Bin size is the smallest possible island.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -899,6 +899,12 @@
                     "default": 0.01,
                     "description": "In epic2 peak calling, remove all islands with an FDR above this cutoff.",
                     "fa_icon": "fas fa-chart-area"
+                },
+                "skip_danpos2": {
+                    "type": "boolean",
+                    "description": "Skip DANPOS2 peak calling.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
                 },
                 "skip_epic2": {
                     "type": "boolean",
