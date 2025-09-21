@@ -300,7 +300,7 @@ workflow INPUT_CHECK {
             // Antibody checks
             if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {
-                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq samples. Check sample: ${meta.id}")
+                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
                 }
                 if (meta.antibody && meta.is_input_control) {
                     error("ERROR: `antibody` must not be specified for input control samples. Check sample: ${meta.id}")
