@@ -39,6 +39,9 @@ include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
 include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
 include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
 
+include { GFF3SORT               } from '../../../modules/local/gff3sort/main'
+include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/main'
+include { TABIX_TABIX           } from '../../../modules/nf-core/tabix/tabix/main'
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
 include { CHROM_SIZES_SPIKEIN_SPLIT  } from '../../../modules/local/chrom_sizes_spikein_split/main'
@@ -67,6 +70,7 @@ workflow PREPARE_GENOME {
     sparsebed          //    file: /path/to/sparsebed.bed
     active_regions     //    file: /path/to/active_regions.bed
     rocco_params       //    file: /path/to/rocco_params.yml
+    skip_gtf_index      //    boolean: skip GTF indexing
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
@@ -106,20 +110,47 @@ workflow PREPARE_GENOME {
     ch_gtf = Channel.empty()
     if (gtf) {
         if (gtf.endsWith('.gz')) {
-            ch_gtf      = GUNZIP_GTF ( [ [id:'gtf'], file(gtf, checkIfExists: true) ] ).gunzip
+            gtf = file(gtf, checkIfExists: true)
+            ch_gtf      = GUNZIP_GTF ( [ [id:"${gtf.getBaseName(2)}"], gtf ] ).gunzip
             ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
         } else {
-            ch_gtf = Channel.value( [ [id:'gtf'], file(gtf, checkIfExists: true) ] )
+            gtf = file(gtf, checkIfExists: true)
+            ch_gtf = Channel.value( [ [id:"${gtf.getBaseName(1)}"], gtf ] )
         }
     } else if (gff) {
         if (gff.endsWith('.gz')) {
-            ch_gff      = GUNZIP_GFF ( [ [id:'gff'], file(gff, checkIfExists: true) ] ).gunzip
+            gff = file(gff, checkIfExists: true)
+            ch_gff      = GUNZIP_GFF ( [ [id:"${gff.getBaseName(2)}"], gff ] ).gunzip
             ch_versions = ch_versions.mix(GUNZIP_GFF.out.versions)
         } else {
-            ch_gff = Channel.value( [ [id:'gff'], file(gff, checkIfExists: true) ] )
+            gff = file(gff, checkIfExists: true)
+            ch_gff = Channel.value( [ [id:"${gff.getBaseName(1)}"], gff ] )
         }
         ch_gtf      = GFFREAD ( ch_gff, ch_fasta.map{ it[1] } ).gtf
         ch_versions = ch_versions.mix(GFFREAD.out.versions)
+    }
+
+    if (!skip_gtf_index) {
+        
+        //
+        // MODULE: Sort GTF file with gff3sort
+        //
+        GFF3SORT ( ch_gtf )
+        ch_gtf = GFF3SORT.out.gtf
+        ch_versions = ch_versions.mix(GFF3SORT.out.versions)
+
+        //
+        // MODULE: Compress sorted GTF file with bgzip
+        //
+        TABIX_BGZIP ( ch_gtf )
+        ch_versions = ch_versions.mix(TABIX_BGZIP.out.versions)
+
+        //
+        // MODULE: Index compressed GTF file with tabix
+        //
+        TABIX_TABIX ( TABIX_BGZIP.out.output )
+        ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
+
     }
 
     ch_sparsebed = Channel.empty()

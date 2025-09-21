@@ -82,6 +82,7 @@ workflow GROTHLAB_GLSEQ {
         sparsebed,
         active_regions,
         rocco_params,
+        params.skip_gtf_index,
         gene_bed,
         bwa_index,
         bowtie2_index,

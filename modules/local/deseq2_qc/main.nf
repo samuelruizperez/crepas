@@ -52,4 +52,24 @@ process DESEQ2_QC {
         bioconductor-deseq2: \$(Rscript -e "library(DESeq2); cat(as.character(packageVersion('DESeq2')))")
     END_VERSIONS
     """
+    
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.pdf
+    touch ${prefix}.RData
+    touch ${prefix}.rds
+    touch ${prefix}.pca.vals.txt
+    touch ${prefix}.pca.vals_mqc.tsv
+    touch ${prefix}.sample.dists.txt
+    touch ${prefix}.sample.dists_mqc.tsv
+    touch ${prefix}.log
+    touch size_factors
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        bioconductor-deseq2: \$(Rscript -e "library(DESeq2); cat(as.character(packageVersion('DESeq2')))")
+    END_VERSIONS
+    """
 }

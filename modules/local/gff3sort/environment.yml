@@ -2,6 +2,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/environment-schema.json
 channels:
   - conda-forge
-  - bioconda
 dependencies:
-  - conda-forge::perl=5.26.2
+  - bioconda::gff3sort=0.1.a1a2bc9
