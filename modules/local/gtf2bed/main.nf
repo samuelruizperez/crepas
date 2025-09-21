@@ -18,10 +18,22 @@ process GTF2BED {
     task.ext.when == null || task.ext.when
 
     script: // This script is bundled with the pipeline
+    def prefix = task.ext.prefix ?: "${gtf.baseName}"
     """
     gtf2bed \\
-        $gtf \\
-        > ${gtf.baseName}.bed
+        ${gtf} \\
+        > ${prefix}.bed
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${gtf.baseName}"
+    """
+    touch ${prefix}.bed
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -464,25 +464,25 @@ The pipeline generates an IGV session file that can be opened in IGV to visualiz
 >   ```
 > - Save the file, restart Visual Studio Code, and reconnect to DAN GPU.
 
-3. If you have not already, launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
+<!-- 3. If you have not already, launch a minimal interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
 
     ```bash
     srun -c 1 --mem=8gb --time=1-00:00:00 --pty bash
-    ```
+    ``` -->
 
-4. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
+3. Load the required [*modules*](https://modules.readthedocs.io/en/latest/):
 
     ```bash
     module load IGV
     ```
 
-5. Run IGV:
+4. Run IGV:
 
     ```bash
     igv.sh
     ```
 
-6. The IGV window should open through XQuartz on your local computer. Go to the `File` menu and select `Open Session...` to open the IGV session file located in the `/igv` directory of the pipeline output directory.
+5. The IGV window should open through XQuartz on your local computer. Go to the `File` menu and select `Open Session...` to open the IGV session file located in the `/igv` directory of the pipeline output directory.
 
 #### Opening on a local computer
 
