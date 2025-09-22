@@ -9,8 +9,7 @@ process UCSC_BIGWIGAVERAGEOVERBED {
         'biocontainers/ucsc-bigwigaverageoverbed:377--h0b8a92a_2' }"
 
     input:
-    tuple val(meta), path(bed)
-    path bigwig
+    tuple val(meta), path(bed), path(bigwig)
 
     output:
     tuple val(meta), path("*.tab"), emit: tab

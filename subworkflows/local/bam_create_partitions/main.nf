@@ -3,7 +3,7 @@ include { SAMTOOLS_INDEX                                            } from '../.
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
-include { BIGTOOLS_BIGWIGAVERAGEOVERBED                             } from '../../../modules/local/bigtools/bigwigaverageoverbed/main'
+include { UCSC_BIGWIGAVERAGEOVERBED                             } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                                   } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                          } from '../../../modules/local/partition_or_rfd_smooth/main'
@@ -169,15 +169,21 @@ workflow BAM_CREATE_PARTITIONS {
         }
         .collectFile( name: '7_scar_ch_num_windows.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
+    ch_bigwig
+        .combine(ch_windows)
+        .map { meta, bigwig, meta_windows, windows ->
+            [ meta, windows, bigwig ]
+        }
+        .set { ch_windows_bigwig }
+
     //
     // MODULE: Calculate average coverage over windows
     //
-    BIGTOOLS_BIGWIGAVERAGEOVERBED (
-        ch_bigwig,
-        ch_windows
+    UCSC_BIGWIGAVERAGEOVERBED (
+        ch_windows_bigwig
     )
-    ch_bwaob = BIGTOOLS_BIGWIGAVERAGEOVERBED.out.bed
-    ch_versions = ch_versions.mix(BIGTOOLS_BIGWIGAVERAGEOVERBED.out.versions.first())
+    ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
+    ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
 
     // TODO: print for debugging
     ch_bwaob

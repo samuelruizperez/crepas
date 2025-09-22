@@ -1026,7 +1026,7 @@ workflow GLSEQ {
 
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
+    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_cs
@@ -1044,7 +1044,7 @@ workflow GLSEQ {
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -1094,7 +1094,7 @@ workflow GLSEQ {
         //
         // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
         //
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER(
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
             ch_ip_control_bam_cs,
             ch_fasta,
             ch_gtf,
@@ -1155,7 +1155,7 @@ workflow GLSEQ {
     ch_genrich_peaks = Channel.empty()
     if (!params.skip_genrich) {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_blacklist,
@@ -1216,7 +1216,7 @@ workflow GLSEQ {
     // SUBWORKFLOW: SCAR-seq and OK-seq analysis: partitioning of reads
     //
     ch_partition_smooth = Channel.empty()
-    BAM_CREATE_PARTITIONS(
+    BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
@@ -1233,7 +1233,7 @@ workflow GLSEQ {
     //
     // SUBWORKFLOW: Create SAMtools summary table
     //
-    SAMTOOLS_STATS_SUMMARY(
+    SAMTOOLS_STATS_SUMMARY (
         ch_samtools_stats_summary,
         params.genome,
         params.spikein_genome ?: Channel.value([])
@@ -1464,7 +1464,7 @@ workflow GLSEQ {
         //     .flatten()
         //     .collectFile(name: 'name_replacement.txt', newLine: true)
 
-        MULTIQC(
+        MULTIQC (
             ch_multiqc_files.collect(),
             ch_multiqc_config.toList(),
             ch_multiqc_custom_config.toList(),
