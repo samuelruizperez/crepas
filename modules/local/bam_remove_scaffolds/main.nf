@@ -28,7 +28,7 @@ process BAM_REMOVE_SCAFFOLDS {
         --with-header \\
         --no-PG \\
         ${bam} \\
-        | grep -v -E '\\.[^\\t]*|_random|^@CO|^@PG' \\
+        | awk 'BEGIN{OFS=FS="\t"} /^@CO/ {next} /^@PG/ {next} (\$2 ~ /SN:.*(\\.|_random)/) {next} (\$3 ~ /\\./ || \$3 ~ /_random/) {next} {print}' \\
         | samtools view \\
             --threads ${nthreads2} \\
             --bam \\
