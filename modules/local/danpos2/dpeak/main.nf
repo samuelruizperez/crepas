@@ -38,7 +38,7 @@ process DANPOS2_DPEAK {
     def treatment_count_arg = treatment_count ? "treatment/${treatment_count}" : ""
     def control_count_arg = control_count ? "control/${control_count}" : ""
     def count_arg = treatment_count || control_count ? "--count ${treatment_count_arg + control_count_arg}" : ""
-    def se = meta.single_end ? "" : "--paired"
+    def se = meta.single_end ? "" : "--paired 1"
     """
     danpos.py dpeak \\
         ${file_arg} \\
