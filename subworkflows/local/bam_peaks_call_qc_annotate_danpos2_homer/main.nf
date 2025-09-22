@@ -106,7 +106,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
 
     emit:
 
-    peaks                        = DANPOS2_DPEAK.out.peaks                  // channel: [ meta, "result/*.peaks.integrative.xls" ]
+    peaks                        = DANPOS2_DPEAK.out.pooled_xls                  // channel: [ meta, "result/*.peaks.integrative.xls" ]
 
     versions                     = ch_versions                      // channel: [ versions.yml ]
 }

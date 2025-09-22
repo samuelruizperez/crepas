@@ -9,21 +9,22 @@ process DANPOS2_DPEAK {
 
     input:
     tuple val(meta), 
-          path(treatment,       stageAs: 'treatment/*'), 
-          path(treatment_input, stageAs: 'treatment_input/*'), 
+          path(treatment,       stageAs: "treatment/*"), 
+          path(treatment_input, stageAs: "treatment_input/*"), 
           val(treatment_count), 
           path(control,         stageAs: 'control/*'), 
           path(control_input,   stageAs: 'control_input/*'), 
           val(control_count)
 
     output:
-    tuple val(meta), path("result/*.peaks.integrative.xls"), emit: peaks
-    tuple val(meta), path("result/pooled/*.wig"), emit: pooled_wig
-    tuple val(meta), path("result/pooled/*peaks.xls"), emit: pooled_xls
-    tuple val(meta), path("result/pooled/*refregions.xls"), emit: pooled_bed
-    tuple val(meta), path("result/diff/*.wig"), emit: diff_wig
-    tuple val(meta), path("result/diff/*local_gain.refpeaks.xls"), emit: local_gain
-    tuple val(meta), path("result/diff/*local_loss.refpeaks.xls"), emit: local_loss
+    tuple val(meta), path("pooled/*.peaks.xls"), emit: pooled_xls
+    tuple val(meta), path("*.peaks.integrative.xls"), emit: integrative_peaks, optional: true
+    tuple val(meta), path("pooled/*input.wig"), emit: pooled_input_wig
+    tuple val(meta), path("pooled/*smooth.wig"), emit: pooled_treat_wig
+    tuple val(meta), path("pooled/*refregions.xls"), emit: pooled_bed, optional: true
+    tuple val(meta), path("diff/*.wig"), emit: diff_wig, optional: true
+    tuple val(meta), path("diff/*local_gain.refpeaks.xls"), emit: local_gain, optional: true
+    tuple val(meta), path("diff/*local_loss.refpeaks.xls"), emit: local_loss, optional: true
     path "versions.yml", emit: versions
 
     when:
@@ -31,6 +32,7 @@ process DANPOS2_DPEAK {
 
     script:
     def args = task.ext.args ?: ""
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def file_arg = control ? "treatment/:control/" : "treatment/"
     def treatment_input_arg = treatment_input ? "treatment/:treatment_input/" : ""
     def control_input_arg = control_input ? "control/:control_input/" : ""
@@ -46,7 +48,11 @@ process DANPOS2_DPEAK {
         ${input_arg} \\
         ${count_arg} \\
         ${se} \\
-        --out ./result/
+        --out ./
+
+    # replace any occurrence of 'treatment' in subdirectory or file names with the prefix
+    find ./result/ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"'
+    find ./result/ -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"'
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -55,7 +61,7 @@ process DANPOS2_DPEAK {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.peaks.integrative.xls
 
