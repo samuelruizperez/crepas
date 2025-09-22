@@ -45,7 +45,8 @@ process DANPOS2_DPEAK {
         ${args} \\
         ${input_arg} \\
         ${count_arg} \\
-        ${se}
+        ${se} \\
+        --out ./result/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

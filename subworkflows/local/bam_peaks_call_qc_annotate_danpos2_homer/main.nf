@@ -3,6 +3,7 @@
 // Call peaks with epic2, annotate with HOMER and perform downstream QC
 //
 
+include { BAM_REMOVE_SCAFFOLDS     } from '../../../modules/local/bam_remove_scaffolds/main'
 include { DANPOS2_DPEAK           } from '../../../modules/local/danpos2/dpeak/main'
 
 
@@ -14,8 +15,17 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
 
     ch_versions = Channel.empty()
 
+    //
+    // MODULE: Remove scaffolds from BAM files
+    //
+    BAM_REMOVE_SCAFFOLDS (
+        ch_bam
+    )
+    ch_versions = ch_versions.mix(BAM_REMOVE_SCAFFOLDS.out.versions.first())
+
+
     // Branch channels based on if input control is present
-    ch_bam
+    BAM_REMOVE_SCAFFOLDS.out.bam
         .branch { meta, bam ->
             ips_with_ipcontrol: meta.input_control
                 return [meta.input_control, meta.antibody, meta, bam]
