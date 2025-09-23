@@ -97,7 +97,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         .set { ch_ip_control_bam_merged_reps }
 
     //
-    // MODULE: Call peaks with danpos2
+    // MODULE: Call peaks with DANPOS2
     //
     DANPOS2_DPEAK (
         ch_ip_control_bam_merged_reps
