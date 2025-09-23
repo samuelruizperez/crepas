@@ -51,8 +51,8 @@ process DANPOS2_DPEAK {
         --out ./
 
     # replace any occurrence of 'treatment' in subdirectory or file names with the prefix
-    find ./result/ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"'
-    find ./result/ -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"'
+    find ./ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"';
+    find ./ -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"';
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
