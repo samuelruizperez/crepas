@@ -99,6 +99,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         }
         .set { ch_ip_control_bam_merged_reps }
 
+    ch_dpeak_pooled_xls = Channel.empty()
     if (!skip_dpeak) {
         //
         // MODULE: Call peaks with DANPOS2 dpeak
@@ -106,6 +107,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         DANPOS2_DPEAK (
             ch_ip_control_bam_merged_reps
         )
+        ch_dpeak_pooled_xls = DANPOS2_DPEAK.out.pooled_xls
         ch_versions = ch_versions.mix(DANPOS2_DPEAK.out.versions.first())
     }
 
@@ -123,7 +125,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
 
     emit:
 
-    dpeak_pooled_xls                        = DANPOS2_DPEAK.out.pooled_xls
+    dpeak_pooled_xls                        = ch_dpeak_pooled_xls
 
     versions                     = ch_versions                      // channel: [ versions.yml ]
 }
