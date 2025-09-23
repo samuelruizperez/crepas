@@ -99,7 +99,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         }
         .set { ch_ip_control_bam_merged_reps }
 
-    if (skip_dpeak) {
+    if (!skip_dpeak) {
         //
         // MODULE: Call peaks with DANPOS2 dpeak
         //
@@ -110,7 +110,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     }
 
     
-    if (skip_dpos) {
+    if (!skip_dpos) {
         //
         // MODULE: call peaks with DANPOS2 dpos
         //
