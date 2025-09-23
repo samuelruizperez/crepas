@@ -17,14 +17,14 @@ process DANPOS2_DPEAK {
           val(control_count)
 
     output:
-    tuple val(meta), path("pooled/*.peaks.xls"), emit: pooled_xls
-    tuple val(meta), path("*.peaks.integrative.xls"), emit: integrative_peaks, optional: true
-    tuple val(meta), path("pooled/*input.wig"), emit: pooled_input_wig
-    tuple val(meta), path("pooled/*smooth.wig"), emit: pooled_treat_wig
-    tuple val(meta), path("pooled/*refregions.xls"), emit: pooled_bed, optional: true
-    tuple val(meta), path("diff/*.wig"), emit: diff_wig, optional: true
-    tuple val(meta), path("diff/*local_gain.refpeaks.xls"), emit: local_gain, optional: true
-    tuple val(meta), path("diff/*local_loss.refpeaks.xls"), emit: local_loss, optional: true
+    tuple val(meta), path("result/pooled/*.peaks.xls"), emit: pooled_xls
+    tuple val(meta), path("result/*.peaks.integrative.xls"), emit: integrative_peaks, optional: true
+    tuple val(meta), path("result/pooled/*input.wig"), emit: pooled_input_wig
+    tuple val(meta), path("result/pooled/*smooth.wig"), emit: pooled_treat_wig
+    tuple val(meta), path("result/pooled/*refregions.xls"), emit: pooled_bed, optional: true
+    tuple val(meta), path("result/diff/*.wig"), emit: diff_wig, optional: true
+    tuple val(meta), path("result/diff/*local_gain.refpeaks.xls"), emit: local_gain, optional: true
+    tuple val(meta), path("result/diff/*local_loss.refpeaks.xls"), emit: local_loss, optional: true
     path "versions.yml", emit: versions
 
     when:
@@ -48,12 +48,15 @@ process DANPOS2_DPEAK {
         ${input_arg} \\
         ${count_arg} \\
         ${se} \\
-        --out ./
+        --out result/
 
-    # replace any occurrence of 'treatment' in subdirectory or file names with the prefix
+    # replace any occurrence of 'treatment' in filenames with the prefix
     find ./ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"' \\;
-    find ./ -mindepth 1 -maxdepth 1 -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"' \\;
-    # TODO: TEMP:
+
+    # replace any occurrence of 'treatment' in subdirectory names with the prefix
+    #find ./ -mindepth 1 -maxdepth 1 -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"' \\;
+    
+    # TODO: this is just to keep track of the final dir structure:
     find .
 
     cat <<-END_VERSIONS > versions.yml
@@ -61,11 +64,13 @@ process DANPOS2_DPEAK {
         DANPOS: \$(echo \$(danpos.py dpeak -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
     END_VERSIONS
     """
-
+    
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.peaks.integrative.xls
+    touch ${prefix}.peaks.xls
+    touch ${prefix}.input.wig
+    touch ${prefix}.smooth.wig
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
