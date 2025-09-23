@@ -1063,15 +1063,15 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
     }
 
-    ch_danpos2_peaks = Channel.empty()
-    if (!params.skip_danpos2) {
+    if (!params.skip_dpeak || !params.skip_dpos) {
         //
         // SUBWORKFLOW: Call peaks with DANPOS2
         //
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) }
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            params.skip_dpeak,
+            params.skip_dpos
         )
-        ch_danpos2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.peaks
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
 

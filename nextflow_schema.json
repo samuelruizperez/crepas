@@ -900,9 +900,15 @@
                     "description": "In epic2 peak calling, remove all islands with an FDR above this cutoff.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "skip_danpos2": {
+                "skip_dpeak": {
                     "type": "boolean",
-                    "description": "Skip DANPOS2 peak calling.",
+                    "description": "Skip DANPOS2's dpeak peak calling.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
+                },
+                "skip_dpos": {
+                    "type": "boolean",
+                    "description": "Skip DANPOS2's dpos peak calling.",
                     "fa_icon": "fas fa-fast-forward",
                     "default": true
                 },

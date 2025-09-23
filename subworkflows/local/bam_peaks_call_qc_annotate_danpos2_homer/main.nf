@@ -5,11 +5,14 @@
 
 include { BAM_REMOVE_SCAFFOLDS     } from '../../../modules/local/bam_remove_scaffolds/main'
 include { DANPOS2_DPEAK           } from '../../../modules/local/danpos2/dpeak/main'
+include { DANPOS2_DPOS            } from '../../../modules/local/danpos2/dpos/main'
 
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
+    skip_dpeak
+    skip_dpos
 
     main:
 
@@ -96,17 +99,31 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         }
         .set { ch_ip_control_bam_merged_reps }
 
-    //
-    // MODULE: Call peaks with DANPOS2
-    //
-    DANPOS2_DPEAK (
-        ch_ip_control_bam_merged_reps
-    )
-    ch_versions = ch_versions.mix(DANPOS2_DPEAK.out.versions.first())
+    if (skip_dpeak) {
+        //
+        // MODULE: Call peaks with DANPOS2 dpeak
+        //
+        DANPOS2_DPEAK (
+            ch_ip_control_bam_merged_reps
+        )
+        ch_versions = ch_versions.mix(DANPOS2_DPEAK.out.versions.first())
+    }
+
+    
+    if (skip_dpos) {
+        //
+        // MODULE: call peaks with DANPOS2 dpos
+        //
+        DANPOS2_DPOS (
+            ch_ip_control_bam_merged_reps
+        )
+        ch_versions = ch_versions.mix(DANPOS2_DPOS.out.versions.first())
+    }
+    
 
     emit:
 
-    peaks                        = DANPOS2_DPEAK.out.pooled_xls                  // channel: [ meta, "result/*.peaks.integrative.xls" ]
+    dpeak_pooled_xls                        = DANPOS2_DPEAK.out.pooled_xls
 
     versions                     = ch_versions                      // channel: [ versions.yml ]
 }
