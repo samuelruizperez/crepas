@@ -18,7 +18,7 @@ process DANPOS2_DPEAK {
 
     output:
     tuple val(meta), path("result/pooled/*.peaks.xls"), emit: pooled_xls
-    tuple val(meta), path("result/*.peaks.integrative.xls"), emit: integrative_peaks, optional: true
+    tuple val(meta), path("*.peaks.integrative.xls"), emit: integrative_peaks, optional: true
     tuple val(meta), path("result/pooled/*input.wig"), emit: pooled_input_wig
     tuple val(meta), path("result/pooled/*smooth.wig"), emit: pooled_treat_wig
     tuple val(meta), path("result/pooled/*refregions.xls"), emit: pooled_bed, optional: true

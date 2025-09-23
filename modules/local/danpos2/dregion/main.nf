@@ -1,4 +1,4 @@
-process DANPOS2_DPOS {
+process DANPOS2_DREGION {
     tag "${meta.id}"
     label 'process_low_memory'
 
@@ -17,15 +17,13 @@ process DANPOS2_DPOS {
           val(control_count)
 
     output:
-    tuple val(meta), path("result/pooled/*.smooth.wig"), emit: pooled_treat_wig
-    tuple val(meta), path("result/pooled/*.smooth.positions.xls"), emit: pooled_smooth_positions
-    tuple val(meta), path("result/pooled/*_input.wig"), emit: pooled_input_wig, optional: true
-    tuple val(meta), path("*.positions.integrative.xls"), emit: integrative_pos, optional: true
-    tuple val(meta), path("*.reference_positions.xls"), emit: reference_pos, optional: true
-    tuple val(meta), path("*.positions.ref_adjust.xls"), emit: pos_ref_adjust, optional: true
+    tuple val(meta), path("*.regions.integrative.xls"), emit: integrative_regions, optional: true
+    tuple val(meta), path("result/diff/*local_gain.refregions.xls"), emit: local_gain, optional: true
+    tuple val(meta), path("result/diff/*local_loss.refregions.xls"), emit: local_loss, optional: true
     tuple val(meta), path("result/diff/*.wig"), emit: diff_wig, optional: true
-
-
+    tuple val(meta), path("result/pooled/*.refregions.xls"), emit: pooled_refregions
+    tuple val(meta), path("result/pooled/*.regions.xls"), emit: pooled_regions, optional: true
+    tuple val(meta), path("result/pooled/*.wig"), emit: pooled_wig, optional: true
     path "versions.yml", emit: versions
 
     when:
@@ -43,7 +41,7 @@ process DANPOS2_DPOS {
     def count_arg = treatment_count || control_count ? "--count ${treatment_count_arg + control_count_arg}" : ""
     def se = meta.single_end ? "" : "--paired 1"
     """
-    danpos.py dpos \\
+    danpos.py dregion \\
         ${file_arg} \\
         ${args} \\
         ${input_arg} \\
@@ -62,10 +60,10 @@ process DANPOS2_DPOS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dpos -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
+        DANPOS: \$(echo \$(danpos.py dregion -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
     END_VERSIONS
     """
-
+    
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
@@ -75,7 +73,7 @@ process DANPOS2_DPOS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dpos -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
+        DANPOS: \$(echo \$(danpos.py dregion -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
     END_VERSIONS
     """
 }
