@@ -702,6 +702,18 @@
                     "description": "Skip local TE counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "skip_tecount_gz": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Skip gzip compression of TEcount output files.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_telocal_gz": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Skip gzip compression of TElocal output files.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
                 "te_counting_mode": {
                     "type": "string",
                     "default": "multi",

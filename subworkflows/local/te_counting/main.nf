@@ -16,6 +16,8 @@ workflow TE_COUNTING {
     ch_telocal_gene_index
     ch_telocal_te_index
     skip_telocal
+    skip_tecount_gz
+    skip_telocal_gz
 
     main:
 
@@ -40,7 +42,8 @@ workflow TE_COUNTING {
     TECOUNT (
         ch_bam,
         ch_tecount_gene_index,
-        ch_tecount_te_index
+        ch_tecount_te_index,
+        skip_tecount_gz
     )
     ch_versions = ch_versions.mix(TECOUNT.out.versions.first())
 
@@ -52,12 +55,12 @@ workflow TE_COUNTING {
         TELOCAL (
             ch_bam,
             ch_telocal_gene_index,
-            ch_telocal_te_index
+            ch_telocal_te_index,
+            skip_telocal_gz
         )
         ch_telocal_counts = TELOCAL.out.counts
         ch_versions = ch_versions.mix(TELOCAL.out.versions.first())
     }
-
 
     emit:
 
