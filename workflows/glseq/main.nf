@@ -28,6 +28,7 @@ include {
 } from '../../subworkflows/local/bam_filter_sambamba/main'
 include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
@@ -1044,7 +1045,7 @@ workflow GLSEQ {
     ch_epic2_peak_count_multiqc = Channel.empty()
     ch_epic2_plot_homer_annotatepeaks_tsv = Channel.empty()
     if (!params.skip_epic2) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER(
+        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
             ch_filtered_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
@@ -1062,6 +1063,18 @@ workflow GLSEQ {
         ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
         ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
+    }
+
+    if (!params.skip_dpeak || !params.skip_dpos) {
+        //
+        // SUBWORKFLOW: Call peaks with DANPOS2
+        //
+        BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            params.skip_dpeak,
+            params.skip_dpos
+        )
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
 
     ch_edd_peaks = Channel.empty()

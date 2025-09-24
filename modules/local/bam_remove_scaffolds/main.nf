@@ -1,0 +1,55 @@
+process BAM_REMOVE_SCAFFOLDS {
+    tag "$meta.id"
+    label 'process_medium'
+
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/samtools:1.21--h50ea8bc_0' :
+        'biocontainers/samtools:1.21--h50ea8bc_0' }"
+
+    input:
+    tuple val(meta), path(bam)
+
+    output:
+    tuple val(meta), path("*.bam"), emit: bam
+    path "versions.yml"           , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def prefix = task.ext.prefix ?: "${meta.id}.flTsfds"
+    // Split the number of extra threads between the two samtools commands
+    def nthreads1 = Math.max(1, (task.cpus / 2) as int)
+    def nthreads2 = Math.max(0, (task.cpus - nthreads1) as int)
+    """
+    samtools view \\
+        --threads ${nthreads1} \\
+        --with-header \\
+        --no-PG \\
+        ${bam} \\
+        | awk 'BEGIN{OFS=FS="\t"} /^@CO/ {next} /^@PG/ {next} (\$2 ~ /SN:.*(\\.|_random)/) {next} (\$3 ~ /\\./ || \$3 ~ /_random/) {next} {print}' \\
+        | samtools view \\
+            --threads ${nthreads2} \\
+            --bam \\
+            - \\
+            > ${prefix}.bam
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
+    """
+    
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}.flTsfds"
+    """
+    touch ${prefix}.bam
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
+    """
+    
+}
