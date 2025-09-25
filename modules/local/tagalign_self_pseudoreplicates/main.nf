@@ -29,12 +29,12 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
     if (meta.single_end) {
         """
         # Get total number of read pairs
-        nlines=$( wc -l < ${tagalign} )
-        nlines=$(( (nlines + 1) / 2 ))
+        nlines=\$( wc -l < ${tagalign} )
+        nlines=\$(( (nlines + 1) / 2 ))
 
         # Shuffle and split tagAlign file into 2 equal parts
         # Will produce prefix.shuf.split.tagAlign00 and prefix.shuf.split.tagAlign01
-        shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${tagalign} \\
+        shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:\$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${tagalign} \\
             | split -d -l \${nlines} - ${prefix}.shuf.split.tagAlign
 
         # Convert reads into standard tagAlign file
@@ -54,11 +54,11 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
         sed 'N;s/\\n/\\t/' ${tagalign} > ${prefix}.tmp.bedpe
 
         # Get total number of read pairs
-        nlines=$( wc -l < ${prefix}.tmp.bedpe )
-        nlines=$(( (nlines + 1) / 2 ))
+        nlines=\$( wc -l < ${prefix}.tmp.bedpe )
+        nlines=\$(( (nlines + 1) / 2 ))
 
         # Shuffle and split BEDPE file into 2 equal parts
-        shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${prefix}.tmp.bedpe \\
+        shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:\$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${prefix}.tmp.bedpe \\
             | split -d -l \${nlines} - ${prefix}.shuf.split.tagAlign
 
         # Convert reads into standard tagAlign file
