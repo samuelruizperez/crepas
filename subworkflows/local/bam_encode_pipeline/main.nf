@@ -70,7 +70,7 @@ workflow BAM_ENCODE_PIPELINE {
             meta_clone.input_control = meta_clone.input_control - ~/_bRep_.*$/
             def antibody = meta.input_control_of_antibody ?: meta.antibody
             def pseudoreplicate = meta.pseudoreplicate ?: false
-            [ meta.id, antibody, pseudoreplicate, meta, tagalign ]
+            [  meta_clone.id, antibody, pseudoreplicate, meta_clone, tagalign ]
         }
         .groupTuple(by: [0, 1, 2])
         .map { id, antibody, pseudoreplicate, metas, tagaligns ->
