@@ -42,7 +42,7 @@ process BED_TO_TAGALIGN {
         """
         awk \\
             ${args} \\
-            'BEGIN{OFS="\\t"}{printf "%s\\t%s\\t%s\\tN\\t1000\\t%s\n%s\\t%s\\t%s\\tN\\t1000\\t%s\\n",\$1,\$2,\$3,\$9,\$4,\$5,\$6,\$10}' \\
+            'BEGIN{OFS="\\t"}{printf "%s\\t%s\\t%s\\tN\\t1000\\t%s\\n%s\\t%s\\t%s\\tN\\t1000\\t%s\\n",\$1,\$2,\$3,\$9,\$4,\$5,\$6,\$10}' \\
             ${bed} \\
             > ${prefix}.tagAlign
 
