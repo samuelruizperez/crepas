@@ -40,7 +40,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.exp_type, meta.genome, meta.id - ~/_REP\d+$/, peak ]
+                [ meta.antibody, meta.exp_type, meta.genome, meta.id - ~/_bRep_.*$/, peak ]
         }
         .tap { ch_antibody_peaks0 }
         .groupTuple(by: [0, 1, 2])

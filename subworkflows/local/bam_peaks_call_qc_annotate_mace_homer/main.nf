@@ -31,12 +31,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     ch_bam_bai
         .map { meta, bam, bai ->
             def meta_clone = meta.clone()
+            def antibody = meta_clone.input_control_of_antibody ?: meta_clone.antibody
             meta_clone.id = meta_clone.id - ~/_bRep_.*$/
             meta_clone.input_control = meta_clone.input_control - ~/_bRep_.*$/
-            [meta_clone.id, meta_clone, bam, bai]
+            [meta_clone.id, antibody, meta_clone, bam, bai]
         }
-        .groupTuple()
-        .map { id, metas, bams, bais ->
+        .groupTuple(by: [0, 1])
+        .map { id, antibody, metas, bams, bais ->
             [metas[0], bams.flatten(), bais.flatten()]
         }
         .set { ch_bam_merged_reps }
