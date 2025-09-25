@@ -78,6 +78,13 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .set { ch_tas_reps_and_pseudoreps }
 
+    // TODO: save for debugging
+    ch_tas_reps_and_pseudoreps
+        .map { meta, tagaligns ->
+            "${meta}\t${tagaligns}"
+        }
+        .collectFile(name: 'ch_tas_reps_and_pseudoreps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
     //
     // MODULE: Pool replicates and pseudoreplicates with cat
     //
