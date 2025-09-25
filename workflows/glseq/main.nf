@@ -29,6 +29,7 @@ include {
 include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
+include { BAM_ENCODE_PIPELINE                                       } from '../../subworkflows/local/bam_encode_pipeline/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
@@ -1108,6 +1109,18 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
 
+
+    //
+    // SUBWORKFLOW: Run ENCODE3 ChIP-seq pipeline
+    //
+    if (!params.skip_encode) {
+        BAM_ENCODE_PIPELINE (
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_fasta
+        )
+        ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
+
+    }
 
     // Create channels: [ meta, ip_bam, ipcontrol_bam ]
     // Including ips_wo_ipcontrol as they will be used for peak calling without control

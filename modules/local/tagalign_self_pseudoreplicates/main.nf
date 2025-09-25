@@ -15,7 +15,8 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
     tuple val(meta), path(tagalign)
 
     output:
-    tuple val(meta), path("*spr*.tagAlign"), emit: tagalign
+    tuple val(meta), path("*spr1.tagAlign"), emit: tagalign1
+    tuple val(meta), path("*spr2.tagAlign"), emit: tagalign2
     path  "versions.yml"          , emit: versions
 
     when:
