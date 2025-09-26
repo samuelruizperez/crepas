@@ -795,14 +795,14 @@ workflow GLSEQ {
         PHANTOMPEAKQUALTOOLS(
             ch_filtered_bam
         )
-        ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.spp.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it[1] })
         ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
         //
         // MODULE: MultiQC custom content for Phantompeaktools
         //
         MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS(
-            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
+            PHANTOMPEAKQUALTOOLS.out.ccscores.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
             ch_spp_correlation_header
