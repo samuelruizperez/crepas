@@ -793,7 +793,7 @@ workflow GLSEQ {
     //
     if (!params.skip_spp) {
         PHANTOMPEAKQUALTOOLS(
-            ch_filtered_bam
+            ch_filtered_bam.map { meta, bam -> [meta, bam []] }
         )
         ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it[1] })
         ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
