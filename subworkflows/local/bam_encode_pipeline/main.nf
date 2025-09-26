@@ -92,7 +92,7 @@ workflow BAM_ENCODE_PIPELINE {
     // MODULE: Pool replicates and pseudoreplicates with cat
     //
     TAGALIGN_POOL (
-        ch_tas_reps_and_pseudoreps
+        ch_tas_reps_and_pseudoreps_to_pool
     )
     ch_versions = ch_versions.mix(TAGALIGN_POOL.out.versions.first())
 
