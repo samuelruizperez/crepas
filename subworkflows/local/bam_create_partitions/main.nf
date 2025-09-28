@@ -105,7 +105,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // SUBWORKFLOW: TE counting
     //
-    if (skip_te_counting) {
+    if (!skip_te_counting) {
         TE_COUNTING (
             ch_bam,
             ch_fasta,
