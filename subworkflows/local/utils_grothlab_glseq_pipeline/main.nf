@@ -441,6 +441,25 @@ def validateInputParameters() {
         }
     }
 
+    if (!params.skip_te_counting) {
+        if (!params.containsKey('tecount_te_index') && !params.containsKey('te_gtf')) {
+            if (params.refgenie_ignore && params.igenomes_ignore) {
+                error("TE counting is enabled (`--skip_te_counting false`), a TEcounts TE index file (`--tecount_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcounts TE index.")
+            } else if (!getGenomeAttribute('tecount_te_index') && !getGenomeAttribute('te_gtf')) {
+                error("TE counting is enabled (`--skip_te_counting false`) but no valid TEcounts TE index file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcounts TE index.")
+            }
+        }
+        if (!params.skip_telocal) {
+            if (!params.containsKey('telocal_te_index') && !params.containsKey('te_gtf')) {
+                if (params.refgenie_ignore && params.igenomes_ignore) {
+                    error("TElocal counting is enabled (`--skip_telocal false`), a TElocal TE index file (`--telocal_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE local counting (`--skip_telocal`) or provide a TElocal TE index.")
+                } else if (!getGenomeAttribute('telocal_te_index') && !getGenomeAttribute('te_gtf')) {
+                    error("TElocal counting is enabled (`--skip_telocal false`) but no valid TElocal TE index file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip TE local counting (`--skip_telocal`) or provide a TElocal TE index.")
+                }
+            }
+        }
+    }
+
     if (!params.containsKey('macs_gsize')) {
         macsGsizeWarn(log)
     }
