@@ -444,9 +444,9 @@ def validateInputParameters() {
     if (!params.skip_te_counting) {
         if (!params.containsKey('tecount_te_index') && !params.containsKey('te_gtf')) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
-                error("TE counting is enabled (`--skip_te_counting false`), a TEcounts TE index file (`--tecount_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcounts TE index.")
+                error("TE counting is enabled (`--skip_te_counting false`), a TEcount TE index file (`--tecount_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcount TE index.")
             } else if (!getGenomeAttribute('tecount_te_index') && !getGenomeAttribute('te_gtf')) {
-                error("TE counting is enabled (`--skip_te_counting false`) but no valid TEcounts TE index file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcounts TE index.")
+                error("TE counting is enabled (`--skip_te_counting false`) but no valid TEcount TE index file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcount TE index.")
             }
         }
         if (!params.skip_telocal) {
