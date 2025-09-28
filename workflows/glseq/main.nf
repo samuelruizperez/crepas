@@ -1220,6 +1220,7 @@ workflow GLSEQ {
     ch_partition_smooth = Channel.empty()
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
+        ch_fasta,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
         ch_okseq_rfd_file.ifEmpty([[:], []]),
@@ -1227,7 +1228,15 @@ workflow GLSEQ {
         params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,
-        params.zero_crossing_radius
+        params.zero_crossing_radius,
+        false,
+        ch_tecount_gene_index,
+        ch_tecount_te_index,
+        ch_telocal_gene_index,
+        ch_telocal_te_index,
+        params.skip_telocal,
+        params.skip_tecount_gz,
+        params.skip_telocal_gz
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)
