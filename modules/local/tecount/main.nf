@@ -23,7 +23,7 @@ process TECOUNT {
     script:
     def args            = task.ext.args         ?: ""
     def prefix          = task.ext.prefix       ?: "${meta.id}"
-    def gzip_cmd        = skip_gz ? "" : "gzip -cf ${prefix}.cntTable > ${prefix}.cntTable.gz"
+    def gzip_cmd        = skip_gz ? "" : "gzip -f ${prefix}.cntTable"
 
     """
      TEcount \\

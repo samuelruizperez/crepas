@@ -36,6 +36,22 @@ workflow TE_COUNTING {
         ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
     }
 
+    ch_te_counting_no_split = ch_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'OK-seq']) }
+    ch_te_counting_split = ch_bam.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
+
+    ch_te_counting_split
+        .map { meta, bam -> [ meta + [ te_counting_strandedness: 'forward' ], bam ] }
+        .set { ch_te_counting_split_fwd }
+
+    ch_te_counting_split 
+        .map { meta, bam -> [ meta + [ te_counting_strandedness: 'reverse' ], bam ] }
+        .set { ch_te_counting_split_rev }
+    
+    ch_te_counting_no_split
+        .mix(ch_te_counting_split_fwd)
+        .mix(ch_te_counting_split_rev)
+        .set { ch_bam }
+
     //
     // MODULE: Count reads in transposable elements (TEs) at the subfamily level
     //
