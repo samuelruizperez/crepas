@@ -98,7 +98,7 @@ workflow BAM_ENCODE_PIPELINE {
 
 
     ch_tas_reps_and_pseudoreps
-        .mix(TAGALIGN_POOL.out.file_out)
+        .mix(TAGALIGN_POOL.out.file_out.map { meta, tagalign -> [ meta + [ pooled: true ], tagalign ] })
         .branch { meta, tagalign ->
             ips_with_ipcontrol: meta.input_control
                 return [meta.input_control, meta.antibody, meta, tagalign]
