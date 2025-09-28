@@ -902,9 +902,28 @@ workflow GLSEQ {
     // SUBWORKFLOW: Counting reads in transposable elements
     //
     if (!params.skip_te_counting) {
+
+        // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
+        ch_te_counting = ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome })
+
+        ch_te_counting_no_split = ch_te_counting.filter { !(it[0].exp_type in ['SCAR-seq', 'OK-seq']) }
+        ch_te_counting_split = ch_te_counting.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
+
+        ch_te_counting_split
+            .map { meta, bam -> [ meta + [ te_counting_strandedness: 'forward' ], bam ] }
+            .set { ch_te_counting_split_fwd }
+
+        ch_te_counting_split 
+            .map { meta, bam -> [ meta + [ te_counting_strandedness: 'reverse' ], bam ] }
+            .set { ch_te_counting_split_rev }
+        
+        ch_te_counting_no_split
+            .mix(ch_te_counting_split_fwd)
+            .mix(ch_te_counting_split_rev)
+            .set { ch_te_counting }
+
         TE_COUNTING (
-            // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
-            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it[0].genome == params.genome }),
+            ch_te_counting,
             ch_fasta,
             false,
             ch_tecount_gene_index,
@@ -1220,7 +1239,6 @@ workflow GLSEQ {
     ch_partition_smooth = Channel.empty()
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_fasta,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
         ch_okseq_rfd_file.ifEmpty([[:], []]),
@@ -1228,16 +1246,7 @@ workflow GLSEQ {
         params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,
-        params.zero_crossing_radius,
-        params.skip_te_counting,
-        false,
-        ch_tecount_gene_index,
-        ch_tecount_te_index,
-        ch_telocal_gene_index,
-        ch_telocal_te_index,
-        params.skip_telocal,
-        params.skip_tecount_gz,
-        params.skip_telocal_gz
+        params.zero_crossing_radius
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
     ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)

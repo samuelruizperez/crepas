@@ -1,5 +1,4 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
-include { TE_COUNTING                                               } from '../../../subworkflows/local/te_counting/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                } from '../../../modules/local/file_sort/main'
@@ -18,7 +17,6 @@ workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
-    ch_fasta
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
@@ -27,15 +25,6 @@ workflow BAM_CREATE_PARTITIONS {
     smooth_radius
     derivative_radius
     zero_crossing_radius
-    skip_te_counting
-    skip_name_sort
-    ch_tecount_gene_index
-    ch_tecount_te_index
-    ch_telocal_gene_index
-    ch_telocal_te_index
-    skip_telocal
-    skip_tecount_gz
-    skip_telocal_gz
 
     main:
 
@@ -100,26 +89,6 @@ workflow BAM_CREATE_PARTITIONS {
             "${meta}\t${bam}"
         }
         .collectFile( name: '4_scar_ch_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
-
-
-    //
-    // SUBWORKFLOW: TE counting
-    //
-    if (!skip_te_counting) {
-        TE_COUNTING (
-            ch_bam,
-            ch_fasta,
-            skip_name_sort,
-            ch_tecount_gene_index,
-            ch_tecount_te_index,
-            ch_telocal_gene_index,
-            ch_telocal_te_index,
-            skip_telocal,
-            skip_tecount_gz,
-            skip_telocal_gz
-        )
-        ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
-    }
 
     //
     // MODULE: Index BAM files per strand
