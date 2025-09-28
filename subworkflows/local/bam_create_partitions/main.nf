@@ -27,6 +27,7 @@ workflow BAM_CREATE_PARTITIONS {
     smooth_radius
     derivative_radius
     zero_crossing_radius
+    skip_te_counting
     skip_name_sort
     ch_tecount_gene_index
     ch_tecount_te_index
@@ -104,7 +105,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // SUBWORKFLOW: TE counting
     //
-    if (!params.skip_te_counting) {
+    if (skip_te_counting) {
         TE_COUNTING (
             ch_bam,
             ch_fasta,

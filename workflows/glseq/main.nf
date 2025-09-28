@@ -1229,6 +1229,7 @@ workflow GLSEQ {
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius,
+        params.skip_te_counting,
         false,
         ch_tecount_gene_index,
         ch_tecount_te_index,
