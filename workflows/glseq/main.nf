@@ -29,6 +29,7 @@ include {
 include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
+include { BAM_ENCODE_PIPELINE                                       } from '../../subworkflows/local/bam_encode_pipeline/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
@@ -792,16 +793,16 @@ workflow GLSEQ {
     //
     if (!params.skip_spp) {
         PHANTOMPEAKQUALTOOLS(
-            ch_filtered_bam
+            ch_filtered_bam.map { meta, bam -> [meta, bam, []] }
         )
-        ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.spp.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it[1] })
         ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
         //
         // MODULE: MultiQC custom content for Phantompeaktools
         //
         MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS(
-            PHANTOMPEAKQUALTOOLS.out.spp.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
+            PHANTOMPEAKQUALTOOLS.out.ccscores.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
             ch_spp_correlation_header
@@ -835,6 +836,44 @@ workflow GLSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect { it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect { it[1] })
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
+
+    } else {
+        //
+        // If no downsampling is done, duplicate input controls for each antibody
+        //
+        ch_filtered_bam_bai
+            .branch { meta, bam, bai ->
+                ips_with_ipcontrol: meta.input_control
+                    return [meta.input_control, meta.antibody, meta, bam, bai]
+                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
+                     return [meta, bam, bai]
+                ipcontrols: !meta.input_control && meta.is_input_control
+                    return [meta.id, meta, bam, bai]
+            }
+            .set { ch_bam_bai_by_type }
+
+        ch_bam_bai_by_type.ipcontrols
+            .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
+            .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
+                def meta_clone = ipcontrol_meta.clone()
+                meta_clone.input_control_of_antibody = ip_antibody
+                [ meta_clone, ipcontrol_bam, ipcontrol_bai ]
+            }
+            .unique()
+            .set { ch_bam_bai_ipcontrols_not_dsp }
+        
+        ch_bam_bai_by_type
+            .ips_with_ipcontrol
+            .map { ipcontrol_id, antibody, meta, bam, bai ->
+                [ meta, bam, bai ]
+            }
+            .mix(ch_bam_bai_by_type.ips_wo_ipcontrol)
+            .mix(ch_bam_bai_ipcontrols_not_dsp)
+            .set { ch_filtered_bam_bai }
+
+        ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
+        ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
+
     }
 
     // TODO: print for debugging
@@ -943,9 +982,8 @@ workflow GLSEQ {
 
     //
     // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
+    // (Excluding ips_wo_ipcontrol as they don't need to be compared to anything)
     //
-
-    // Branch channels based on if input control is present
     ch_filtered_bam_bai
         .branch { meta, bam, bai ->
             ips_with_ipcontrol: meta.input_control
@@ -953,90 +991,35 @@ workflow GLSEQ {
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
                 return [meta, bam, bai]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
         }
         .set { ch_bam_bai_by_type }
 
-    // For non-downsampled files, copy input ipcontrols for each antibody 
-    ch_bam_bai_by_type
-        .ipcontrols
-        .branch { id, meta, bam, bai ->
-            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
-                return [id, meta.input_control_of_antibody, meta, bam, bai]
-            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
-                return [id, meta, bam, bai]
-        }
-        .set { ch_bam_ipcontrols }
-    
-    ch_bam_ipcontrols
-        .not_dsp
-        .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
-        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
-            def meta_clone = ipcontrol_meta.clone()
-            meta_clone.input_control_of_antibody = ip_antibody
-            [ ipcontrol_id, meta_clone.input_control_of_antibody, meta_clone, ipcontrol_bam, ipcontrol_bai ]
-        }
-        .unique()
-        .set { ch_bam_ipcontrols_not_dsp }
-
-    ch_bam_ipcontrols = ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp)
-
-    // This is to rejoin ch_filtered_bam_bai with controls with updated meta
-    ch_bam_bai_by_type.ips_wo_ipcontrol
-        .mix(ch_bam_ipcontrols.map { ipcontrol_id, antibody, meta, ipcontrol_bam, ipcontrol_bai -> [ meta, ipcontrol_bam, ipcontrol_bai ] })
-        .mix(ch_bam_bai_by_type.ips_with_ipcontrol.map { ipcontrol_id, antibody, meta, bam, bai -> [ meta, bam, bai ] })
-        .set { ch_filtered_bam_bai }
-
-    ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
-
     ch_bam_bai_by_type
         .ips_with_ipcontrol
-        .combine(ch_bam_ipcontrols, by: [0,1])
+        .combine(ch_bam_bai_by_type.ipcontrols, by: [0,1])
         .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
             [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
         }
-        .set { ch_ip_control_bam_bai }
+        .set { ch_ip_and_ipcontrols_bam_bai }
 
     // TODO: Print to file for debuggin
-    ch_ip_control_bam_bai
+    ch_ip_and_ipcontrols_bam_bai
         .map { meta, bams, bais ->
             "${meta}\t${bams}\t${bais}"
         }
-        .collectFile(name: 'ch_ip_control_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
+        .collectFile(name: 'ch_ip_and_ipcontrols_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
     if (!params.skip_plot_fingerprint) {
         DEEPTOOLS_PLOTFINGERPRINT(
-            ch_ip_control_bam_bai
+            ch_ip_and_ipcontrols_bam_bai
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.matrix.collect { it[1] })
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
-
-    // Create channels: [ meta, ip_bam, ipcontrol_bam ]
-    ch_bam_bai_by_type
-        .ips_wo_ipcontrol
-        .map { meta, bam, bai -> [meta, [bam], [bai]] }
-        .mix(ch_ip_control_bam_bai)
-        // ips_wo_ipcontrol do not have ipcontrol_bam
-        .map { meta, bams, bais ->
-            [meta, bams[0], (bams[1] ?: [])]
-        }
-        .set { ch_ip_control_bam }
-
-
-    // separate samples based on meta.exp_type
-    ch_ip_control_bam_cs = Channel.empty()
-    ch_ip_control_bam_cs = ch_ip_control_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) }
-
-    // TODO: Print to file for debuggin
-    ch_ip_control_bam_cs
-        .map { meta, ip_bam, ipcontrol_bam ->
-            "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
-        }
-        .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     //
     // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
@@ -1066,10 +1049,59 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
     }
 
+    //
+    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
+    //
+    ch_genrich_peaks = Channel.empty()
+    if (!params.skip_genrich) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
+            ch_filtered_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
+            ch_fasta,
+            ch_gtf,
+            ch_blacklist,
+            ".annotatePeaks.txt",
+            ch_gr_peak_count_header,
+            ch_gr_frip_score_header,
+            ch_gr_peak_annotation_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
+    }
+
+    //
+    // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
+    //
+    ch_mace_peaks = Channel.empty()
+    if (!params.skip_mace) {
+        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
+            ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
+            ch_fasta,
+            ch_gtf,
+            ch_chrom_sizes_endo,
+            ".annotatePeaks.txt",
+            ch_mace_peak_count_header,
+            ch_mace_frip_score_header,
+            ch_mace_peak_annotation_header,
+            params.skip_peak_annotation,
+            params.skip_peak_qc
+        )
+        ch_mace_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
+    }
+
+    //
+    // SUBWORKFLOW: Call peaks with DANPOS2
+    //
     if (!params.skip_dpeak || !params.skip_dpos) {
-        //
-        // SUBWORKFLOW: Call peaks with DANPOS2
-        //
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
             ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             params.skip_dpeak,
@@ -1077,6 +1109,42 @@ workflow GLSEQ {
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
+
+
+    //
+    // SUBWORKFLOW: Run ENCODE3 ChIP-seq pipeline
+    //
+    if (!params.skip_encode) {
+        BAM_ENCODE_PIPELINE (
+            ch_filtered_bam.filter { !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_fasta
+        )
+        ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
+
+    }
+
+    // Create channels: [ meta, ip_bam, ipcontrol_bam ]
+    // Including ips_wo_ipcontrol as they will be used for peak calling without control
+    ch_bam_bai_by_type
+        .ips_wo_ipcontrol
+        .map { meta, bam, bai -> [meta, [bam], [bai]] }
+        .mix(ch_ip_and_ipcontrols_bam_bai)
+        // ips_wo_ipcontrol do not have ipcontrol_bam
+        .map { meta, bams, bais ->
+            [meta, bams[0], (bams[1] ?: [])]
+        }
+        .set { ch_all_ip_and_controls }
+
+    // separate samples based on meta.exp_type
+    ch_ip_control_bam_cs = Channel.empty()
+    ch_ip_control_bam_cs = ch_all_ip_and_controls.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) }
+
+    // TODO: Print to file for debuggin
+    ch_ip_control_bam_cs
+        .map { meta, ip_bam, ipcontrol_bam ->
+            "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
+        }
+        .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     ch_edd_peaks = Channel.empty()
     if (!params.skip_edd) {
@@ -1152,54 +1220,6 @@ workflow GLSEQ {
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
-    //
-    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
-    //
-    ch_genrich_peaks = Channel.empty()
-    if (!params.skip_genrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
-            ch_fasta,
-            ch_gtf,
-            ch_blacklist,
-            ".annotatePeaks.txt",
-            ch_gr_peak_count_header,
-            ch_gr_frip_score_header,
-            ch_gr_peak_annotation_header,
-            params.narrow_peak,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
-    //
-    ch_mace_peaks = Channel.empty()
-    if (!params.skip_mace) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
-            ch_filtered_bam_bai.filter { it[0].exp_type == 'ChIP-exo' },
-            ch_fasta,
-            ch_gtf,
-            ch_chrom_sizes_endo,
-            ".annotatePeaks.txt",
-            ch_mace_peak_count_header,
-            ch_mace_frip_score_header,
-            ch_mace_peak_annotation_header,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_mace_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
-    }
 
     ch_filtered_bam_ss = Channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it[0].exp_type in ['SCAR-seq', 'OK-seq'] }

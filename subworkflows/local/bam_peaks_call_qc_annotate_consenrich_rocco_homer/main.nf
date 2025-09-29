@@ -36,36 +36,14 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
                 return [meta.id, meta.antibody, meta, bam, bai]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
         }
         .set { ch_bam_by_type }
 
-    // For non-downsampled files, duplicate input ipcontrols for each antibody 
-    ch_bam_by_type
-        .ipcontrols
-        .branch { id, meta, bam, bai ->
-            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
-                return [id, meta.input_control_of_antibody, meta, bam, bai]
-            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
-                return [id, meta, bam, bai]
-        }
-        .set { ch_bam_ipcontrols }
-    
-    ch_bam_ipcontrols
-        .not_dsp
-        .combine(ch_bam_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
-        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
-            def meta_clone = ipcontrol_meta.clone()
-            meta_clone.input_control_of_antibody = ip_antibody
-            [ ipcontrol_id, meta_clone.input_control_of_antibody, meta_clone, ipcontrol_bam, ipcontrol_bai ]
-        }
-        .unique()
-        .set { ch_bam_ipcontrols_not_dsp }
-    
     // Create channel for Consenrich: [ meta, [ip_bams_merged_reps], [ip_bais_merged_reps], [ipcontrol_bams_merged_reps], [ipcontrol_bais_merged_reps] ]
     ch_bam_by_type
         .ips_with_ipcontrol
-        .combine(ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp), by: [0, 1])
+        .combine(ch_bam_by_type.ipcontrols, by: [0, 1])
         .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
             [ ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_bam, ipcontrol_bai ]
         }

@@ -9,12 +9,14 @@ process PHANTOMPEAKQUALTOOLS {
         'community.wave.seqera.io/library/phantompeakqualtools:1.2.2--f8026fe2526a5e18' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(chip), path(input_control)
 
     output:
-    tuple val(meta), path("*.out")  , emit: spp
+    tuple val(meta), path("*.ccscores")  , emit: ccscores
     tuple val(meta), path("*.pdf")  , emit: pdf
     tuple val(meta), path("*.Rdata"), emit: rdata
+    tuple val(meta), path("*.narrowPeak"), emit: narrowpeak, optional: true
+    tuple val(meta), path("*.regionPeak"), emit: regionpeak, optional: true
     path  "versions.yml"            , emit: versions
 
     when:
@@ -23,11 +25,18 @@ process PHANTOMPEAKQUALTOOLS {
     script:
     def args   = task.ext.args ?: ''
     def args2  = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}.spp"
+    def peaks_arg = input_control ? "-savn='${prefix}.narrowPeak' -savr='${prefix}.regionPeak'" : ""
     def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     RUN_SPP=`which run_spp.R`
-    Rscript $args -e "library(caTools); source(\\"\$RUN_SPP\\")" -c="$bam" -savp="${prefix}.spp.pdf" -savd="${prefix}.spp.Rdata" -out="${prefix}.spp.out" $args2
+    Rscript ${args} -e "library(caTools); source(\\"\$RUN_SPP\\")" \\
+        -c="${chip}" \\
+        -savp="${prefix}.pdf" \\
+        -savd="${prefix}.Rdata" \\
+        -out="${prefix}.ccscores" \\
+        ${args2} \\
+        ${peaks_arg}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -36,12 +45,14 @@ process PHANTOMPEAKQUALTOOLS {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}.spp"
+    def peaks_arg = input_control ? "touch ${prefix}.narrowPeak; touch ${prefix}.regionPeak;" : ""
     def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
-    touch ${prefix}.spp.pdf
-    touch ${prefix}.spp.Rdata
-    touch ${prefix}.spp.out
+    touch ${prefix}.pdf
+    touch ${prefix}.Rdata
+    touch ${prefix}.ccscores
+    ${peaks_arg}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -138,63 +138,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
-    // Split into ChIP and ipcontrol channels because inputs' norm_factor_val_used should depend on meta.antibody
-    // from its corresponding ChIP. Thus, for inputs, we need the info of both ChIP and input in the if statements below
-    ch_bdg_map
-        .branch { meta, bdg ->
-            ip: !meta.is_input_control
-                return [ meta.input_control, meta.antibody, meta, bdg ]
-            ipcontrol: meta.is_input_control
-        }
-        .set { ch_bdg_map_type }
-
-    // For non-downsampled files, duplicate input controls for each antibody
-    ch_bdg_map_type
-        .ipcontrol
-        .branch { meta, bdg ->
-            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
-                return [ meta, bdg ] // [ meta.id, meta.input_control_of_antibody, meta, bdg ]
-            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
-                return [ meta.id, meta, bdg ]
-        }
-        .set { ch_bdg_map_ipcontrols }
-
-    // Probably not needed, but just in case:
-    // For downsampled files, use existing control_of_antibody
-    //  ch_bdg_map_ipcontrols
-    //     .dsp
-    //     .combine(ch_bdg_map_type.ip, by: [0,1]) // combine by ipcontrol_id and antibody
-    //     .map { ipcontrol_id, antibody, ipcontrol_meta, ipcontrol_bdg, ip_meta, ip_bdg ->
-    //         [ ipcontrol_meta, ipcontrol_bdg ]
-    //     }
-    //     .set { ch_controls_dsp }
-
-    ch_bdg_map_ipcontrols
-        .not_dsp
-        .combine(ch_bdg_map_type.ip, by: 0) // combine by ipcontrol_id only
-        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bdg, ip_antibody, ip_meta, ip_bdg ->
-            def meta_clone = ipcontrol_meta.clone()
-            meta_clone.input_control_of_antibody = ip_antibody
-            [ meta_clone, ipcontrol_bdg ]
-        }
-        .unique()
-        .set { ch_ipcontrols_not_dsp }
-
-    ch_bdg_map_ipcontrols.dsp
-        .mix(ch_ipcontrols_not_dsp)
-        .mix(ch_bdg_map_type.ip.map { ipcontrol_id, antibody, meta, bdg -> [ meta, bdg ] })
-        .set { ch_bdg_map_mod }
-
-    // TODO: print for debugging
-    ch_bdg_map_mod
-        .map { meta, bdg ->
-            "${meta}\t${bdg}"
-        }
-        .collectFile( name: 'ch_bdg_map_mod.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
-
     // RPM normalization factors
     ch_bdg_rpm = Channel.empty()
-    ch_bdg_map_mod
+    ch_bdg_map
         .map { meta, bdg ->
             def meta_clone = meta.clone()
             // samples have meta.antibody, while input controls have meta.input_control_of_antibody
@@ -236,7 +182,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     // Copy and modify channel meta to add SRPM normalization factors (for ChIPs)
     ch_bdg_srpm = Channel.empty()
     if (!skip_srpm) {
-        ch_bdg_map_mod
+        ch_bdg_map
             .map { meta, bdg ->
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
@@ -326,7 +272,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     // controls, and this will fail, since there is no flT2_total_mapped_reads
     if (spikein_genome && !skip_cisrpm) {
         // Split BAMs by genome (endo and exo) and by type (ip and ipcontrol)
-        ch_bdg_map_mod
+        ch_bdg_map
             .map { meta, bdg ->
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
@@ -409,7 +355,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         // In this case CISRPM is the same as RPM, but we cannot
         // just copy the RPM from before, since cisrpm_use_flT2_total
         // can be different than rpm_use_flT2_total
-        ch_bdg_map_mod
+        ch_bdg_map
             .filter { meta, bdg ->
                 meta.genome == genome && meta.is_input_control
             }

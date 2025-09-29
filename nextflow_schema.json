@@ -924,6 +924,12 @@
                     "fa_icon": "fas fa-fast-forward",
                     "default": true
                 },
+                "skip_encode_pipeline": {
+                    "type": "boolean",
+                    "description": "Skip peak calling with the ENCODE ChIP-seq pipeline.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
+                },
                 "skip_epic2": {
                     "type": "boolean",
                     "default": true,

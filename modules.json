@@ -29,11 +29,14 @@
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
+<<<<<<< HEAD
                     },
                     "bioawk": {
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
+=======
+>>>>>>> origin/feature/encode3-chip_pipe
                     },
                     "bowtie2/align": {
                         "branch": "master",
@@ -54,6 +57,14 @@
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["fastq_align_bwa", "modules"]
+<<<<<<< HEAD
+=======
+                    },
+                    "cat/cat": {
+                        "branch": "master",
+                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+                        "installed_by": ["modules"]
+>>>>>>> origin/feature/encode3-chip_pipe
                     },
                     "chromap/chromap": {
                         "branch": "master",
@@ -140,6 +151,14 @@
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
+<<<<<<< HEAD
+=======
+                    },
+                    "idr": {
+                        "branch": "master",
+                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+                        "installed_by": ["modules"]
+>>>>>>> origin/feature/encode3-chip_pipe
                     },
                     "khmer/uniquekmers": {
                         "branch": "master",
