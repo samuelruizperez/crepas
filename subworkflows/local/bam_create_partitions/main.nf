@@ -28,7 +28,7 @@ workflow BAM_CREATE_PARTITIONS {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // TODO: print for debugging
     ch_bam
@@ -118,7 +118,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     BEDTOOLS_GENOMECOV (
         ch_bam_scale,
-        ch_chrom_sizes.map { it[1] },
+        ch_chrom_sizes.map { it -> it[1] },
         'bdg',
         true
     )
@@ -138,7 +138,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     UCSC_BEDGRAPHTOBIGWIG_WINDOWS (
         BEDGRAPH_SORT.out.sorted,
-        ch_chrom_sizes.map { it[1] }
+        ch_chrom_sizes.map { it -> it[1] }
     )
     ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
@@ -153,7 +153,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // MODULE: Create genomic windows
     //
-    ch_windows = Channel.empty()
+    ch_windows = channel.empty()
     BEDTOOLS_MAKEWINDOWS (
         ch_chrom_sizes
     )
@@ -206,7 +206,7 @@ workflow BAM_CREATE_PARTITIONS {
                 meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
                 meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
             // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2 or flT1, otherwise use flT3
-            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads) {
+            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it -> it.trim() } || !meta_clone.flT3_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -377,7 +377,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_norm_and_smi
         .map { meta, norm_or_smi_fwd, norm_or_smi_rev ->
             def meta_clone = meta.clone()
-            meta_clone.removeAll { it.key in ['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'] }
+            meta_clone.removeAll { it -> it.key in ['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'] }
             [ meta_clone, meta, norm_or_smi_fwd, norm_or_smi_rev ]
         }
         .set { ch_norm_and_smi_to_combine }
@@ -470,7 +470,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
         COLLECT_PARTITIONS.out.bdg,
-        ch_chrom_sizes.map { it[1] }
+        ch_chrom_sizes.map { it -> it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 

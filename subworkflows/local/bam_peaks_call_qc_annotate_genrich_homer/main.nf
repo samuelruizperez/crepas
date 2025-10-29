@@ -26,7 +26,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SAMTOOLS_SORT(
         ch_bam,
@@ -80,7 +80,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     //
     GENRICH (
         ch_ip_ipcontrol_bam_merged_reps,
-        ch_blacklist.map { it[1] }
+        ch_blacklist.map { it -> it[1] }
     )
     ch_versions = ch_versions.mix(GENRICH.out.versions.first())
 
@@ -131,20 +131,20 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
-    ch_homer_annotatepeaks = Channel.empty()
-    ch_plot_gr_qc_txt = Channel.empty()
-    ch_plot_gr_qc_pdf = Channel.empty()
-    ch_plot_homer_annotatepeaks_txt = Channel.empty()
-    ch_plot_homer_annotatepeaks_pdf = Channel.empty()
-    ch_plot_homer_annotatepeaks_tsv = Channel.empty()
+    ch_homer_annotatepeaks = channel.empty()
+    ch_plot_gr_qc_txt = channel.empty()
+    ch_plot_gr_qc_pdf = channel.empty()
+    ch_plot_homer_annotatepeaks_txt = channel.empty()
+    ch_plot_homer_annotatepeaks_pdf = channel.empty()
+    ch_plot_homer_annotatepeaks_tsv = channel.empty()
     if (!skip_peak_annotation) {
         //
         // Annotate peaks with HOMER
         //
         HOMER_ANNOTATEPEAKS(
             ch_gr_peaks,
-            ch_fasta.map { it[1] },
-            ch_gtf.map { it[1] }
+            ch_fasta.map { it -> it[1] },
+            ch_gtf.map { it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())

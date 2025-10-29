@@ -19,7 +19,7 @@ workflow BAM_SPIKEIN_SPLIT {
     spikein_genome       // val
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: split BAMs by spike-in genome (keep endogenous)
@@ -64,20 +64,20 @@ workflow BAM_SPIKEIN_SPLIT {
 
     emit:
 
-    bam           = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it[0].genome == genome }            // channel: [ val(meta), [ bam ] ]
-    exo_bam       = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ bam ] ]
+    bam           = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it -> it[0].genome == genome }            // channel: [ val(meta), [ bam ] ]
+    exo_bam       = BAM_SORT_STATS_SAMTOOLS.out.bam.filter { it -> it[0].genome == spikein_genome }    // channel: [ val(meta), [ bam ] ]
 
-    bai           = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == genome }            // channel: [ val(meta), [ bai ] ]
-    exo_bai       = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it[0].genome == spikein_genome }
+    bai           = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it -> it[0].genome == genome }            // channel: [ val(meta), [ bai ] ]
+    exo_bai       = BAM_SORT_STATS_SAMTOOLS.out.bai.filter { it -> it[0].genome == spikein_genome }
 
-    stats         = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it[0].genome == genome }            // channel: [ val(meta), [ stats ] ]
-    exo_stats     = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ stats ] ]
+    stats         = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it -> it[0].genome == genome }            // channel: [ val(meta), [ stats ] ]
+    exo_stats     = BAM_SORT_STATS_SAMTOOLS.out.stats.filter { it -> it[0].genome == spikein_genome }    // channel: [ val(meta), [ stats ] ]
 
-    flagstat      = BAM_SORT_STATS_SAMTOOLS.out.flagstat.filter { it[0].genome == genome }            // channel: [ val(meta), [ flagstat ] ]
-    exo_flagstat  = BAM_SORT_STATS_SAMTOOLS.out.flagstat.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ flagstat ] ]
+    flagstat      = BAM_SORT_STATS_SAMTOOLS.out.flagstat.filter { it -> it[0].genome == genome }            // channel: [ val(meta), [ flagstat ] ]
+    exo_flagstat  = BAM_SORT_STATS_SAMTOOLS.out.flagstat.filter { it -> it[0].genome == spikein_genome }    // channel: [ val(meta), [ flagstat ] ]
 
-    idxstats      = BAM_SORT_STATS_SAMTOOLS.out.idxstats.filter { it[0].genome == genome }            // channel: [ val(meta), [ idxstats ] ]
-    exo_idxstats  = BAM_SORT_STATS_SAMTOOLS.out.idxstats.filter { it[0].genome == spikein_genome }    // channel: [ val(meta), [ idxstats ] ]
+    idxstats      = BAM_SORT_STATS_SAMTOOLS.out.idxstats.filter { it -> it[0].genome == genome }            // channel: [ val(meta), [ idxstats ] ]
+    exo_idxstats  = BAM_SORT_STATS_SAMTOOLS.out.idxstats.filter { it -> it[0].genome == spikein_genome }    // channel: [ val(meta), [ idxstats ] ]
 
     versions = ch_versions                    // channel: [ versions.yml ]
 }

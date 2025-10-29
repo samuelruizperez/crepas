@@ -34,7 +34,7 @@ workflow PIPELINE_INITIALISATION {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
@@ -105,9 +105,9 @@ workflow INPUT_CHECK {
         .groupTuple(by: [0,1])
         .map { id, brep, metas, fastq_lists ->
             def new_metas = metas
-            if (metas.any { it.trep }) {
+            if (metas.any { it -> it.trep }) {
                 //println "There is a technical replicate set for sample group: ${sample_group}"
-                if (!metas.every { it.trep }) {
+                if (!metas.every { it -> it.trep }) {
                     error(
                         """
                         ERROR: If any technical replicate within a biological replicate is assigned an ID, then all the technical replicates within that biological replicate must have an ID. 
@@ -130,7 +130,7 @@ workflow INPUT_CHECK {
                 }
             }
             // Check that all meta.trep are unique
-            def trep_ids = new_metas.collect { it.trep }
+            def trep_ids = new_metas.collect { it -> it.trep }
             if (trep_ids.size() != trep_ids.unique().size()) {
                 error(
                     """
@@ -321,7 +321,7 @@ workflow INPUT_CHECK {
 
     emit:
     fastq = ch_fastq                                    // channel: [ val(meta), [ reads ] ]
-    versions = Channel.empty() // channel: [ versions.yml ]
+    versions = channel.empty() // channel: [ versions.yml ]
 }
 
 /*

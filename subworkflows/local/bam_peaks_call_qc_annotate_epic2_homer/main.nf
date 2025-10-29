@@ -26,7 +26,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Branch channels based on if input control is present
     ch_bam
@@ -138,20 +138,20 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
-    ch_homer_annotatepeaks          = Channel.empty()
-    //ch_plot_epic2_qc_txt            = Channel.empty()
-    //ch_plot_epic2_qc_pdf            = Channel.empty()
-    ch_plot_homer_annotatepeaks_txt = Channel.empty()
-    ch_plot_homer_annotatepeaks_pdf = Channel.empty()
-    ch_plot_homer_annotatepeaks_tsv = Channel.empty()
+    ch_homer_annotatepeaks          = channel.empty()
+    //ch_plot_epic2_qc_txt            = channel.empty()
+    //ch_plot_epic2_qc_pdf            = channel.empty()
+    ch_plot_homer_annotatepeaks_txt = channel.empty()
+    ch_plot_homer_annotatepeaks_pdf = channel.empty()
+    ch_plot_homer_annotatepeaks_tsv = channel.empty()
     if (!skip_peak_annotation) {
         //
         // Annotate peaks with HOMER
         //
         HOMER_ANNOTATEPEAKS (
             ch_epic2_peaks,
-            ch_fasta.map{ it[1] },
-            ch_gtf.map{ it[1] }
+            ch_fasta.map{ it -> it[1] },
+            ch_gtf.map{ it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())

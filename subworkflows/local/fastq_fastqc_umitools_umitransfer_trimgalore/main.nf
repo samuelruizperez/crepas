@@ -37,9 +37,9 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
 
 
     main:
-    ch_versions = Channel.empty()
-    fastqc_html = Channel.empty()
-    fastqc_zip  = Channel.empty()
+    ch_versions = channel.empty()
+    fastqc_html = channel.empty()
+    fastqc_zip  = channel.empty()
     if (!skip_fastqc) {
         FASTQC (reads)
         fastqc_html = FASTQC.out.html
@@ -48,10 +48,10 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     }
 
     umi_reads = reads
-    ch_sep_umi_fq       = Channel.empty()
-    ch_no_sep_umi_fq    = Channel.empty()
-    sep_umi_fq_log             = Channel.empty()
-    no_sep_umi_fq_log          = Channel.empty()
+    ch_sep_umi_fq       = channel.empty()
+    ch_no_sep_umi_fq    = channel.empty()
+    sep_umi_fq_log             = channel.empty()
+    no_sep_umi_fq_log          = channel.empty()
     if (with_umi && !skip_umi_extract) {
 
         // split umi_reads channel into the ones that have meta.sep_umi_fq and the ones that don't
@@ -94,11 +94,11 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     }
 
     trim_reads      = umi_reads
-    trim_unpaired   = Channel.empty()
-    trim_html       = Channel.empty()
-    trim_zip        = Channel.empty()
-    trim_log        = Channel.empty()
-    trim_read_count = Channel.empty()
+    trim_unpaired   = channel.empty()
+    trim_html       = channel.empty()
+    trim_zip        = channel.empty()
+    trim_log        = channel.empty()
+    trim_read_count = channel.empty()
     if (!skip_trimming) {
         TRIMGALORE (umi_reads)
         trim_unpaired = TRIMGALORE.out.unpaired
@@ -134,10 +134,10 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
             .map { meta, read, num_reads -> [ meta, num_reads ] }
             .set { trim_read_count }
 
-        htrim_unpaired   = Channel.empty()
-        htrim_html       = Channel.empty()
-        htrim_zip        = Channel.empty()
-        htrim_log        = Channel.empty()
+        htrim_unpaired   = channel.empty()
+        htrim_html       = channel.empty()
+        htrim_zip        = channel.empty()
+        htrim_log        = channel.empty()
         htrim_reads = trim_reads
         if (hardtrim3_length || hardtrim5_length) {
             TRIMGALORE_HARDTRIM (trim_reads)

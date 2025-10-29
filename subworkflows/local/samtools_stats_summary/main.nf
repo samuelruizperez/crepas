@@ -15,12 +15,12 @@ workflow SAMTOOLS_STATS_SUMMARY {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SAMTOOLS_STATS_TRANSPOSE (
         ch_stats
     )
-    ch_col_stats = SAMTOOLS_STATS_TRANSPOSE.out.t_stats.collect{ it[1] }
+    ch_col_stats = SAMTOOLS_STATS_TRANSPOSE.out.t_stats.collect{ it -> it[1] }
     ch_versions = ch_versions.mix(SAMTOOLS_STATS_TRANSPOSE.out.versions.first())
 
     SAMTOOLS_STATS_CAT (

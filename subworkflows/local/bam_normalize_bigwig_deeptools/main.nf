@@ -30,7 +30,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
 
     ch_bam_bai
@@ -97,8 +97,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
     
     ch_bdg_map = ch_bdg_map_endo
-    ch_windows_exo = Channel.empty()
-    ch_windows_exo_bdg_raw = Channel.empty()
+    ch_windows_exo = channel.empty()
+    ch_windows_exo_bdg_raw = channel.empty()
     if (spikein_genome) {
         BEDTOOLS_MAKEWINDOWS_EXO (
             ch_chrom_sizes_exo
@@ -139,7 +139,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .collectFile( name: 'ch_bdg_map.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     // RPM normalization factors
-    ch_bdg_rpm = Channel.empty()
+    ch_bdg_rpm = channel.empty()
     ch_bdg_map
         .map { meta, bdg ->
             def meta_clone = meta.clone()
@@ -150,7 +150,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
                 meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
             // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || !meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads) {
+            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it -> it.trim() } || !meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads) {
                 if (meta_clone.flT2_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
@@ -180,7 +180,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .collectFile( name: 'ch_bdg_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     // Copy and modify channel meta to add SRPM normalization factors (for ChIPs)
-    ch_bdg_srpm = Channel.empty()
+    ch_bdg_srpm = channel.empty()
     if (!skip_srpm) {
         ch_bdg_map
             .map { meta, bdg ->
@@ -227,7 +227,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.dSp_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
                 // if antibody is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                } else if (srpm_use_flT2_total && antibody in srpm_use_flT2_total.split(',').collect { it.trim() } || !exo_meta.flT3_total_mapped_reads && !exo_meta.flTbl_total_mapped_reads) {
+                } else if (srpm_use_flT2_total && antibody in srpm_use_flT2_total.split(',').collect { it -> it.trim() } || !exo_meta.flT3_total_mapped_reads && !exo_meta.flTbl_total_mapped_reads) {
                     meta_clone.norm_factor_val = 1e6 / exo_meta.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else if (exo_meta.flTbl_total_mapped_reads) {
@@ -262,12 +262,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     
     // Copy and modify channel meta to add CISRPM normalization factors
-    ch_bdg_genome_type = Channel.empty()
-    ch_bdg_genome_ip = Channel.empty()
-    ch_bdg_genome_ipcontrol = Channel.empty()
-    ch_bdg_ip_cisrpm = Channel.empty()
-    ch_bdg_ipcontrol_cisrpm = Channel.empty()
-    ch_bdg_cisrpm = Channel.empty()
+    ch_bdg_genome_type = channel.empty()
+    ch_bdg_genome_ip = channel.empty()
+    ch_bdg_genome_ipcontrol = channel.empty()
+    ch_bdg_ip_cisrpm = channel.empty()
+    ch_bdg_ipcontrol_cisrpm = channel.empty()
+    ch_bdg_cisrpm = channel.empty()
     // "if (spikein_genome)" is needed, otherwise cisrpm will be attempted for
     // controls, and this will fail, since there is no flT2_total_mapped_reads
     if (spikein_genome && !skip_cisrpm) {
@@ -328,7 +328,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta.dSp_total_mapped_reads) * (exo_ipcontrol_meta.dSp_total_mapped_reads / endo_ipcontrol_meta.dSp_total_mapped_reads)
                         meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
                     // if meta.antibody is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                    } else if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || !exo_ip_meta.flT3_total_mapped_reads && !exo_ip_meta.flTbl_total_mapped_reads) {
+                    } else if (cisrpm_use_flT2_total && meta_clone.antibody in cisrpm_use_flT2_total.split(',').collect { it -> it.trim() } || !exo_ip_meta.flT3_total_mapped_reads && !exo_ip_meta.flTbl_total_mapped_reads) {
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta.flT2_total_mapped_reads) * (exo_ipcontrol_meta.flT2_total_mapped_reads / endo_ipcontrol_meta.flT2_total_mapped_reads)
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                     } else if (exo_ip_meta.flTbl_total_mapped_reads) {
@@ -366,7 +366,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
                 // if meta.input_control_of_antibody is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                } else if (cisrpm_use_flT2_total && meta.input_control_of_antibody in cisrpm_use_flT2_total.split(',').collect { it.trim() } || (!meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads)) {
+                } else if (cisrpm_use_flT2_total && meta.input_control_of_antibody in cisrpm_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads)) {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
                 } else if (meta_clone.flTbl_total_mapped_reads) {
@@ -419,7 +419,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     // Create channel: [ val(meta), [ ip_bdg ], [ ipcontrol_bdg ] ]
     ch_bdg_all = ch_bdg_map_norm
-    ch_bdg_ip_control_cisrpm = Channel.empty()
+    ch_bdg_ip_control_cisrpm = channel.empty()
     if (!skip_cisrpmsoi) {
         ch_bdg_map_norm
             .filter { meta, bdg ->
@@ -492,24 +492,24 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     //
     UCSC_BEDGRAPHTOBIGWIG_ENDO (
         ch_bdg_all.filter { it -> it[0].genome == genome },
-        ch_chrom_sizes_endo.map { it[1] }
+        ch_chrom_sizes_endo.map { it -> it[1] }
     )
     ch_bigwig_endo_rpm = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' }
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
 
 
-   ch_bw_exo = Channel.empty()
+   ch_bw_exo = channel.empty()
    if (spikein_genome) {
         UCSC_BEDGRAPHTOBIGWIG_EXO (
             ch_bdg_all.filter { it -> it[0].genome == spikein_genome },
-            ch_chrom_sizes_exo.map { it[1] }
+            ch_chrom_sizes_exo.map { it -> it[1] }
         )
         ch_bw_exo = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig
         ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
     }
 
     // if coverage_bin_size is not 1, then we need to generate bw with that binsize for computeMatrix
-    ch_binsize1 = Channel.empty()
+    ch_binsize1 = channel.empty()
     if (coverage_bin_size != 1 && !skip_plot_profile) {
 
         ch_bam_bai
@@ -551,7 +551,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                     meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
                     meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
                 // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it.trim() } || (!meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads)) {
+                } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta_clone.flT3_total_mapped_reads && !meta_clone.flTbl_total_mapped_reads)) {
                     if (meta_clone.flT2_total_mapped_reads) {
                         meta_clone.norm_factor_val = 1e6 / meta_clone.flT2_total_mapped_reads
                         meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'

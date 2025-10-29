@@ -34,7 +34,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // Call peaks with MACS3
@@ -139,12 +139,12 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
-    ch_homer_annotatepeaks          = Channel.empty()
-    ch_plot_macs3_qc_txt            = Channel.empty()
-    ch_plot_macs3_qc_pdf            = Channel.empty()
-    ch_plot_homer_annotatepeaks_txt = Channel.empty()
-    ch_plot_homer_annotatepeaks_pdf = Channel.empty()
-    ch_plot_homer_annotatepeaks_tsv = Channel.empty()
+    ch_homer_annotatepeaks          = channel.empty()
+    ch_plot_macs3_qc_txt            = channel.empty()
+    ch_plot_macs3_qc_pdf            = channel.empty()
+    ch_plot_homer_annotatepeaks_txt = channel.empty()
+    ch_plot_homer_annotatepeaks_pdf = channel.empty()
+    ch_plot_homer_annotatepeaks_tsv = channel.empty()
     if (!skip_peak_annotation) {
         //
         // Annotate peaks with HOMER

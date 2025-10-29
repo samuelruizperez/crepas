@@ -16,7 +16,7 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SAMTOOLS_SORT (
         ch_bam,

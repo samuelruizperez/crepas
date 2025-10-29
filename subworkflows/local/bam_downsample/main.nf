@@ -17,7 +17,7 @@ workflow BAM_DOWNSAMPLE {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // TODO: simplify this subworkflow: several steps are repeated for the different downsampling methods
     // TODO: check if samples without input control and samples without spike-in can still be downsampled
@@ -61,7 +61,7 @@ workflow BAM_DOWNSAMPLE {
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 // if antibody_to_use is in the list of antibodies or there is no flT3 or flTbl, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 }
@@ -73,13 +73,13 @@ workflow BAM_DOWNSAMPLE {
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
                 // min_endo should be the minimum number in totals above the downsampling_endo_threshold
-                def filtered_totals = totals.findAll { it >= downsampling_endo_threshold }
+                def filtered_totals = totals.findAll { it -> it >= downsampling_endo_threshold }
                 // If there are no totals above the threshold, we use the minimum of all totals
                 def min_endo = filtered_totals ? filtered_totals.min() : totals.min()
                 // These two lines are just to keep track of the dSp reference sample
                 def min_endo_id = metas[totals.indexOf(min_endo)].id
                 def min_endo_genome = metas[totals.indexOf(min_endo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it.value == min_endo }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it -> it.value == min_endo }.key
                 [exp_type, antibody, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais]
             }
             .transpose()
@@ -157,7 +157,7 @@ workflow BAM_DOWNSAMPLE {
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 }
@@ -169,12 +169,12 @@ workflow BAM_DOWNSAMPLE {
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
                 // min_exo should be the minimum number in totals above the downsampling_exo_threshold
-                def filtered_totals = totals.findAll { it >= downsampling_exo_threshold }
+                def filtered_totals = totals.findAll { it -> it >= downsampling_exo_threshold }
                 def min_exo = filtered_totals ? filtered_totals.min() : totals.min()
                 // These two lines are just to keep track of the dSp reference sample
                 def min_exo_id = metas[totals.indexOf(min_exo)].id
                 def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it.value == min_exo }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it -> it.value == min_exo }.key
                 [exp_type, antibody, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais]
             }
             .transpose()
@@ -252,7 +252,7 @@ workflow BAM_DOWNSAMPLE {
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 }
@@ -264,13 +264,13 @@ workflow BAM_DOWNSAMPLE {
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->
                 // min_endo should be the minimum number in totals above the downsampling_endo_threshold
-                def filtered_totals = totals.findAll { it >= downsampling_endo_threshold }
+                def filtered_totals = totals.findAll { it -> it >= downsampling_endo_threshold }
                 // If there are no totals above the threshold, we use the minimum of all totals
                 def min_endo = filtered_totals ? filtered_totals.min() : totals.min()
                 def min_endo_id = metas[totals.indexOf(min_endo)].id
                 def min_endo_genome = metas[totals.indexOf(min_endo)].genome
                 // get the key name of the meta item from which we got the min_endo (e.g. "flT3_total_mapped_reads")
-                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it.value == min_endo }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it -> it.value == min_endo }.key
                 [exp_type, antibody, is_input_control, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais]
             }
             .transpose()
@@ -348,7 +348,7 @@ workflow BAM_DOWNSAMPLE {
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
+                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
                 if (use_flT2_or_flT1) {
                     total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
                 }
@@ -360,13 +360,13 @@ workflow BAM_DOWNSAMPLE {
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->
                 // min_exo should be the minimum number in totals above the downsampling_exo_threshold
-                def filtered_totals = totals.findAll { it >= downsampling_exo_threshold }
+                def filtered_totals = totals.findAll { it -> it >= downsampling_exo_threshold }
                 // If there are no totals above the threshold, we use the minimum of all totals
                 def min_exo = filtered_totals ? filtered_totals.min() : totals.min()
                 // These two lines are just to keep track of the dSp reference sample
                 def min_exo_id = metas[totals.indexOf(min_exo)].id
                 def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it.value == min_exo }.key
+                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it -> it.value == min_exo }.key
                 [exp_type, antibody, is_input_control, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais]
             }
             .transpose()

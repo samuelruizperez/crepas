@@ -34,7 +34,7 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
 
         # Shuffle and split tagAlign file into 2 equal parts
         # Will produce prefix.shuf.split.tagAlign00 and prefix.shuf.split.tagAlign01
-        shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:\$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${tagalign} \\
+        shuf ${args} --random-source=<(openssl enc -aes-256-ctr -pass pass:\$(wc -c < ${tagalign}) -nosalt </dev/zero 2>/dev/null) ${tagalign} \\
             | split -d -l \${nlines} - ${prefix}.shuf.split.tagAlign
 
         # Convert reads into standard tagAlign file

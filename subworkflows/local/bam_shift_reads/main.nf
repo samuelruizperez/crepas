@@ -10,7 +10,7 @@ workflow BAM_SHIFT_READS {
     ch_fasta                     // channel: [ val(meta), [ fasta ] ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: Shift ATAC-seq reads

@@ -16,7 +16,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: Remove scaffolds from BAM files
@@ -99,7 +99,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         }
         .set { ch_ip_control_bam_merged_reps }
 
-    ch_dpeak_pooled_xls = Channel.empty()
+    ch_dpeak_pooled_xls = channel.empty()
     if (!skip_dpeak) {
         //
         // MODULE: Call peaks with DANPOS2 dpeak

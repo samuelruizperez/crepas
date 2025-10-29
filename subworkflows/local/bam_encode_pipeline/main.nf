@@ -13,7 +13,7 @@ workflow BAM_ENCODE_PIPELINE {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: Name-sorting BAM files

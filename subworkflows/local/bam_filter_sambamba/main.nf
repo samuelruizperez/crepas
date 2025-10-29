@@ -12,7 +12,7 @@ workflow BAM_FILTER_SAMBAMBA {
     ch_fasta                  // channel: [ fasta ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SAMBAMBA_VIEW (
         ch_bam_index,

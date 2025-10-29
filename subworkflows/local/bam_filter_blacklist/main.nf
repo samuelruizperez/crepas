@@ -15,7 +15,7 @@ workflow BAM_FILTER_BLACKLIST {
     ch_fasta         // channel: [ fasta ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: Filter BAM file with SAMBAMBA using blacklist
@@ -28,9 +28,9 @@ workflow BAM_FILTER_BLACKLIST {
     ch_filtered_bam = BAM_FILTER_SAMBAMBA.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA.out.bai
     ch_flagstat = BAM_FILTER_SAMBAMBA.out.flagstat
-    ch_multiqc_files = BAM_FILTER_SAMBAMBA.out.stats.collect { it[1] }
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.flagstat.collect { it[1] })
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect { it[1] })
+    ch_multiqc_files = BAM_FILTER_SAMBAMBA.out.stats.collect { it -> it[1] }
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.flagstat.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect { it -> it[1] })
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
     // Separate single-end and paired-end BAM files (SE do not have orphans)
@@ -81,9 +81,9 @@ workflow BAM_FILTER_BLACKLIST {
         BAM_REMOVE_ORPHANS.out.bam,
         ch_fasta
     )
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.stats.collect { it[1] })
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat.collect { it[1] })
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect { it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.stats.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect { it -> it[1] })
     ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
 

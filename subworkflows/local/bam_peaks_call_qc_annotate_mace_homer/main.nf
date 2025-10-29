@@ -25,7 +25,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Create channel: [ meta, [bams_merged_reps] ]
     ch_bam_bai
@@ -76,7 +76,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
 
     UCSC_WIGTOBIGWIG(
         ch_wig,
-        ch_chrom_sizes.map { it[1] }
+        ch_chrom_sizes.map { it -> it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_WIGTOBIGWIG.out.versions.first())
 
@@ -151,20 +151,20 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     )
     ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
-    ch_homer_annotatepeaks = Channel.empty()
-    // ch_plot_mace_qc_txt            = Channel.empty()
-    // ch_plot_mace_qc_pdf            = Channel.empty()
-    ch_plot_homer_annotatepeaks_txt = Channel.empty()
-    ch_plot_homer_annotatepeaks_pdf = Channel.empty()
-    ch_plot_homer_annotatepeaks_tsv = Channel.empty()
+    ch_homer_annotatepeaks = channel.empty()
+    // ch_plot_mace_qc_txt            = channel.empty()
+    // ch_plot_mace_qc_pdf            = channel.empty()
+    ch_plot_homer_annotatepeaks_txt = channel.empty()
+    ch_plot_homer_annotatepeaks_pdf = channel.empty()
+    ch_plot_homer_annotatepeaks_tsv = channel.empty()
     if (!skip_peak_annotation) {
         //
         // Annotate peaks with HOMER
         //
         HOMER_ANNOTATEPEAKS(
             ch_mace_peaks,
-            ch_fasta.map { it[1] },
-            ch_gtf.map { it[1] }
+            ch_fasta.map { it -> it[1] },
+            ch_gtf.map { it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
