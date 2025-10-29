@@ -9,9 +9,9 @@
 # Source:
 #     https://github.com/nf-core/chipseq/blame/76e2382b6d443db4dc2396e6831d1243256d80b0/bin/deseq2_qc.r
 #
-# Adapted for the grothlab/glseq pipeline by:
+# Adapted for the grothlab/crepas pipeline by:
 #     - Samuel Ruiz-Pérez <samper@cancer.dk>
-#     https://github.com/grothlab/glseq/
+#     https://github.com/grothlab/crepas/
 #
 # Description:
 #     Generates quality control plots from DESeq2 output.

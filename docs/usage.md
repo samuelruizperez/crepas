@@ -1,7 +1,7 @@
-# grothlab/glseq: Usage
+# grothlab/crepas: Usage
 
 > [!IMPORTANT]
-> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/usage.md](https://github.com/grothlab/glseq/blob/dev/docs/usage.md)
+> Please read this documentation on the grothlab/crepas repository: [https://github.com/grothlab/crepas/blob/dev/docs/usage.md](https://github.com/grothlab/crepas/blob/dev/docs/usage.md)
 
 ## Table of Contents
 
@@ -138,7 +138,7 @@ wget -L https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.b
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run grothlab/glseq \
+nextflow run grothlab/crepas \
   -profile docker \
   --input samplesheet.csv \
   --genome GRCh37 \
@@ -165,7 +165,7 @@ Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <
 > The above pipeline run specified with a params file in yaml format:
 
 ```bash
-nextflow run grothlab/glseq -profile docker -params-file params.yaml
+nextflow run grothlab/crepas -profile docker -params-file params.yaml
 ```
 
 with `params.yaml` containing:
@@ -188,7 +188,7 @@ Define where the pipeline should find input data and save output data.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).</small></details>| `string` |  | true |  |
+| `input` | Path to comma-separated file containing information about the samples in the experiment. <details><summary>Help</summary><small>You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).</small></details>| `string` |  | true |  |
 | `fragment_size` | Estimated fragment size used to extend single-end reads. | `integer` | 150 |  |  |
 | `seq_platform` | Platform/technology used to produce the reads. Corresponds to the `PL` tag in the SAM/BAM file header. <details><summary>Help</summary><small>See the [SAM format specification](https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf). Valid values: CAPILLARY, DNBSEQ (MGI/BGI), ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT (Oxford Nanopore), PACBIO (Pacific Biosciences), SINGULAR, SOLID, and ULTIMA. This field should be omitted when the technology is not in this list (though the PM field may still be present in this case) or is unknown.</small></details>| `string` |  |  |  |
 | `seq_center` | Sequencing center information to be added to read group of BAM files. | `string` |  |  |  |
@@ -327,9 +327,9 @@ Options to adjust coverage and normalization criteria.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `skip_srpm` | Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
-| `skip_cisrpm` | Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
-| `skip_cisrpmsoi` | Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `skip_srpm` | Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `skip_cisrpm` | Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
+| `skip_cisrpmsoi` | Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details. | `boolean` | false |  |  |
 | `soi_min_count` | Minimum CISRPM value required in a bin to be included in the signal over input (SOI) calculation. | `integer` | 0 |  |  |
 | `coverage_extend_reads` | This parameter allows the extension of reads to fragment size. If set, each read is extended, without exception. <details><summary>Help</summary><small>Single-end: Requires a user specified value for the final fragment length. Reads that already exceed this fragment length will not be extended. Paired-end: Reads with mates are always extended to match the fragment size defined by the two read mates. Unmated reads, mate reads that map too far apart (>4x fragment length) or even map to different chromosomes are treated like single-end reads. The input of a fragment length value is optional. If no value is specified, it is estimated from the data (mean of the fragment size of all mate reads). Read the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-processing-options) for more details.</small></details>| `integer` | 250 |  |  |
 | `coverage_bin_size` | Size of the bins, in bases, for the output of the coverage calculation. | `integer` | 250 |  |  |
@@ -471,7 +471,7 @@ Less common options for the pipeline, typically set in a config file.
 | `hook_url` |  | `string` |  |  |  |
 | `version` |  | `boolean` |  |  |  |
 | `pipelines_testdata_base_path` |  | `string` | https://raw.githubusercontent.com/nf-core/test-datasets/ |  |  |
-| `local_testdata_base_path` |  | `string` | /maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/ |  |  |
+| `local_testdata_base_path` |  | `string` | /maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/ |  |  |
 | `validationFailUnrecognisedParams` |  | `boolean` |  |  |  |
 | `validationLenientMode` |  | `boolean` |  |  |  |
 | `validationShowHiddenParams` |  | `boolean` |  |  |  |
@@ -482,7 +482,7 @@ Less common options for the pipeline, typically set in a config file.
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
-nextflow pull grothlab/glseq
+nextflow pull grothlab/crepas
 ```
 
 
@@ -494,35 +494,35 @@ It is a good idea to specify a pipeline version when running the pipeline on you
 
 To run a specific version of the pipeline, use the [`-r` option](https://www.nextflow.io/docs/latest/reference/cli.html). For example:
 
-- With a [release tag](https://github.com/grothlab/glseq/releases) from the pipeline's repository:
+- With a [release tag](https://github.com/grothlab/crepas/releases) from the pipeline's repository:
 
   ```bash
-  nextflow run grothlab/glseq \
+  nextflow run grothlab/crepas \
     -r 1.1.12
   ```
 
-- With a [commit](https://github.com/grothlab/glseq/commits/dev/) ID (revision number) from the pipeline's repository:
+- With a [commit](https://github.com/grothlab/crepas/commits/dev/) ID (revision number) from the pipeline's repository:
 
   ```bash
-  nextflow run grothlab/glseq \
+  nextflow run grothlab/crepas \
     -r a6840348453bebe2cb49384f8522bbfb20d7087b
   ```
 
   You can also use the short version of the commit ID:
 
   ```bash
-  nextflow run grothlab/glseq \
+  nextflow run grothlab/crepas \
     -r a684034
   ```
-- With a [git branch](https://github.com/grothlab/glseq/branches) from the pipeline's repository:
+- With a [git branch](https://github.com/grothlab/crepas/branches) from the pipeline's repository:
 
   ```bash
-  nextflow run grothlab/glseq \
+  nextflow run grothlab/crepas \
     -r dev
   ```
 
 > [!NOTE]
-> In this last example, the pipeline will run with the latest **cached** version of the `dev` branch. Make sure to run `nextflow pull grothlab/glseq -r dev` before if you want to update the cached version.
+> In this last example, the pipeline will run with the latest **cached** version of the `dev` branch. Make sure to run `nextflow pull grothlab/crepas -r dev` before if you want to update the cached version.
 
 The version number you use will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
 
@@ -632,20 +632,20 @@ Some HPC setups also allow you to run nextflow within a cluster job submitted yo
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+#SBATCH --job-name=CREPAS_JOB        # specify a name for the job
 #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=NONE            # email address to receive the notifications
 #SBATCH -c 1                        # number of requested cores for the Nextflow head job
 #SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
 #SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
-#SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+#SBATCH --output=crepas_job.%j.log   # standard output and error log, '%j' gives the job ID
 
 # Create an output directory for the pipeline run if it does not exist
 mkdir -p <path_to_output_directory>
 cd <path_to_output_directory>
 
 # Run the pipeline
-nextflow run grothlab/glseq \
+nextflow run grothlab/crepas \
     -r main \
     -profile test_scarseq \
     --outdir <path_to_output_directory>
@@ -653,7 +653,7 @@ nextflow run grothlab/glseq \
 And then, submitting the job to the queue with:
 
 ```bash
-sbatch glseq_job.sh
+sbatch crepas_job.sh
 ```
 > [!TIP]
 > We recommend providing 4 GB of RAM for the Nextflow head job. In the case of an `sbatch` script, this is specified with the `#SBATCH --mem=4gb` line. See [Optimizing Nextflow for HPC and cloud at scale](https://seqera.io/blog/optimizing-nextflow-for-hpc-and-cloud-at-scale/) for more details.
@@ -682,7 +682,7 @@ Before analyzing any kind of data, we need to install or load Nextflow and a con
 First, we start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
   ```bash
-  tmux new-session -s glseq_example
+  tmux new-session -s crepas_example
   ```
 
 Then we launch an interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
@@ -708,7 +708,7 @@ For this example, we will analyze a subset of the ChIP-seq data from the followi
 
 Now we need to download the ChIP-seq data. We will do so using the [nf-core/fetchngs](https://nf-co.re/fetchngs/latest) pipeline, which works very well to fetch metadata and raw FastQ files from public databases.
 
-#### Running *glseq*
+#### Running *crepas*
 
 
 

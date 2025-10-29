@@ -1,7 +1,7 @@
-# grothlab/glseq: Output
+# grothlab/crepas: Output
 
 > [!IMPORTANT]
-> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/output.md](https://github.com/grothlab/glseq/blob/dev/docs/output.md)
+> Please read this documentation on the grothlab/crepas repository: [https://github.com/grothlab/crepas/blob/dev/docs/output.md](https://github.com/grothlab/crepas/blob/dev/docs/output.md)
 
 ## Table of Contents
 

@@ -8,9 +8,9 @@
 # Source:
 #     https://github.com/grothlab/SCARseq_Pipeline/blob/a4b327f1901ae6a980767d05ec7af79896a604c9/SCAR_partition_plots.R
 #
-# Adapted for the grothlab/glseq pipeline by:
+# Adapted for the grothlab/crepas pipeline by:
 #     - Samuel Ruiz-Pérez <samper@cancer.dk>
-#     https://github.com/grothlab/glseq/
+#     https://github.com/grothlab/crepas/
 #
 # Description:
 #     Script for plotting partition plots of SCARseq together with its stranded Input.

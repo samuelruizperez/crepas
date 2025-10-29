@@ -10,9 +10,9 @@ Originally created July 4th 2018 by:
 Source:
     https://github.com/nf-core/atacseq/blame/1a1dbe52ffbd82256c941a032b0e22abbd925b8a/bin/igv_files_to_session.py
 
-Adapted for the grothlab/glseq pipeline by:
+Adapted for the grothlab/crepas pipeline by:
     - Samuel Ruiz-Pérez <samper@cancer.dk>
-    https://github.com/grothlab/glseq/
+    https://github.com/grothlab/crepas/
 
 Description:
     Create IGV session file from a list of files and associated colours.

@@ -20,8 +20,8 @@ include { samplesheetToList                } from 'plugin/nf-schema'
 include { paramsSummaryMap                                            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
-include { INPUT_CHECK                                                 } from '../../subworkflows/local/utils_grothlab_glseq_pipeline'
+include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+include { INPUT_CHECK                                                 } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
 include {
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1 ;
     BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
@@ -89,7 +89,7 @@ include { BAM_SORT_STATS_SAMTOOLS                                     } from '..
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow GLSEQ {
+workflow CREPAS {
     take:
     ch_samplesheet                  // channel: path(sample_sheet.csv)
     ch_versions               // channel: [ path(versions.yml) ]
@@ -1430,7 +1430,7 @@ workflow GLSEQ {
     // Collate and save software versions
     //
     softwareVersionsToYAML(ch_versions)
-        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'glseq_software_mqc_versions.yml', sort: true, newLine: true)
+        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'crepas_software_mqc_versions.yml', sort: true, newLine: true)
         .set { ch_collated_versions }
 
     //

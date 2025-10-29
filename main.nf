@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    grothlab/glseq
+    grothlab/crepas
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/grothlab/glseq
+    Github : https://github.com/grothlab/crepas
 ----------------------------------------------------------------------------------------
 */
 
@@ -12,12 +12,12 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { GLSEQ                   } from './workflows/glseq'
+include { CREPAS                   } from './workflows/crepas'
 include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_glseq_pipeline'
-include { getGenomeAttribute      } from './subworkflows/local/utils_grothlab_glseq_pipeline'
-include { getMacsGsize            } from './subworkflows/local/utils_grothlab_glseq_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_glseq_pipeline'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_crepas_pipeline'
+include { getGenomeAttribute      } from './subworkflows/local/utils_grothlab_crepas_pipeline'
+include { getMacsGsize            } from './subworkflows/local/utils_grothlab_crepas_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_crepas_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,10 +28,10 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_grothlab_gl
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow GROTHLAB_GLSEQ {
+workflow GROTHLAB_CREPAS {
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,10 +103,10 @@ workflow GROTHLAB_GLSEQ {
     ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
     //
-    // WORKFLOW: Run grothlab/glseq workflow
+    // WORKFLOW: Run grothlab/crepas workflow
     //
     ch_samplesheet = Channel.value(file(params.input, checkIfExists: true))
-    GLSEQ (
+    CREPAS (
         ch_samplesheet,
         ch_versions,
         PREPARE_GENOME.out.fasta,
@@ -137,7 +137,7 @@ workflow GROTHLAB_GLSEQ {
     )
 
     emit:
-    multiqc_report = GLSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = CREPAS.out.multiqc_report // channel: /path/to/multiqc_report.html
     versions       = ch_versions                // channel: [version1, version2, ...]
 }
 
@@ -164,7 +164,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    GROTHLAB_GLSEQ ()
+    GROTHLAB_CREPAS ()
 
     //
     // SUBWORKFLOW: Run completion tasks
@@ -176,7 +176,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        GROTHLAB_GLSEQ.out.multiqc_report
+        GROTHLAB_CREPAS.out.multiqc_report
     )
 }
 

@@ -9,9 +9,9 @@
 # Source:
 #     https://github.com/nf-core/chipseq/blob/76e2382b6d443db4dc2396e6831d1243256d80b0/bin/plot_macs3_qc.r
 #
-# Adapted for the grothlab/glseq pipeline by:
+# Adapted for the grothlab/crepas pipeline by:
 #     - Samuel Ruiz-Pérez <samper@cancer.dk>
-#     https://github.com/grothlab/glseq/
+#     https://github.com/grothlab/crepas/
 #
 # Description:
 #     Generates plots from MACS3 QC output.

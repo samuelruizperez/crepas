@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use [grothlab/glseq](https://github.com/grothlab/glseq) in your work, please cite it as below."
+message: "If you use [grothlab/crepas](https://github.com/grothlab/crepas) in your work, please cite it as below."
 authors:
 - family-names: "Ruiz-Pérez"
   given-names: "Samuel"
@@ -10,8 +10,8 @@ authors:
 - family-names: "Groth"
   given-names: "Anja"
   orcid: "https://orcid.org/0000-0003-0577-1771"
-title: "grothlab/glseq: A bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq)"
+title: "grothlab/crepas: A bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq)"
 version: 0.0.1
 # doi: 10.5281/zenodo.1234
 date-released: 2025-02-03
-url: "https://github.com/grothlab/glseq"
+url: "https://github.com/grothlab/crepas"

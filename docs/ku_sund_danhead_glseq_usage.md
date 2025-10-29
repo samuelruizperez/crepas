@@ -1,7 +1,7 @@
-# grothlab/glseq: Usage guide for DAN System users
+# grothlab/crepas: Usage guide for DAN System users
 
 > [!IMPORTANT]
-> Please read this documentation on the grothlab/glseq repository: [https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md](https://github.com/grothlab/glseq/blob/dev/docs/ku_sund_danhead_glseq_usage.md)
+> Please read this documentation on the grothlab/crepas repository: [https://github.com/grothlab/crepas/blob/dev/docs/ku_sund_danhead_crepas_usage.md](https://github.com/grothlab/crepas/blob/dev/docs/ku_sund_danhead_crepas_usage.md)
 >
 > This is a guide tailored for users of the [DAN System](https://sgn102.pages.ku.dk/a-not-long-tour-of-dangpu/). For general usage instructions, please refer to the main [usage documentation](../docs/usage.md).
 
@@ -46,11 +46,11 @@
 
     - Click on the [***Generate new token***](https://github.com/settings/personal-access-tokens/new) button on the upper right.
 
-    - Under ***Token name***, provide any name to identify its purpose (e.g. `glseq_pat`).
+    - Under ***Token name***, provide any name to identify its purpose (e.g. `crepas_pat`).
 
     - Under ***Resource owner***, select the `grothlab` organization.
 
-    - Under ***Repository access***, click on ***Only select repositories***, search for the `grothlab/glseq` repository, and select it.
+    - Under ***Repository access***, click on ***Only select repositories***, search for the `grothlab/crepas` repository, and select it.
 
     - Under ***Permissions***, click on ***Repository permissions***. 
     
@@ -122,12 +122,12 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
 3. Now, create a subdirectory for the pipeline's input and output files:
 
     ```bash
-    mkdir -p /maps/projects/dan1/data/Groth_group/<your_initials>/project1/glseq/output/
+    mkdir -p /maps/projects/dan1/data/Groth_group/<your_initials>/project1/crepas/output/
     ```
 
-4. Create an **input samplesheet** formatted as described in the [Samplesheet input](../docs/usage.md#samplesheet-input) section of the usage documentation. You can use any text editor or Excel to do this. Then place the input samplesheet file in your `glseq/` directory.
+4. Create an **input samplesheet** formatted as described in the [Samplesheet input](../docs/usage.md#samplesheet-input) section of the usage documentation. You can use any text editor or Excel to do this. Then place the input samplesheet file in your `crepas/` directory.
 
-5. Create a **parameter file** as described in the [Inputting parameters](#inputting-parameters) section of this document. Then place the parameter file in your `glseq/` directory.
+5. Create a **parameter file** as described in the [Inputting parameters](#inputting-parameters) section of this document. Then place the parameter file in your `crepas/` directory.
 
 6. Choose the **version** of the pipeline you want to run; you will need to provide it in the next step. You can read the examples in the [Reproducibility](../docs/usage.md#reproducibility) section of the usage documentation or ask Samuel Ruiz-Pérez ([<samper@cancer.dk>](mailto:samper@cancer.dk)) for advice.
 
@@ -136,13 +136,13 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     ```bash
     #!/bin/bash
 
-    #SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+    #SBATCH --job-name=CREPAS_JOB        # specify a name for the job
     #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
     #SBATCH --mail-user=NONE            # email address to receive the notifications
     #SBATCH -c 1                        # number of requested cores for the Nextflow head job
     #SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
     #SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
-    #SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+    #SBATCH --output=crepas_job.%j.log   # standard output and error log, '%j' gives the job ID
 
     # Source the bashrc file to load the environment variables
     source ~/.bashrc
@@ -155,7 +155,7 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     cd <path_to_project_directory>/output/
 
     # Run the pipeline
-    nextflow run grothlab/glseq \
+    nextflow run grothlab/crepas \
         -r <version> \
         -profile ku_sund_danhead_mod \
         -params-file <path_to_project_directory>/<params_file_yaml> \
@@ -175,25 +175,25 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
     ```console
     ../Groth_group/<your_initials>/project1/        # Project directory
     ├── fastq/                                      # (Optional) Directory with raw FASTQ files
-    └── glseq/                                      # Directory for the glseq pipeline
-        ├── project1_glseq_samplesheet.csv          # Input samplesheet file (CSV)
-        ├── project1_glseq_params.yaml              # Parameter file (YAML)
-        ├── project1_glseq_sbatch.sh                # SBATCH script to submit the job
+    └── crepas/                                      # Directory for the crepas pipeline
+        ├── project1_crepas_samplesheet.csv          # Input samplesheet file (CSV)
+        ├── project1_crepas_params.yaml              # Parameter file (YAML)
+        ├── project1_crepas_sbatch.sh                # SBATCH script to submit the job
         └── output/                                 # Output directory for the pipeline
     ```
  
 8. Now, you are ready to run the pipeline! Submit it to the queue by running:
 
     ```bash
-    cd <path_to_project_directory>/glseq/
+    cd <path_to_project_directory>/crepas/
 
-    sbatch project1_glseq_sbatch.sh
+    sbatch project1_crepas_sbatch.sh
     ```
 
 9. You can always check the status of the pipeline run in the `.nextflow.log` file located in the `output/` directory:
 
     ```bash
-    tail -f <path_to_project_directory>/glseq/output/.nextflow.log
+    tail -f <path_to_project_directory>/crepas/output/.nextflow.log
     ```
 > [!TIP]
 > The `.nextflow.log` can be very verbose. If there is an error with the pipeline run, sometimes you might not be able
@@ -215,10 +215,10 @@ You can test the correct functioning of any pipeline version (`-r <version>`) by
 
 Now, you should follow similar steps as in the [Running the pipeline through an *SBATCH* job](#running-the-pipeline-through-an-sbatch-job) section, but this time we do not need to copy any FASTQ files or create an input samplesheet or parameter file, as the test data and parameters are already included in the pipeline profiles.
 
-Instead, just create the project, glseq, and output directories as described before:
+Instead, just create the project, crepas, and output directories as described before:
 
 ```bash
-mkdir -p /maps/projects/dan1/data/Groth_group/<your_initials>/project_test1/glseq/output/
+mkdir -p /maps/projects/dan1/data/Groth_group/<your_initials>/project_test1/crepas/output/
 ```
 
 Then create an SBATCH script to submit the job to the DAN System queue. Use the following template, but remember to replace the placeholders (`<...>`) with your own paths and filenames (you should not need to change anything else):
@@ -227,13 +227,13 @@ Then create an SBATCH script to submit the job to the DAN System queue. Use the 
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=GLSEQ_JOB        # specify a name for the job
+#SBATCH --job-name=CREPAS_JOB        # specify a name for the job
 #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=NONE            # email address to receive the notifications
 #SBATCH -c 1                        # number of requested cores for the Nextflow head job
 #SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
 #SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
-#SBATCH --output=glseq_job.%j.log   # standard output and error log, '%j' gives the job ID
+#SBATCH --output=crepas_job.%j.log   # standard output and error log, '%j' gives the job ID
 
 # Source the bashrc file to load the environment variables
 source ~/.bashrc
@@ -242,22 +242,22 @@ source ~/.bashrc
 module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
 
 # Create an output directory for the pipeline run if it does not exist
-mkdir -p <path_to_test_project_directory>/glseq/output/
-cd <path_to_test_project_directory>/glseq/output/
+mkdir -p <path_to_test_project_directory>/crepas/output/
+cd <path_to_test_project_directory>/crepas/output/
 
 # Run the pipeline
-nextflow run grothlab/glseq \
+nextflow run grothlab/crepas \
     -r <version> \
     -profile ku_sund_danhead_mod,local_test_chipseq \
-    --outdir <path_to_test_project_directory>/glseq/output/ \
-    -work-dir <path_to_test_project_directory>/glseq/output/work/
+    --outdir <path_to_test_project_directory>/crepas/output/ \
+    -work-dir <path_to_test_project_directory>/crepas/output/work/
 ```
 
 Then, submit the job to the queue by running:
 
 ```bash
-cd <path_to_test_project_directory>/glseq/
-sbatch project_test1_glseq_sbatch.sh
+cd <path_to_test_project_directory>/crepas/
+sbatch project_test1_crepas_sbatch.sh
 ```
 
 
@@ -313,7 +313,7 @@ Reference files for the Groth Lab have been made available by [Nicolás Alcaraz]
 > [!TIP]
 > Make sure to always input the prebuilt index files (besides the FASTA and GTF files) if available to avoid building the index from scratch every time you run the pipeline:
 > ```bash
-> nextflow run grothlab/glseq \
+> nextflow run grothlab/crepas \
 >    -r main \
 >    -profile ku_sund_danhead_mod \
 >    --input <path_to_input_samplesheet_csv> \
@@ -352,10 +352,10 @@ Okazaki fragment sequencing (OK-seq) partition BED files are inputted using the 
 On the command line:
 
 ```bash
-nextflow run /user/datadir/software/glseq \
+nextflow run /user/datadir/software/crepas \
       -r main \
       -profile ku_sund_danhead_mod \
-      --input /user/datadir/projects/project1/project1_glseq_samplesheet.csv \
+      --input /user/datadir/projects/project1/project1_crepas_samplesheet.csv \
       --outdir /user/datadir/projects/project1/output/ \
       -work-dir /user/datadir/projects/project1/output/work/ \
       --aligner bowtie2 \
@@ -379,10 +379,10 @@ nextflow run /user/datadir/software/glseq \
 Parameters specified on the command line [can be also specified in a params file using the `-params-file` option](https://www.nextflow.io/docs/latest/cli.html#pipeline-parameters). This is useful for saving a set of parameters that you use frequently, or for sharing parameters with others.
 
 
-Parameters can be represented in YAML (`.yml`) format. For example, `project1_glseq_params.yml` would look like this:
+Parameters can be represented in YAML (`.yml`) format. For example, `project1_crepas_params.yml` would look like this:
 
-```yaml title="project1_glseq_params.yml"
-input: /user/datadir/projects/project1/project1_glseq_samplesheet.csv
+```yaml title="project1_crepas_params.yml"
+input: /user/datadir/projects/project1/project1_crepas_samplesheet.csv
 outdir: /user/datadir/projects/project1/output/
 work_dir: /user/datadir/projects/project1/output/work/
 aligner: bowtie2
@@ -402,16 +402,16 @@ save_spikein_intermeds: true
 Then you can run the pipeline like this:
 
 ```bash
-nextflow run /user/datadir/software/glseq \
+nextflow run /user/datadir/software/crepas \
       -profile ku_sund_danhead_mod \
-      --params-file /user/datadir/projects/project1/project1_glseq_params.yml
+      --params-file /user/datadir/projects/project1/project1_crepas_params.yml
 ```
 
-Or in JSON (`.json`) format. For example, `project1_glseq_params.json` would look like this:
+Or in JSON (`.json`) format. For example, `project1_crepas_params.json` would look like this:
 
-```json title="project1_glseq_params.json"
+```json title="project1_crepas_params.json"
 {
-  "input": "/user/datadir/projects/project1/project1_glseq_samplesheet.csv",
+  "input": "/user/datadir/projects/project1/project1_crepas_samplesheet.csv",
   "outdir": "/user/datadir/projects/project1/output/",
   "work_dir": "/user/datadir/projects/project1/output/work/",
   "aligner": "bowtie2",
@@ -431,9 +431,9 @@ Or in JSON (`.json`) format. For example, `project1_glseq_params.json` would loo
 Then you can run the pipeline like this:
 
 ```bash
-nextflow run /user/datadir/software/glseq \
+nextflow run /user/datadir/software/crepas \
       -profile ku_sund_danhead_mod \
-      --params-file /user/datadir/projects/project1/project1_glseq_params.json
+      --params-file /user/datadir/projects/project1/project1_crepas_params.json
 ```
 
 ### Opening the IGV session generated by the pipeline

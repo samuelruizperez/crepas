@@ -2,7 +2,7 @@
 /*
  * Remove orphan reads from paired-end BAM file
  * Downloaded from: https://github.com/nf-core/chipseq/blob/76e2382b6d443db4dc2396e6831d1243256d80b0/modules/local/bam_remove_orphans.nf
- * Adapted by Samuel Ruiz-Pérez <samper@cancer.dk> for the grothlab/glseq pipeline.
+ * Adapted by Samuel Ruiz-Pérez <samper@cancer.dk>.
  */
 process BAM_REMOVE_ORPHANS {
     tag "$meta.id"

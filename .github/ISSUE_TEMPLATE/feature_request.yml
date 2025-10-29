@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea for the grothlab/glseq pipeline
+description: Suggest an idea for the grothlab/crepas pipeline
 labels: enhancement
 body:
   - type: textarea

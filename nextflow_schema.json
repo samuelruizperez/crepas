@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/grothlab/glseq/master/nextflow_schema.json",
-    "title": "grothlab/glseq pipeline parameters",
-    "description": "grothlab/glseq is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
+    "$id": "https://raw.githubusercontent.com/grothlab/crepas/master/nextflow_schema.json",
+    "title": "grothlab/crepas pipeline parameters",
+    "description": "grothlab/crepas is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -20,7 +20,7 @@
                     "schema": "assets/schema_input.json",
                     "exists": true,
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/glseq/blob/main/docs/usage.md).",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "fragment_size": {
@@ -572,19 +572,19 @@
                 "skip_srpm": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "description": "Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_cisrpm": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_cisrpmsoi": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/glseq/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
+                    "description": "Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "soi_min_count": {
@@ -1341,7 +1341,7 @@
         },
         "local_testdata_base_path": {
             "type": "string",
-            "default": "/maps/projects/dan1/data/Groth_group/SRP/glseq_testdata/"
+            "default": "/maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/"
         },
         "trace_report_suffix": {
             "type": "string",

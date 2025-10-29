@@ -9,12 +9,12 @@ Originally created on February 1st 2017 by:
 Source:
     https://github.com/nf-core/chipseq/blame/76e2382b6d443db4dc2396e6831d1243256d80b0/bin/bampe_rm_orphan.py
 
-Adapted for the grothlab/glseq pipeline by:
+Adapted for the grothlab/crepas pipeline by:
     - Samuel Ruiz-Pérez <samper@cancer.dk>
-    https://github.com/grothlab/glseq/
+    https://github.com/grothlab/crepas/
 
 Description:
-   Removes singletons (orphan reads) from paired-end BAM file for use with the grothlab/glseq pipeline.
+   Removes singletons (orphan reads) from paired-end BAM file for use with the grothlab/crepas pipeline.
 ===============================================================================
 """
 
