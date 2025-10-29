@@ -105,7 +105,7 @@ workflow GROTHLAB_CREPAS {
     //
     // WORKFLOW: Run grothlab/crepas workflow
     //
-    ch_samplesheet = Channel.value(file(params.input, checkIfExists: true))
+    ch_samplesheet = channel.value(file(params.input, checkIfExists: true))
     CREPAS (
         ch_samplesheet,
         ch_versions,
