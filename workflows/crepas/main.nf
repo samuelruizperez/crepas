@@ -1114,7 +1114,7 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Run ENCODE3 ChIP-seq pipeline
     //
-    if (!params.skip_encode) {
+    if (!params.skip_encode_pipeline) {
         BAM_ENCODE_PIPELINE (
             ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             ch_fasta
