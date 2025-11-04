@@ -26,5 +26,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER {
 
     emit:
     peaks                        = ch_seacr_peaks                   // channel: [ val(meta), [ peaks ] ]
+    versions                     = ch_versions                      // channel: [ val(tool), version ]
 
 }
