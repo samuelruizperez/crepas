@@ -25,7 +25,7 @@ process TELOCAL {
     def prefix          = task.ext.prefix       ?: "${meta.id}"
     def gzip_cmd        = skip_gz ? "" : "gzip -f ${prefix}.cntTable"
     """
-     TElocal \\
+    TElocal \\
         ${args} \\
         --BAM ${bam} \\
         --GTF ${genic_gtf_or_index} \\

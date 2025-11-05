@@ -45,6 +45,7 @@ include { BAM_FILTER_BLACKLIST                                        } from '..
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                              } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                                              } from '../../subworkflows/local/bam_downsample/main'
 include { TE_COUNTING                                                 } from '../../subworkflows/local/te_counting/main'
+include { DENOPA                                                       } from '../../modules/local/denopa/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -646,7 +647,7 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Shift ATAC-seq reads
     //
-    BAM_SHIFT_READS(
+    BAM_SHIFT_READS (
         ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
         ch_fasta
     )
@@ -886,7 +887,7 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
     //
-    BAM_NORMALIZE_BIGWIG_DEEPTOOLS(
+    BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
         ch_chrom_sizes_endo,
         ch_chrom_sizes_exo,
@@ -1158,6 +1159,18 @@ workflow CREPAS {
         )
         ch_edd_peaks = EDD.out.peaks
         ch_versions = ch_versions.mix(EDD.out.versions.first())
+    }
+
+    ch_denopa_peaks = channel.empty()
+    if (!params.skip_denopa) {
+        //
+        // MODULE: Call peaks with denopa
+        //
+        DENOPA (
+            ch_all_ip_and_controls.filter { it -> it[0].exp_type in ['ATAC-seq'] }
+        )
+        ch_denopa_peaks = DENOPA.out.arers
+        ch_versions = ch_versions.mix(DENOPA.out.versions.first())
     }
 
     ch_macs3_peaks = channel.empty()
