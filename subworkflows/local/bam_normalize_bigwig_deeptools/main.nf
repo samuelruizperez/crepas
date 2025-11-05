@@ -587,6 +587,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
     bigwig_binsize1  = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
+    bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
 
     versions      = ch_versions                                     // channel: [ versions.yml ]
 }

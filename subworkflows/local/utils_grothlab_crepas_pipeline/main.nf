@@ -298,16 +298,16 @@ workflow INPUT_CHECK {
                 error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
             }
             // Antibody checks
-            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq'].contains(meta.exp_type)) {
+            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {
-                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
+                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUTandTag, CUTandRUN, and TIP-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
                 }
                 if (meta.antibody && meta.is_input_control) {
                     error("ERROR: `antibody` must not be specified for input control samples. Check sample: ${meta.id}")
                 }
             } else {
                 if (meta.antibody) {
-                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq. Check sample: ${meta.id}")
+                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUT&Tag, CUT&RUN, and TIP-seq. Check sample: ${meta.id}")
                 }
             }
             return [ meta, fastqs ]

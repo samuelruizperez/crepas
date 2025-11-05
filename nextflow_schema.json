@@ -954,6 +954,26 @@
                     "description": "Skip MACS3 peak calling.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "seacr_peak_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR specifies returns the top n fraction (between 0 and 1) of peaks based on total signal within peaks. This is only used if there are no controls included with the samples and if `--use_control` is `false`"
+                },
+                "seacr_norm": {
+                    "type": "string",
+                    "default": "non",
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR normalization.",
+                    "enum": ["non", "norm"]
+                },
+                "seacr_stringency": {
+                    "type": "string",
+                    "default": "stringent",
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR stringency.",
+                    "enum": ["stringent", "relaxed"]
+                },
                 "mace_kmer_size": {
                     "type": "integer",
                     "description": "Set the k-mer size for MACE peak calling. Kmer size [6,12] to correct nucleotide composition bias. kmerSize < 0.5*read_length. Larger KmerSize might make program slower. Set kmerSize = 0 to turn off nucleotide compsition bias correction. default=6. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",

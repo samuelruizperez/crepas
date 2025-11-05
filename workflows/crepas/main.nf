@@ -34,6 +34,7 @@ include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '..
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_PARTITIONS                                       } from '../../subworkflows/local/bam_create_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../../subworkflows/local/bam_allocate_multimappers/main'
@@ -957,6 +958,58 @@ workflow CREPAS {
             params.skip_telocal_gz
         )
         ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
+    }
+
+
+    //
+    // SUBWORKFLOW: Call peaks with SEACR
+    //
+    ch_seacr_peaks = channel.empty()
+    if (!params.skip_seacr) {
+
+        // Create channels: [ meta, ip_bam, ipcontrol_bam ]
+        // Including ips_wo_ipcontrol as they will be used for peak calling without control
+        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bedgraph_endo
+            .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
+            .branch { meta, bdg ->
+                ips_with_ipcontrol: meta.input_control
+                    return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
+                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
+                    return [meta, bdg, []]
+                ipcontrols: !meta.input_control && meta.is_input_control
+                    return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
+            }
+            .set { ch_bedgraph_by_type }  
+
+        ch_bedgraph_by_type
+            .ips_with_ipcontrol
+            .combine(ch_bedgraph_by_type.ipcontrols, by: [0,1,2])
+            .map { ipcontrol_id, antibody, norm_factor_type, ip_meta, ip_bdg, ipcontrol_meta, ipcontrol_bdg ->
+                [ ip_meta, ip_bdg, ipcontrol_bdg ]
+            }
+            .set { ch_ip_and_ipcontrols_bdg }
+
+        ch_bedgraph_by_type
+            .ips_wo_ipcontrol
+            .mix(ch_ip_and_ipcontrols_bdg)
+            .set { ch_all_bdg_ip_and_controls }
+
+
+        // TODO: Print to file for debuggin
+        ch_all_bdg_ip_and_controls
+            .map { meta, ip_bdg, ipcontrol_bdg ->
+                "${meta}\t${ip_bdg}\t${ipcontrol_bdg}"
+            }
+            .collectFile(name: 'ch_all_bdg_ip_and_controls.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
+
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
+            ch_all_bdg_ip_and_controls,
+            params.seacr_peak_threshold
+            
+        )
+        ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.versions.first())
     }
 
     //
