@@ -26,7 +26,7 @@ process PHANTOMPEAKQUALTOOLS {
     def args   = task.ext.args ?: ''
     def args2  = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.spp"
-    def input_control_arg = input_control ? "-i=${input_control}" : ''
+    def input_control_arg = input_control ? "-i='${input_control}'" : ''
     def peaks_arg = input_control ? "-savn='${prefix}.narrowPeak' -savr='${prefix}.regionPeak'" : ""
     def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
