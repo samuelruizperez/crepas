@@ -134,7 +134,7 @@ workflow BAM_ENCODE_PIPELINE {
     // MODULE: Call peaks with phantompeakqualtools SPP
     //
     PHANTOMPEAKQUALTOOLS (
-        TAGALIGN_POOL.out.file_out
+        ch_ip_ipcontrol_tagalign
     )
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
