@@ -63,10 +63,10 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
 
         # Convert reads into standard tagAlign file
         awk 'BEGIN{OFS="\\t"}{printf "%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n",\$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$11,\$12}' "${prefix}.shuf.split.tagAlign00" \\
-            | gzip -nc > ${prefix}.spr1.tagAlign
+            > ${prefix}.spr1.tagAlign
 
         awk 'BEGIN{OFS="\\t"}{printf "%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n",\$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$11,\$12}' "${prefix}.shuf.split.tagAlign01" \\
-            | gzip -nc > ${prefix}.spr2.tagAlign
+            > ${prefix}.spr2.tagAlign
         
         rm "${prefix}.shuf.split.tagAlign00"
         rm "${prefix}.shuf.split.tagAlign01"
