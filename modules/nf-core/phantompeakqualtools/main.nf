@@ -13,7 +13,6 @@ process PHANTOMPEAKQUALTOOLS {
 
     output:
     tuple val(meta), path("*.ccscores")  , emit: ccscores
-    tuple val(meta), path("*.out")  , emit: spp
     tuple val(meta), path("*.pdf")  , emit: pdf
     tuple val(meta), path("*.Rdata"), emit: rdata
     tuple val(meta), path("*.narrowPeak"), emit: narrowpeak, optional: true
