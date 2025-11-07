@@ -130,15 +130,13 @@ workflow BAM_ENCODE_PIPELINE {
         .collectFile(name: 'ch_ip_ipcontrol_tagalign.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
 
-
-
     //
     // MODULE: Call peaks with phantompeakqualtools SPP
     //
-    // PHANTOMPEAKQUALTOOLS (
-    //     TAGALIGN_POOL.out.file_out
-    // )
-    // ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
+    PHANTOMPEAKQUALTOOLS (
+        TAGALIGN_POOL.out.file_out
+    )
+    ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
 
     emit:
