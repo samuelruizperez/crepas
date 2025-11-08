@@ -930,7 +930,7 @@
                     "fa_icon": "fas fa-fast-forward",
                     "default": true
                 },
-                "ctl_depth_ratio": {
+                "ctl_depth_ratio_threshold": {
                     "type": "number",
                     "default": 1.2,
                     "description": "For each sample, if the ratio of depth between input controls is higher than this, then a pooled input control will be used for all sample replicates.",
