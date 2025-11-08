@@ -473,6 +473,7 @@ workflow CREPAS {
         .map { meta, bam, bai, total ->
             def meta_clone = meta.clone()
             meta_clone.flT1_total_mapped_reads = total.toDouble()
+            meta_clone.ref_total_mapped_reads_key = 'flT1_total_mapped_reads'
             [meta_clone, bam, bai]
         }
         .set { ch_filtered_bam_bai }
@@ -541,6 +542,7 @@ workflow CREPAS {
             .map { meta, bam, bai, total ->
                 def meta_clone = meta.clone()
                 meta_clone.flT2_total_mapped_reads = total.toDouble()
+                meta_clone.ref_total_mapped_reads_key = 'flT2_total_mapped_reads'
                 [meta_clone, bam, bai]
             }
             .set { ch_filtered2_endo_exo_bam_bai }
@@ -739,11 +741,8 @@ workflow CREPAS {
             .exo
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                if (meta.flT3_total_mapped_reads) {
-                    meta_clone.flTbl_total_mapped_reads = meta.flT3_total_mapped_reads
-                } else {
-                    meta_clone.flTbl_total_mapped_reads = meta.flT2_total_mapped_reads
-                }
+                meta_clone.flTbl_total_mapped_reads = meta[meta.ref_total_mapped_reads_key]
+                meta_clone.ref_total_mapped_reads_key = 'flTbl_total_mapped_reads'
                 [meta_clone, bam, bai]
             }
             .set { ch_flt_bam_bai_by_genome_exo }
@@ -815,6 +814,79 @@ workflow CREPAS {
         ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.versions.first())
     }
 
+    //
+    // Duplicate input controls for each antibody
+    // This is done for the cases where one input control is used for multiple IPs
+    //
+    ch_filtered_bam_bai
+        .branch { meta, bam, bai ->
+            ips_with_ipcontrol: meta.input_control
+                return [meta.input_control, meta.antibody, meta, bam, bai]
+            ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
+                    return [meta, bam, bai]
+            ipcontrols: !meta.input_control && meta.is_input_control
+                return [meta.id, meta, bam, bai]
+        }
+        .set { ch_bam_bai_by_type }
+
+    ch_bam_bai_by_type.ipcontrols
+        .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
+        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
+            def meta_clone = ipcontrol_meta.clone()
+            meta_clone.input_control_of_antibody = ip_antibody
+            [ meta_clone, ipcontrol_bam, ipcontrol_bai ]
+        }
+        .unique()
+        .set { ch_bam_bai_ipcontrols }
+    
+    ch_bam_bai_by_type
+        .ips_with_ipcontrol
+        .map { ipcontrol_id, antibody, meta, bam, bai ->
+            [ meta, bam, bai ]
+        }
+        .mix(ch_bam_bai_by_type.ips_wo_ipcontrol)
+        .mix(ch_bam_bai_ipcontrols)
+        .set { ch_filtered_bam_bai }
+
+    //
+    // Define the reference total mapped reads key to be used for downsampling, normalization, etc.
+    // Note: this is the place to define more complex rules if needed
+    // For example: if one wants to prefer flT2 for downsampling, but not for normalization,
+    // then change definition of meta.ref_total_mapped_reads_for_dSp here:
+    //
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            def meta_clone = meta.clone()
+            // samples have meta.antibody, while input controls have meta.input_control_of_antibody
+            def antibody = meta.antibody ?: meta.input_control_of_antibody
+            def total_key = meta.ref_total_mapped_reads_key
+            if (antibody in params.flT2_as_total_ref.split(',').collect { it -> it.trim() }) {
+                if (meta.flT2_total_mapped_reads) {
+                    total_key = 'flT2_total_mapped_reads'
+                } else {
+                    total_key = 'flT1_total_mapped_reads'
+                }
+            }
+            meta_clone.ref_total_mapped_reads_key = total_key
+            meta_clone.ref_total_mapped_reads_for_dSp = total_key
+            def norm_key = params.bam_downsampling_method ? 'dSp_total_mapped_reads' : total_key
+            meta_clone.ref_total_mapped_reads_for_rpm = norm_key
+            meta_clone.ref_total_mapped_reads_for_srpm = norm_key
+            meta_clone.ref_total_mapped_reads_for_cisrpm = norm_key
+            [meta_clone, bam, bai]
+        }
+        .set { ch_filtered_bam_bai }
+
+    ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
+    ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
+
+    // TODO: print for debugging
+    ch_filtered_bam_bai
+        .map { meta, bam, bai ->
+            "${meta}\t${bam}\t${bai}"
+        }
+        .collectFile(name: 'ch_filtered_bam_bai_before_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+
     if (params.bam_downsampling_method) {
         //
         // SUBWORKFLOW: Downsample IP and input control BAM files
@@ -827,8 +899,7 @@ workflow CREPAS {
             params.spikein_genome,
             params.bam_downsampling_method,
             params.downsampling_endo_threshold,
-            params.downsampling_exo_threshold,
-            params.dSp_use_flT2_total
+            params.downsampling_exo_threshold
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
         ch_filtered_index = BAM_DOWNSAMPLE.out.bai
@@ -839,43 +910,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect { it -> it[1] })
         ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
 
-    } else {
-        //
-        // If no downsampling is done, duplicate input controls for each antibody
-        //
-        ch_filtered_bam_bai
-            .branch { meta, bam, bai ->
-                ips_with_ipcontrol: meta.input_control
-                    return [meta.input_control, meta.antibody, meta, bam, bai]
-                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                     return [meta, bam, bai]
-                ipcontrols: !meta.input_control && meta.is_input_control
-                    return [meta.id, meta, bam, bai]
-            }
-            .set { ch_bam_bai_by_type }
-
-        ch_bam_bai_by_type.ipcontrols
-            .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
-            .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
-                def meta_clone = ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = ip_antibody
-                [ meta_clone, ipcontrol_bam, ipcontrol_bai ]
-            }
-            .unique()
-            .set { ch_bam_bai_ipcontrols_not_dsp }
-        
-        ch_bam_bai_by_type
-            .ips_with_ipcontrol
-            .map { ipcontrol_id, antibody, meta, bam, bai ->
-                [ meta, bam, bai ]
-            }
-            .mix(ch_bam_bai_by_type.ips_wo_ipcontrol)
-            .mix(ch_bam_bai_ipcontrols_not_dsp)
-            .set { ch_filtered_bam_bai }
-
-        ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
-        ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
-
     }
 
     // TODO: print for debugging
@@ -883,7 +917,7 @@ workflow CREPAS {
         .map { meta, bam, bai ->
             "${meta}\t${bam}\t${bai}"
         }
-        .collectFile(name: 'ch_filtered_bam_bai_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+        .collectFile(name: 'ch_filtered_bam_bai_after_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     //
     // SUBWORKFLOW: Normalized bigWig coverage tracks
@@ -898,10 +932,7 @@ workflow CREPAS {
         params.skip_srpm,
         params.skip_cisrpm,
         params.skip_cisrpmsoi,
-        params.skip_plot_profile,
-        params.rpm_use_flT2_total,
-        params.srpm_use_flT2_total,
-        params.cisrpm_use_flT2_total
+        params.skip_plot_profile
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -1312,7 +1343,6 @@ workflow CREPAS {
         ch_blacklist,
         ch_okseq_rfd_file.ifEmpty([[:], []]),
         ch_initiation_zones.ifEmpty([[:], []]),
-        params.rpm_use_flT2_total,
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius
