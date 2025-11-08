@@ -860,7 +860,7 @@ workflow CREPAS {
             // samples have meta.antibody, while input controls have meta.input_control_of_antibody
             def antibody = meta.antibody ?: meta.input_control_of_antibody
             def total_key = meta.ref_total_mapped_reads_key
-            if (antibody in params.flT2_as_total_ref.split(',').collect { it -> it.trim() }) {
+            if (antibody in params.use_flT2_as_total_ref.split(',').collect { it -> it.trim() }) {
                 if (meta.flT2_total_mapped_reads) {
                     total_key = 'flT2_total_mapped_reads'
                 } else {
