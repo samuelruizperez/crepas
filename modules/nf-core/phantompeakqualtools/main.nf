@@ -15,8 +15,8 @@ process PHANTOMPEAKQUALTOOLS {
     tuple val(meta), path("*.ccscores")  , emit: ccscores
     tuple val(meta), path("*.pdf")  , emit: pdf
     tuple val(meta), path("*.Rdata"), emit: rdata
-    tuple val(meta), path("*.narrowPeak"), emit: narrowpeak, optional: true
-    tuple val(meta), path("*.regionPeak"), emit: regionpeak, optional: true
+    tuple val(meta), path("*.narrowPeak.gz"), emit: narrowpeak, optional: true
+    tuple val(meta), path("*.regionPeak.gz"), emit: regionpeak, optional: true
     path  "versions.yml"            , emit: versions
 
     when:
