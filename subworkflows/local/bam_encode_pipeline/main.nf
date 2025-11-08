@@ -129,14 +129,18 @@ workflow BAM_ENCODE_PIPELINE {
                 meta.flT2_total_mapped_reads ?: 
                 meta.flT1_total_mapped_reads
             }
-            def ctl_depth_ratio_exceeded = depths.max() / depths.min() > ctl_depth_ratio
-            [ pooled_ipcontrol_id, antibody, ctl_depth_ratio_exceeded, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ]
+            def ctl_depth_max = depths.max()
+            def ctl_depth_min = depths.min()
+            def ctl_depth_ratio_exceeded = ctl_depth_max / ctl_depth_min > ctl_depth_ratio
+            [ pooled_ipcontrol_id, antibody, ctl_depth_ratio_exceeded, ctl_depth_max, ctl_depth_min, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ]
         }
         .transpose()
-        .map { pooled_ipcontrol_id, antibody, ctl_depth_ratio_exceeded, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
+        .map { pooled_ipcontrol_id, antibody, ctl_depth_ratio_exceeded, ctl_depth_max, ctl_depth_min, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             def meta_clone = ip_meta.clone()
             meta_clone.input_control = ctl_depth_ratio_exceeded ? pooled_ipcontrol_id : meta_clone.input_control
-            meta_clone.pooled = ctl_depth_ratio_exceeded ?: true
+            meta_clone.pooled = ctl_depth_ratio_exceeded ?: false
+            meta_clone.ctl_depth_max = ctl_depth_max
+            meta_clone.ctl_depth_min = ctl_depth_min
             meta_clone.ctl_depth_ratio_exceeded = ctl_depth_ratio_exceeded
             [ meta_clone.input_control, meta_clone.antibody, meta_clone, ip_tagalign]
         }
