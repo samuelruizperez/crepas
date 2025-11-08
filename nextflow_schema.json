@@ -606,22 +606,10 @@
                     "description": "Size of the bins, in bases, for the output of the coverage calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "rpm_use_flT2_total": {
+                "use_flT2_as_total_ref": {
                     "type": "string",
                     "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which RPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
-                    "fa_icon": "fas fa-chart-area"
-                },
-                "srpm_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which SRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
-                    "fa_icon": "fas fa-chart-area"
-                },
-                "cisrpm_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which CISRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
+                    "description": "Comma-separated list of histone marks for which downsampling or normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "save_coverage_intermeds": {
@@ -656,12 +644,6 @@
                     "default": 300000,
                     "description": "Threshold of exogenous mapped reads for downsampling. For downsampling methods that search for the minimum exogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped exogenous reads should be the minimum number above the `downsampling_exogenous_threshold`. If there are no totals above this threshold, then the (true) minimum is used.",
                     "fa_icon": "fas fa-compress-arrows-alt"
-                },
-                "dSp_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which downsampling probabilities should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list, the total mapped reads after flT3 will be used for downsampling probability calculation.",
-                    "fa_icon": "fas fa-chart-area"
                 },
                 "bam_downsampling_strategy": {
                     "type": "string",
