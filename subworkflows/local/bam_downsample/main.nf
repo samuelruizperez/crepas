@@ -13,7 +13,6 @@ workflow BAM_DOWNSAMPLE {
     downsampling_method         // string: e.g. 'min_by_type'
     downsampling_endo_threshold // int: e.g. 10000000
     downsampling_exo_threshold  // int: e.g. 300000
-    dSp_use_flT2_total          // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for downsampling
 
     main:
 
@@ -42,33 +41,13 @@ workflow BAM_DOWNSAMPLE {
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of endogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_endo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.endo_ipcontrol
-            .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
-            .map { ipcontrol_id, endo_ipcontrol_meta, endo_ipcontrol_bam, endo_ipcontrol_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
-                def meta_clone = endo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = endo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, endo_ipcontrol_bam, endo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_endo_ipcontrol }
-
         ch_bam_bai_genome_type.endo_ip
-            .mix(ch_bam_bai_endo_ipcontrol)
+            .mix(ch_bam_bai_genome_type.endo_ipcontrol)
             .map { ipcontrol_id, meta, bam, bai ->
-                def total
+                def total = meta[meta.ref_total_mapped_reads_for_dSp]
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3 or flTbl, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, total, meta, bam, bai]
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
@@ -138,33 +117,13 @@ workflow BAM_DOWNSAMPLE {
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of exogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_exo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.exo_ipcontrol
-            .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
-            .map { ipcontrol_id, exo_ipcontrol_meta, exo_ipcontrol_bam, exo_ipcontrol_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
-                def meta_clone = exo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = exo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, exo_ipcontrol_bam, exo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_exo_ipcontrol }
-
         ch_bam_bai_genome_type.exo_ip
-            .mix(ch_bam_bai_exo_ipcontrol)
+            .mix(ch_bam_bai_genome_type.exo_ipcontrol)
             .map { ipcontrol_id, meta, bam, bai ->
-                def total
+                def total = meta[meta.ref_total_mapped_reads_for_dSp]
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, total, meta, bam, bai]
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
@@ -233,33 +192,13 @@ workflow BAM_DOWNSAMPLE {
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of endogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_endo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.endo_ipcontrol
-            .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
-            .map { ipcontrol_id, endo_ipcontrol_meta, endo_ipcontrol_bam, endo_ipcontrol_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
-                def meta_clone = endo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = endo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, endo_ipcontrol_bam, endo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_endo_ipcontrol }
-
         ch_bam_bai_genome_type.endo_ip
-            .mix(ch_bam_bai_endo_ipcontrol)
+            .mix(ch_bam_bai_genome_type.endo_ipcontrol)
             .map { ipcontrol_id, meta, bam, bai ->
-                def total
+                def total = meta[meta.ref_total_mapped_reads_for_dSp]
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, meta.is_input_control, total, meta, bam, bai]
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->
@@ -329,33 +268,13 @@ workflow BAM_DOWNSAMPLE {
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of exogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_exo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.exo_ipcontrol
-            .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
-            .map { ipcontrol_id, exo_ipcontrol_meta, exo_ipcontrol_bam, exo_ipcontrol_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
-                def meta_clone = exo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = exo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, exo_ipcontrol_bam, exo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_exo_ipcontrol }
-
         ch_bam_bai_genome_type.exo_ip
-            .mix(ch_bam_bai_exo_ipcontrol)
+            .mix(ch_bam_bai_genome_type.exo_ipcontrol)
             .map { ipcontrol_id, meta, bam, bai ->
-                def total
+                def total = meta[meta.ref_total_mapped_reads_for_dSp]
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, meta.is_input_control, total, meta, bam, bai]
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->

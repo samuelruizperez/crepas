@@ -117,6 +117,7 @@ workflow BAM_FILTER_BLACKLIST {
         .map { meta, bam, bai, total ->
             def meta_clone = meta.clone()
             meta_clone.flTbl_total_mapped_reads = total.toDouble()
+            meta_clone.ref_total_mapped_reads_key = 'flTbl_total_mapped_reads'
             [meta_clone, bam, bai]
         }
         .set { ch_filtered_bam_bai }

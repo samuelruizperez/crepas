@@ -21,7 +21,6 @@ workflow BAM_CREATE_PARTITIONS {
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones     // channel: [ val(meta), [ bed ] ]
-    rpm_use_flT2_total      // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for RPM normalization
     smooth_radius
     derivative_radius
     zero_crossing_radius
@@ -199,26 +198,7 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-            def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-            // If the sample was downsampled before, we want to use dSp_total_mapped_reads
-            if (meta_clone.dSp_total_mapped_reads) {
-                meta_clone.norm_factor_val = 1e6 / meta_clone.dSp_total_mapped_reads
-                meta_clone.norm_factor_val_used = 'dSp_total_mapped_reads'
-            // if antibody_to_use is in the list of antibodies or there is no flT3, use flT2 or flT1, otherwise use flT3
-            } else if (rpm_use_flT2_total && antibody_to_use in rpm_use_flT2_total.split(',').collect { it -> it.trim() } || !meta_clone.flT3_total_mapped_reads) {
-                if (meta_clone.flT2_total_mapped_reads) {
-                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT2_total_mapped_reads + num_windows)
-                    meta_clone.norm_factor_val_used = 'flT2_total_mapped_reads'
-                } else {
-                    // Samples without spike-in wouldn't have flT2_total_mapped_reads, so we use flT1_total_mapped_reads instead
-                    meta_clone.norm_factor_val = 1e6 / (meta_clone.flT1_total_mapped_reads + num_windows)
-                    meta_clone.norm_factor_val_used = 'flT1_total_mapped_reads'
-                }
-            } else {
-                meta_clone.norm_factor_val = 1e6 / (meta_clone.flT3_total_mapped_reads + num_windows)
-                meta_clone.norm_factor_val_used = 'flT3_total_mapped_reads'
-            }
+            meta_clone.norm_factor_val = meta[meta.ref_total_mapped_reads_for_rpm]
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bwaob ]
         }
@@ -377,7 +357,7 @@ workflow BAM_CREATE_PARTITIONS {
     ch_norm_and_smi
         .map { meta, norm_or_smi_fwd, norm_or_smi_rev ->
             def meta_clone = meta.clone()
-            meta_clone.removeAll { it -> it.key in ['norm_factor_val', 'norm_factor_val_used', 'norm_factor_type', 'signal_minus_input'] }
+            meta_clone.removeAll { it -> it.key in ['norm_factor_val', 'norm_factor_type', 'signal_minus_input'] }
             [ meta_clone, meta, norm_or_smi_fwd, norm_or_smi_rev ]
         }
         .set { ch_norm_and_smi_to_combine }

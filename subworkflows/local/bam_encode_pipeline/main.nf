@@ -122,15 +122,11 @@ workflow BAM_ENCODE_PIPELINE {
         .groupTuple(by: [0,1])
         .map { pooled_ipcontrol_id, antibody, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ->
             // if depth ratio between controls is higher than ctl_depth_ratio, then use pooled control
-            def depths = ipcontrol_metas.collect { meta ->
-                meta.dSp_total_mapped_reads ?: 
-                meta.flTbl_total_mapped_reads ?: 
-                meta.flT3_total_mapped_reads ?: 
-                meta.flT2_total_mapped_reads ?: 
-                meta.flT1_total_mapped_reads
+            def ipcontrol_depths = ipcontrol_metas.collect { meta ->
+                meta[meta.ref_total_mapped_reads_for_rpm]
             }
-            def ctl_depth_max = depths.max()
-            def ctl_depth_min = depths.min()
+            def ctl_depth_max = ipcontrol_depths.max()
+            def ctl_depth_min = ipcontrol_depths.min()
             def ctl_depth_ratio = ctl_depth_max / ctl_depth_min
             def ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio > ctl_depth_ratio_threshold
             [ pooled_ipcontrol_id, antibody, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ]
@@ -138,12 +134,14 @@ workflow BAM_ENCODE_PIPELINE {
         .transpose()
         .map { pooled_ipcontrol_id, antibody, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             def meta_clone = ip_meta.clone()
-            meta_clone.input_control = ctl_depth_ratio_threshold_exceeded ? pooled_ipcontrol_id : meta_clone.input_control
+            if (ctl_depth_ratio_threshold_exceeded) {
+                meta_clone.input_control = pooled_ipcontrol_id
+            } 
             meta_clone.ctl_depth_max = ctl_depth_max
             meta_clone.ctl_depth_min = ctl_depth_min
             meta_clone.ctl_depth_ratio = ctl_depth_ratio
             meta_clone.ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio_threshold_exceeded
-            meta_clone.pooled = ctl_depth_ratio_threshold_exceeded ?: false
+            meta_clone.pooled_ipcontrol = ctl_depth_ratio_threshold_exceeded ?: false
             [ meta_clone.input_control, meta_clone.antibody, meta_clone, ip_tagalign]
         }
         .set { ch_tagalign_ips_with_ipcontrol }
