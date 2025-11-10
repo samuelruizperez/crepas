@@ -1030,6 +1030,12 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
                     "fa_icon": "fas fa-save"
+                },
+                "skip_denopa": {
+                    "type": "boolean",
+                    "description": "Skip deNOPA peak calling for ATAC-seq.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
                 }
             }
         },
