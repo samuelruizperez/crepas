@@ -24,6 +24,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     skip_cisrpm             // boolean: skip the CISRPM normalization step
     skip_cisrpmsoi          // boolean: skip the CISRPM-SOI normalization step
     skip_plot_profile       // boolean: skip the plot profile step
+    min_reads_for_norm
 
     main:
 
@@ -37,6 +38,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta_clone.norm_factor_type = 'raw'
             [ meta_clone, bam, bai ]
         }
+        // Remove empty BAMs to prevent bamCoverage errors
+        .filter { meta, bam, bai -> meta[meta.ref_total_mapped_reads_for_rpm] >= min_reads_for_norm }
         .set { ch_bam_bai }
 
     //

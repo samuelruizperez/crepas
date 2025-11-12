@@ -617,6 +617,12 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format.",
                     "fa_icon": "fas fa-save"
+                },
+                "min_reads_for_norm": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Minimum number of total mapped reads required to include a BAM in any normalization. For example, this prevents having an empty exogenous input control BAM when no reads map to the spike-in genome.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },
