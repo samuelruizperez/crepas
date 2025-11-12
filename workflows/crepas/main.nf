@@ -692,6 +692,7 @@ workflow CREPAS {
             .map { meta, bam, bai, total ->
                 def meta_clone = meta.clone()
                 meta_clone.flT3_total_mapped_reads = total.toDouble()
+                meta_clone.ref_total_mapped_reads_key = 'flT3_total_mapped_reads'
                 [meta_clone, bam, bai]
             }
             .set { ch_filtered_bam_bai }
