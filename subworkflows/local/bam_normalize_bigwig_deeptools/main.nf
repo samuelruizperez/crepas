@@ -39,7 +39,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             [ meta_clone, bam, bai ]
         }
         // Remove empty BAMs to prevent bamCoverage errors
-        .filter { meta, bam, bai -> meta[meta.ref_total_mapped_reads_for_rpm] >= min_reads_for_norm }
+        .filter { meta, bam, bai -> meta[meta.last_total_mapped_reads_key] >= min_reads_for_norm }
         .set { ch_bam_bai }
 
     //
