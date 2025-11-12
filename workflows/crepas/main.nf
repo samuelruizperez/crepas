@@ -932,7 +932,8 @@ workflow CREPAS {
         params.skip_srpm,
         params.skip_cisrpm,
         params.skip_cisrpmsoi,
-        params.skip_plot_profile
+        params.skip_plot_profile,
+        params.min_reads_for_norm
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
