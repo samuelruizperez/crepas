@@ -793,8 +793,17 @@ workflow CREPAS {
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
     //
     if (!params.skip_spp) {
+
+        // Remove exogenous samples from SPP analysis
+        ch_filtered_bam
+            .filter { meta, bam ->
+                meta.genome == params.genome
+            }
+            .map { meta, bam -> [meta, bam, []] }
+            .set { ch_filtered_bam_for_spp }
+
         PHANTOMPEAKQUALTOOLS(
-            ch_filtered_bam.map { meta, bam -> [meta, bam, []] }
+            ch_filtered_bam_for_spp
         )
         ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it -> it[1] })
         ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
