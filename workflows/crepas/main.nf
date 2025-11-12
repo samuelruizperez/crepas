@@ -176,11 +176,6 @@ workflow CREPAS {
         }
         .set { ch_fastq }
 
-    // TODO: print for debugging
-    ch_fastq
-        .map { it -> "${it}" }
-        .collectFile(name: 'ch_fastq.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
-
     //
     // SUBWORKFLOW: Extra validation of input samplesheet
     //
@@ -336,10 +331,6 @@ workflow CREPAS {
         }
         .set { ch_sort_bam }
 
-    // TODO: print for debugging
-    ch_sort_bam.map { meta, bam -> "${meta}\t${bam}" }
-        .collectFile(name: 'ch_sort_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
-
     PICARD_MERGESAMFILES(
         ch_sort_bam
     )
@@ -363,7 +354,6 @@ workflow CREPAS {
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
 
-    // TODO: change this so UMI dedup is evaluated per sample and not for the whole pipeline run
     if (params.with_umi) {
 
         //
@@ -1038,14 +1028,6 @@ workflow CREPAS {
             .set { ch_all_bdg_ip_and_controls }
 
 
-        // TODO: Print to file for debuggin
-        ch_all_bdg_ip_and_controls
-            .map { meta, ip_bdg, ipcontrol_bdg ->
-                "${meta}\t${ip_bdg}\t${ipcontrol_bdg}"
-            }
-            .collectFile(name: 'ch_all_bdg_ip_and_controls.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
-
-
         BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
             ch_all_bdg_ip_and_controls,
             params.seacr_peak_threshold
@@ -1099,13 +1081,6 @@ workflow CREPAS {
             [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
         }
         .set { ch_ip_and_ipcontrols_bam_bai }
-
-    // TODO: Print to file for debuggin
-    ch_ip_and_ipcontrols_bam_bai
-        .map { meta, bams, bais ->
-            "${meta}\t${bams}\t${bais}"
-        }
-        .collectFile(name: 'ch_ip_and_ipcontrols_bam_bai.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
@@ -1236,13 +1211,6 @@ workflow CREPAS {
     // separate samples based on meta.exp_type
     ch_ip_control_bam_cs = channel.empty()
     ch_ip_control_bam_cs = ch_all_ip_and_controls.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) }
-
-    // TODO: Print to file for debuggin
-    ch_ip_control_bam_cs
-        .map { meta, ip_bam, ipcontrol_bam ->
-            "${meta.id}\t${ip_bam}\t${ipcontrol_bam}"
-        }
-        .collectFile(name: 'ch_ip_control_bam_cs.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug")
 
     ch_edd_peaks = channel.empty()
     if (!params.skip_edd) {
@@ -1574,27 +1542,6 @@ workflow CREPAS {
             .mix(ch_workflow_summary)
             .mix(ch_collated_versions)
         // .mix(ch_methods_description)
-
-
-        // Provide MultiQC with rename patterns to ensure it uses sample names
-        // for single-techrep samples not processed by CAT_FASTQ, and trims out
-        // _raw or _trimmed
-
-        // ch_name_replacements = ch_fastq
-        //     .map{ meta, reads ->
-        //         def name1 = file(reads[0][0]).simpleName + "\t" + meta.id + '_1'
-        //         def fastqcnames = meta.id + "_raw\t" + meta.id + "\n" + meta.id + "_trimmed\t" + meta.id
-        //         if (reads[0][1] ){
-        //             def name2 = file(reads[0][1]).simpleName + "\t" + meta.id + '_2'
-        //             def fastqcnames1 = meta.id + "_raw_1\t" + meta.id + "_1\n" + meta.id + "_trimmed_1\t" + meta.id + "_1"
-        //             def fastqcnames2 = meta.id + "_raw_2\t" + meta.id + "_2\n" + meta.id + "_trimmed_2\t" + meta.id + "_2"
-        //             return [ name1, name2, fastqcnames1, fastqcnames2 ]
-        //         } else{
-        //             return [ name1, fastqcnames ]
-        //         }
-        //     }
-        //     .flatten()
-        //     .collectFile(name: 'name_replacement.txt', newLine: true)
 
         MULTIQC (
             ch_multiqc_files.collect(),
