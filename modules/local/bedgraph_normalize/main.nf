@@ -9,9 +9,10 @@ process BEDGRAPH_NORMALIZE {
 
     input:
     tuple val(meta), path(bdg)
+    val extension
 
     output:
-    tuple val(meta), path("*.bedgraph") , emit: bedgraph
+    tuple val(meta), path("*.${extension}") , emit: normalized
     path  "versions.yml"                , emit: versions
 
     when:
@@ -38,7 +39,7 @@ process BEDGRAPH_NORMALIZE {
         else if (operation == "subtract") \$4 = (\$4 + pseudocount) - norm_factor; \\
         print }' \\
         ${bdg} \\
-        > ${prefix}.bedgraph
+        > ${prefix}.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -49,7 +50,7 @@ process BEDGRAPH_NORMALIZE {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.bedgraph
+    touch  ${prefix}.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -935,7 +935,8 @@ workflow CREPAS {
         params.skip_cisrpm,
         params.skip_cisrpmsoi,
         params.skip_plot_profile,
-        params.min_reads_for_norm
+        params.min_reads_for_norm,
+        params.skip_bw_average
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -1349,6 +1350,8 @@ workflow CREPAS {
 
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1)
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_avg)
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1_avg)
             .map { meta, bw -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1357,6 +1360,7 @@ workflow CREPAS {
                     "/coverage/" +
                     "${meta.norm_factor_type}" +
                     "${meta.signal_over_input ? '/cisrpm_soi' : ''}" +
+                    "${meta.averaged_brep ? '/average' : ''}" +
                     "/${bw.getName()}"
 
                 [meta, bw, outpath, "0,0,178"] // dark blue

@@ -6,7 +6,7 @@ include { BEDTOOLS_MAKEWINDOWS                                      } from '../.
 include { FILE_SORT as WINDOWS_SORT                               } from '../../../modules/local/file_sort/main'
 include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
 include { FILE_SORT as BWAOB_SORT                                   } from '../../../modules/local/file_sort/main'
-include { BEDGRAPH_NORMALIZE                                        } from '../../../modules/local/bedgraph_normalize/main'
+include { BEDGRAPH_NORMALIZE as BWAOB_NORMALIZE                     } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                               } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                   } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                        } from '../../../modules/local/collect_partitions/main'
@@ -130,7 +130,7 @@ workflow BAM_CREATE_PARTITIONS {
     //
     BEDGRAPH_SORT (
         BEDTOOLS_GENOMECOV.out.genomecov,
-        'bedgraph'
+        'bedGraph'
     )
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
@@ -235,13 +235,14 @@ workflow BAM_CREATE_PARTITIONS {
         .collectFile( name: '9_scar_ch_bwaob_rpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
     //
-    // MODULE: Normalize strands
+    // MODULE: Normalize the 4th column of the bwaob file (sum of values over all bases covered)
     //
-    BEDGRAPH_NORMALIZE (
-        ch_bwaob_rpm
+    BWAOB_NORMALIZE (
+        ch_bwaob_rpm,
+        'tab'
     )
-    ch_norm = BEDGRAPH_NORMALIZE.out.bedgraph
-    ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
+    ch_norm = BWAOB_NORMALIZE.out.normalized
+    ch_versions = ch_versions.mix(BWAOB_NORMALIZE.out.versions.first())
 
     // TODO: print for debugging
     ch_norm
