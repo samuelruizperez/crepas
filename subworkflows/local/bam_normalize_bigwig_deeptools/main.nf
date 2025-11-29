@@ -9,7 +9,8 @@ include { FILE_SORT as BEDGRAPH_SORT                                    } from '
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO   } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1       } from '../../../modules/nf-core/deeptools/bamcoverage/main'
-
+include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINS        } from '../../../modules/local/deeptools/bigwigaverage/main'
+include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1     } from '../../../modules/local/deeptools/bigwigaverage/main'
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
@@ -25,6 +26,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     skip_cisrpmsoi          // boolean: skip the CISRPM-SOI normalization step
     skip_plot_profile       // boolean: skip the plot profile step
     min_reads_for_norm
+    skip_bw_average
 
     main:
 
@@ -347,11 +349,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     // MODULE: Normalize the bedgraphs
     //
     BEDGRAPH_NORMALIZE (
-        ch_bdg_norm
+        ch_bdg_norm,
+        'bedGraph'
     )
     ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
 
-    ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.bedgraph)
+    ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.normalized)
 
     // Create channel: [ val(meta), [ ip_bdg ], [ ipcontrol_bdg ] ]
     ch_bdg_all = ch_bdg_map_norm
@@ -400,7 +403,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     //
     BEDGRAPH_SORT (
         ch_bdg_all,
-        'bedgraph'
+        'bedGraph'
     )
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
@@ -442,6 +445,35 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         )
         ch_bw_exo = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig
         ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
+    }
+
+    if (!skip_bw_average) {
+
+        // Create channel: [ val(meta), [ bRep_bigwigs ] ]
+        UCSC_BEDGRAPHTOBIGWIG_ENDO
+            .out
+            .bigwig
+            .map { meta, bw ->
+                def meta_clone = meta.clone()
+                meta_clone.id = meta_clone.id - ~/_bRep_.*$/
+                [ meta_clone.id, meta_clone.antibody, meta_clone, bw ]
+            }
+            .groupTuple(by: [0, 1])
+            .map { id, antibody, metas, bws ->
+                def meta_clone = metas[0].clone()
+                meta_clone.averaged_brep = true
+                [meta_clone, bws.flatten()]
+            }
+            .set { ch_bdg_all_brep_bw }
+
+        //
+        // MODULE: Average bigwigs across replicates
+        //
+        DEEPTOOLS_BIGWIGAVERAGE_BINS (
+            ch_bdg_all_brep_bw,
+            []
+        )
+        ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINS.out.versions.first())
     }
 
     // if coverage_bin_size is not 1, then we need to generate bw with that binsize for computeMatrix
@@ -494,13 +526,46 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         )
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
+
+        ch_binsize1_brep_bw = channel.empty()
+        if (!skip_bw_average) {
+
+            // Create channel: [ val(meta), [ bRep_bigwigs ] ]
+            ch_binsize1
+                .map { meta, bw ->
+                    def meta_clone = meta.clone()
+                    meta_clone.id = meta_clone.id - ~/_bRep_.*$/
+                    [ meta_clone.id, meta_clone.antibody, meta_clone, bw ]
+                }
+                .groupTuple(by: [0, 1])
+                .map { id, antibody, metas, bws ->
+                    def meta_clone = metas[0].clone()
+                    meta_clone.averaged_brep = true
+                    [meta_clone, bws.flatten()]
+                }
+                .set { ch_binsize1_brep_bw }
+
+            //
+            // MODULE: Average bigwigs across replicates
+            //
+            DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1 (
+                ch_binsize1_brep_bw,
+                []
+            )
+            ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.versions.first())
+        }
+
+
     }
+
 
     emit:
     bigwig_endo_rpm  = ch_bigwig_endo_rpm                           // channel: [ val(meta), [ bigwig ] ]
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo_avg  = DEEPTOOLS_BIGWIGAVERAGE_BINS.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
     bigwig_binsize1  = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
+    bigwig_binsize1_avg = DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.bigwig   // channel: [ val(meta), [ bigwig ] ]
     bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
 
     versions      = ch_versions                                     // channel: [ versions.yml ]
