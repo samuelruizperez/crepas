@@ -447,6 +447,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
     }
 
+    ch_bw_avg_endo = channel.empty()
     if (!skip_bw_average) {
 
         // Create channel: [ val(meta), [ bRep_bigwigs ] ]
@@ -473,6 +474,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bdg_all_brep_bw,
             []
         )
+        ch_bw_avg_endo = DEEPTOOLS_BIGWIGAVERAGE_BINS.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINS.out.versions.first())
     }
 
@@ -527,7 +529,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
 
-        ch_binsize1_brep_bw = channel.empty()
+        ch_bw_avg_binsize1 = channel.empty()
         if (!skip_bw_average) {
 
             // Create channel: [ val(meta), [ bRep_bigwigs ] ]
@@ -552,6 +554,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 ch_binsize1_brep_bw,
                 []
             )
+            ch_bw_avg_binsize1 = DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.bigwig
             ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.versions.first())
         }
 
@@ -560,13 +563,13 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
 
     emit:
-    bigwig_endo_rpm  = ch_bigwig_endo_rpm                           // channel: [ val(meta), [ bigwig ] ]
-    bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
-    bigwig_endo_avg  = DEEPTOOLS_BIGWIGAVERAGE_BINS.out.bigwig        // channel: [ val(meta), [ bigwig ] ]
-    bigwig_exo       = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
-    bigwig_binsize1  = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
-    bigwig_binsize1_avg = DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.bigwig   // channel: [ val(meta), [ bigwig ] ]
-    bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
+    bigwig_endo_rpm     = ch_bigwig_endo_rpm                           // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo         = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
+    bigwig_avg_endo     = ch_bw_avg_endo        // channel: [ val(meta), [ bigwig ] ]
+    bigwig_exo          = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
+    bigwig_binsize1     = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
+    bigwig_binsize1_avg = ch_bw_avg_binsize1   // channel: [ val(meta), [ bigwig ] ]
+    bedgraph_endo       = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
 
     versions      = ch_versions                                     // channel: [ versions.yml ]
 }
