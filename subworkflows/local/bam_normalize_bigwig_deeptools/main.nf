@@ -472,7 +472,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         //
         DEEPTOOLS_BIGWIGAVERAGE_BINS (
             ch_bdg_all_brep_bw,
-            []
+            channel.value([[:], []])
         )
         ch_bw_avg_endo = DEEPTOOLS_BIGWIGAVERAGE_BINS.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINS.out.versions.first())
@@ -552,7 +552,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             //
             DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1 (
                 ch_binsize1_brep_bw,
-                []
+                channel.value([[:], []])
             )
             ch_bw_avg_binsize1 = DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.bigwig
             ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.versions.first())
