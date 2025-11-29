@@ -40,8 +40,8 @@ process DEEPTOOLS_BIGWIGAVERAGE {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}.bigwigAverage"
     """
-    touch ${prefix}.bigwigAverage.bigWig
-    touch ${prefix}.bigwigAverage.bedgraph
+    touch ${prefix}.bigWig
+    touch ${prefix}.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
