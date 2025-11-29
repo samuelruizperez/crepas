@@ -3,13 +3,14 @@ include { SAMTOOLS_INDEX                                            } from '../.
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
-include { FILE_SORT as WINDOWS_SORT                               } from '../../../modules/local/file_sort/main'
+include { FILE_SORT as WINDOWS_SORT                                 } from '../../../modules/local/file_sort/main'
 include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
 include { FILE_SORT as BWAOB_SORT                                   } from '../../../modules/local/file_sort/main'
 include { BEDGRAPH_NORMALIZE as BWAOB_NORMALIZE                     } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                               } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                   } from '../../../modules/local/partition_or_rfd_smooth/main'
 include { COLLECT_PARTITIONS                                        } from '../../../modules/local/collect_partitions/main'
+include { PARTITION_AVERAGE                                         } from '../../../modules/local/partition_average/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { PARTITION_PLOT                                            } from '../../../modules/local/partition_plot/main'
@@ -401,10 +402,10 @@ workflow BAM_CREATE_PARTITIONS {
         .map { meta, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd, meta_windows, windows ->
             [ meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ]
         }
-        .set { ch_partitions }
+        .set { ch_to_collect }
 
     // TODO: print for debugging
-    ch_partitions
+    ch_to_collect
         .map { meta, windows, bwaob_fwd, bwaob_rev, norm_or_smi_fwd, norm_or_smi_rev, rfd ->
             "${meta}\t${windows}\t${bwaob_fwd}\t${bwaob_rev}\t${norm_or_smi_fwd}\t${norm_or_smi_rev}\t${rfd}"
         }
@@ -414,13 +415,38 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Collect partitions
     //
     COLLECT_PARTITIONS (
-        ch_partitions
+        ch_to_collect
     )
+    ch_partitions = COLLECT_PARTITIONS.out.tsv
     ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
-    COLLECT_PARTITIONS
-        .out
-        .tsv
+
+    // Create channel: [ val(meta), partitions_brep ]
+    ch_partitions
+        .map { meta, partition ->
+            def meta_clone = meta.clone()
+            def antibody = meta.antibody ?: meta.input_control_of_antibody
+            meta_clone.id = meta_clone.id - ~/_bRep_.*$/
+            [ meta_clone.id, antibody, meta.signal_minus_input, meta, partition ]
+        }
+        .groupTuple(by: [0, 1, 2])
+        .map { id, antibody, smi, metas, partitions ->
+            def meta_clone = metas[0].clone()
+            meta_clone.averaged_brep = true
+            [meta_clone, partitions.flatten()]
+        }
+        .set { ch_partitions_brep }
+
+    //
+    // MODULE: Create average partition across biological replicates
+    //
+    PARTITION_AVERAGE (
+        ch_partitions_brep
+    )
+    ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
+
+    ch_partitions
+        .mix(PARTITION_AVERAGE.out.tsv)
         .branch { meta, tsv ->
             scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input
                 return [ meta.input_control, meta, tsv ]
@@ -451,7 +477,6 @@ workflow BAM_CREATE_PARTITIONS {
         }
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
-
     //
     // MODULE: Plot the final partition
     //
@@ -468,7 +493,7 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Convert the final partition bedgraph to bigwig
     //
     UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
-        COLLECT_PARTITIONS.out.bdg,
+        COLLECT_PARTITIONS.out.bdg.mix(PARTITION_AVERAGE.out.bdg),
         ch_chrom_sizes.map { it -> it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())

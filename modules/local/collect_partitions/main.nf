@@ -42,6 +42,20 @@ process COLLECT_PARTITIONS {
         exit 1
     fi
 
+    # This file will contain the following 12 columns:
+    #   1. chromosome
+    #   2. start
+    #   3. end
+    #   4. bwaob_fwd_counts: Forward raw counts in bin
+    #   5. bwaob_rev_counts: Reverse raw counts in bin
+    #   6. bwaob_fwd_RPM: Forward RPMs in bin
+    #   7. bwaob_rev_RPM: Reverse RPMs in bin
+    #   8. RFD_raw: Raw partition or RFD score
+    #   9. RFD_smooth: Smoothed partition or RFD score
+    #  10. RFD_deriv: Value of the derivative of the partition/RFD at this bin
+    #  11. score: not used
+    #  12. zero_deriv: second derivative at this bin
+
     # Paste columns and filter for bwaob_fwd > 0 and bwaob_rev > 0
     paste ${args} ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
     | awk '\$8 > 0 && \$14 > 0' \\
@@ -49,7 +63,12 @@ process COLLECT_PARTITIONS {
     ${sort_cmd} \\
     > ${prefix}.tsv
 
-    # Making bedGraph
+    # The following creates a bedGraph file with the following 4 columns:
+    #   1. chromosome
+    #   2. start
+    #   3. end
+    #   4. RFD_smooth: Smoothed partition or RFD score
+    
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
     ${prefix}.tsv \\
     > ${prefix}.bdg

@@ -456,8 +456,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .bigwig
             .map { meta, bw ->
                 def meta_clone = meta.clone()
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
                 meta_clone.id = meta_clone.id - ~/_bRep_.*$/
-                [ meta_clone.id, meta_clone.antibody, meta_clone, bw ]
+                [ meta_clone.id, antibody, meta_clone, bw ]
             }
             .groupTuple(by: [0, 1])
             .map { id, antibody, metas, bws ->
@@ -536,8 +537,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_binsize1
                 .map { meta, bw ->
                     def meta_clone = meta.clone()
+                    def antibody = meta.antibody ?: meta.input_control_of_antibody
                     meta_clone.id = meta_clone.id - ~/_bRep_.*$/
-                    [ meta_clone.id, meta_clone.antibody, meta_clone, bw ]
+                    [ meta_clone.id, antibody, meta_clone, bw ]
                 }
                 .groupTuple(by: [0, 1])
                 .map { id, antibody, metas, bws ->
