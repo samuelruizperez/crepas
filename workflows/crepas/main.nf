@@ -1350,7 +1350,7 @@ workflow CREPAS {
 
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1)
-        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_avg)
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1_avg)
             .map { meta, bw -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
