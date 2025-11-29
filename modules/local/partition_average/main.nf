@@ -11,8 +11,8 @@ process PARTITION_AVERAGE {
     tuple val(meta) , path(partitions)
 
     output:
-    tuple val(meta), path("*.tsv"), emit: partition_avg_tsv
-    tuple val(meta), path("*.bdg"), emit: partition_avg_bdg
+    tuple val(meta), path("*.tsv"), emit: tsv
+    tuple val(meta), path("*.bdg"), emit: bdg
     path  "versions.yml"          , emit: versions
 
     when:
