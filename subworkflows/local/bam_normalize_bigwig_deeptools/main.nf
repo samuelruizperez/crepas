@@ -480,6 +480,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     // if coverage_bin_size is not 1, then we need to generate bw with that binsize for computeMatrix
     ch_binsize1 = channel.empty()
+    ch_bw_avg_binsize1 = channel.empty()
     if (coverage_bin_size != 1 && !skip_plot_profile) {
 
         ch_bam_bai
@@ -529,7 +530,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())
 
-        ch_bw_avg_binsize1 = channel.empty()
         if (!skip_bw_average) {
 
             // Create channel: [ val(meta), [ bRep_bigwigs ] ]
@@ -557,7 +557,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bw_avg_binsize1 = DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.bigwig
             ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1.out.versions.first())
         }
-
 
     }
 
