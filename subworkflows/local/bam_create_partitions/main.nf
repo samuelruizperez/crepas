@@ -3,6 +3,7 @@ include { SAMTOOLS_INDEX                                            } from '../.
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
+include { FILE_SORT as WINDOWS_SORT                               } from '../../../modules/local/file_sort/main'
 include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
 include { BEDGRAPH_NORMALIZE                                        } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                               } from '../../../modules/local/bedgraph_signal_minus_input/main'
@@ -157,6 +158,16 @@ workflow BAM_CREATE_PARTITIONS {
         ch_chrom_sizes
     )
     ch_windows = BEDTOOLS_MAKEWINDOWS.out.bed
+
+    //
+    // MODULE: Sort windows
+    //
+    WINDOWS_SORT (
+        ch_windows,
+        'bed'
+    )
+    ch_windows = WINDOWS_SORT.out.sorted
+
     // count number of lines in the windows file
     ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
     ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions)
