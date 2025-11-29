@@ -5,6 +5,7 @@ include { FILE_SORT as BEDGRAPH_SORT                                } from '../.
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { FILE_SORT as WINDOWS_SORT                               } from '../../../modules/local/file_sort/main'
 include { UCSC_BIGWIGAVERAGEOVERBED                                 } from '../../../modules/nf-core/ucsc/bigwigaverageoverbed/main'
+include { FILE_SORT as BWAOB_SORT                                   } from '../../../modules/local/file_sort/main'
 include { BEDGRAPH_NORMALIZE                                        } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_MINUS_INPUT                               } from '../../../modules/local/bedgraph_signal_minus_input/main'
 include { PARTITION_OR_RFD_SMOOTH                                   } from '../../../modules/local/partition_or_rfd_smooth/main'
@@ -201,6 +202,17 @@ workflow BAM_CREATE_PARTITIONS {
             "${meta}\t${bwaob}"
         }
         .collectFile( name: '8_scar_ch_bwaob.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
+
+    //
+    // MODULE: Sort BWAOB
+    //
+    BWAOB_SORT (
+        ch_bwaob,
+        'tab'
+    )
+    ch_bwaob = BWAOB_SORT.out.sorted
+    ch_versions = ch_versions.mix(BWAOB_SORT.out.versions.first())
+
 
 
     // RPM normalization factors
