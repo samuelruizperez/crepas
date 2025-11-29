@@ -198,7 +198,7 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm]
+            meta_clone.norm_factor_val = 1e6 / (meta[meta.ref_total_mapped_reads_for_rpm] + num_windows)
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bwaob ]
         }
@@ -229,16 +229,11 @@ workflow BAM_CREATE_PARTITIONS {
 
     // for each of the strands, subtract the input from the sample
     ch_norm
-        .map { meta, bdg ->
-            // samples can have meta.antibody, while controls can have meta.input_control_of_antibody (if downsampling was performed)
-            def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-            [ meta, antibody_to_use, bdg ]
-        }
-        .branch { meta, antibody, bdg ->
+        .branch { meta, bdg ->
             scar_with_ipcontrol: meta.input_control
-                return [ meta.input_control, antibody, meta.strand, meta, bdg ]
+                return [ meta.input_control, meta.antibody, meta.strand, meta, bdg ]
             ipcontrol: !meta.input_control && meta.is_input_control
-                return [ meta.id, antibody, meta.strand, bdg ]
+                return [ meta.id, meta.input_control_of_antibody, meta.strand, bdg ]
         }
         .set { ch_norm_by_type }
 
