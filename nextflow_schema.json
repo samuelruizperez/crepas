@@ -624,6 +624,12 @@
                     "description": "Minimum number of total mapped reads required to include a BAM in any normalization. For example, this prevents having an empty exogenous input control BAM when no reads map to the spike-in genome.",
                     "fa_icon": "fas fa-chart-area"
                 },
+                "skip_rpm_lfc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the calculation of the log2ratio between RPM-normalized IP and RPM-normalized input bigWig files.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_bw_average": {
                     "type": "boolean",
                     "default": false,

@@ -936,6 +936,7 @@ workflow CREPAS {
         params.skip_cisrpmsoi,
         params.skip_plot_profile,
         params.min_reads_for_norm,
+        params.skip_rpm_lfc,
         params.skip_bw_average
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
@@ -1351,6 +1352,7 @@ workflow CREPAS {
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm_lfc)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1_avg)
             .map { meta, bw -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
@@ -1360,6 +1362,7 @@ workflow CREPAS {
                     "/coverage/" +
                     "${meta.norm_factor_type}" +
                     "${meta.signal_over_input ? '/cisrpm_soi' : ''}" +
+                    "${meta.log2FC ? '/log2FC' : ''}" +
                     "${meta.averaged_brep ? '/average' : ''}" +
                     "/${bw.getName()}"
 
