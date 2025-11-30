@@ -318,9 +318,11 @@ if (HAS_OKSEQ) {
     stop("[", Sys.time(), "] (", ok_base_name, ") ERROR: The OK-seq RFD file is not in the correct format (ncol != 12)")
   }
 
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins within excluded chromosomes or outside of chrom_sizes...")
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins within excluded chromosomes, outside of chrom_sizes, or with <1 fwd or <1 rev counts...")
   OK_df <- OK_df %>%
-    dplyr::filter(seqnames %in% names(chrom_sizes)) %>%
+    dplyr::filter(seqnames %in% names(chrom_sizes),
+                  fwd_counts >= 1,
+                  rev_counts >= 1) %>%
     mutate(total_counts = fwd_counts + rev_counts, # total raw counts
            RPM = fwd_RPM + rev_RPM,                 # total counts per million
            sample = "OK-seq",
@@ -499,9 +501,11 @@ for (type in names(part_files)) {
       stop("[", Sys.time(), "] ERROR:", base_name, "is not a partition file format (ncol != 12)")
     }
 
-    message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins within excluded chromosomes or outside of chromosome sizes...")
+    message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins within excluded chromosomes, outside of chromosome sizes, or with <1 fwd or <1 rev counts...")
     SCAR_df <- SCAR_df %>%
-      dplyr::filter(seqnames %in% names(chrom_sizes)) %>%
+      dplyr::filter(seqnames %in% names(chrom_sizes),
+                  fwd_counts >= 1,
+                  rev_counts >= 1) %>%
       mutate(IZ = NA,
             strand = "*",
             total_counts = fwd_counts + rev_counts, # total raw counts
