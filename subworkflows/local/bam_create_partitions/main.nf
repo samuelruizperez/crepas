@@ -438,6 +438,13 @@ workflow BAM_CREATE_PARTITIONS {
         }
         .set { ch_partitions_brep }
 
+    // TODO: print for debugging
+    ch_partitions_brep
+        .map { meta, partitions ->
+            "${meta}\t${partitions}"
+        }
+        .collectFile( name: '18_scar_ch_partitions_brep.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
+
     //
     // MODULE: Create average partition across biological replicates
     //
