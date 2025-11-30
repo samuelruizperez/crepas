@@ -431,7 +431,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_bigwig_endo_rpm
             .branch { meta, bw ->
                 ips: !meta.is_input_control
-                    return [ meta.id, meta.antibody, meta, bw ]
+                    return [ meta.input_control, meta.antibody, meta, bw ]
                 ipcontrols: meta.is_input_control
                     return [ meta.id, meta.input_control_of_antibody, meta, bw ]
             }
