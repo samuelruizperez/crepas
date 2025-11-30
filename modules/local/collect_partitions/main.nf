@@ -27,7 +27,7 @@ process COLLECT_PARTITIONS {
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def buffer = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
-    def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1 -k2,2n"
+    def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1V -k2,2n"
 
     """
     # Check that all input files have the same number of lines
@@ -56,9 +56,7 @@ process COLLECT_PARTITIONS {
     #  11. score: not used
     #  12. zero_deriv: second derivative at this bin
 
-    # Paste columns and filter for bwaob_fwd > 0 and bwaob_rev > 0
     paste ${args} ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
-    | awk '\$8 > 0 && \$14 > 0' \\
     | cut -f -3,8,14,20,26,30- \\
     ${sort_cmd} \\
     > ${prefix}.tsv
