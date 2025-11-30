@@ -6,12 +6,12 @@ include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO                              } from '
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { BEDGRAPH_SIGNAL_OVER_INPUT                                    } from '../../../modules/local/bedgraph_signal_over_input/main'
 include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO   } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { DEEPTOOLS_BIGWIGCOMPARE } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO           } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO            } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { DEEPTOOLS_BIGWIGCOMPARE                                       } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
 include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1       } from '../../../modules/nf-core/deeptools/bamcoverage/main'
-include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINS        } from '../../../modules/local/deeptools/bigwigaverage/main'
-include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1     } from '../../../modules/local/deeptools/bigwigaverage/main'
+include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINS       } from '../../../modules/local/deeptools/bigwigaverage/main'
+include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1   } from '../../../modules/local/deeptools/bigwigaverage/main'
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
