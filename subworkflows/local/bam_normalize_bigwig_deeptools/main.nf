@@ -451,7 +451,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bigwig_endo_rpm_ip_ipcontrol,
             channel.value([[:], []])
         )
-        ch_bigwig_endo_rpm_lfc = DEEPTOOLS_BIGWIGCOMPARE.out.bigwig
+        ch_bigwig_endo_rpm_lfc = DEEPTOOLS_BIGWIGCOMPARE.out.output
         ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGCOMPARE.out.versions.first())
     }
 
