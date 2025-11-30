@@ -8,6 +8,7 @@ include { BEDGRAPH_SIGNAL_OVER_INPUT                                    } from '
 include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO   } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { DEEPTOOLS_BIGWIGCOMPARE as DEEPTOOLS_BIGWIGCOMPARE } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
 include { DEEPTOOLS_BAMCOVERAGE as DEEPTOOLS_BAMCOVERAGE_BINSIZE1       } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINS        } from '../../../modules/local/deeptools/bigwigaverage/main'
 include { DEEPTOOLS_BIGWIGAVERAGE as DEEPTOOLS_BIGWIGAVERAGE_BINSIZE1     } from '../../../modules/local/deeptools/bigwigaverage/main'
@@ -26,6 +27,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     skip_cisrpmsoi          // boolean: skip the CISRPM-SOI normalization step
     skip_plot_profile       // boolean: skip the plot profile step
     min_reads_for_norm
+    skip_rpm_lfc
     skip_bw_average
 
     main:
@@ -168,19 +170,11 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
                 [ meta.id, antibody_to_use, meta, bdg ]
             }
-            .tap { ch_tmp_debug0 }
             .branch { id, antibody, meta, bdg ->
                 endo: meta.genome == genome
                 exo: meta.genome == spikein_genome
             }
             .set { ch_bdg_genome }
-
-        // TODO: print for debugging
-        ch_tmp_debug0
-            .map { it ->
-                "${it}"
-            }
-            .collectFile( name: 'ch_tmp_debug0.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
         // TODO: print for debugging
         ch_bdg_genome.endo
@@ -199,7 +193,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
         ch_bdg_genome.endo
             .combine(ch_bdg_genome.exo, by: [0,1])
-            .tap { ch_tmp_debug1 }
             .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.norm_factor_val = 1e6 / exo_meta[exo_meta.ref_total_mapped_reads_for_srpm]
@@ -207,14 +200,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 [ meta_clone, endo_bdg ]
             }
             .set { ch_bdg_srpm }
-
-    // TODO: print for debugging
-    ch_tmp_debug1
-        .map { it ->
-                "${it}"
-        }
-        .collectFile( name: 'ch_tmp_debug1.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
-
 
     }
 
@@ -436,9 +421,42 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bigwig_endo_rpm = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' }
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
 
+    //
+    // MODULE: Compute log2FC between engogenous ChIPs and endogenous inputs
+    //
+    ch_bigwig_endo_rpm_lfc = channel.empty()
+    if (!skip_rpm_lfc) {
 
-   ch_bw_exo = channel.empty()
-   if (spikein_genome) {
+        // Create channel: [ val(meta), [ ip_bigwig ], [ ipcontrol_bigwig ] ]
+        ch_bigwig_endo_rpm
+            .branch { meta, bw ->
+                ips: !meta.is_input_control
+                    return [ meta.id, meta.antibody, meta, bw ]
+                ipcontrols: meta.is_input_control
+                    return [ meta.id, meta.input_control_of_antibody, meta, bw ]
+            }
+            .set { ch_bigwig_endo_rpm_type }
+
+        ch_bigwig_endo_rpm_type
+            .ips
+            .combine(ch_bigwig_endo_rpm_type.ipcontrols, by: [0,1])
+            .map { id, antibody, ip_meta, ip_bw, ipcontrol_meta, ipcontrol_bw ->
+                def meta_clone = ip_meta.clone()
+                    meta_clone.log2FC = true
+                    [ meta_clone, ip_bw, ipcontrol_bw ]
+            }
+            .set { ch_bigwig_endo_rpm_ip_ipcontrol }
+
+        DEEPTOOLS_BIGWIGCOMPARE (
+            ch_bigwig_endo_rpm_ip_ipcontrol,
+            channel.value([[:], []])
+        )
+        ch_bigwig_endo_rpm_lfc = DEEPTOOLS_BIGWIGCOMPARE.out.bigwig
+        ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGCOMPARE.out.versions.first())
+    }
+
+    ch_bw_exo = channel.empty()
+    if (spikein_genome) {
         UCSC_BEDGRAPHTOBIGWIG_EXO (
             ch_bdg_all.filter { it -> it[0].genome == spikein_genome },
             ch_chrom_sizes_exo.map { it -> it[1] }
@@ -562,10 +580,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     }
 
-
     emit:
     bigwig_endo_rpm     = ch_bigwig_endo_rpm                           // channel: [ val(meta), [ bigwig ] ]
     bigwig_endo         = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
+    bigwig_endo_rpm_lfc = ch_bigwig_endo_rpm_lfc                       // channel: [ val(meta), [ bigwig ] ]
     bigwig_avg_endo     = ch_bw_avg_endo        // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo          = ch_bw_exo                                    // channel: [ val(meta), [ bigwig ] ]
     bigwig_binsize1     = ch_binsize1                                  // channel: [ val(meta), [ bigwig ] ]
