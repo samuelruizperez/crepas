@@ -426,8 +426,9 @@ workflow BAM_CREATE_PARTITIONS {
         .map { meta, partition ->
             def meta_clone = meta.clone()
             def antibody = meta.antibody ?: meta.input_control_of_antibody
-            meta_clone.id = meta_clone.id - ~/_bRep_.*$/
-            [ meta_clone.id, antibody, meta.signal_minus_input, meta, partition ]
+            meta_clone.id = meta.id - ~/_bRep_.*$/
+            meta_clone.input_control = meta.input_control - ~/_bRep_.*$/
+            [ meta_clone.id, antibody, meta.signal_minus_input, meta_clone, partition ]
         }
         .groupTuple(by: [0, 1, 2])
         .map { id, antibody, smi, metas, partitions ->
