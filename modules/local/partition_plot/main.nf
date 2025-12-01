@@ -19,6 +19,7 @@ process PARTITION_PLOT {
     path "*.partition_plots_raw.png",       emit: partition_raw_png
     path "*.partition_plots_smoothed.pdf",  emit: partition_smoothed_pdf
     path "*.partition_plots_smoothed.png",  emit: partition_smoothed_png
+    path "*.partition_mean_values.tsv",     emit: partition_mean_values
     path "*.scatter_plots.pdf",             emit: scatter_pdf, optional:true
     path "*.scatter_plots.png",             emit: scatter_png, optional:true
     path "versions.yml",                    emit: versions

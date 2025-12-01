@@ -605,6 +605,10 @@ partition_mean_df <- partition_df %>%
   ) %>%
   mutate(sample = gsub("^SCAR-seq_", "", sample))
 
+write_tsv(partition_mean_df,
+           file = file.path(opt_outdir, paste0(opt_prefix, ".partition_mean_values.tsv")),
+           col_names = TRUE)
+
 message("\n[", Sys.time(), "] A glimpse of the partition mean data frame:")
 print(partition_mean_df)
 
