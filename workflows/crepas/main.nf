@@ -644,12 +644,12 @@ workflow CREPAS {
 
         ch_flt_bam_bai_by_genome
             .exo
-            .map { meta, bam, bai ->
-                def meta_clone = meta.clone()
-                meta_clone.flTbl_total_mapped_reads = meta[meta.ref_total_mapped_reads_key]
-                meta_clone.ref_total_mapped_reads_key = 'flTbl_total_mapped_reads'
-                [meta_clone, bam, bai]
-            }
+            // .map { meta, bam, bai ->
+            //     def meta_clone = meta.clone()
+            //     meta_clone.flTbl_total_mapped_reads = meta[meta.ref_total_mapped_reads_key]
+            //     meta_clone.ref_total_mapped_reads_key = 'flTbl_total_mapped_reads'
+            //     [meta_clone, bam, bai]
+            // }
             .set { ch_flt_bam_bai_by_genome_exo }
    
         // TODO: print for debugging
@@ -753,7 +753,7 @@ workflow CREPAS {
     // Define the reference total mapped reads key to be used for downsampling, normalization, etc.
     // Note: this is the place to define more complex rules if needed
     // For example: if one wants to prefer flT2 for downsampling, but not for normalization,
-    // then change definition of meta.ref_total_mapped_reads_for_dSp here:
+    // then change definition of meta.ref_total_mapped_reads_for_dSp_key here:
     //
     ch_filtered_bam_bai
         .map { meta, bam, bai ->
@@ -771,11 +771,11 @@ workflow CREPAS {
                 }
             }
             meta_clone.ref_total_mapped_reads_key = total_key
-            meta_clone.ref_total_mapped_reads_for_dSp = total_key
+            meta_clone.ref_total_mapped_reads_for_dSp_key = total_key
             def norm_key = params.bam_downsampling_method ? 'dSp_total_mapped_reads' : total_key
-            meta_clone.ref_total_mapped_reads_for_rpm = norm_key
-            meta_clone.ref_total_mapped_reads_for_srpm = norm_key
-            meta_clone.ref_total_mapped_reads_for_cisrpm = norm_key
+            meta_clone.ref_total_mapped_reads_for_rpm_key = norm_key
+            meta_clone.ref_total_mapped_reads_for_srpm_key = norm_key
+            meta_clone.ref_total_mapped_reads_for_cisrpm_key = norm_key
             [meta_clone, bam, bai]
         }
         .set { ch_filtered_bam_bai }
@@ -838,7 +838,8 @@ workflow CREPAS {
         params.skip_plot_profile,
         params.min_reads_for_norm,
         params.skip_rpm_lfc,
-        params.skip_bw_average
+        params.skip_bw_average,
+        params.skip_exo_bw
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
@@ -1262,10 +1263,10 @@ workflow CREPAS {
                     "/${meta.exp_type}" +
                     "${meta.downsampling_method ? '/downsampled' : ''}" +
                     "/coverage/" +
-                    "${meta.norm_factor_type}" +
-                    "${meta.signal_over_input ? '/cisrpm_soi' : ''}" +
+                    "/${meta.coverage_bin_size}" + "_bp_bins" +
+                    "/${meta.signal_over_input ? '/cisrpm_soi' : meta.norm_factor_type}" +
                     "${meta.log2FC ? '/log2FC' : ''}" +
-                    "${meta.averaged_brep ? '/average' : ''}" +
+                    "${meta.averaged_brep ? '/bRep_avg' : ''}" +
                     "/${bw.getName()}"
 
                 [meta, bw, outpath, "0,0,178"] // dark blue

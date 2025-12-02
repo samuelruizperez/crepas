@@ -693,6 +693,12 @@
                     "default": false,
                     "description": "Whether to skip the generation of average bigWig files across replicates for each sample group.",
                     "fa_icon": "fas fa-chart-area"
+                },
+                "skip_exo_bw": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip the generation of exogenous bigWig files for each sample.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },
