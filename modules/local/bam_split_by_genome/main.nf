@@ -55,6 +55,7 @@ process BAM_SPLIT_BY_GENOME {
             --no-PG \\
             ${bam} \\
             | grep -E "^@RG|_${exo_genome}" | grep -v -e '^@CO' -e '^@PG' \\
+            | sed "s/_${exo_genome}//g" \\
             | samtools view \\
                 --threads ${nthreads2} \\
                 --no-PG \\
