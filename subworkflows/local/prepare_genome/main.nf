@@ -52,7 +52,7 @@ include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/mai
 include { TABIX_TABIX           } from '../../../modules/nf-core/tabix/tabix/main'
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
-include { CHROM_SIZES_SPIKEIN_SPLIT  } from '../../../modules/local/chrom_sizes_spikein_split/main'
+include { CHROMSIZES_SPLIT_BY_GENOME  } from '../../../modules/local/chromsizes_split_by_genome/main'
 
 include {
     TETRANSCRIPTS_INDEXER as TETRANSCRIPTS_INDEXER_GENE
