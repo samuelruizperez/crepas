@@ -44,7 +44,7 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai_genome_type.endo_ip
             .mix(ch_bam_bai_genome_type.endo_ipcontrol)
             .map { ipcontrol_id, antibody, meta, bam, bai ->
-                def total = meta[meta.ref_total_mapped_reads_for_dSp]
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
                 [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
@@ -62,7 +62,7 @@ workflow BAM_DOWNSAMPLE {
             .transpose()
             .map { exp_type, antibody, min_endo, min_endo_id, min_endo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp]
+                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_endo is higher due to downsampling_endo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_endo
@@ -112,7 +112,7 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai_genome_type.exo_ip
             .mix(ch_bam_bai_genome_type.exo_ipcontrol)
             .map { ipcontrol_id, antibody, meta, bam, bai ->
-                def total = meta[meta.ref_total_mapped_reads_for_dSp]
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
                 [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
@@ -129,7 +129,7 @@ workflow BAM_DOWNSAMPLE {
             .transpose()
             .map { exp_type, antibody, min_exo, min_exo_id, min_exo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp]
+                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_exo is higher due to downsampling_exo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_exo
@@ -180,7 +180,7 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai_genome_type.endo_ip
             .mix(ch_bam_bai_genome_type.endo_ipcontrol)
             .map { ipcontrol_id, antibody, meta, bam, bai ->
-                def total = meta[meta.ref_total_mapped_reads_for_dSp]
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
                 [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
@@ -197,7 +197,7 @@ workflow BAM_DOWNSAMPLE {
             .transpose()
             .map { exp_type, antibody, min_endo, min_endo_id, min_endo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp]
+                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_endo is higher due to downsampling_endo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_endo
@@ -248,7 +248,7 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai_genome_type.exo_ip
             .mix(ch_bam_bai_genome_type.exo_ipcontrol)
             .map { ipcontrol_id, antibody, meta, bam, bai ->
-                def total = meta[meta.ref_total_mapped_reads_for_dSp]
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
                 [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
@@ -266,7 +266,7 @@ workflow BAM_DOWNSAMPLE {
             .map { exp_type, antibody, min_exo, min_exo_id, min_exo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 // If downsampling_prob is higher than 1 (when min_exo is higher due to downsampling_exo_threshold), we set it to 1
-                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp]
+                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_exo
                 // These two lines are just to keep track of the dSp reference sample
