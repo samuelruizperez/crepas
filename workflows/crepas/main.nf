@@ -613,6 +613,19 @@ workflow CREPAS {
         }
     }
 
+    //
+    // MODULE: Picard post alignment QC
+    //
+    if (!params.skip_picard_metrics) {
+        PICARD_COLLECTMULTIPLEMETRICS (
+            ch_filtered_bam.join(ch_filtered_index, by: 0),
+            ch_fasta,
+            ch_fai
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
+    }
+
     // Mix the exogenous and endogenous BAM and index files
     ch_filtered_bam
         .mix(ch_filtered_exo_bam)
@@ -766,19 +779,6 @@ workflow CREPAS {
         }
         .collectFile(name: 'ch_filtered_bam_bai_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
-
-    //
-    // MODULE: Picard post alignment QC
-    //
-    if (!params.skip_picard_metrics) {
-        PICARD_COLLECTMULTIPLEMETRICS(
-            ch_filtered_bam_bai,
-            ch_fasta,
-            ch_fai
-        )
-        ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
-    }
 
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
