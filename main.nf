@@ -58,7 +58,7 @@ workflow GROTHLAB_CREPAS {
     def splicesites           = params.containsKey('splicesites') ? params.splicesites : (params.refgenie_ignore ? null : getGenomeAttribute('splicesites'))
     def okseq_rfd_file        = params.containsKey('okseq_rfd_file') ? params.okseq_rfd_file : (params.refgenie_ignore ? null : getGenomeAttribute('okseq_rfd_file'))
     def initiation_zones      = params.containsKey('initiation_zones') ? params.initiation_zones : (params.refgenie_ignore ? null : getGenomeAttribute('initiation_zones'))
-    def te_counting_gene_gtf  = params.containsKey('tecounting_gene_gtf') ? params.tecounting_gene_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('tecounting_gene_gtf'))
+    def te_counting_gene_gtf  = params.containsKey('te_counting_gene_gtf') ? params.te_counting_gene_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('te_counting_gene_gtf'))
     def tecount_gene_index    = params.containsKey('tecount_gene_index') ? params.tecount_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_gene_index'))
     def telocal_gene_index    = params.containsKey('telocal_gene_index') ? params.telocal_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_gene_index'))
     def te_gtf                = params.containsKey('te_gtf') ? params.te_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('te_gtf'))
