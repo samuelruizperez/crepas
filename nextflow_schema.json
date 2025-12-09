@@ -721,6 +721,12 @@
                     "fa_icon": "fas fa-dna",
                     "enum": ["multi", "uniq"]
                 },
+                "te_counting_gene_gtf": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to a different gene GTF file for counting with TEcount and TElocal. If not provided, the main `--gtf` file will be used to generate a gene index suitable for TEcount or TElocal, unless the respective prebuilt gene index files are provided.",
+                    "fa_icon": "fas fa-dna"
+                },
                 "tecount_gene_index": {
                     "type": "string",
                     "format": "file-path",

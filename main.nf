@@ -42,28 +42,29 @@ workflow GROTHLAB_CREPAS {
     // collect paths from genome attributes file (e.g. iGenomes.config; optional)
     // we cannot overwrite params in the workflow (they stay null as coming from the config file)
     // TODO: simplify, readability
-    def fasta               = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
-    def bwa_index           = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
-    def bowtie2_index       = params.containsKey('bowtie2_index') ? params.bowtie2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie2_index'))
-    def chromap_index       = params.containsKey('chromap_index') ? params.chromap_index : (params.refgenie_ignore ? null : getGenomeAttribute('chromap'))
-    def star_index          = params.containsKey('star_index') ? params.star_index : (params.refgenie_ignore ? null : getGenomeAttribute('star'))
-    def hisat2_index        = params.containsKey('hisat2_index') ? params.hisat2_index : (params.refgenie_ignore ? null : getGenomeAttribute('hisat2'))
-    def gtf                 = params.containsKey('gtf') ? params.gtf : (params.refgenie_ignore ? null : getGenomeAttribute('gtf'))
-    def gff                 = params.containsKey('gff') ? params.gff : (params.refgenie_ignore ? null : getGenomeAttribute('gff'))
-    def gene_bed            = params.containsKey('gene_bed') ? params.gene_bed : (params.refgenie_ignore ? null : getGenomeAttribute('gene_bed'))
-    def blacklist           = params.containsKey('blacklist') ? params.blacklist : (params.refgenie_ignore ? null : getGenomeAttribute('blacklist'))
-    def sparsebed           = params.containsKey('sparsebed') ? params.sparsebed : (params.refgenie_ignore ? null : getGenomeAttribute('sparsebed'))
-    def active_regions      = params.containsKey('active_regions') ? params.active_regions : (params.refgenie_ignore ? null : getGenomeAttribute('active_regions'))
-    def rocco_params        = params.containsKey('rocco_params') ? params.rocco_params : (params.refgenie_ignore ? null : getGenomeAttribute('rocco_params'))
-    def splicesites         = params.containsKey('splicesites') ? params.splicesites : (params.refgenie_ignore ? null : getGenomeAttribute('splicesites'))
-    def okseq_rfd_file      = params.containsKey('okseq_rfd_file') ? params.okseq_rfd_file : (params.refgenie_ignore ? null : getGenomeAttribute('okseq_rfd_file'))
-    def initiation_zones    = params.containsKey('initiation_zones') ? params.initiation_zones : (params.refgenie_ignore ? null : getGenomeAttribute('initiation_zones'))
-    def tecount_gene_index  = params.containsKey('tecount_gene_index') ? params.tecount_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_gene_index'))
-    def telocal_gene_index  = params.containsKey('telocal_gene_index') ? params.telocal_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_gene_index'))
-    def te_gtf              = params.containsKey('te_gtf') ? params.te_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('te_gtf'))
-    def tecount_te_index    = params.containsKey('tecount_te_index') ? params.tecount_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_te_index'))
-    def telocal_te_index    = params.containsKey('telocal_te_index') ? params.telocal_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_te_index'))
-    def macs_gsize          = params.containsKey('macs_gsize') ? params.macs_gsize : getMacsGsize(params)
+    def fasta                 = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
+    def bwa_index             = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
+    def bowtie2_index         = params.containsKey('bowtie2_index') ? params.bowtie2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie2_index'))
+    def chromap_index         = params.containsKey('chromap_index') ? params.chromap_index : (params.refgenie_ignore ? null : getGenomeAttribute('chromap'))
+    def star_index            = params.containsKey('star_index') ? params.star_index : (params.refgenie_ignore ? null : getGenomeAttribute('star'))
+    def hisat2_index          = params.containsKey('hisat2_index') ? params.hisat2_index : (params.refgenie_ignore ? null : getGenomeAttribute('hisat2'))
+    def gtf                   = params.containsKey('gtf') ? params.gtf : (params.refgenie_ignore ? null : getGenomeAttribute('gtf'))
+    def gff                   = params.containsKey('gff') ? params.gff : (params.refgenie_ignore ? null : getGenomeAttribute('gff'))
+    def gene_bed              = params.containsKey('gene_bed') ? params.gene_bed : (params.refgenie_ignore ? null : getGenomeAttribute('gene_bed'))
+    def blacklist             = params.containsKey('blacklist') ? params.blacklist : (params.refgenie_ignore ? null : getGenomeAttribute('blacklist'))
+    def sparsebed             = params.containsKey('sparsebed') ? params.sparsebed : (params.refgenie_ignore ? null : getGenomeAttribute('sparsebed'))
+    def active_regions        = params.containsKey('active_regions') ? params.active_regions : (params.refgenie_ignore ? null : getGenomeAttribute('active_regions'))
+    def rocco_params          = params.containsKey('rocco_params') ? params.rocco_params : (params.refgenie_ignore ? null : getGenomeAttribute('rocco_params'))
+    def splicesites           = params.containsKey('splicesites') ? params.splicesites : (params.refgenie_ignore ? null : getGenomeAttribute('splicesites'))
+    def okseq_rfd_file        = params.containsKey('okseq_rfd_file') ? params.okseq_rfd_file : (params.refgenie_ignore ? null : getGenomeAttribute('okseq_rfd_file'))
+    def initiation_zones      = params.containsKey('initiation_zones') ? params.initiation_zones : (params.refgenie_ignore ? null : getGenomeAttribute('initiation_zones'))
+    def te_counting_gene_gtf  = params.containsKey('tecounting_gene_gtf') ? params.tecounting_gene_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('tecounting_gene_gtf'))
+    def tecount_gene_index    = params.containsKey('tecount_gene_index') ? params.tecount_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_gene_index'))
+    def telocal_gene_index    = params.containsKey('telocal_gene_index') ? params.telocal_gene_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_gene_index'))
+    def te_gtf                = params.containsKey('te_gtf') ? params.te_gtf : (params.refgenie_ignore ? null : getGenomeAttribute('te_gtf'))
+    def tecount_te_index      = params.containsKey('tecount_te_index') ? params.tecount_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_te_index'))
+    def telocal_te_index      = params.containsKey('telocal_te_index') ? params.telocal_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_te_index'))
+    def macs_gsize            = params.containsKey('macs_gsize') ? params.macs_gsize : getMacsGsize(params)
 
 
     //
@@ -94,6 +95,7 @@ workflow GROTHLAB_CREPAS {
         initiation_zones,
         params.skip_te_counting,
         params.skip_telocal,
+        te_counting_gene_gtf,
         tecount_gene_index,
         telocal_gene_index,
         te_gtf,

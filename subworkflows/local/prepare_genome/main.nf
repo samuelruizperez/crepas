@@ -14,6 +14,7 @@ include {
     GUNZIP as GUNZIP_INITIATION_ZONES
     GUNZIP as GUNZIP_OKSEQ_RFD_FILE
     GUNZIP as GUNZIP_SPLICESITES
+    GUNZIP as GUNZIP_TE_COUNTING_GENE_GTF
     GUNZIP as GUNZIP_TECOUNT_GENE_INDEX
     GUNZIP as GUNZIP_TELOCAL_GENE_INDEX
     GUNZIP as GUNZIP_TE_GTF
@@ -82,6 +83,7 @@ workflow PREPARE_GENOME {
     initiation_zones   //    file: /path/to/initiation_zones.bed
     skip_te_counting   //    boolean: skip TE counting
     skip_telocal    //    boolean: skip TElocal indexing
+    te_counting_gene_gtf //    file: /path/to/te_counting_gene_gtf.gtf
     tecount_gene_index //    file: /path/to/tecount_gene_index.Ind
     telocal_gene_index //    file: /path/to/telocal_gene_index.Ind
     te_gtf     //    file: /path/to/te_gtf.gtf
@@ -409,6 +411,20 @@ workflow PREPARE_GENOME {
     }
 
     //
+    // Uncompress gene GTF for TE counting or use existing gene GTF
+    // With this, it is possible to provide a different GTF specifically for TE counting
+    //
+    ch_te_counting_gene_gtf = ch_gtf
+    if (te_counting_gene_gtf) {
+        if (te_counting_gene_gtf.endsWith('.gz')) {
+            ch_te_counting_gene_gtf = GUNZIP_TE_COUNTING_GENE_GTF ( [ [id:'te_counting_gene_gtf'], file(te_counting_gene_gtf, checkIfExists: true) ] ).gunzip
+            ch_versions = ch_versions.mix(GUNZIP_TE_COUNTING_GENE_GTF.out.versions)
+        } else {
+            ch_te_counting_gene_gtf = channel.value( [ [id:'te_counting_gene_gtf'], file(te_counting_gene_gtf, checkIfExists: true) ] )
+        }
+    }
+
+    //
     // Uncompress TEcount or TElocal indices or generate from scratch if required
     //
     ch_tecount_gene_index = channel.empty()
@@ -424,7 +440,7 @@ workflow PREPARE_GENOME {
                 ch_tecount_gene_index = channel.value( [ [id:'tecount_gene_index'], file(tecount_gene_index, checkIfExists: true) ] )
             }
         } else {
-            ch_tecount_gene_index = TETRANSCRIPTS_INDEXER_GENE ( ch_gtf, 'gene' ).index
+            ch_tecount_gene_index = TETRANSCRIPTS_INDEXER_GENE ( ch_te_counting_gene_gtf, 'gene' ).index
             ch_versions = ch_versions.mix(TETRANSCRIPTS_INDEXER_GENE.out.versions)
         }
         if (tecount_te_index) {
@@ -454,7 +470,7 @@ workflow PREPARE_GENOME {
                     ch_telocal_gene_index = channel.value( [ [id:'telocal_gene_index'], file(telocal_gene_index, checkIfExists: true) ] )
                 }
             } else {
-                ch_telocal_gene_index = TELOCAL_INDEXER_GENE ( ch_gtf, 'gene' ).index
+                ch_telocal_gene_index = TELOCAL_INDEXER_GENE ( ch_te_counting_gene_gtf, 'gene' ).index
                 ch_versions = ch_versions.mix(TELOCAL_INDEXER_GENE.out.versions)
             }
             if (telocal_te_index) {
@@ -494,6 +510,7 @@ workflow PREPARE_GENOME {
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index           = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
     splicesites            = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
+    te_counting_gene_gtf   = ch_te_counting_gene_gtf   //    channel: [ val(meta), [ te_counting_gene_gtf.gtf ]]
     tecount_gene_index     = ch_tecount_gene_index     //    channel: [ val(meta), [ tecount_gene_index.Ind ]]
     telocal_gene_index     = ch_telocal_gene_index     //    channel: [ val(meta), [ telocal_gene_index.Ind ]]
     tecount_te_index       = ch_tecount_te_index       //    channel: [ val(meta), [ tecount_te_index.Ind ]]
