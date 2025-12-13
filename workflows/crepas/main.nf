@@ -1007,6 +1007,7 @@ workflow CREPAS {
         // Including ips_wo_ipcontrol as they will be used for peak calling without control
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bedgraph_endo
             .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
+            .filter { it -> !(it[0].signal_over_input)}
             .branch { meta, bdg ->
                 ips_with_ipcontrol: meta.input_control
                     return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
