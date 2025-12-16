@@ -132,6 +132,26 @@ parser$add_argument("-w", "--only_plot_wholly_within_iz", action = "store",
 
 opt <- parser$parse_args()
 
+opt_scar_partition_file <- NULL
+opt_scarminusinput_partition_file <- "/home/whq695/Groth_group/SRP/projects/crepas_paper/crepas_runs/run1/output/chromap/mergedLibrary/SCAR-seq/6_collect/bRep_average/SCAR-seq_SCAR_438_T0_H3K4me3.mLb.mkD.flT1.GRCm39.flT2.flT3.flTbl.rmO.rpm.smi.partition.w1000.s30.d30.z1.collect.bRep_avg.tsv"
+opt_strandedinput_partition_file <- NULL
+opt_okazaki_file <- "/home/whq695/Groth_group/SRP/projects/crepas_paper/crepas_runs/run1/output/genome/OK-seq_SRR7535256_REP1.mLb.mkD.flT1.flT3.rpm.partition.w1000.s30.d30.z1.tsv"
+opt_initiation_zones <- NULL
+opt_blacklist <- "/home/whq695/Groth_group/SRP/projects/crepas_paper/crepas_runs/run1/output/genome/GRCm39.ExcludeRanges.Boyle.Excludable_v2.bed"
+opt_chrom_sizes <- "/home/whq695/Groth_group/SRP/projects/crepas_paper/crepas_runs/run1/output/genome/GRCm39_dm6.primary_assembly.genome.fa.GRCm39.sizes"
+opt_prefix <- "test"
+opt_outdir <- "/home/whq695/Groth_group/SRP/projects/crepas_paper/tmp"
+opt_rpm_cutoff <- 0.3
+opt_zero_deriv_quantile <- 0.9
+opt_plot_range <- 100
+opt_exclude_chromosomes <- "chrX,chrY,chrM"
+opt_exclude_scaffolds <- TRUE
+opt_only_plot_within_iz <- FALSE
+
+
+
+
+
 opt_scar_partition_file <- opt$scar_partition_file
 opt_scarminusinput_partition_file <- opt$scarminusinput_partition_file
 opt_strandedinput_partition_file <- opt$strandedinput_partition_file
@@ -376,6 +396,7 @@ if (HAS_OKSEQ) {
   
   # Get original start coordinate for each initiation zone 
   IZ_gr$break_start <- start(IZ_gr)
+  IZ_gr$break_end <- end(IZ_gr)
   
   # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
   IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
@@ -423,6 +444,8 @@ if (HAS_OKSEQ) {
   
   # Get original start coordinate for each initiation zone 
   IZ_gr$break_start <- start(IZ_gr)
+  IZ_gr$break_end <- end(IZ_gr)
+
   
   # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
   IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
@@ -633,6 +656,69 @@ sample_names <- unique(partition_mean_df$sample)
 sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
 sample_colors["OK-seq"] <- "grey60"
 line_colors <- sample_colors
+
+
+
+# ===============================================================================
+# Heatmaps
+# ===============================================================================
+
+# plot heatmaps, where each row is an IZ, columns ar bases, centered on IZ
+
+# move original ranges from IZ_gr to a new GRanges object
+IZ_gr_new <- GRanges(seqnames = seqnames(IZ_gr),
+                         ranges = IRanges(start = IZ_gr$break_start,
+                                          end = IZ_gr$break_end),
+                         strand = strand(IZ_gr))
+# copy all metadata columns
+mcols(IZ_gr_new) <- mcols(IZ_gr)
+# keep only centers
+IZ_gr_new <- resize(IZ_gr_new, width = 1, fix = "center")
+
+library(EnrichedHeatmap)
+tmp <- normalizeToMatrix(signal = partition_gr,
+                         target = IZ_gr_new,
+                         value_column = "RFD_smooth",
+                         extend = IZ_LIMITS,
+                         w = 1,
+                         mean_mode = "weighted")
+
+# Calculate y-limits as min and max of tmp plus 5% padding
+mean_profile <- colMeans(tmp, na.rm = TRUE)
+abs_max <- max(abs(mean_profile), na.rm = TRUE)
+ylims <- c( -abs_max * 1.05, abs_max * 1.05)
+ylims <- round(ylims, digits = 4)
+
+
+png(filename = file.path("/home/whq695/Groth_group/SRP/projects/crepas_paper/tmp/test.heatmap.RFD_smooth.png"),
+    width = 4, height = 8, units = "in", res = 600)
+
+# Create the enriched annotation with axis on the left, y-limits from -0.1 to 0.1
+enriched_anno <- anno_enriched(gp = gpar(col = "red"),
+                               ylim = ylims,
+                               axis_param = list(side = "left"))
+
+# Create the heatmap with the custom annotation
+ht <- EnrichedHeatmap(mat = tmp,
+                      name = "RFD_smooth",
+                      top_annotation = HeatmapAnnotation(enriched = enriched_anno,
+                                                         height = unit(5, "cm")),
+                      axis_name = c(" -100 kb", "IZ center", " +100 kb")
+)
+
+draw(ht)
+
+decorate_annotation("enriched", {
+    grid.lines(c(0, 1), unit(c(0.5, 0.5), "native"), gp = gpar(col = "grey70"))
+    # Add corner labels
+    grid.text("lagging", x = unit(0.02, "npc"), y = unit(0.96, "npc"), just = c("left", "top"), gp = gpar(fontsize = 6))
+    grid.text("leading", x = unit(0.98, "npc"), y = unit(0.96, "npc"), just = c("right", "top"), gp = gpar(fontsize = 6))
+    grid.text("leading", x = unit(0.02, "npc"), y = unit(0.04, "npc"), just = c("left", "bottom"), gp = gpar(fontsize = 6))
+    grid.text("lagging", x = unit(0.98, "npc"), y = unit(0.04, "npc"), just = c("right", "bottom"), gp = gpar(fontsize = 6))
+})
+
+dev.off()
+
 
 
 # ===============================================================================
