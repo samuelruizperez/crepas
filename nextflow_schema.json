@@ -1123,6 +1123,11 @@
             "fa_icon": "fas fa-dna",
             "description": "Options to adjust SCAR-seq and OK-seq analysis criteria.",
             "properties": {
+                "partition_fragment_size": {
+                    "type": "integer",
+                    "description": "For single-end SCAR-seq or OK-seq data, the fragment size (in bp) to extend reads when calculating coverage for partition/RFD analysis. For paired-end data, coverage of intervals is calculated from the left point of a read pair to the right point.",
+                    "default": 250
+                },
                 "partition_window_size": {
                     "type": "integer",
                     "description": "Window/bin size (in bp) for dividing chromosomes when calculating coverage for partition/RFD analysis in SCAR-seq or OK-seq experiments. See [this reference](https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials) for more details.",
