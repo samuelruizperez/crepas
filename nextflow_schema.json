@@ -475,6 +475,12 @@
                     "type": "integer",
                     "fa_icon": "fas fa-dice-d20",
                     "description": "Number of multimappers to map."
+                },
+                "align_end_to_end": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Wheter to perform end-to-end alignment (only relevant for Bowtie2 and STAR). If set to false, local alignment will be performed.",
+                    "fa_icon": "fas fa-map-signs"
                 }
             }
         },
