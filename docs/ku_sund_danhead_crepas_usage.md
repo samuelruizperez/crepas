@@ -99,6 +99,19 @@
         }
     }
     ```
+
+<!-- ## CPRGPU version
+
+```
+cat <<'EOF' >> ~/.bashrc
+
+### Source Nextflow definitions
+if [ -f /maps/projects/dan1/apps/etc/bashrc ]; then
+    . /maps/projects/dan1/apps/etc/bashrc
+fi
+EOF
+``` -->
+
 ## Running the pipeline
 
 The recommended way to run the pipeline on the DAN System is through an *SBATCH* job:
