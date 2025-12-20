@@ -222,12 +222,6 @@ if (is.null(opt_initiation_zones)) {
   HAS_IZ <- TRUE
 }
 
-if (!HAS_OKSEQ) {
-  if (!HAS_IZ) {
-    stop("[", Sys.time(), "] Please provide either valid Okazaki RFD file or Initiation Zone bed file")
-  }
-}
-
 # Check blacklist file
 HAS_BLACKLIST <- FALSE
 if (is.null(opt_blacklist)) {
@@ -269,7 +263,7 @@ cls <- c("seqnames","start","end", # Coordinates of bin
          "RFD_deriv",              # Value of the derivative of the partition at this bin
          "score",                  # not used
          "zero_deriv")             # second derivative at this bin
-# 
+
 blacklist_gr <- GRanges()
 if (HAS_BLACKLIST) {
   blacklist_df <- read_tsv(opt_blacklist, col_select = c(1:3), col_names = c("seqnames","start","end"), show_col_types = FALSE)
@@ -300,7 +294,7 @@ if (HAS_CHROM_SIZES) {
 
 
 message("\n# ===============================================================================")
-message("# STEP 1-B. Extracting initiation zones from provided BED file...")
+message("# STEP 1. Extracting initiation zones from provided BED file...")
 message("# ===============================================================================")
 
 iz_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_initiation_zones))
@@ -318,6 +312,11 @@ IZ_gr <- IZ_df %>%
   makeGRangesFromDataFrame(seqinfo = chrom_sizes,
                             keep.extra.columns = TRUE,
                             starts.in.df.are.0based = TRUE)
+
+# print ranges out of bound
+out_of_bound_iz <- IZ_gr[which(end(IZ_gr) > seqlengths(IZ_gr)[as.character(seqnames(IZ_gr))])]
+out_of_bound_iz
+
 
 # We copy the interval now and not before with dplyr because the start
 # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
@@ -380,6 +379,10 @@ if (HAS_OKSEQ) {
   # We copy the interval now and not before with dplyr because the start
   # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
   OK_gr$interval <- paste0(seqnames(OK_gr), ":", start(OK_gr), "-", end(OK_gr))
+
+  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating OK-seq bin size...")
+
+  OK_BIN_SIZE <- width(OK_gr)[1]
 
   message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
@@ -526,6 +529,8 @@ message("# =====================================================================
 partition_summary <- partition_df %>%
   dplyr::group_by(sample, sample_type, sample_facet) %>%
   dplyr::summarise(N_IZ = n_distinct(break_ID), .groups = "drop")
+
+print(partition_summary)
 
 partition_mean_df <- partition_df %>%
   dplyr::filter(RPM >= opt_rpm_cutoff) %>%
