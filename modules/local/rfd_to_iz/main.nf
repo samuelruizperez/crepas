@@ -28,6 +28,7 @@ process RFD_TO_IZ {
 
     """
     rfd_to_iz.R \\
+        --okseq_rfd_file ${okseq_rfd_file} \\
         ${blacklist_arg} \\
         --chrom_sizes ${chrom_sizes} \\
         --prefix ${prefix} \\
