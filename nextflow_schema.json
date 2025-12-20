@@ -111,6 +111,12 @@
                     "description": "Path to directory or tar.gz archive for pre-built BWA index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
+                "bowtie_index": {
+                    "type": "string",
+                    "format": "path",
+                    "fa_icon": "fas fa-bezier-curve",
+                    "description": "Path to directory or tar.gz archive for pre-built Bowtie index."
+                },
                 "bowtie2_index": {
                     "type": "string",
                     "format": "path",
@@ -446,7 +452,7 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bowtie2", "chromap", "star", "hisat2"]
+                    "enum": ["bwa", "bowtie", "bowtie2", "chromap", "star", "hisat2"]
                 },
                 "bwa_min_score": {
                     "type": "integer",

@@ -44,6 +44,7 @@ workflow GROTHLAB_CREPAS {
     // TODO: simplify, readability
     def fasta                 = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
     def bwa_index             = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
+    def bowtie_index          = params.containsKey('bowtie_index') ? params.bowtie_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie'))
     def bowtie2_index         = params.containsKey('bowtie2_index') ? params.bowtie2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie2_index'))
     def chromap_index         = params.containsKey('chromap_index') ? params.chromap_index : (params.refgenie_ignore ? null : getGenomeAttribute('chromap'))
     def star_index            = params.containsKey('star_index') ? params.star_index : (params.refgenie_ignore ? null : getGenomeAttribute('star'))
@@ -86,6 +87,7 @@ workflow GROTHLAB_CREPAS {
         params.skip_gtf_index,
         gene_bed,
         bwa_index,
+        bowtie_index,
         bowtie2_index,
         chromap_index,
         star_index,
