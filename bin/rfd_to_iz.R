@@ -305,7 +305,7 @@ message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zone
 
 # Save initiation zones to BED file
 rtracklayer::export.bed(IZ_gr_tmp,
-                            con = file.path(opt_outdir, paste0(opt_prefix, "init_zones.rm_overlaps.bed")))
+                            con = file.path(opt_outdir, paste0(opt_prefix, ".init_zones.rm_overlaps.bed")))
 
 message("\n# ===============================================================================")
 message("# Done!")
