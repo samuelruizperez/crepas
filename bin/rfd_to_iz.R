@@ -233,9 +233,15 @@ OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv
                                             probs = opt_zero_deriv_quantile,
                                             na.rm = TRUE))]
 
+OK_gr_tmp2 <- GRanges(seqnames = seqnames(OK_gr_tmp),
+                        ranges = IRanges(start = start(OK_gr_tmp),
+                                        end = end(OK_gr_tmp)),
+                        strand = strand(OK_gr_tmp))
+
 message("\n[", Sys.time(), "] (", ok_base_name, ") The number of OK-seq bins after filtering by RPM and RFD zero derivative quantile is ", length(OK_gr_tmp), ".")
-rtracklayer::export.bed(OK_gr_tmp,
+rtracklayer::export.bed(OK_gr_tmp2,
                             con = file.path(opt_outdir, paste0(opt_prefix, ".prefiltered.bed")))
+rm(OK_gr_tmp2)
 
 # As in Petryk et al. (2018; https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials),
 # for initiation zones less than 3 bins apart, the bin with the highest RFD derivative is selected:
@@ -256,9 +262,14 @@ OK_gr$IZ <- ifelse(OK_gr$interval %in% filtered_data$interval, TRUE, FALSE)
 message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after preprocessing is ", sum(OK_gr$IZ), ".")
 IZ_gr <- subset(OK_gr, IZ)
 
-rtracklayer::export.bed(IZ_gr,
-                            con = file.path(opt_outdir, paste0(opt_prefix, ".init_zones.bed")))
+IZ_gr_tmp <- GRanges(seqnames = seqnames(IZ_gr),
+                        ranges = IRanges(start = start(IZ_gr),
+                                        end = end(IZ_gr)),
+                        strand = strand(IZ_gr))
 
+rtracklayer::export.bed(IZ_gr_tmp,
+                            con = file.path(opt_outdir, paste0(opt_prefix, ".init_zones.bed")))
+rm(IZ_gr_tmp)
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Removing overlapping initiation zones (within ", 
         opt_iz_limits_kb,
