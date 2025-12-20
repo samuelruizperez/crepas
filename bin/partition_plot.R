@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # ===============================================================================
-# partition_or_rfd_plot.R
+# partition_plot.R
 #
 # Originally created by:
 #     - Nicolas Alcaraz <nicolas.alcaraz@cpr.ku.dk>
@@ -74,12 +74,13 @@ parser$add_argument("-f","--strandedinput_partition_file", action = "store",
                     nargs = '+',
                     help = "Partition file(s) from stranded input  [required]. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
 
-parser$add_argument("-k", "--okazaki_file", action = "store",
+parser$add_argument("-k", "--okseq_rfd_file", action = "store",
                     type = "character",
                     help = "Okazaki file from OK-seq [optional, required for scatter plot]")
 
 parser$add_argument("-i", "--initiation_zones", action = "store",
                     type = "character",
+                    required = TRUE,
                     help = "Bed file with known initiation-zones. Must be provided if no Okazaki partition file is given")
 
 parser$add_argument("-b", "--blacklist", action = "store",
@@ -105,11 +106,6 @@ parser$add_argument("-c", "--rpm_cutoff", action = "store",
                     type = "double",
                     help = "RPM cutoff for noisy bins [default: 0.3]")
 
-parser$add_argument("-z", "--zero_deriv_quantile", action = "store",
-                    default = 0.9,
-                    type = "double",
-                    help = "Quantile for zero derivative filtering [default: 0.9]")
-
 parser$add_argument("-r", "--plot_range", action = "store",
                     default = 100,
                     type = "integer",
@@ -121,7 +117,7 @@ parser$add_argument("-e", "--exclude_chromosomes", action = "store",
                     help = "Chromosomes to exclude from analyses, must be provided comma separated [default: chrX,chrY,chrM]")
 
 parser$add_argument("-g", "--exclude_scaffolds", action = "store",
-                    default = FALSE,
+                    default = TRUE,
                     type = "logical",
                     help = "Whether to exclude scaffolds from analyses. Chromosomes whose name begins with 'chrUn' or contains a dot ('.') are considered scaffolds [default: FALSE]")
 
@@ -135,14 +131,13 @@ opt <- parser$parse_args()
 opt_scar_partition_file <- opt$scar_partition_file
 opt_scarminusinput_partition_file <- opt$scarminusinput_partition_file
 opt_strandedinput_partition_file <- opt$strandedinput_partition_file
-opt_okazaki_file <- opt$okazaki_file
+opt_okazaki_file <- opt$okseq_rfd_file
 opt_initiation_zones <- opt$initiation_zones
 opt_blacklist <- opt$blacklist
 opt_chrom_sizes <- opt$chrom_sizes
 opt_prefix <- opt$prefix
 opt_outdir <- opt$outdir
 opt_rpm_cutoff <- opt$rpm_cutoff
-opt_zero_deriv_quantile <- opt$zero_deriv_quantile
 opt_plot_range <- opt$plot_range
 opt_exclude_chromosomes <- opt$exclude_chromosomes
 opt_exclude_scaffolds <- opt$exclude_scaffolds
@@ -304,11 +299,59 @@ if (HAS_CHROM_SIZES) {
 }
 
 
+message("\n# ===============================================================================")
+message("# STEP 1-B. Extracting initiation zones from provided BED file...")
+message("# ===============================================================================")
+
+iz_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_initiation_zones))
+message("\n[", Sys.time(), "] (", iz_base_name, ") Reading initiation zones file...")
+IZ_df <- read_tsv(opt_initiation_zones,
+                  col_select = c(1:3),
+                  col_names = c("seqnames", "start", "end"),
+                  show_col_types = FALSE)
+
+message("\n[", Sys.time(), "] (", iz_base_name, ") Removing initiation zones within excluded chromosomes or outside of chrom_sizes...")
+IZ_gr <- IZ_df %>%
+  filter(seqnames %in% names(chrom_sizes)) %>%
+  mutate(sample = "OK-seq",
+          sample_type = "OK-seq") %>%
+  makeGRangesFromDataFrame(seqinfo = chrom_sizes,
+                            keep.extra.columns = TRUE,
+                            starts.in.df.are.0based = TRUE)
+
+# We copy the interval now and not before with dplyr because the start
+# coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
+IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
+
+message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
+
+# Get original start coordinate for each initiation zone 
+IZ_gr$break_start <- start(IZ_gr)
+
+# Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
+IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
+
+# Resizing can generate bins with negative start positions (out-of-bound), so we trim them
+IZ_gr <- trim(IZ_gr)
+
+# Finding the nearest resized initiation zone to each resized initiation zone
+IZ_dist <- distanceToNearest(IZ_gr)
+
+# Removing overlapping resized initiation zones
+IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
+
+message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")  
+
+# Remove temporary variables
+rm(IZ_dist)
+
+
 if (HAS_OKSEQ) {
 
   message("\n# ===============================================================================")
-  message("# STEP 1-A. Extracting initiation zones from OK-seq RFD file...")
+  message("# STEP 2. Preprocessing of OK-seq (RFD) file...")
   message("# ===============================================================================")
+
 
   ok_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_okazaki_file))
   message("\n[", Sys.time(), "] (", ok_base_name, ") Reading OK-seq RFD file...")
@@ -341,118 +384,6 @@ if (HAS_OKSEQ) {
   message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
   OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with sufficient coverage...")
-  OK_gr_tmp <- subset(OK_gr, RPM >= opt_rpm_cutoff)
-
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with a RFD zero derivative above the set quantile threshold (", opt_zero_deriv_quantile, ")...")
-  OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv,
-                                               probs = opt_zero_deriv_quantile,
-                                               na.rm = TRUE))]
-  
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating OK-seq bin size...")
-
-  OK_BIN_SIZE <- width(OK_gr)[1]
-  
-  # As in Petryk et al. (2018; https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials),
-  # for initiation zones less than 3 bins apart, the bin with the highest RFD derivative is selected:
-
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Merging overlapping/adjacent OK-seq bins with a gap smaller than 3x bin size...")
-  OK_reduced_gr <- GenomicRanges::reduce(OK_gr_tmp,
-                                     min.gapwidth = OK_BIN_SIZE * 3,
-                                     with.revmap = TRUE)
-
-  # For each set of merged bins,
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping the OK-seq bin with the highest RFD derivative...")
-  filtered_data <- OK_gr_tmp[sapply(OK_reduced_gr$revmap, 
-    function(x) { x[which.max(OK_gr_tmp$RFD_deriv[x])] })]
-
-  # Set these bins as initiation zones
-  OK_gr$IZ <- ifelse(OK_gr$interval %in% filtered_data$interval, TRUE, FALSE)
-
-  message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after preprocessing is ", sum(OK_gr$IZ), ".")
-  IZ_gr <- subset(OK_gr, IZ)
-
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
-  
-  # Get original start coordinate for each initiation zone 
-  IZ_gr$break_start <- start(IZ_gr)
-  
-  # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
-  IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
-  
-  # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
-  IZ_gr <- trim(IZ_gr)
-  
-  # Finding the nearest resized initiation zone to each resized initiation zone
-  IZ_dist <- distanceToNearest(IZ_gr)
-  
-  # Removing overlapping resized initiation zones
-  IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
-  
-  message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")
-  
-  rm(OK_df, OK_gr_tmp, OK_reduced_gr, filtered_data, IZ_dist)
-
-} else {
-
-  message("\n# ===============================================================================")
-  message("# STEP 1-B. Extracting initiation zones from provided BED file...")
-  message("# ===============================================================================")
-
-  iz_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_initiation_zones))
-  message("\n[", Sys.time(), "] (", iz_base_name, ") Reading initiation zones file...")
-  IZ_df <- read_tsv(opt_initiation_zones,
-                    col_select = c(1:3),
-                    col_names = c("seqnames", "start", "end"),
-                    show_col_types = FALSE)
-
-  message("\n[", Sys.time(), "] (", iz_base_name, ") Removing initiation zones within excluded chromosomes or outside of chrom_sizes...")
-  IZ_gr <- IZ_df %>%
-    filter(seqnames %in% names(chrom_sizes)) %>%
-    mutate(sample = "OK-seq",
-           sample_type = "OK-seq") %>%
-    makeGRangesFromDataFrame(seqinfo = chrom_sizes,
-                             keep.extra.columns = TRUE,
-                             starts.in.df.are.0based = TRUE)
-
-  # We copy the interval now and not before with dplyr because the start
-  # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
-  IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
-
-  message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
-  
-  # Get original start coordinate for each initiation zone 
-  IZ_gr$break_start <- start(IZ_gr)
-  
-  # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
-  IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
-
-  # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
-  IZ_gr <- trim(IZ_gr)
-  
-  # Finding the nearest resized initiation zone to each resized initiation zone
-  IZ_dist <- distanceToNearest(IZ_gr)
-  
-  # Removing overlapping resized initiation zones
-  IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
-  
-  message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")  
-  
-  # Remove temporary variables
-  rm(IZ_dist)
-  
-}
-
-if (HAS_OKSEQ) {
-
-  message("\n# ===============================================================================")
-  message("# STEP 2. Preprocessing of OK-seq (RFD) file...")
-  message("# ===============================================================================")
-
-  # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
-  message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating RFD rates around initiation zones (100 kb upstream and 100 kb
-  downstream of each IZ) by averaging values within each bin position...")
-  
   # Finding out which initiation zones overlap which OK-seq bins
   if (opt_only_plot_within_iz) {
     overlap_pairs <- findOverlaps(query = OK_gr, subject = IZ_gr, type = "within")
@@ -587,8 +518,9 @@ if (HAS_OKSEQ) {
 }
 
 message("\n# ===============================================================================")
-message("# STEP 4. Calculating mean partition rates around initiation zones...")
+message("# STEP 4. Calculating mean partition/RFD rates around initiation zones...")
 message("# ===============================================================================")
+# As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
 
 # get a summary table with the number of unique break_ID per sample and sample_type
 partition_summary <- partition_df %>%

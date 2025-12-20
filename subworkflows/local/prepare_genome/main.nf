@@ -39,6 +39,7 @@ include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomeg
 include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
 include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
 include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
+include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
 
 include { GFF3SORT               } from '../../../modules/local/gff3sort/main'
 include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/main'
@@ -201,25 +202,6 @@ workflow PREPARE_GENOME {
         }
     }
 
-    ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel
-    if (okseq_rfd_file) {
-        if (okseq_rfd_file.endsWith('.gz')) {
-            ch_okseq_rfd_file = GUNZIP_OKSEQ_RFD_FILE ( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] ).gunzip
-            ch_versions = ch_versions.mix(GUNZIP_OKSEQ_RFD_FILE.out.versions)
-        } else {
-            ch_okseq_rfd_file = channel.value( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] )
-        }
-    }
-
-    ch_initiation_zones = channel.empty().first() // .first() ensures it is a value channel
-    if (initiation_zones) {
-        if (initiation_zones.endsWith('.gz')) {
-            ch_initiation_zones = GUNZIP_INITIATION_ZONES ( [ [id:'initiation_zones'], file(initiation_zones, checkIfExists: true) ] ).gunzip
-            ch_versions = ch_versions.mix(GUNZIP_INITIATION_ZONES.out.versions)
-        } else {
-            ch_initiation_zones = channel.value( [ [id:'initiation_zones'], file(initiation_zones, checkIfExists: true) ] )
-        }
-    }
 
     //
     // Uncompress gene BED annotation file or create from GTF if required
@@ -254,6 +236,38 @@ workflow PREPARE_GENOME {
         ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
         ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
     }
+
+    ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel
+    if (okseq_rfd_file) {
+        if (okseq_rfd_file.endsWith('.gz')) {
+            ch_okseq_rfd_file = GUNZIP_OKSEQ_RFD_FILE ( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] ).gunzip
+            ch_versions = ch_versions.mix(GUNZIP_OKSEQ_RFD_FILE.out.versions)
+        } else {
+            ch_okseq_rfd_file = channel.value( [ [id:'okseq_rfd_file'], file(okseq_rfd_file, checkIfExists: true) ] )
+        }
+    }
+
+    ch_initiation_zones = channel.empty().first() // .first() ensures it is a value channel
+    if (initiation_zones) {
+        if (initiation_zones.endsWith('.gz')) {
+            ch_initiation_zones = GUNZIP_INITIATION_ZONES ( [ [id:'initiation_zones'], file(initiation_zones, checkIfExists: true) ] ).gunzip
+            ch_versions = ch_versions.mix(GUNZIP_INITIATION_ZONES.out.versions)
+        } else {
+            ch_initiation_zones = channel.value( [ [id:'initiation_zones'], file(initiation_zones, checkIfExists: true) ] )
+        }
+    } else if (okseq_rfd_file) {
+        //
+        // MODULE: Process OK-seq RFD file to get initiation zones
+        //
+        RFD_TO_IZ (
+            ch_okseq_rfd_file,
+            ch_blacklist.ifEmpty([[:], []]),
+            ch_chrom_sizes_endo
+        )
+        ch_initiation_zones = RFD_TO_IZ.out.iz_bed
+        ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
+    }
+
 
     //
     // MODULE: Calculate genome size with khmer

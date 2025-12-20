@@ -13,6 +13,7 @@ include { COLLECT_PARTITIONS                                        } from '../.
 include { PARTITION_AVERAGE                                         } from '../../../modules/local/partition_average/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
 include { PARTITION_PLOT                                            } from '../../../modules/local/partition_plot/main'
 
 
@@ -422,6 +423,7 @@ workflow BAM_CREATE_PARTITIONS {
 
 
     // Create channel: [ val(meta), partitions_brep ]
+    ch_partitions_brep = channel.empty()
     ch_partitions
         .map { meta, partition ->
             def meta_clone = meta.clone()
@@ -431,6 +433,10 @@ workflow BAM_CREATE_PARTITIONS {
             [ meta_clone.id, antibody, meta.signal_minus_input, meta_clone, partition ]
         }
         .groupTuple(by: [0, 1, 2])
+        // remove elements where there is only one biological replicate
+        .filter { id, antibody, smi, metas, partitions ->
+            partitions.size() > 1
+        }
         .map { id, antibody, smi, metas, partitions ->
             def meta_clone = metas[0].clone()
             meta_clone.averaged_brep = true
@@ -452,6 +458,25 @@ workflow BAM_CREATE_PARTITIONS {
         ch_partitions_brep
     )
     ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
+
+
+    ch_partitions
+        .mix(PARTITION_AVERAGE.out.tsv)
+        .filter { it -> it[0].exp_type == 'OK-seq' }
+        .set { ch_okseq }
+    
+    //
+    // MODULE: Process OK-seq RFD file to get initiation zones
+    //
+    // Note: this IZ file is not used for plotting in the PARTITION_PLOT module,
+    // it is only created here when an OK-seq sample is being processed
+    // The one used for plotting is generated in PREPARE_GENOME
+    RFD_TO_IZ (
+        ch_okseq,
+        ch_blacklist,
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
     ch_partitions
         .mix(PARTITION_AVERAGE.out.tsv)

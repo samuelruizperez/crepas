@@ -33,16 +33,16 @@ process PARTITION_PLOT {
     def scar_partition_arg = partition ? "--scar_partition_file $partition" : ''
     def scarminusinput_arg = scarminusinput ? "--scarminusinput_partition_file $scarminusinput" : ''
     def strandedinput_arg  = strandedinput ? "--strandedinput_partition_file $strandedinput" : ''
-    def okazaki_arg        = okseq_rfd_file ? "--okazaki_file $okseq_rfd_file" : ''
+    def okseq_rfd_arg      = okseq_rfd_file ? "--okseq_rfd_file ${okseq_rfd_file}" : ''
     def iz_arg             = initiation_zones ? "--initiation_zones $initiation_zones" : ''
     def blacklist_arg      = blacklist ? "--blacklist $blacklist" : ''
 
     """
-    partition_or_rfd_plot.R \\
+    partition_plot.R \\
         ${scar_partition_arg} \\
         ${scarminusinput_arg} \\
         ${strandedinput_arg} \\
-        ${okazaki_arg} \\
+        ${okseq_rfd_arg} \\
         ${iz_arg} \\
         ${blacklist_arg} \\
         --chrom_sizes ${chrom_sizes} \\
