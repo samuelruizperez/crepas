@@ -235,7 +235,6 @@ workflow CREPAS {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
             ch_bowtie_index,
             params.save_unaligned,
-            params.sort_bam,
             ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam

@@ -10,7 +10,6 @@ workflow FASTQ_ALIGN_BOWTIE {
     ch_reads          // channel: [ val(meta), [ reads ] ]
     ch_index          // channel: /path/to/bowtie2/index/
     save_unaligned    // val
-    sort_bam          // val
     ch_fasta          // channel: /path/to/reference.fasta
 
     main:
@@ -20,7 +19,7 @@ workflow FASTQ_ALIGN_BOWTIE {
     //
     // Map reads with Bowtie2
     //
-    BOWTIE_ALIGN ( ch_reads, ch_index, ch_fasta, save_unaligned, sort_bam )
+    BOWTIE_ALIGN ( ch_reads, ch_index, save_unaligned )
     ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
     //
