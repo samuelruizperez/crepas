@@ -129,6 +129,7 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.okseq_rfd_file,
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
+        PREPARE_GENOME.out.bowtie_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
         PREPARE_GENOME.out.star_index,
