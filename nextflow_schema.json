@@ -396,7 +396,11 @@
                 "trim_minimum_length": {
                     "type": "integer",
                     "default": 5,
-                    "description": "Instructs Trim Galore to remove reads shorter than this length after adapter/quality trimming."
+                    "description": "Instructs Trim Galore to discard reads that became shorter than this length after adapter or quality trimming. A value of 0 effectively disables this behaviour."
+                },
+                "trim_maximum_length": {
+                    "type": "integer",
+                    "description": "Instructs Trim Galore to discard reads that are longer than this length after adapter or quality trimming."
                 },
                 "skip_trimming": {
                     "type": "boolean",
