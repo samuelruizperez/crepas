@@ -337,13 +337,19 @@ IZ_gr <- trim(IZ_gr)
 IZ_dist <- distanceToNearest(IZ_gr)
 
 # Removing overlapping resized initiation zones
-IZ_gr <- IZ_gr[-queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))]
-
+overlapping_hits <- queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))
+# The following line removes overlapping IZs, and catches the case when there are no overlaps
+if (length(overlapping_hits) > 0) {
+  IZ_gr <- IZ_gr[-overlapping_hits]
+} else {
+  message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within 100 kb upstream and 100 kb downstream of another initiation zone.")
+}
+ 
 message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")  
-
-# Remove temporary variables
-rm(IZ_dist)
-
+ 
+ # Remove temporary variables
+rm(IZ_dist, overlapping_hits)
+ 
 
 if (HAS_OKSEQ) {
 
