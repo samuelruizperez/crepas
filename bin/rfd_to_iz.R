@@ -201,8 +201,7 @@ stop("[", Sys.time(), "] (", ok_base_name, ") ERROR: The OK-seq RFD file is not 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins within excluded chromosomes, outside of chrom_sizes, or with <1 fwd or <1 rev counts...")
 OK_df <- OK_df %>%
 dplyr::filter(seqnames %in% names(chrom_sizes),
-                fwd_counts >= 1,
-                rev_counts >= 1) %>%
+              (fwd_counts >= 1 | rev_counts >= 1)) %>%
 mutate(total_counts = fwd_counts + rev_counts, # total raw counts
         RPM = fwd_RPM + rev_RPM,               # total counts per million
         sample = "OK-seq",
@@ -226,35 +225,37 @@ message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that ove
 OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with sufficient coverage...")
-OK_gr_tmp <- subset(OK_gr, RPM >= opt_rpm_cutoff)
+OK_gr <- subset(OK_gr, RPM >= opt_rpm_cutoff)
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with a RFD zero derivative above the set quantile threshold (", opt_zero_deriv_quantile, ")...")
-OK_gr_tmp <- OK_gr_tmp[which(OK_gr_tmp$zero_deriv > quantile(OK_gr_tmp$RFD_deriv,
+OK_gr <- OK_gr[which(OK_gr$zero_deriv > quantile(OK_gr$RFD_deriv,
                                             probs = opt_zero_deriv_quantile,
                                             na.rm = TRUE))]
 
-OK_gr_tmp2 <- GRanges(seqnames = seqnames(OK_gr_tmp),
-                        ranges = IRanges(start = start(OK_gr_tmp),
-                                        end = end(OK_gr_tmp)),
-                        strand = strand(OK_gr_tmp))
+OK_gr_tmp <- GRanges(seqnames = seqnames(OK_gr),
+                        ranges = IRanges(start = start(OK_gr),
+                                        end = end(OK_gr)),
+                        strand = strand(OK_gr))
 
-message("\n[", Sys.time(), "] (", ok_base_name, ") The number of OK-seq bins after filtering by RPM and RFD zero derivative quantile is ", length(OK_gr_tmp), ".")
-rtracklayer::export.bed(OK_gr_tmp2,
+message("\n[", Sys.time(), "] (", ok_base_name, ") The number of OK-seq bins after filtering by RPM and RFD zero derivative quantile is ", length(OK_gr), ".")
+rtracklayer::export.bed(OK_gr_tmp,
                             con = file.path(opt_outdir, paste0(opt_prefix, ".prefiltered.bed")))
-rm(OK_gr_tmp2)
+rm(OK_gr_tmp)
 
 # As in Petryk et al. (2018; https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials),
 # for initiation zones less than 3 bins apart, the bin with the highest RFD derivative is selected:
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Merging overlapping/adjacent OK-seq bins with a gap smaller than 3x bin size...")
-OK_reduced_gr <- GenomicRanges::reduce(OK_gr_tmp,
+OK_reduced_gr <- GenomicRanges::reduce(OK_gr,
                                     min.gapwidth = OK_BIN_SIZE * 3,
                                     with.revmap = TRUE)
 
 # For each set of merged bins,
 message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping the OK-seq bin with the highest RFD derivative...")
-filtered_data <- OK_gr_tmp[sapply(OK_reduced_gr$revmap, 
-function(x) { x[which.max(OK_gr_tmp$RFD_deriv[x])] })]
+filtered_data <- OK_gr[sapply(OK_reduced_gr$revmap, 
+                                  function(x) { x[which.max(OK_gr$RFD_deriv[x])] })]
+
+rm(OK_reduced_gr)
 
 # Set these bins as initiation zones
 OK_gr$IZ <- ifelse(OK_gr$interval %in% filtered_data$interval, TRUE, FALSE)
@@ -299,14 +300,13 @@ if (length(overlapping_hits) > 0) {
   message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within 100 kb upstream and 100 kb downstream of another initiation zone.")
 }
 
-
 # Prepare IZ for saving
 IZ_gr_tmp <- GRanges(seqnames = seqnames(IZ_gr),
                         ranges = IRanges(start = IZ_gr$break_start,
                                         end = IZ_gr$break_end),
                         strand = strand(IZ_gr))
 
-message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps within", 
+message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps within ", 
         opt_iz_limits_kb,
         " kb upstream and downstream from the IZ center is: ", length(IZ_gr_tmp), ".")
 
