@@ -418,13 +418,13 @@ workflow BAM_CREATE_PARTITIONS {
     COLLECT_PARTITIONS (
         ch_to_collect
     )
-    ch_partitions = COLLECT_PARTITIONS.out.tsv
+    ch_partitions_filtered = COLLECT_PARTITIONS.out.filtered_tsv
     ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
 
     // Create channel: [ val(meta), partitions_brep ]
     ch_partitions_brep = channel.empty()
-    ch_partitions
+    COLLECT_PARTITIONS.out.tsv
         .map { meta, partition ->
             def meta_clone = meta.clone()
             def antibody = meta.antibody ?: meta.input_control_of_antibody
@@ -460,8 +460,8 @@ workflow BAM_CREATE_PARTITIONS {
     ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
 
 
-    ch_partitions
-        .mix(PARTITION_AVERAGE.out.tsv)
+    ch_partitions_filtered
+        .mix(PARTITION_AVERAGE.out.filtered_tsv)
         .filter { it -> it[0].exp_type == 'OK-seq' }
         .set { ch_okseq }
     
@@ -478,8 +478,8 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
-    ch_partitions
-        .mix(PARTITION_AVERAGE.out.tsv)
+    ch_partitions_filtered
+        .mix(PARTITION_AVERAGE.out.filtered_tsv)
         .branch { meta, tsv ->
             scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input
                 return [ meta.input_control, meta, tsv ]
@@ -526,7 +526,7 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Convert the final partition bedgraph to bigwig
     //
     UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
-        COLLECT_PARTITIONS.out.bdg.mix(PARTITION_AVERAGE.out.bdg),
+        COLLECT_PARTITIONS.out.filtered_bdg.mix(PARTITION_AVERAGE.out.filtered_bdg),
         ch_chrom_sizes.map { it -> it[1] }
     )
     ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())

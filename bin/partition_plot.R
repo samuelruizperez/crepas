@@ -189,6 +189,16 @@ if (!is.null(opt_strandedinput_partition_file)) {
   }
 }
 
+# Check OK-seq RFD file
+HAS_OKSEQ <- FALSE
+if (is.null(opt_okazaki_file)) {
+  warning("\n[", Sys.time(), "] OK-seq file not provided.")
+} else if (!file.exists(opt_okazaki_file)) {
+  warning("\n[", Sys.time(), "] OK-seq file not found: ", opt_okazaki_file)
+} else {
+  HAS_OKSEQ <- TRUE
+}
+
 # Count how many types have at least one file
 num_types_with_files <- sum(sapply(part_files, function(x) length(x) > 0))
 
@@ -200,16 +210,6 @@ if (num_types_with_files == 0) {
   plot_width <- 7
 } else if (num_types_with_files == 3) {
   plot_width <- 8
-}
-
-# Check OK-seq RFD file
-HAS_OKSEQ <- FALSE
-if (is.null(opt_okazaki_file)) {
-  warning("\n[", Sys.time(), "] OK-seq file not provided.")
-} else if (!file.exists(opt_okazaki_file)) {
-  warning("\n[", Sys.time(), "] OK-seq file not found: ", opt_okazaki_file)
-} else {
-  HAS_OKSEQ <- TRUE
 }
 
 # Check initiation zones file
@@ -313,11 +313,6 @@ IZ_gr <- IZ_df %>%
                             keep.extra.columns = TRUE,
                             starts.in.df.are.0based = TRUE)
 
-# print ranges out of bound
-out_of_bound_iz <- IZ_gr[which(end(IZ_gr) > seqlengths(IZ_gr)[as.character(seqnames(IZ_gr))])]
-out_of_bound_iz
-
-
 # We copy the interval now and not before with dplyr because the start
 # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
 IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
@@ -369,8 +364,7 @@ if (HAS_OKSEQ) {
   message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins within excluded chromosomes, outside of chrom_sizes, or with <1 fwd or <1 rev counts...")
   OK_df <- OK_df %>%
     dplyr::filter(seqnames %in% names(chrom_sizes),
-                  fwd_counts >= 1,
-                  rev_counts >= 1) %>%
+                  (fwd_counts >= 1 | rev_counts >= 1)) %>%
     mutate(total_counts = fwd_counts + rev_counts, # total raw counts
            RPM = fwd_RPM + rev_RPM,                 # total counts per million
            sample = "OK-seq",
@@ -444,15 +438,12 @@ for (type in names(part_files)) {
     message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins within excluded chromosomes, outside of chromosome sizes, or with <1 fwd or <1 rev counts...")
     SCAR_df <- SCAR_df %>%
       dplyr::filter(seqnames %in% names(chrom_sizes),
-                  fwd_counts >= 1,
-                  rev_counts >= 1) %>%
-      mutate(IZ = NA,
-            strand = "*",
-            total_counts = fwd_counts + rev_counts, # total raw counts
-            RPM = fwd_RPM + rev_RPM,                # total counts pr. million
-            sample = base_name,
-            sample_type = type,
-            sample_facet = type)
+                  (fwd_counts >= 1 | rev_counts >= 1)) %>%
+      mutate(total_counts = fwd_counts + rev_counts, # total raw counts
+             RPM = fwd_RPM + rev_RPM,                # total counts pr. million
+             sample = base_name,
+             sample_type = type,
+             sample_facet = type)
     
     SCAR_gr <- makeGRangesFromDataFrame(SCAR_df,
                                         seqinfo = chrom_sizes,
