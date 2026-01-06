@@ -1344,6 +1344,7 @@ workflow CREPAS {
     ch_partition_smooth = channel.empty()
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
+        ch_fasta,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
         ch_okseq_rfd_file.ifEmpty([[:], []]),

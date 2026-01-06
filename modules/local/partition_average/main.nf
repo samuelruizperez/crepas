@@ -12,8 +12,8 @@ process PARTITION_AVERAGE {
 
     output:
     tuple val(meta), path("*.tsv"), emit: tsv
-    tuple val(meta), path("*.filtered.tsv"), emit: filtered_tsv
-    tuple val(meta), path("*.filtered.bdg"), emit: filtered_bdg
+    tuple val(meta), path("*.flT_by_counts.tsv"), emit: filtered_tsv
+    tuple val(meta), path("*.flT_by_counts.bdg"), emit: filtered_bdg
     path  "versions.yml"          , emit: versions
 
     when:
@@ -66,7 +66,7 @@ process PARTITION_AVERAGE {
     
     # Create filtered version with rows where either bwaob_fwd_counts or bwaob_rev_counts > 0
     awk '\$4 > 0 || \$5 > 0' ${prefix}.tsv \\
-    > ${prefix}.filtered.tsv
+    > ${prefix}.flT_by_counts.tsv
 
     # The following creates a bedGraph file with the 4th column averaged across all input files:
     #   1. chromosome
@@ -75,8 +75,8 @@ process PARTITION_AVERAGE {
     #   4. RFD_smooth: Smoothed partition or RFD score
     
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
-    ${prefix}.filtered.tsv \\
-    > ${prefix}.filtered.bdg
+    ${prefix}.flT_by_counts.tsv \\
+    > ${prefix}.flT_by_counts.bdg
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -88,8 +88,8 @@ process PARTITION_AVERAGE {
     def prefix = task.ext.prefix ?: "${meta.id}.average"
     """
     touch ${prefix}.tsv
-    touch  ${prefix}.filtered.tsv
-    touch ${prefix}.filtered.bdg
+    touch  ${prefix}.flT_by_counts.tsv
+    touch ${prefix}.flT_by_counts.bdg
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
