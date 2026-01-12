@@ -13,9 +13,9 @@ process RFD_TO_IZ {
     tuple val(meta3), path(chrom_sizes)
 
     output:
-    path "*.prefiltered.bed", emit: okseq_filtered_bed
-    path "*.init_zones.bed",  emit: iz_bed
-    path "*.rm_overlaps.bed", emit: iz_rm_overlaps_bed
+    tuple val(meta), path("*.prefiltered.bed"), emit: okseq_filtered_bed
+    tuple val(meta), path("*.init_zones.bed"),  emit: iz_bed
+    tuple val(meta), path("*.rm_overlaps.bed"), emit: iz_rm_overlaps_bed
     path "versions.yml",      emit: versions
 
     when:

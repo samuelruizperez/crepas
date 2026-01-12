@@ -62,17 +62,17 @@ parser$add_argument("-a","--scar_partition_file",
                     action = "store",
                     type = "character",
                     nargs = '+',
-                    help = "Partition file(s) from SCAR-seq [required]. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
+                    help = "Partition file(s) from SCAR-seq. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
 
 parser$add_argument("-d","--scarminusinput_partition_file", action = "store",
                     type = "character",
                     nargs = '+',
-                    help = "Partition file(s) from input corrected SCAR-seq [required]. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
+                    help = "Partition file(s) from input corrected SCAR-seq. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
 
 parser$add_argument("-f","--strandedinput_partition_file", action = "store",
                     type = "character",
                     nargs = '+',
-                    help = "Partition file(s) from stranded input  [required]. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
+                    help = "Partition file(s) from stranded input. It can be a single file path or a space-separated list of quoted file paths. If multiple files are provided, they will be plotted in the same figure.")
 
 parser$add_argument("-k", "--okseq_rfd_file", action = "store",
                     type = "character",
@@ -131,7 +131,7 @@ opt <- parser$parse_args()
 opt_scar_partition_file <- opt$scar_partition_file
 opt_scarminusinput_partition_file <- opt$scarminusinput_partition_file
 opt_strandedinput_partition_file <- opt$strandedinput_partition_file
-opt_okazaki_file <- opt$okseq_rfd_file
+opt_okseq_rfd_file <- opt$okseq_rfd_file
 opt_initiation_zones <- opt$initiation_zones
 opt_blacklist <- opt$blacklist
 opt_chrom_sizes <- opt$chrom_sizes
@@ -191,10 +191,10 @@ if (!is.null(opt_strandedinput_partition_file)) {
 
 # Check OK-seq RFD file
 HAS_OKSEQ <- FALSE
-if (is.null(opt_okazaki_file)) {
+if (is.null(opt_okseq_rfd_file)) {
   warning("\n[", Sys.time(), "] OK-seq file not provided.")
-} else if (!file.exists(opt_okazaki_file)) {
-  warning("\n[", Sys.time(), "] OK-seq file not found: ", opt_okazaki_file)
+} else if (!file.exists(opt_okseq_rfd_file)) {
+  warning("\n[", Sys.time(), "] OK-seq file not found: ", opt_okseq_rfd_file)
 } else {
   HAS_OKSEQ <- TRUE
 }
@@ -202,14 +202,21 @@ if (is.null(opt_okazaki_file)) {
 # Count how many types have at least one file
 num_types_with_files <- sum(sapply(part_files, function(x) length(x) > 0))
 
-if (num_types_with_files == 0) {
-  stop("[", Sys.time(), "] ERROR: Please provide at least one partition file to create plots.")
+if (num_types_with_files == 0 && !HAS_OKSEQ) {
+  stop("[", Sys.time(), "] ERROR: Please provide at least one partition file or OK-seq file to create plots.")
+} else if (num_types_with_files == 0 && HAS_OKSEQ) {
+  # OK-seq only
+  plot_width <- 6
+  plot_suffix <- "RFD"
 } else if (num_types_with_files == 1) {
   plot_width <- 6
+  plot_suffix <- "partition"
 } else if (num_types_with_files == 2) {
   plot_width <- 7
+  plot_suffix <- "partition"
 } else if (num_types_with_files == 3) {
   plot_width <- 8
+  plot_suffix <- "partition"
 }
 
 # Check initiation zones file
@@ -353,9 +360,9 @@ if (HAS_OKSEQ) {
   message("# ===============================================================================")
 
 
-  ok_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_okazaki_file))
+  ok_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_okseq_rfd_file))
   message("\n[", Sys.time(), "] (", ok_base_name, ") Reading OK-seq RFD file...")
-  OK_df <- read_tsv(opt_okazaki_file, col_names = cls, show_col_types = FALSE)
+  OK_df <- read_tsv(opt_okseq_rfd_file, col_names = cls, show_col_types = FALSE)
 
   if (ncol(OK_df) != 12) {
     stop("[", Sys.time(), "] (", ok_base_name, ") ERROR: The OK-seq RFD file is not in the correct format (ncol != 12)")
@@ -418,7 +425,7 @@ message("\n# ===================================================================
 message("# STEP 3. Preprocessing of partition files...")
 message("# ===============================================================================")
 
-partition_df <- c()
+partition_df <- tibble()
 
 for (type in names(part_files)) {
 
@@ -501,10 +508,8 @@ if (HAS_OKSEQ) {
   # Expand RFD_gr for each unique sample_facet in partition_mean_df
   sample_facets <- unique(partition_df$sample_facet)
   # if sample_facets is empty (there are no SCAR partitions, just OK-seq):
-  if (is.null(sample_facets)) {
+  if (length(sample_facets) == 0 || is.null(sample_facets)) {
     sample_facets <- "OK-seq"
-  } else {
-    sample_facets <- sample_facets
   }
   
   expanded_RFD <- tidyr::expand_grid(
@@ -540,7 +545,7 @@ partition_mean_df <- partition_df %>%
   mutate(sample = gsub("^SCAR-seq_", "", sample))
 
 write_tsv(partition_mean_df,
-           file = file.path(opt_outdir, paste0(opt_prefix, ".partition_mean_values.tsv")),
+           file = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_mean_values.tsv")),
            col_names = TRUE)
 
 message("\n[", Sys.time(), "] A glimpse of the partition mean data frame:")
@@ -612,10 +617,10 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color
             vjust = 2, size = 2)
 
 message("\n[", Sys.time(), "] Saving raw partition plot(s)...")
-ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".partition_plots_raw.pdf")),
+ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_raw.pdf")),
        plot = raw_plot, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".partition_plots_raw.png")),
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.png")),
        plot = raw_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
@@ -663,10 +668,10 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, co
             vjust = 2, size = 2)
 
 message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".partition_plots_smoothed.pdf")),
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.pdf")),
        plot = smooth_plot, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".partition_plots_smoothed.png")),
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.png")),
        plot = smooth_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
@@ -716,10 +721,10 @@ if (HAS_OKSEQ) {
           aspect.ratio = 1)
 
   message("\n[", Sys.time(), "] Saving scatter plot(s) (OK-seq vs partitions)...")
-  ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".scatter_plots.pdf")),
+  ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".scatter_plot.pdf")),
          plot = partition_scatter_plot, width = plot_width, height = 6.52, units = "in")
 
-  ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".scatter_plots.png")),
+  ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".scatter_plot.png")),
          plot = partition_scatter_plot, width = plot_width, height = 6.52, units = "in",
          dpi = 600)
 
