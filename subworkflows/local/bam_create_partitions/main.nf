@@ -1,6 +1,6 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_STATS_SAMTOOLS                                       } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS                                        } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
@@ -14,8 +14,9 @@ include { COLLECT_PARTITIONS                                        } from '../.
 include { PARTITION_AVERAGE                                         } from '../../../modules/local/partition_average/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
-include { PARTITION_PLOT                                            } from '../../../modules/local/partition_plot/main'
+include { RFD_TO_IZ                                                 } from '../../../modules/local/rfd_to_iz/main'
+include { PARTITION_OR_RFD_PLOT as PARTITION_PLOT                   } from '../../../modules/local/partition_or_rfd_plot/main'
+include { PARTITION_OR_RFD_PLOT as RFD_PLOT                         } from '../../../modules/local/partition_or_rfd_plot/main'
 
 
 workflow BAM_CREATE_PARTITIONS {
@@ -536,6 +537,19 @@ workflow BAM_CREATE_PARTITIONS {
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
+
+    //
+    // MODULE: Plot RFD profiles around initiation zones
+    //
+    RFD_PLOT (
+        channel.value([[], [], [], []]),
+        ch_blacklist,
+        ch_okseq,
+        RFD_TO_IZ.out.iz_rm_overlaps_bed,
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(RFD_PLOT.out.versions.first())
+
 
     // Create channel: [ val(meta), [ scar_tsv ], [ input_tsv ], [ minusinput_tsv ] ]
     ch_partitions_filtered
