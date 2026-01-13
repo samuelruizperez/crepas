@@ -600,7 +600,7 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color
     geom_line(linewidth = 0.3) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
-    ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
+    ylab(ifelse(HAS_OKSEQ, ifelse(num_types_with_files > 0, "Partition or RFD", "RFD"), "Partition")) +
     labs(caption = paste("N =", length(IZ_gr))) +
     theme_bw(base_family = "Helvetica") +
     theme(panel.grid.major = element_blank(),
@@ -651,7 +651,7 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, co
     geom_line(stat = "smooth", method = "gam", se = FALSE, linewidth = 0.5) +
     scale_color_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
-    ylab(ifelse(HAS_OKSEQ, "Partition or RFD", "Partition")) +
+    ylab(ifelse(HAS_OKSEQ, ifelse(num_types_with_files > 0, "Partition or RFD", "RFD"), "Partition")) +
     labs(caption = paste("N =", length(IZ_gr))) +
     theme_bw(base_family = "Helvetica") +
     theme(panel.grid.major = element_blank(),

@@ -674,28 +674,173 @@ NXF_OPTS='-Xms1g -Xmx4g'
 Before analyzing any kind of data, we need to install or load Nextflow and a container runtime, as explained in the [Quick start section of the README](../README.md#quick-start).
 
 > [!NOTE]
-> In this case, we will use [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) to run a persistent terminal
-> session, [*slurm*](https://slurm.schedmd.com/documentation.html) to schedule jobs,
-> [*modules*](https://modules.readthedocs.io/en/latest/) to load Nextflow, and [*singularity*](https://sylabs.io/guides/3.0/user-guide/) to run the containerized software in the pipeline. However, these choices
+> In this case, we will use [*SBATCH (SLURM)*](https://slurm.schedmd.com/documentation.html) to schedule jobs and
+> [*modules*](https://modules.readthedocs.io/en/latest/) to load Nextflow, and [*singularity*](https://sylabs.io/guides/3.0/user-guide/)
+> to run the containerized software in the pipeline. However, these choices
 > may vary depending on your specific computing environment, so should check your local documentation.
 
-First, we start a [*tmux*](https://github.com/tmux/tmux/wiki/Getting-Started) session:
 
-  ```bash
-  tmux new-session -s crepas_example
-  ```
-
-Then we launch an interactive [*slurm*](https://slurm.schedmd.com/documentation.html) job session:
-
-  ```bash
-  srun -c 1 --mem=4gb --time=0-08:00:00 --pty bash
-  ```
-
-Finally, we load the Nextflow and Singularity [*modules*](https://modules.readthedocs.io/en/latest/):
+First, we create a directory structure for our project:
 
 ```bash
-module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+mkdir ${HOME}/projects/project1
 ```
+
+
+
+
+### Analyzing OK-seq data
+
+#### Downloading the data
+
+For this example, we will replicate the initiation zone and fork directionality analyses from the following article:
+
+> Petryk, N., Dalby, M., Wenger, A., Stromme, C. B., Strandsby, A., Andersson, R., & Groth, A. (2018). MCM2 promotes symmetric inheritance of modified histones during DNA replication. *Science*, *361*(6409), 1389–1392. [https://doi.org/10.1126/science.aau0294](https://doi.org/10.1126/science.aau0294)
+
+First, we need to download the OK-seq data. We will do so using the [nf-core/fetchngs](https://nf-co.re/fetchngs/latest) pipeline, which works very well to fetch metadata and raw FastQ files from public databases, including the Gene Expression Omnibus (GEO).
+
+We create a subdirectory for nf-core/fetchngs files:
+
+```bash
+mkdir -p ${HOME}/projects/project1/fetchngs/
+```
+
+##### Input IDs file
+
+We then create a CSV file with the SRA IDs of the samples we want to download.
+In this case, we want the OK-seq data from the Petryk et al. 2018 paper, which is available under accession [SRR7535256](https://trace.ncbi.nlm.nih.gov/Traces/index.html?view=run_browser&acc=SRR7535256&display=download). Therefore, the file CSV should look like this:
+
+```csv
+SRR7535256
+```
+And we save it as `project1.fetchngs.input.csv` in the `fetchngs` subdirectory.
+
+##### SBATCH script
+
+Now, we will create an **SBATCH script** to submit the job to the cluster queue. You can use the following template. 
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=FETCHNGS            # specify a name for the job
+#SBATCH --mail-type=END,FAIL           # mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=NONE               # email address to receive the notifications
+#SBATCH -c 1                           # number of requested cores for the Nextflow head job
+#SBATCH --mem=4gb                      # total requested RAM for the Nextflow head job
+#SBATCH --time=2-00:00:00              # max. running time of the pipeline job, format in D-HH:MM:SS
+#SBATCH --output=fetchngs_job.%j.log   # standard output and error log, '%j' gives the job ID
+
+# Load the required modules
+module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+
+# Create an output directory for the pipeline's output
+mkdir -p ${HOME}/projects/project1/fetchngs/output/
+cd ${HOME}/projects/project1/fetchngs/output/
+
+# Run the pipeline
+nextflow run nf-core/fetchngs \
+    -r 1.11.0 \
+    -profile ku_sund_danhead_mod \
+    --input ${HOME}/projects/project1/fetchngs/project1.fetchngs.input.csv \
+    --outdir ${HOME}/projects/project1/fetchngs/output/
+```
+
+Then place the script in your project directory, e.g., as `project1.fetchngs.sbatch.sh`.
+
+Your folder structure should so far look something like this:
+
+```
+projects/
+└── project1/
+    └── fetchngs/
+        ├── project1.fetchngs.input.csv
+        └── project1.fetchngs.sbatch.sh
+```
+
+##### Submitting the job
+
+We can then submit the job to the queue with:
+
+```bash
+cd ${HOME}/projects/project1/fetchngs/
+sbatch project1.fetchngs.sbatch.sh
+```
+
+You can then monitor the job status using `squeue` or by looking at the `fetchngs_job.%j.log` file in the `fetchngs` directory. You can also check the `.nextflow.log` file in the `fetchngs/output/` directory for more detailed logs.
+
+When this job is finished, you should have the raw FastQ file `SRX4403092_SRR7535256.fastq.gz` downloaded in the `fetchngs/output/fastq/` subdirectory.
+
+#### Running CREPAS
+
+Now that we have the data, we can run the *CREPAS* pipeline to analyze it. We will create another subdirectory for the *CREPAS* files:
+
+```bash
+mkdir -p ${HOME}/projects/project1/crepas/
+```
+##### Input samplesheet CSV
+
+Then, we need to create a samplesheet CSV file for the *CREPAS* pipeline. This file should contain information about the samples we want to analyze. For this example, we will create a file called `project1.crepas.samplesheet.csv` in the `crepas` subdirectory with the following content:
+
+```csv
+sample,fastq_1,biological_replicate,exp_type,strandedness
+SRR7535256,<PATH>/projects/project1/fetchngs/output/fastq/SRX4403092_SRR7535256.fastq.gz,1,OK-seq,forward
+```
+
+>[!NOTE]
+> Make sure to replace `<PATH>` with the actual **full path** to your project directory.
+
+##### Parameter YAML file
+
+Next, since the CREPAS pipeline has many more parameters, we will compile them into a parameter YAML file for easier management. The file should contain:
+
+```yaml
+input: /home/whq695/datadir/projects/OK_seq_SRR7535256/crepas/OK_seq_SRR7535256.crepas.samplesheet.csv
+outdir: /home/whq695/datadir/projects/OK_seq_SRR7535256/crepas/output_mm10_bowtie2
+bowtie2_index: /home/whq695/datadir/reference_files/GRCm38/bowtie2_2.5.4_index
+fasta: /home/whq695/datadir/reference_files/GRCm38/GRCm38.primary_assembly.genome.fa.gz
+gtf: /home/whq695/datadir/reference_files/GRCm38/gencode.vM25.primary_assembly.annotation.gtf.gz
+blacklist: /home/whq695/datadir/reference_files/GRCm38/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz
+aligner: bowtie2
+genome: GRCm38
+seq_platform: ILLUMINA
+read_length: 75
+fragment_size: 200
+partition_fragment_size: 200
+skip_macs3: true
+multiqc_title: OK_seq_SRR7535256
+skip_umi_extract: true
+with_umi: false
+trim_full_length: false
+trim_minimum_length: 10
+trim_maximum_length: 70
+trim_nextseq: 0
+trim_stringency: 1
+trim_error_rate: 0.1
+trim_q_cutoff: 20
+skip_flT3: true
+skip_flTbl: false
+save_partition_intermeds: true
+skip_plot_profile: true
+skip_plot_fingerprint: true
+skip_spp: true
+```
+
+>[!NOTE]
+> You can of course adjust any of these parameters or the other parameters of the pipeline, but in this case, since we want our results to be as similar as possible to those in the original Petryk et al. 2018 paper, we will set them as shown above.
+
+Save this file as `project1.crepas.params.yaml` in the `crepas/` subdirectory.
+
+##### SBATCH script
+
+Now, we will create an **SBATCH script** to submit the *CREPAS* job to the cluster queue. You can use the following template. 
+
+```bash
+
+```
+
+
+##### Submitting the job
+
 
 ### Analyzing ChIP-seq data
 
@@ -728,9 +873,7 @@ WIP
 
 WIP
 
-### Analyzing OK-seq data
 
-WIP
 
 ### Analyzing ChIP-exo data
 
