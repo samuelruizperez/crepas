@@ -8,21 +8,19 @@ process PARTITION_OR_RFD_PLOT {
         'community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-ggpmisc_pruned:2c7c689513df97b4' }"
 
     input:
-    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput)
+    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput), path(okseq_rfd_file), path(initiation_zones)
     tuple val(meta2), path(blacklist)
-    tuple val(meta3), path(okseq_rfd_file)
-    tuple val(meta4), path(initiation_zones)
-    tuple val(meta5), path(chrom_sizes)
+    tuple val(meta3), path(chrom_sizes)
 
     output:
     tuple val(meta), path("*_plot_raw.pdf"),       emit: plot_raw_pdf
     tuple val(meta), path("*_plot_raw.png"),       emit: plot_raw_png
     tuple val(meta), path("*_plot_smoothed.pdf"),  emit: plot_smoothed_pdf
     tuple val(meta), path("*_plot_smoothed.png"),  emit: plot_smoothed_png
-    tuple val(meta), path("*_mean_values.tsv"),     emit: mean_values
+    tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
     tuple val(meta), path("*_scatter_plot.pdf"),   emit: scatter_pdf, optional:true
     tuple val(meta), path("*_scatter_plot.png"),   emit: scatter_png, optional:true
-    path "versions.yml",                             emit: versions
+    path "versions.yml",                           emit: versions
 
     when:
     task.ext.when == null || task.ext.when

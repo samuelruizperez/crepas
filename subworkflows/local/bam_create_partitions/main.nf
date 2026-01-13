@@ -538,14 +538,17 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
+    ch_okseq
+        .combine(RFD_TO_IZ.out.iz_rm_overlaps_bed, by: 0)
+        .set { ch_okseq_and_iz }
+
+
     //
     // MODULE: Plot RFD profiles around initiation zones
     //
     RFD_PLOT (
-        channel.value([[], [], [], []]),
+        ch_okseq_and_iz.map { meta, okseq, iz -> [ meta, [], [], [], okseq, iz ] },
         ch_blacklist,
-        ch_okseq,
-        RFD_TO_IZ.out.iz_rm_overlaps_bed,
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(RFD_PLOT.out.versions.first())
@@ -574,13 +577,15 @@ workflow BAM_CREATE_PARTITIONS {
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             [ meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         }
+        .combine(ch_okseq_rfd_file.map { it -> it[1] })
+        .combine(ch_initiation_zones.map { it -> it[1] })
         .set { ch_part_flt_to_plot }
 
 
     // TODO: print for debugging
     ch_part_flt_to_plot
-        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
-            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}"
+        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq_rfd_file, initiation_zones ->
+            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq_rfd_file}\t${initiation_zones}"
         }
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
@@ -590,8 +595,6 @@ workflow BAM_CREATE_PARTITIONS {
     PARTITION_PLOT (
         ch_part_flt_to_plot,
         ch_blacklist,
-        ch_okseq_rfd_file,
-        ch_initiation_zones,
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())

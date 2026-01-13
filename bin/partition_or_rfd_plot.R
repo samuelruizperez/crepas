@@ -562,15 +562,25 @@ message("# =====================================================================
 # ===============================================================================
 
 message("\n[", Sys.time(), "] Setting sample labels and colors...")
-sample_labels <-  c("SCAR_Input_Corrected" =  "SCAR (Input-corrected)",
-                    "SCAR" = "SCAR", "strandedInput" = "Stranded input")
-sample_labels <- sample_labels[names(part_files)]
+
+# Check if there are partition files
+if (num_types_with_files > 0) {
+  sample_labels <- c("SCAR_Input_Corrected" = "SCAR (Input-corrected)",
+                     "SCAR" = "SCAR", "strandedInput" = "Stranded input")
+  sample_labels <- sample_labels[names(part_files)]
+} else if (HAS_OKSEQ) {
+  # Only OK-seq, no partition files
+  sample_labels <- c("OK-seq" = "OK-seq")
+}
 
 # set a color in Dark2 palette for each sample, but set OK-seq to dark gray
 dark2_colors <- RColorBrewer::brewer.pal(length(unique(partition_mean_df$sample)), "Paired")
 sample_names <- unique(partition_mean_df$sample)
 sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
-sample_colors["OK-seq"] <- "grey60"
+# Only set OK-seq to grey if there are partition files
+if (num_types_with_files > 0) {
+  sample_colors["OK-seq"] <- "grey60"
+}
 line_colors <- sample_colors
 
 
@@ -680,14 +690,14 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 # Scatter plots: RFD (OK-seq) vs partition
 # ===============================================================================
 
-if (HAS_OKSEQ) {
+if (HAS_OKSEQ && num_types_with_files > 0) {
 
   message("\n[", Sys.time(), "] Creating scatter plot(s) (OK-seq vs partitions)...")
 
   partition_df_flt <- partition_df %>%
     filter(RPM >= opt_rpm_cutoff,
            !is.na(RFD_smooth)) %>%
-    dplyr::select(interval,  sample, sample_type, sample_facet, RFD_smooth)
+    dplyr::select(interval, sample, sample_type, sample_facet, RFD_smooth)
   
   RFD_plot_df <- partition_df_flt %>%
     group_by(interval, sample, sample_facet) %>%
