@@ -551,6 +551,7 @@ partition_mean_df <- partition_df %>%
   dplyr::summarise(
     RFD_raw = mean(RFD_raw, na.rm = TRUE),
     RFD_smooth = mean(RFD_smooth, na.rm = TRUE),
+    N_IZ = n_distinct(break_ID),
     .groups = "drop"
   ) %>%
   mutate(sample = gsub("^SCAR-seq_", "", sample))
