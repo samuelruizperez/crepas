@@ -603,9 +603,9 @@ message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
 
 raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
-              fill = "grey92", inherit.aes = FALSE) +
+              fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
-              fill = "grey92", inherit.aes = FALSE) +
+              fill = "grey95", inherit.aes = FALSE) +
     geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_line(linewidth = 0.3) +
@@ -654,9 +654,9 @@ message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
 
 smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
-              fill = "grey92", inherit.aes = FALSE) +
+              fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
-              fill = "grey92", inherit.aes = FALSE) +
+              fill = "grey95", inherit.aes = FALSE) +
     geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_line(stat = "smooth", method = "gam", se = FALSE, linewidth = 0.5) +
