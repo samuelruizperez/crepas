@@ -219,6 +219,17 @@ if (num_types_with_files == 0 && !HAS_OKSEQ) {
   plot_suffix <- "partition"
 }
 
+# Check that all partition types with files have the same number of files
+if (num_types_with_files > 1) {
+  file_counts <- sapply(part_files, length)
+  file_counts <- file_counts[file_counts > 0]
+  
+  if (length(unique(file_counts)) > 1) {
+    stop("[", Sys.time(), "] ERROR: All partition types must have the same number of files. ",
+         "Current counts: ", paste(names(file_counts), "=", file_counts, collapse = ", "))
+  }
+}
+
 # Check initiation zones file
 HAS_IZ <- FALSE
 if (is.null(opt_initiation_zones)) {
@@ -699,6 +710,25 @@ if (HAS_OKSEQ && num_types_with_files > 0) {
            !is.na(RFD_smooth)) %>%
     dplyr::select(interval, sample, sample_type, sample_facet, RFD_smooth)
   
+  # To prevent empty facets in the scatter plot...
+  # If there are stranded input samples, replace their sample names with corresponding SCAR sample names
+  if (HAS_INPUT && HAS_SCAR) {
+    # Get the sample names for SCAR and strandedInput in order
+    scar_samples <- unique(partition_df_flt$sample[partition_df_flt$sample_type == "SCAR"])
+    input_samples <- unique(partition_df_flt$sample[partition_df_flt$sample_type == "strandedInput"])
+    
+    # Create a mapping from input sample names to SCAR sample names
+    if (length(scar_samples) == length(input_samples)) {
+      sample_mapping <- setNames(scar_samples, input_samples)
+      
+      # Replace strandedInput sample names
+      partition_df_flt <- partition_df_flt %>%
+        mutate(sample = ifelse(sample_type == "strandedInput", 
+                               sample_mapping[sample], 
+                               sample))
+    }
+  }
+
   RFD_plot_df <- partition_df_flt %>%
     group_by(interval, sample, sample_facet) %>%
     summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
