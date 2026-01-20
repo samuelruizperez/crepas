@@ -538,20 +538,22 @@ message("# STEP 4. Calculating mean partition/RFD rates around initiation zones.
 message("# ===============================================================================")
 # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
 
-# get a summary table with the number of unique break_ID per sample and sample_type
-partition_summary <- partition_df %>%
-  dplyr::group_by(sample, sample_type, sample_facet) %>%
-  dplyr::summarise(N_IZ = n_distinct(break_ID), .groups = "drop")
-
-print(partition_summary)
-
+# Filter by RPM cutoff
 partition_mean_df <- partition_df %>%
-  dplyr::filter(RPM >= opt_rpm_cutoff) %>%
+  dplyr::filter(RPM >= opt_rpm_cutoff)
+
+# Get intersection of break_IDs between all samples (after RPM filtering)
+common_break_IDs <- Reduce(intersect, split(partition_mean_df$break_ID, partition_mean_df$sample))
+
+partition_mean_df <- partition_mean_df %>%
   dplyr::group_by(dist, sample, sample_type, sample_facet) %>%
   dplyr::summarise(
-    RFD_raw = mean(RFD_raw, na.rm = TRUE),
-    RFD_smooth = mean(RFD_smooth, na.rm = TRUE),
-    N_IZ = n_distinct(break_ID),
+    RFD_raw_mean = mean(RFD_raw, na.rm = TRUE),
+    RFD_raw_sd = sd(RFD_raw, na.rm = TRUE),
+    RFD_raw_n = sum(!is.na(RFD_raw)),
+    RFD_smooth_mean = mean(RFD_smooth, na.rm = TRUE),
+    RFD_smooth_sd = sd(RFD_smooth, na.rm = TRUE),
+    RFD_smooth_n = sum(!is.na(RFD_smooth)),
     .groups = "drop"
   ) %>%
   mutate(sample = gsub("^SCAR-seq_", "", sample))
@@ -562,7 +564,6 @@ write_tsv(partition_mean_df,
 
 message("\n[", Sys.time(), "] A glimpse of the partition mean data frame:")
 print(partition_mean_df)
-
 
 message("\n# ===============================================================================")
 message("# STEP 5. Plotting")
@@ -602,15 +603,19 @@ line_colors <- sample_colors
 
 message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
 
-raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
+raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample, fill = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
               fill = "grey95", inherit.aes = FALSE) +
     geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
+                    ymax = RFD_smooth_mean + RFD_smooth_sd),
+                alpha = 0.2) +
     geom_line(linewidth = 0.3) +
     scale_color_manual(values = line_colors) +
+    scale_fill_manual(values = line_colors) +
     xlab("Distance from initiation zone center (kb)") +
     ylab(ifelse(HAS_OKSEQ, ifelse(num_types_with_files > 0, "Partition or RFD", "RFD"), "Partition")) +
     labs(caption = paste("N =", length(IZ_gr))) +
@@ -653,7 +658,7 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 
 message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
 
-smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth, color = sample)) +
+smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -732,8 +737,8 @@ if (HAS_OKSEQ && num_types_with_files > 0) {
 
   RFD_plot_df <- partition_df_flt %>%
     group_by(interval, sample, sample_facet) %>%
-    summarise(RFD_smooth = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(names_from = sample, values_from = RFD_smooth) %>%
+    summarise(RFD_smooth_mean = mean(RFD_smooth, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(names_from = sample, values_from = RFD_smooth_mean) %>%
     pivot_longer(cols = -c(interval, "OK-seq", sample_facet), names_to = "sample", values_to = "Partition") %>%
     dplyr::rename(RFD = "OK-seq") %>%
     mutate(sample = gsub("^SCAR-seq_", "", sample))
