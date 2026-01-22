@@ -603,7 +603,7 @@ line_colors <- sample_colors
 
 message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
 
-raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample, fill = sample)) +
+raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -611,7 +611,8 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, 
     geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
     geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
-                    ymax = RFD_smooth_mean + RFD_smooth_sd),
+                    ymax = RFD_smooth_mean + RFD_smooth_sd, fill = sample),
+                linetype = 0,
                 alpha = 0.2) +
     geom_line(linewidth = 0.3) +
     scale_color_manual(values = line_colors) +
