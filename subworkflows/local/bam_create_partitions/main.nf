@@ -1,5 +1,6 @@
 include { BAM_SPLIT_BY_STRAND                                       } from '../../../modules/local/bam_split_by_strand/main'
 include { SAMTOOLS_INDEX                                            } from '../../../modules/nf-core/samtools/index/main'
+include { BAM_STATS_SAMTOOLS                                        } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BEDTOOLS_GENOMECOV                                        } from '../../../modules/nf-core/bedtools/genomecov/main'
 include { FILE_SORT as BEDGRAPH_SORT                                } from '../../../modules/local/file_sort/main'
 include { BEDTOOLS_MAKEWINDOWS                                      } from '../../../modules/nf-core/bedtools/makewindows/main'
@@ -13,14 +14,16 @@ include { COLLECT_PARTITIONS                                        } from '../.
 include { PARTITION_AVERAGE                                         } from '../../../modules/local/partition_average/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
-include { PARTITION_PLOT                                            } from '../../../modules/local/partition_plot/main'
+include { RFD_TO_IZ                                                 } from '../../../modules/local/rfd_to_iz/main'
+include { PARTITION_OR_RFD_PLOT as PARTITION_PLOT                   } from '../../../modules/local/partition_or_rfd_plot/main'
+include { PARTITION_OR_RFD_PLOT as RFD_PLOT                         } from '../../../modules/local/partition_or_rfd_plot/main'
 
 
 workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
+    ch_fasta                // channel: [ val(meta), path(fasta) ]
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
@@ -100,6 +103,16 @@ workflow BAM_CREATE_PARTITIONS {
         ch_bam
     )
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
+
+    //
+    // MODULE: Run samtools stats, flagstat and idxstats per strand
+    //
+    BAM_STATS_SAMTOOLS (
+        ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0),
+        ch_fasta
+    )
+    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
+
 
     // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
     ch_bam
@@ -223,7 +236,7 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            meta_clone.norm_factor_val = 1e6 / (meta[meta.ref_total_mapped_reads_for_rpm] + num_windows)
+            meta_clone.norm_factor_val = 1e6 / (meta[meta.ref_total_mapped_reads_for_rpm] + (num_windows * 2))
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bwaob ]
         }
@@ -418,13 +431,31 @@ workflow BAM_CREATE_PARTITIONS {
     COLLECT_PARTITIONS (
         ch_to_collect
     )
-    ch_partitions = COLLECT_PARTITIONS.out.tsv
     ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
+
+    //
+    // Add meta information to the filtered partitions and bedgraph
+    //
+    COLLECT_PARTITIONS.out.filtered_tsv
+        .map { meta, tsv ->
+            def meta_clone = meta.clone()
+            meta_clone.flT_by_counts = true
+            [ meta_clone, tsv ]
+        }
+        .set { ch_partitions_filtered }
+
+    COLLECT_PARTITIONS.out.filtered_bdg
+        .map { meta, bdg ->
+            def meta_clone = meta.clone()
+            meta_clone.flT_by_counts = true
+            [ meta_clone, bdg ]
+        }
+        .set { ch_partitions_filtered_bdg }
 
 
     // Create channel: [ val(meta), partitions_brep ]
     ch_partitions_brep = channel.empty()
-    ch_partitions
+    COLLECT_PARTITIONS.out.tsv
         .map { meta, partition ->
             def meta_clone = meta.clone()
             def antibody = meta.antibody ?: meta.input_control_of_antibody
@@ -459,9 +490,38 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
 
+    //
+    // Add meta information to the filtered partitions and bedgraph
+    //
+    PARTITION_AVERAGE.out.filtered_tsv
+        .map { meta, tsv ->
+            def meta_clone = meta.clone()
+            meta_clone.flT_by_counts = true
+            [ meta_clone, tsv ]
+        }
+        .set { ch_part_avg_filtered }
 
-    ch_partitions
-        .mix(PARTITION_AVERAGE.out.tsv)
+    PARTITION_AVERAGE.out.filtered_bdg
+        .map { meta, bdg ->
+            def meta_clone = meta.clone()
+            meta_clone.flT_by_counts = true
+            [ meta_clone, bdg ]
+        }
+        .set { ch_part_avg_filtered_bdg }
+
+    //
+    // MODULE: Convert the final partition bedgraph to bigwig
+    //
+    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
+        ch_partitions_filtered_bdg.mix(ch_part_avg_filtered_bdg),
+        ch_chrom_sizes.map { it -> it[1] }
+    )
+    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
+
+
+    // Mix individual and averaged RFD (OK-seq) files
+    ch_partitions_filtered
+        .mix(ch_part_avg_filtered)
         .filter { it -> it[0].exp_type == 'OK-seq' }
         .set { ch_okseq }
     
@@ -478,8 +538,25 @@ workflow BAM_CREATE_PARTITIONS {
     )
     ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
-    ch_partitions
-        .mix(PARTITION_AVERAGE.out.tsv)
+    ch_okseq
+        .combine(RFD_TO_IZ.out.iz_rm_overlaps_bed, by: 0)
+        .set { ch_okseq_and_iz }
+
+
+    //
+    // MODULE: Plot RFD profiles around initiation zones
+    //
+    RFD_PLOT (
+        ch_okseq_and_iz.map { meta, okseq, iz -> [ meta, [], [], [], okseq, iz ] },
+        ch_blacklist,
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(RFD_PLOT.out.versions.first())
+
+
+    // Create channel: [ val(meta), [ scar_tsv ], [ input_tsv ], [ minusinput_tsv ] ]
+    ch_partitions_filtered
+        .mix(ch_part_avg_filtered)
         .branch { meta, tsv ->
             scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input
                 return [ meta.input_control, meta, tsv ]
@@ -488,25 +565,27 @@ workflow BAM_CREATE_PARTITIONS {
             minusipcontrol: meta.signal_minus_input
                 return [ meta.id, tsv ]
         }
-        .set { ch_partitions_by_type }
+        .set { ch_part_flt_by_type }
 
-    ch_partitions_by_type
+    ch_part_flt_by_type
         .scar_with_ipcontrol
-        .combine(ch_partitions_by_type.ipcontrol, by: 0)
+        .combine(ch_part_flt_by_type.ipcontrol, by: 0)
         .map { ipcontrol_id, meta_scar, scar_tsv, input_tsv ->
             [ meta_scar.id, meta_scar, scar_tsv, input_tsv ]
         }
-        .combine(ch_partitions_by_type.minusipcontrol, by: 0)
+        .combine(ch_part_flt_by_type.minusipcontrol, by: 0)
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             [ meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         }
-        .set { ch_partitions_to_plot }
+        .combine(ch_okseq_rfd_file.map { it -> it[1] })
+        .combine(ch_initiation_zones.map { it -> it[1] })
+        .set { ch_part_flt_to_plot }
 
 
     // TODO: print for debugging
-    ch_partitions_to_plot
-        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
-            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}"
+    ch_part_flt_to_plot
+        .map { meta_scar, scar_tsv, input_tsv, minusinput_tsv, okseq_rfd_file, initiation_zones ->
+            "${meta_scar}\t${scar_tsv}\t${input_tsv}\t${minusinput_tsv}\t${okseq_rfd_file}\t${initiation_zones}"
         }
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
@@ -514,22 +593,11 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Plot the final partition
     //
     PARTITION_PLOT (
-        ch_partitions_to_plot,
+        ch_part_flt_to_plot,
         ch_blacklist,
-        ch_okseq_rfd_file,
-        ch_initiation_zones,
         ch_chrom_sizes
     )
     ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
-
-    //
-    // MODULE: Convert the final partition bedgraph to bigwig
-    //
-    UCSC_BEDGRAPHTOBIGWIG_PARTITIONS (
-        COLLECT_PARTITIONS.out.bdg.mix(PARTITION_AVERAGE.out.bdg),
-        ch_chrom_sizes.map { it -> it[1] }
-    )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]

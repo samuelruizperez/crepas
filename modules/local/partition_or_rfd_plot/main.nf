@@ -1,4 +1,4 @@
-process PARTITION_PLOT {
+process PARTITION_OR_RFD_PLOT {
     tag "$meta.id"
     label 'process_medium_memory'
 
@@ -8,21 +8,19 @@ process PARTITION_PLOT {
         'community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-ggpmisc_pruned:2c7c689513df97b4' }"
 
     input:
-    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput)
+    tuple val(meta), path(partition), path(strandedinput), path(scarminusinput), path(okseq_rfd_file), path(initiation_zones)
     tuple val(meta2), path(blacklist)
-    tuple val(meta3), path(okseq_rfd_file)
-    tuple val(meta4), path(initiation_zones)
-    tuple val(meta5), path(chrom_sizes)
+    tuple val(meta3), path(chrom_sizes)
 
     output:
-    path "*.partition_plots_raw.pdf",       emit: partition_raw_pdf
-    path "*.partition_plots_raw.png",       emit: partition_raw_png
-    path "*.partition_plots_smoothed.pdf",  emit: partition_smoothed_pdf
-    path "*.partition_plots_smoothed.png",  emit: partition_smoothed_png
-    path "*.partition_mean_values.tsv",     emit: partition_mean_values
-    path "*.scatter_plots.pdf",             emit: scatter_pdf, optional:true
-    path "*.scatter_plots.png",             emit: scatter_png, optional:true
-    path "versions.yml",                    emit: versions
+    tuple val(meta), path("*_plot_raw.pdf"),       emit: plot_raw_pdf
+    tuple val(meta), path("*_plot_raw.png"),       emit: plot_raw_png
+    tuple val(meta), path("*_plot_smoothed.pdf"),  emit: plot_smoothed_pdf
+    tuple val(meta), path("*_plot_smoothed.png"),  emit: plot_smoothed_png
+    tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
+    tuple val(meta), path("*_scatter_plot.pdf"),   emit: scatter_pdf, optional:true
+    tuple val(meta), path("*_scatter_plot.png"),   emit: scatter_png, optional:true
+    path "versions.yml",                           emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -30,15 +28,15 @@ process PARTITION_PLOT {
     script:
     def args               = task.ext.args ?: ''
     def prefix             = task.ext.prefix ?: "${meta.id}"
-    def scar_partition_arg = partition ? "--scar_partition_file $partition" : ''
-    def scarminusinput_arg = scarminusinput ? "--scarminusinput_partition_file $scarminusinput" : ''
-    def strandedinput_arg  = strandedinput ? "--strandedinput_partition_file $strandedinput" : ''
+    def scar_partition_arg = partition ? "--scar_partition_file ${partition}" : ''
+    def scarminusinput_arg = scarminusinput ? "--scarminusinput_partition_file ${scarminusinput}" : ''
+    def strandedinput_arg  = strandedinput ? "--strandedinput_partition_file ${strandedinput}" : ''
     def okseq_rfd_arg      = okseq_rfd_file ? "--okseq_rfd_file ${okseq_rfd_file}" : ''
-    def iz_arg             = initiation_zones ? "--initiation_zones $initiation_zones" : ''
-    def blacklist_arg      = blacklist ? "--blacklist $blacklist" : ''
+    def iz_arg             = initiation_zones ? "--initiation_zones ${initiation_zones}" : ''
+    def blacklist_arg      = blacklist ? "--blacklist ${blacklist}" : ''
 
     """
-    partition_plot.R \\
+    partition_or_rfd_plot.R \\
         ${scar_partition_arg} \\
         ${scarminusinput_arg} \\
         ${strandedinput_arg} \\
@@ -59,12 +57,12 @@ process PARTITION_PLOT {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch  ${prefix}.scatter_plots.pdf
-    touch  ${prefix}.scatter_plots.png
-    touch  ${prefix}.partition_plots_raw.pdf
-    touch  ${prefix}.partition_plots_raw.png
-    touch  ${prefix}.partition_plots_smoothed.pdf
-    touch  ${prefix}.partition_plots_smoothed.png
+    touch  ${prefix}.scatter_plot.pdf
+    touch  ${prefix}.scatter_plot.png
+    touch  ${prefix}.plot_raw.pdf
+    touch  ${prefix}.plot_raw.png
+    touch  ${prefix}.plot_smoothed.pdf
+    touch  ${prefix}.plot_smoothed.png
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

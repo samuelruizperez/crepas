@@ -77,6 +77,7 @@ include { MULTIQC                                                     } from '..
 // include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
 include { FASTQ_ALIGN_BWA                                             } from '../../subworkflows/nf-core/fastq_align_bwa'
 include { FASTQ_ALIGN_BOWTIE2                                         } from '../../subworkflows/nf-core/fastq_align_bowtie2'
+include { FASTQ_ALIGN_BOWTIE                                         } from '../../subworkflows/local/fastq_align_bowtie'
 include { FASTQ_ALIGN_CHROMAP                                         } from '../../subworkflows/nf-core/fastq_align_chromap'
 include { FASTQ_ALIGN_STAR                                            } from '../../subworkflows/nf-core/fastq_align_star'
 include { FASTQ_ALIGN_HISAT2                                          } from '../../subworkflows/nf-core/fastq_align_hisat2'
@@ -111,6 +112,7 @@ workflow CREPAS {
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
+    ch_bowtie_index            // channel: path(bowtie/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
     ch_chromap_index          // channel: path(chromap.index)
     ch_star_index             // channel: path(star/index/)
@@ -223,6 +225,25 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.idxstats.collect { it -> it[1] })
         ch_versions = ch_versions.mix(FASTQ_ALIGN_BWA.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with Bowtie & BAM QC
+    //
+    if (params.aligner == 'bowtie') {
+        FASTQ_ALIGN_BOWTIE(
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
+            ch_bowtie_index,
+            params.save_unaligned,
+            ch_fasta
+        )
+        ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE.out.versions.first())
     }
 
     //
@@ -1323,6 +1344,7 @@ workflow CREPAS {
     ch_partition_smooth = channel.empty()
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
+        ch_fasta,
         ch_chrom_sizes_endo_ss,
         ch_blacklist,
         ch_okseq_rfd_file.ifEmpty([[:], []]),

@@ -24,6 +24,7 @@ include {
 
 include {
     UNTAR as UNTAR_BWA_INDEX
+    UNTAR as UNTAR_BOWTIE_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
     UNTAR as UNTAR_STAR_INDEX
     UNTAR as UNTAR_CHROMAP_INDEX
@@ -33,6 +34,7 @@ include {
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
 include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
+include { BOWTIE_BUILD        } from '../../../modules/nf-core/bowtie/build/main'
 include { BOWTIE2_BUILD        } from '../../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/main'
 include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
@@ -75,6 +77,7 @@ workflow PREPARE_GENOME {
     skip_gtf_index      //    boolean: skip GTF indexing
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
+    bowtie_index        //    file: /path/to/bowtie/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
     chromap_index      //    file: /path/to/chromap/index/
     star_index         //    file: /path/to/star/index/
@@ -341,6 +344,24 @@ workflow PREPARE_GENOME {
     }
 
     //
+    // Uncompress Bowtie index or generate from scratch if required
+    //
+    ch_bowtie_index = channel.empty()
+    if (prepare_tool_index == 'bowtie') {
+        if (bowtie_index) {
+            if (bowtie_index.endsWith('.tar.gz')) {
+                ch_bowtie_index = UNTAR_BOWTIE_INDEX ( [ [id:'bowtie_index'], file(bowtie_index, checkIfExists: true) ] ).untar
+                ch_versions  = ch_versions.mix(UNTAR_BOWTIE_INDEX.out.versions)
+            } else {
+                ch_bowtie_index = channel.value( [ [id:'bowtie_index'], file(bowtie_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_bowtie_index = BOWTIE_BUILD ( ch_fasta ).index
+            ch_versions      = ch_versions.mix(BOWTIE_BUILD.out.versions)
+        }
+    }
+
+    //
     // Uncompress Bowtie2 index or generate from scratch if required
     //
     ch_bowtie2_index = channel.empty()
@@ -519,6 +540,7 @@ workflow PREPARE_GENOME {
     okseq_rfd_file         = ch_okseq_rfd_file         //    channel: [ val(meta), [ okseq_rfd_file.bed ]]
     initiation_zones       = ch_initiation_zones       //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index              = ch_bwa_index              //    path: bwa/index/
+    bowtie_index           = ch_bowtie_index            //    channel: [ val(meta), [ bowtie/index/ ]]
     bowtie2_index          = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index          = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
