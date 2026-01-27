@@ -163,7 +163,7 @@
                     "format": "file-path",
                     "mimetype": "text/plain",
                     "exists": true,
-                    "pattern": "^\\S+\\.(txt|tsv|bed)\\.gz$",
+                    "pattern": "^\\S+\\.(txt|tsv|bed)(\\.gz)?$",
                     "fa_icon": "fas fa-procedures",
                     "description": "Path to GZIP-compressed OK-seq RFD text file. The path cannot contain spaces and must have extension '.txt.gz', '.tsv.gz' or '.bed.gz'"
                 },
