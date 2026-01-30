@@ -1,0 +1,52 @@
+//
+// Alignment with strobealign
+//
+
+include { STROBEALIGN           } from "../../../modules/nf-core/strobealign/main"
+include { SAMTOOLS_INDEX        } from '../../../modules/nf-core/samtools/index/main'
+include { BAM_STATS_SAMTOOLS    } from '../../nf-core/bam_stats_samtools/main'
+
+workflow FASTQ_ALIGN_STROBEALIGN {
+    take:
+    ch_reads          // channel: [ val(meta), [ reads ] ]
+    ch_strobealign_index
+    ch_fasta          // channel: /path/to/reference.fasta
+    sort_bam          // val
+
+    main:
+
+    ch_versions = channel.empty()
+
+    //
+    // MODULE: Map reads with strobealign
+    //
+    STROBEALIGN  (
+        ch_reads,
+        ch_fasta,
+        ch_strobealign_index,
+        sort_bam
+    )
+    ch_versions = ch_versions.mix(STROBEALIGN.out.versions)
+
+    //
+    // MODULE: Index BAM file with samtools
+    //
+    SAMTOOLS_INDEX ( STROBEALIGN.out.bam )
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
+
+    //
+    // MODULE: Run samtools stats, flagstat and idxstats
+    //
+    BAM_STATS_SAMTOOLS ( STROBEALIGN.out.bam, ch_fasta )
+    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
+
+    emit:
+    bam              = STROBEALIGN.out.bam      // channel: [ val(meta), [ bam ] ]
+    bai              = SAMTOOLS_INDEX.out.bai      // channel: [ val(meta), [ bai ] ]
+    csi              = SAMTOOLS_INDEX.out.csi      // channel: [ val(meta), [ csi ] ]
+    stats            = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
+    flagstat         = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
+    idxstats         = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
+
+    versions         = ch_versions                      // channel: [ versions.yml ]
+}

@@ -258,6 +258,11 @@
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
                     },
+                    "strobealign": {
+                        "branch": "master",
+                        "git_sha": "d5cc72b63c4e1565cb66e83f0577b04c0bb54d5c",
+                        "installed_by": ["modules"]
+                    },
                     "subread/featurecounts": {
                         "branch": "master",
                         "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
