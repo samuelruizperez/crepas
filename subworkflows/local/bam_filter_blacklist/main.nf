@@ -33,6 +33,14 @@ workflow BAM_FILTER_BLACKLIST {
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect { it -> it[1] })
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
 
+    // Print debug info
+    ch_filtered_bam
+        .map { meta, bam ->
+            "${meta}\t${bam}"
+        }
+        .collectFile(name: 'ch_filtered_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_FILTER_BLACKLIST")
+    
+
     // Separate single-end and paired-end BAM files (SE do not have orphans)
     ch_filtered_bam
         .branch { meta, bam ->
@@ -110,9 +118,6 @@ workflow BAM_FILTER_BLACKLIST {
     // Add the total_mapped_reads to the bams' and bais' metas
     ch_filtered_bam
         .combine(ch_filtered_index, by: 0)
-        .map { meta, bam, bai ->
-            [meta, bam, bai]
-        }
         .combine(ch_flTbl_total, by: 0)
         .map { meta, bam, bai, total ->
             def meta_clone = meta.clone()
