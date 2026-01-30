@@ -78,6 +78,7 @@ include { MULTIQC                                                     } from '..
 include { FASTQ_ALIGN_BWA                                             } from '../../subworkflows/nf-core/fastq_align_bwa'
 include { FASTQ_ALIGN_BOWTIE2                                         } from '../../subworkflows/nf-core/fastq_align_bowtie2'
 include { FASTQ_ALIGN_BOWTIE                                         } from '../../subworkflows/local/fastq_align_bowtie'
+include { FASTQ_ALIGN_STROBEALIGN                                     } from '../../subworkflows/local/fastq_align_strobealign'
 include { FASTQ_ALIGN_CHROMAP                                         } from '../../subworkflows/nf-core/fastq_align_chromap'
 include { FASTQ_ALIGN_STAR                                            } from '../../subworkflows/nf-core/fastq_align_star'
 include { FASTQ_ALIGN_HISAT2                                          } from '../../subworkflows/nf-core/fastq_align_hisat2'
@@ -264,6 +265,25 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats.collect { it -> it[1] })
         ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE2.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with strobealign
+    //
+    if (params.aligner == 'strobealign') {
+        FASTQ_ALIGN_STROBEALIGN (
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
+            channel.value([[:], []]),
+            ch_fasta,
+            true
+        )
+        ch_genome_bam = FASTQ_ALIGN_STROBEALIGN.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_STROBEALIGN.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STROBEALIGN.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_STROBEALIGN.out.versions.first())
     }
 
     //

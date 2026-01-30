@@ -456,7 +456,7 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bowtie", "bowtie2", "chromap", "star", "hisat2"]
+                    "enum": ["bwa", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign"]
                 },
                 "bwa_min_score": {
                     "type": "integer",
