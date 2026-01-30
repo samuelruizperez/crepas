@@ -26,22 +26,27 @@ workflow FASTQ_ALIGN_STROBEALIGN {
         ch_strobealign_index,
         sort_bam
     )
+    ch_bam = STROBEALIGN.out.bam
     ch_versions = ch_versions.mix(STROBEALIGN.out.versions)
 
     //
     // MODULE: Index BAM file with samtools
     //
-    SAMTOOLS_INDEX ( STROBEALIGN.out.bam )
+    SAMTOOLS_INDEX ( ch_bam )
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
+
+
+    ch_bam_bai = ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
+
 
     //
     // MODULE: Run samtools stats, flagstat and idxstats
     //
-    BAM_STATS_SAMTOOLS ( STROBEALIGN.out.bam, ch_fasta )
+    BAM_STATS_SAMTOOLS ( ch_bam_bai, ch_fasta )
     ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     emit:
-    bam              = STROBEALIGN.out.bam      // channel: [ val(meta), [ bam ] ]
+    bam              = ch_bam      // channel: [ val(meta), [ bam ] ]
     bai              = SAMTOOLS_INDEX.out.bai      // channel: [ val(meta), [ bai ] ]
     csi              = SAMTOOLS_INDEX.out.csi      // channel: [ val(meta), [ csi ] ]
     stats            = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
