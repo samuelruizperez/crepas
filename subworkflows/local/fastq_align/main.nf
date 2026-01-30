@@ -1,0 +1,182 @@
+//
+// FASTQ_ALIGN: Align fastq files to a reference genome
+//
+
+include { FASTQ_ALIGN_BWA           } from '../../../subworkflows/nf-core/fastq_align_bwa'
+include { FASTQ_ALIGN_BOWTIE2       } from '../../../subworkflows/nf-core/fastq_align_bowtie2'
+include { FASTQ_ALIGN_BOWTIE        } from '../../../subworkflows/local/fastq_align_bowtie'
+include { FASTQ_ALIGN_STROBEALIGN   } from '../../../subworkflows/local/fastq_align_strobealign'
+include { FASTQ_ALIGN_CHROMAP       } from '../../../subworkflows/nf-core/fastq_align_chromap'
+include { FASTQ_ALIGN_STAR          } from '../../../subworkflows/nf-core/fastq_align_star'
+include { FASTQ_ALIGN_HISAT2        } from '../../../subworkflows/nf-core/fastq_align_hisat2'
+
+workflow FASTQ_ALIGN {
+    take:
+    ch_reads            // channel: [mandatory] meta, reads
+    ch_fasta
+    aligner
+    ch_bwa_index
+    ch_bowtie_index
+    ch_bowtie2_index
+    ch_chromap_index
+    ch_star_index
+    ch_hisat2_index
+    ch_gtf
+    ch_splicesites
+    save_unaligned
+    seq_platform
+    seq_center
+    sort_bam
+
+    main:
+
+    ch_multiqc_files = channel.empty()
+    ch_samtools_stats_summary = channel.empty()  
+    ch_versions     = channel.empty()
+
+    if (aligner == 'bwa') {
+        FASTQ_ALIGN_BWA(
+            ch_reads,
+            ch_bwa_index,
+            false,
+            ch_fasta
+        )
+        ch_genome_bam = FASTQ_ALIGN_BWA.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_BWA.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_BWA.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with Bowtie & BAM QC
+    //
+    if (aligner == 'bowtie') {
+        FASTQ_ALIGN_BOWTIE(
+            ch_reads,
+            ch_bowtie_index,
+            save_unaligned,
+            ch_fasta
+        )
+        ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with Bowtie2 & BAM QC
+    //
+    if (aligner == 'bowtie2') {
+        FASTQ_ALIGN_BOWTIE2(
+            ch_reads,
+            ch_bowtie2_index,
+            save_unaligned,
+            sort_bam,
+            ch_fasta
+        )
+        ch_genome_bam = FASTQ_ALIGN_BOWTIE2.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE2.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE2.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with strobealign
+    //
+    if (aligner == 'strobealign') {
+        FASTQ_ALIGN_STROBEALIGN (
+            ch_reads,
+            channel.value([[:], []]),
+            ch_fasta,
+            true
+        )
+        ch_genome_bam = FASTQ_ALIGN_STROBEALIGN.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_STROBEALIGN.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STROBEALIGN.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_STROBEALIGN.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with Chromap & BAM QC
+    //
+    if (aligner == 'chromap') {
+        FASTQ_ALIGN_CHROMAP(
+            ch_reads,
+            ch_chromap_index,
+            ch_fasta,
+            [],
+            [],
+            [],
+            []
+        )
+
+        ch_genome_bam = FASTQ_ALIGN_CHROMAP.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_CHROMAP.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_CHROMAP.out.versions.first())
+    }
+
+    //
+    // SUBWORKFLOW: Alignment with STAR & BAM QC
+    //
+    if (aligner == 'star') {
+        FASTQ_ALIGN_STAR(
+            ch_reads,
+            ch_star_index,
+            ch_gtf,
+            true,
+            seq_platform ?: '',
+            seq_center ?: '',
+            ch_fasta,
+            channel.value([[:], []])
+        )
+        ch_genome_bam = FASTQ_ALIGN_STAR.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_STAR.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.idxstats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.log_final.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_STAR.out.versions)
+    }
+
+    if (aligner == 'hisat2') {
+        FASTQ_ALIGN_HISAT2(
+            ch_reads,
+            ch_hisat2_index,
+            ch_splicesites,
+            ch_fasta
+        )
+        ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.idxstats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.summary.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(FASTQ_ALIGN_HISAT2.out.versions)
+    }
+
+    emit:
+    bam      = ch_genome_bam          // channel: [ val(meta), path(bam) ]
+    bai      = ch_genome_bam_index    // channel: [ val(meta), path(bai) ]
+    samtools_stats_summary = ch_samtools_stats_summary  // channel: [ val(meta), path(summary) ]
+    multiqc_files = ch_multiqc_files            // channel: [ path(multiqc files ]
+
+    versions = ch_versions                      // channel: [ path(versions.yml) ]
+}
