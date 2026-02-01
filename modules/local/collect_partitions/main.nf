@@ -15,9 +15,9 @@ process COLLECT_PARTITIONS {
     tuple val(meta), path(windows), path(bwaob_fwd), path(bwaob_rev), path(norm_or_smi_fwd), path(norm_or_smi_rev), path(rfd)
 
     output:
-    tuple val(meta), path("*.tsv"), emit: tsv
-    tuple val(meta), path("*.flT_by_counts.tsv"), emit: filtered_tsv
-    tuple val(meta), path("*.flT_by_counts.bdg"), emit: filtered_bdg
+    tuple val(meta), path("${prefix}.tsv"), emit: tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.tsv"), emit: filtered_tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.bdg"), emit: filtered_bdg
     path "versions.yml", emit: versions
 
     when:
@@ -26,7 +26,7 @@ process COLLECT_PARTITIONS {
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}.collect"
     def buffer = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
     def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1V -k2,2n"
 
@@ -84,7 +84,7 @@ process COLLECT_PARTITIONS {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}.collect"
     """
     touch  ${prefix}.tsv
     touch  ${prefix}.flT_by_counts.tsv
