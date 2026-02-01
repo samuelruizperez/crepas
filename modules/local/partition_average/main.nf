@@ -11,9 +11,9 @@ process PARTITION_AVERAGE {
     tuple val(meta) , path(partitions)
 
     output:
-    tuple val(meta), path("*.tsv"), emit: tsv
-    tuple val(meta), path("*.flT_by_counts.tsv"), emit: filtered_tsv
-    tuple val(meta), path("*.flT_by_counts.bdg"), emit: filtered_bdg
+    tuple val(meta), path("${prefix}.tsv"), emit: tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.tsv"), emit: filtered_tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.bdg"), emit: filtered_bdg
     path  "versions.yml"          , emit: versions
 
     when:
@@ -22,7 +22,7 @@ process PARTITION_AVERAGE {
     script:
     def args   = task.ext.args ?: ''
     def args2  = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.average"
+    prefix = task.ext.prefix ?: "${meta.id}.average"
     """
     # This file will contain the following 12 columns, with 4-12 averaged across all input files:
     #   1. chromosome
@@ -85,7 +85,7 @@ process PARTITION_AVERAGE {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}.average"
+    prefix = task.ext.prefix ?: "${meta.id}.average"
     """
     touch ${prefix}.tsv
     touch  ${prefix}.flT_by_counts.tsv
