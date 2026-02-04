@@ -18,8 +18,8 @@ process PARTITION_OR_RFD_PLOT {
     tuple val(meta), path("*_plot_smoothed.pdf"),  emit: plot_smoothed_pdf
     tuple val(meta), path("*_plot_smoothed.png"),  emit: plot_smoothed_png
     tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
-    tuple val(meta), path("*_scatter_plot.pdf"),   emit: scatter_pdf, optional:true
-    tuple val(meta), path("*_scatter_plot.png"),   emit: scatter_png, optional:true
+    tuple val(meta), path("*.scatter_plot.pdf"),   emit: scatter_pdf, optional:true
+    tuple val(meta), path("*.scatter_plot.png"),   emit: scatter_png, optional:true
     path "versions.yml",                           emit: versions
 
     when:
