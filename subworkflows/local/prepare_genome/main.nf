@@ -581,11 +581,13 @@ workflow PREPARE_GENOME {
     okseq_rfd_file         = ch_okseq_rfd_file         //    channel: [ val(meta), [ okseq_rfd_file.bed ]]
     initiation_zones       = ch_initiation_zones       //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index              = ch_bwa_index              //    path: bwa/index/
+    bwamem2_index          = ch_bwamem2_index          //    channel: [ val(meta), [ bwamem2/index/ ]]
     bowtie_index           = ch_bowtie_index            //    channel: [ val(meta), [ bowtie/index/ ]]
     bowtie2_index          = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index          = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index           = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
+    minimap2_index         = ch_minimap2_index         //    channel: [ val(meta), [ minimap2/index/ ]]
     splicesites            = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
     te_counting_gene_gtf   = ch_te_counting_gene_gtf   //    channel: [ val(meta), [ te_counting_gene_gtf.gtf ]]
     tecount_gene_index     = ch_tecount_gene_index     //    channel: [ val(meta), [ tecount_gene_index.Ind ]]
