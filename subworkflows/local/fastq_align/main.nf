@@ -199,7 +199,7 @@ workflow FASTQ_ALIGN {
             ch_minimap2_index,
             ch_fasta,
             true,
-            '.bai',
+            'bai',
             false,
             true
         )
