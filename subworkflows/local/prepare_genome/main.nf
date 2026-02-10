@@ -24,22 +24,26 @@ include {
 
 include {
     UNTAR as UNTAR_BWA_INDEX
+    UNTAR as UNTAR_BWAMEM2_INDEX
     UNTAR as UNTAR_BOWTIE_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
     UNTAR as UNTAR_STAR_INDEX
     UNTAR as UNTAR_CHROMAP_INDEX
     UNTAR as UNTAR_HISAT2_INDEX
+    UNTAR as UNTAR_MINIMAP2_INDEX
     } from '../../../modules/nf-core/untar/main'
 
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
 include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
+include { BWAMEM2_INDEX        } from '../../../modules/nf-core/bwamem2/index/main'
 include { BOWTIE_BUILD        } from '../../../modules/nf-core/bowtie/build/main'
 include { BOWTIE2_BUILD        } from '../../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/main'
 include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
 include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
 include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
+include { MINIMAP2_INDEX       } from '../../../modules/nf-core/minimap2/index/main'
 include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
 include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
 
@@ -77,11 +81,13 @@ workflow PREPARE_GENOME {
     skip_gtf_index      //    boolean: skip GTF indexing
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
+    bwamem2_index      //    file: /path/to/bwamem2/index/
     bowtie_index        //    file: /path/to/bowtie/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
     chromap_index      //    file: /path/to/chromap/index/
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
+    minimap2_index     //    file: /path/to/minimap2/index/
     splicesites        //    file: /path/to/splicesites.txt
     okseq_rfd_file     //    file: /path/to/okseq_rfd_file.bed
     initiation_zones   //    file: /path/to/initiation_zones.bed
@@ -344,6 +350,24 @@ workflow PREPARE_GENOME {
     }
 
     //
+    // Uncompress BWAMEM2 index or generate from scratch if required
+    //
+    ch_bwamem2_index = channel.empty()
+    if (prepare_tool_index == 'bwamem2') {
+        if (bwamem2_index) {
+            if (bwamem2_index.endsWith('.tar.gz')) {
+                ch_bwamem2_index = UNTAR_BWAMEM2_INDEX ( [ [id:'bwamem2_index'], file(bwamem2_index, checkIfExists: true) ] ).untar
+                ch_versions  = ch_versions.mix(UNTAR_BWAMEM2_INDEX.out.versions)
+            } else {
+                ch_bwamem2_index = channel.value( [ [id:'bwamem2_index'], file(bwamem2_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_bwamem2_index = BWAMEM2_INDEX ( ch_fasta ).index
+            ch_versions  = ch_versions.mix(BWAMEM2_INDEX.out.versions_bwamem2)
+        }
+    }
+
+    //
     // Uncompress Bowtie index or generate from scratch if required
     //
     ch_bowtie_index = channel.empty()
@@ -445,6 +469,23 @@ workflow PREPARE_GENOME {
         }
     }
 
+    //
+    // Uncompress Minimap2 index or generate from scratch if required
+    //
+    ch_minimap2_index = channel.empty()
+    if (prepare_tool_index == 'minimap2') {
+        if (minimap2_index) {
+            if (minimap2_index.endsWith('.tar.gz')) {
+                ch_minimap2_index = UNTAR_MINIMAP2_INDEX ( [ [id:'minimap2_index'], file(minimap2_index, checkIfExists: true) ] ).untar
+                ch_versions  = ch_versions.mix(UNTAR_MINIMAP2_INDEX.out.versions)
+            } else {
+                ch_minimap2_index = channel.value( [ [id:'minimap2_index'], file(minimap2_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_minimap2_index = MINIMAP2_INDEX ( ch_fasta ).index
+            ch_versions  = ch_versions.mix(MINIMAP2_INDEX.out.versions_minimap2)
+        }
+    }
     //
     // Uncompress gene GTF for TE counting or use existing gene GTF
     // With this, it is possible to provide a different GTF specifically for TE counting
