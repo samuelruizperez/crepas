@@ -52,7 +52,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     DEEPTOOLS_BAMCOVERAGE_BINS (
         ch_bam_bai,
         [],
-        []
+        [],
+        channel.value([[:], []])
     )
     ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE_BINS.out.bedgraph
     ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINS.out.versions.first())
@@ -98,7 +99,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_chrom_sizes_endo
     )
     ch_bdg_map_endo = BEDTOOLS_MAP_ENDO.out.mapped
-    ch_versions = ch_versions.mix(BEDTOOLS_MAP_ENDO.out.versions.first())
     
     ch_bdg_map = ch_bdg_map_endo
     ch_windows_exo = channel.empty()
@@ -129,7 +129,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_chrom_sizes_exo
         )
         ch_bdg_map_exo = BEDTOOLS_MAP_EXO.out.mapped
-        ch_versions = ch_versions.mix(BEDTOOLS_MAP_EXO.out.versions.first())
 
         // Merge the two channels
         ch_bdg_map = ch_bdg_map_endo.mix(ch_bdg_map_exo)
@@ -419,7 +418,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_chrom_sizes_endo.map { it -> it[1] }
     )
     ch_bigwig_endo_rpm = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig.filter { it -> it[0].norm_factor_type == 'rpm' }
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_ENDO.out.versions.first())
 
     //
     // MODULE: Compute log2FC between engogenous ChIPs and endogenous inputs
@@ -462,7 +460,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_chrom_sizes_exo.map { it -> it[1] }
         )
         ch_bw_exo = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig
-        ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_EXO.out.versions.first())
     }
 
     ch_bw_avg_endo = channel.empty()
@@ -544,7 +541,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         DEEPTOOLS_BAMCOVERAGE_BINSIZE1 (
             ch_binsize1,
             [],
-            []
+            [],
+            channel.value([[:], []])
         )
         ch_binsize1 = DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.bigwig
         ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE_BINSIZE1.out.versions.first())

@@ -1,4 +1,4 @@
-Changes in module 'nf-core/chromap/chromap'
+Changes in component 'nf-core/chromap/chromap'
 'modules/nf-core/chromap/chromap/meta.yml' is unchanged
 Changes in 'chromap/chromap/main.nf':
 --- modules/nf-core/chromap/chromap/main.nf

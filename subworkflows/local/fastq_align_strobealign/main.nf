@@ -43,7 +43,6 @@ workflow FASTQ_ALIGN_STROBEALIGN {
     // MODULE: Run samtools stats, flagstat and idxstats
     //
     BAM_STATS_SAMTOOLS ( ch_bam_bai, ch_fasta )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     emit:
     bam              = ch_bam      // channel: [ val(meta), [ bam ] ]

@@ -59,7 +59,6 @@ include { FASTQ_ALIGN                                                 } from '..
 //
 
 include { SAMTOOLS_INDEX                                              } from '../../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_COLLATE                                            } from '../../modules/nf-core/samtools/collate/main'
 include { PICARD_MERGESAMFILES                                        } from '../../modules/nf-core/picard/mergesamfiles/main'
 include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP                                             } from '../../modules/nf-core/preseq/lcextrap/main'
@@ -78,7 +77,6 @@ include { MULTIQC                                                     } from '..
 include { BAM_MARKDUPLICATES_PICARD                                   } from '../../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_UMI                                               } from '../../subworkflows/nf-core/bam_dedup_umi'
 include { BAM_STATS_SAMTOOLS                                          } from '../../subworkflows/nf-core/bam_stats_samtools'
-include { BAM_SORT_STATS_SAMTOOLS                                     } from '../../subworkflows/nf-core/bam_sort_stats_samtools'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -258,13 +256,12 @@ workflow CREPAS {
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
     ch_versions = ch_versions.mix(PICARD_MERGESAMFILES.out.versions.first())
 
-    SAMTOOLS_INDEX(
+    SAMTOOLS_INDEX (
         ch_merged_bam
     )
     ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
-    BAM_STATS_SAMTOOLS(
+    BAM_STATS_SAMTOOLS (
         ch_merged_bam_bai,
         ch_fasta
     )
@@ -272,7 +269,6 @@ workflow CREPAS {
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
 
     if (params.with_umi) {
@@ -318,7 +314,7 @@ workflow CREPAS {
         //
         // SUBWORKFLOW: Mark duplicates & filter BAM files
         //
-        BAM_MARKDUPLICATES_PICARD(
+        BAM_MARKDUPLICATES_PICARD (
             ch_merged_bam,
             ch_fasta,
             ch_fai
@@ -330,7 +326,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.metrics.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
         //
         // MODULE: Preseq coverage analysis
@@ -512,7 +507,7 @@ workflow CREPAS {
         ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.versions)
 
         if (params.allocate_exogenous) {
-            BAM_ALLOCATE_MULTIMAPPERS_EXO(
+            BAM_ALLOCATE_MULTIMAPPERS_EXO (
                 ch_filtered_exo_bam,
                 ch_fasta,
                 params.multimap_allocation_method
@@ -537,7 +532,6 @@ workflow CREPAS {
             ch_fai
         )
         ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
 
     // Mix the exogenous and endogenous BAM and index files
@@ -1430,8 +1424,31 @@ workflow CREPAS {
     //
     // Collate and save software versions
     //
-    softwareVersionsToYAML(ch_versions)
-        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'crepas_software_mqc_versions.yml', sort: true, newLine: true)
+    def topic_versions = channel.topic("versions")
+        .distinct()
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
+    softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
+        .mix(topic_versions_string)
+        .collectFile(
+            storeDir: "${params.outdir}/pipeline_info",
+            name: 'grothlab' + 'crepas_software_' + 'mqc_' + 'versions.yml',
+            sort: true,
+            newLine: true,
+        )
         .set { ch_collated_versions }
 
     //
@@ -1476,6 +1493,7 @@ workflow CREPAS {
             []
         )
         ch_multiqc_report = MULTIQC.out.report
+        ch_versions = ch_versions.mix(MULTIQC.out.versions)
     }
 
     emit:

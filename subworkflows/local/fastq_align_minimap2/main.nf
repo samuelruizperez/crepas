@@ -16,12 +16,10 @@ workflow FASTQ_ALIGN_MINIMAP2 {
     cigar_bam
 
     main:
-    ch_versions = channel.empty()
 
     //
-    // Map reads with MINIMAP2_ALIGN
+    // MODULE: Map reads with MINIMAP2_ALIGN
     //
-
     MINIMAP2_ALIGN (
         ch_reads,
         ch_index,
@@ -30,7 +28,6 @@ workflow FASTQ_ALIGN_MINIMAP2 {
         cigar_paf_format,
         cigar_bam
     )
-    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions_minimap2.first())
 
     MINIMAP2_ALIGN
         .out
@@ -39,10 +36,9 @@ workflow FASTQ_ALIGN_MINIMAP2 {
         .set { ch_bam_bai }
 
     //
-    // Run samtools stats, flagstat and idxstats
+    // MODULE: Run samtools stats, flagstat and idxstats
     //
     BAM_STATS_SAMTOOLS ( ch_bam_bai, ch_fasta )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     emit:
     bam      = MINIMAP2_ALIGN.out.bam      // channel: [ val(meta), path(bam) ]
@@ -51,5 +47,4 @@ workflow FASTQ_ALIGN_MINIMAP2 {
     flagstat = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
 
-    versions = ch_versions                          // channel: [ path(versions.yml) ]
 }
