@@ -500,8 +500,8 @@ def validateInputParameters() {
     }
 
     if (params.map_n_multimappers) {
-        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign'].contains(params.aligner)) {
-            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', or 'strobealign'.")
+        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2'].contains(params.aligner)) {
+            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', or 'minimap2'.")
         }
     }
 
