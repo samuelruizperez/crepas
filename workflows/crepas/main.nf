@@ -405,32 +405,25 @@ workflow CREPAS {
     ch_filtered_exo_bam = channel.empty()
     ch_filtered_exo_index = channel.empty()
     if (params.spikein_genome) {
-        BAM_SPIKEIN_SPLIT(
+        BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
             ch_fasta,
-            channel.value([[:], []]),
             params.genome,
             params.spikein_genome
         )
-        ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
+        ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.endo_bam
         ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
-        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.bai
+        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.endo_bai
         ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_bai
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.exo_stats)
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_idxstats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
 
         //
         // MODULE: Extract total mapped reads from flagstats
         //
-        BAM_FLAGSTAT_MAPPED_FLT2(
-            BAM_SPIKEIN_SPLIT.out.flagstat.mix(BAM_SPIKEIN_SPLIT.out.exo_flagstat)
+        BAM_FLAGSTAT_MAPPED_FLT2 (
+            BAM_SPIKEIN_SPLIT.out.flagstat
         )
         ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT2.out.versions)
 
@@ -501,7 +494,7 @@ workflow CREPAS {
     // SUBWORKFLOW: Allocation of multimappers
     //
     if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
-        BAM_ALLOCATE_MULTIMAPPERS_ENDO(
+        BAM_ALLOCATE_MULTIMAPPERS_ENDO (
             ch_filtered_bam,
             ch_fasta,
             params.multimap_allocation_method
