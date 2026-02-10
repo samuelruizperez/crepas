@@ -111,6 +111,11 @@
                     "description": "Path to directory or tar.gz archive for pre-built BWA index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
+                "bwa_mem2_index": {
+                    "type": "string",
+                    "description": "Path to directory or tar.gz archive for pre-built BWAMEM2 index.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
                 "bowtie_index": {
                     "type": "string",
                     "format": "path",
@@ -140,6 +145,12 @@
                     "format": "path",
                     "fa_icon": "fas fa-bezier-curve",
                     "description": "Path to directory or tar.gz archive for pre-built HISAT2 index."
+                },
+                "minimap2_index": {
+                    "type": "string",
+                    "format": "path",
+                    "fa_icon": "fas fa-bezier-curve",
+                    "description": "Path to directory or tar.gz archive for pre-built Minimap2 index."
                 },
                 "gene_bed": {
                     "type": "string",
@@ -456,11 +467,16 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign"]
+                    "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
                 },
                 "bwa_min_score": {
                     "type": "integer",
                     "description": "Don't output BWA MEM alignments with score lower than this parameter.",
+                    "fa_icon": "fas fa-hand-paper"
+                },
+                "bwamem2_min_score": {
+                    "type": "integer",
+                    "description": "Don't output BWAMEM2 alignments with score lower than this parameter.",
                     "fa_icon": "fas fa-hand-paper"
                 },
                 "sort_bam": {
@@ -490,6 +506,25 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Wheter to perform end-to-end alignment (only relevant for Bowtie2 and STAR). If set to false, local alignment will be performed.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minimap2_preset": {
+                    "type": "string",
+                    "default": "sr",
+                    "description": "Preset to use for minimap2 alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs",
+                    "enum": ["sr"]
+                },
+                "minimap2_kmer_length": {
+                    "type": "integer",
+                    "default": 21,
+                    "description": "K-mer length to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minimap2_min_win_size": {
+                    "type": "integer",
+                    "default": 11,
+                    "description": "Minimizer window size to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
                     "fa_icon": "fas fa-map-signs"
                 }
             }

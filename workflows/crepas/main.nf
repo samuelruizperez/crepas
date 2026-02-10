@@ -106,11 +106,13 @@ workflow CREPAS {
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
+    ch_bwamem2_index        // channel: path(bwamem2/index/)
     ch_bowtie_index            // channel: path(bowtie/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
     ch_chromap_index          // channel: path(chromap.index)
     ch_star_index             // channel: path(star/index/)
     ch_hisat2_index           // channel: path(hisat2/index)
+    ch_minimap2_index         // channel: path(minimap2/index/)
     ch_splicesites            // channel: path(splicesites)
     ch_tecount_gene_index // channel: val(meta), path(tecount_gene_index.Ind)
     ch_telocal_gene_index // channel: val(meta), path(telocal_gene_index.Ind)
@@ -209,11 +211,13 @@ workflow CREPAS {
         ch_fasta,
         params.aligner,
         ch_bwa_index,
+        ch_bwamem2_index,
         ch_bowtie_index,
         ch_bowtie2_index,
         ch_chromap_index,
         ch_star_index,
         ch_hisat2_index,
+        ch_minimap2_index,
         ch_gtf,
         ch_splicesites,
         params.save_unaligned,
