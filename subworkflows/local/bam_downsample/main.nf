@@ -329,7 +329,6 @@ workflow BAM_DOWNSAMPLE {
         ch_ds_bam
     )
     ch_ds_index = SAMTOOLS_INDEX.out.bai
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
     // SUBWORKFLOW: Run SAMtools stats, flagstat and idxstats
@@ -339,7 +338,6 @@ workflow BAM_DOWNSAMPLE {
         ch_fasta
     )
     ch_ds_flagstat = BAM_STATS_SAMTOOLS.out.flagstat
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     //
     // MODULE: Extract total mapped reads from flagstats

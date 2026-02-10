@@ -13,21 +13,18 @@ workflow FASTQ_ALIGN_BWAMEM2 {
     ch_fasta        // channel (optional) : [ val(meta3), path(fasta) ]
 
     main:
-    ch_versions = channel.empty()
 
     //
     // Map reads with BWAMEM2_MEM
     //
 
     BWAMEM2_MEM ( ch_reads, ch_index, ch_fasta, val_sort_bam )
-    ch_versions = ch_versions.mix(BWAMEM2_MEM.out.versions_bwamem2.first())
 
     //
     // Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
 
     BAM_SORT_STATS_SAMTOOLS ( BWAMEM2_MEM.out.bam, ch_fasta )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
     emit:
     bam_orig = BWAMEM2_MEM.out.bam                  // channel: [ val(meta), path(bam) ]
@@ -38,5 +35,4 @@ workflow FASTQ_ALIGN_BWAMEM2 {
     flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
     idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
 
-    versions = ch_versions                          // channel: [ path(versions.yml) ]
 }

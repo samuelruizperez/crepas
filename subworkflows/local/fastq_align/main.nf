@@ -67,7 +67,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BWAMEM2.out.versions.first())
     }
 
 
@@ -173,7 +172,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.log_final.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_STAR.out.versions)
     }
 
     if (aligner == 'hisat2') {
@@ -190,7 +188,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.summary.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_HISAT2.out.versions)
     }
 
     if (aligner == 'minimap2') {
@@ -209,7 +206,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_MINIMAP2.out.versions)
     }
 
     emit:

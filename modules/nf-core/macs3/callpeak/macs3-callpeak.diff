@@ -1,4 +1,4 @@
-Changes in module 'nf-core/macs3/callpeak'
+Changes in component 'nf-core/macs3/callpeak'
 'modules/nf-core/macs3/callpeak/meta.yml' is unchanged
 Changes in 'macs3/callpeak/main.nf':
 --- modules/nf-core/macs3/callpeak/main.nf

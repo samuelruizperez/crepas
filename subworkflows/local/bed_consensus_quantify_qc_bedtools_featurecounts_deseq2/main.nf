@@ -154,7 +154,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     SUBREAD_FEATURECOUNTS (
         ch_bam_saf
     )
-    ch_versions = ch_versions.mix(SUBREAD_FEATURECOUNTS.out.versions)
 
     //
     // Generate QC plots with DESeq2

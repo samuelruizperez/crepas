@@ -35,7 +35,6 @@ workflow BAM_ENCODE_PIPELINE {
     BEDTOOLS_BAMTOBED (
         SAMTOOLS_SORT.out.bam
     )
-    ch_versions = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions.first())
 
     //
     // MODULE: Convert BED to TAGALIGN
