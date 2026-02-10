@@ -209,7 +209,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.summary.collect { it -> it[1] })
         ch_versions = ch_versions.mix(FASTQ_ALIGN_MINIMAP2.out.versions)
     }
 
