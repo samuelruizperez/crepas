@@ -204,7 +204,7 @@ workflow FASTQ_ALIGN {
             true
         )
         ch_genome_bam = FASTQ_ALIGN_MINIMAP2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_MINIMAP2.out.index
+        ch_genome_bam_index = FASTQ_ALIGN_MINIMAP2.out.bai
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_MINIMAP2.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.flagstat.collect { it -> it[1] })
