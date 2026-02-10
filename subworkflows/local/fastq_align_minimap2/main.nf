@@ -3,7 +3,7 @@
 //
 
 include { MINIMAP2_ALIGN                 } from '../../../modules/nf-core/minimap2/align/main'
-include { BAM_SORT_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_sort_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow FASTQ_ALIGN_MINIMAP2 {
     take:
@@ -32,19 +32,24 @@ workflow FASTQ_ALIGN_MINIMAP2 {
     )
     ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions_minimap2.first())
 
+    MINIMAP2_ALIGN
+        .out
+        .bam
+        .join(MINIMAP2_ALIGN.out.index, by: 0)
+        .set { ch_bam_bai }
+
     //
-    // Sort, index BAM file and run samtools stats, flagstat and idxstats
+    // Run samtools stats, flagstat and idxstats
     //
-    BAM_SORT_STATS_SAMTOOLS ( MINIMAP2_ALIGN.out.bam, ch_fasta )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
+    BAM_STATS_SAMTOOLS ( ch_bam_bai, ch_fasta )
+    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     emit:
-    bam      = BAM_SORT_STATS_SAMTOOLS.out.bam      // channel: [ val(meta), path(bam) ]
-    bai      = BAM_SORT_STATS_SAMTOOLS.out.bai      // channel: [ val(meta), path(bai) ]
-    csi      = BAM_SORT_STATS_SAMTOOLS.out.csi      // channel: [ val(meta), path(csi) ]
-    stats    = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), path(stats) ]
-    flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
-    idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
+    bam      = MINIMAP2_ALIGN.out.bam      // channel: [ val(meta), path(bam) ]
+    bai      = MINIMAP2_ALIGN.out.index    // channel: [ val(meta), path(bai) ]
+    stats    = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), path(stats) ]
+    flagstat = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
+    idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
 
     versions = ch_versions                          // channel: [ path(versions.yml) ]
 }
