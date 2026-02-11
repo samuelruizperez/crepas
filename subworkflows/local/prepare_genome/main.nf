@@ -163,7 +163,6 @@ workflow PREPARE_GENOME {
     if (sparsebed) {
         if (sparsebed.endsWith('.gz')) {
             ch_sparsebed = GUNZIP_SPARSEBED ( [ [id:'sparsebed'], file(sparsebed, checkIfExists: true) ] ).gunzip
-            ch_versions  = ch_versions.mix(GUNZIP_SPARSEBED.out.versions)
         } else {
             ch_sparsebed = channel.value( [ [id:'sparsebed'], file(sparsebed, checkIfExists: true) ] )
         }
@@ -173,7 +172,6 @@ workflow PREPARE_GENOME {
     if (active_regions) {
         if (active_regions.endsWith('.gz')) {
             ch_active_regions = GUNZIP_ACTIVE_REGIONS ( [ [id:'active_regions'], file(active_regions, checkIfExists: true) ] ).gunzip
-            ch_versions  = ch_versions.mix(GUNZIP_ACTIVE_REGIONS.out.versions)
         } else {
             ch_active_regions = channel.value( [ [id:'active_regions'], file(active_regions, checkIfExists: true) ] )
         }
@@ -183,7 +181,6 @@ workflow PREPARE_GENOME {
     if (rocco_params) {
         if (rocco_params.endsWith('.gz')) {
             ch_rocco_params = GUNZIP_ROCCO_PARAMS ( [ [id:'rocco_params'], file(rocco_params, checkIfExists: true) ] ).gunzip
-            ch_versions     = ch_versions.mix(GUNZIP_ROCCO_PARAMS.out.versions)
         } else {
             ch_rocco_params = channel.value( [ [id:'rocco_params'], file(rocco_params, checkIfExists: true) ] )
         }
@@ -199,7 +196,6 @@ workflow PREPARE_GENOME {
     if (blacklist) {
         if (blacklist.endsWith('.gz')) {
             ch_blacklist = GUNZIP_BLACKLIST ( [ [id:'blacklist'], file(blacklist, checkIfExists: true) ] ).gunzip
-            ch_versions  = ch_versions.mix(GUNZIP_BLACKLIST.out.versions)
         } else {
             ch_blacklist = channel.value( [ [id:'blacklist'], file(blacklist, checkIfExists: true) ] )
         }
@@ -435,7 +431,6 @@ workflow PREPARE_GENOME {
         } else {
             if (splicesites.endsWith('.gz')) {
                 ch_splicesites = GUNZIP_SPLICESITES ( [ [id:'splicesites'], file(splicesites, checkIfExists: true) ] ).gunzip
-                ch_versions    = ch_versions.mix(GUNZIP_SPLICESITES.out.versions)
             } else {
                 ch_splicesites = channel.value( [ [id:'splicesites'], file(splicesites, checkIfExists: true) ] )
             }
