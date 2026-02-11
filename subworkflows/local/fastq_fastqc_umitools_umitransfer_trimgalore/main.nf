@@ -44,7 +44,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
         FASTQC (reads)
         fastqc_html = FASTQC.out.html
         fastqc_zip  = FASTQC.out.zip
-        ch_versions = ch_versions.mix(FASTQC.out.versions.first())
     }
 
     umi_reads = reads
