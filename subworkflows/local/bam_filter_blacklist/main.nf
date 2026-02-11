@@ -20,7 +20,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     // MODULE: Filter BAM file with SAMBAMBA using blacklist
     //
-    BAM_FILTER_SAMBAMBA(
+    BAM_FILTER_SAMBAMBA (
         ch_bam_index,
         ch_whitelist_bed,
         ch_fasta
@@ -31,7 +31,7 @@ workflow BAM_FILTER_BLACKLIST {
     ch_multiqc_files = BAM_FILTER_SAMBAMBA.out.stats.collect { it -> it[1] }
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions.first())
 
     // Print debug info
     ch_filtered_bam
@@ -76,7 +76,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     // MODULE: Remove orphan reads left by SAMBAMBA's blacklist filtering
     //
-    BAM_REMOVE_ORPHANS(
+    BAM_REMOVE_ORPHANS (
         ch_filtered_bam_pe,
         true
     )
