@@ -220,6 +220,7 @@ workflow PREPARE_GENOME {
     // we do not have a fai
     ch_fasta
         .combine(channel.value([[]]))
+        .first()
         .set { ch_fasta_fai }
 
     //
@@ -297,6 +298,7 @@ workflow PREPARE_GENOME {
         }
         .sum()
         .combine(ch_effective_gsize)
+        .first()
         .map { size, egs ->
             egs.toDouble() / size.toDouble()
         }
