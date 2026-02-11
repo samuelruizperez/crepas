@@ -302,7 +302,6 @@ workflow CREPAS {
         ch_dedup_bam = BAM_DEDUP_UMI.out.bam
         ch_dedup_index = BAM_DEDUP_UMI.out.bai
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_DEDUP_UMI.out.versions)
     }
     else {
         //
