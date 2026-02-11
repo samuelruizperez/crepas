@@ -301,13 +301,7 @@ workflow CREPAS {
         )
         ch_dedup_bam = BAM_DEDUP_UMI.out.bam
         ch_dedup_index = BAM_DEDUP_UMI.out.bai
-        ch_dedup_umi_stats = BAM_DEDUP_UMI.out.stats
-        ch_dedup_umi_flagstat = BAM_DEDUP_UMI.out.flagstat
-        ch_dedup_umi_idxstats = BAM_DEDUP_UMI.out.idxstats
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.dedup_log.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.multiqc_files)
         ch_versions = ch_versions.mix(BAM_DEDUP_UMI.out.versions)
     }
     else {
