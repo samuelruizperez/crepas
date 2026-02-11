@@ -20,12 +20,11 @@ workflow BAM_ENCODE_PIPELINE {
     // MODULE: Name-sorting BAM files
     //
 
-    SAMTOOLS_SORT(
+    SAMTOOLS_SORT (
         ch_bam,
-        ch_fasta
+        ch_fasta,
+        ''
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
-
 
     // 2a section of the ENCODE 3 ChIP-seq pipeline:
 

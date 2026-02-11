@@ -68,10 +68,10 @@ workflow BAM_FILTER_BLACKLIST {
     //
     SAMTOOLS_SORT(
         ch_filtered_bam.pe,
-        ch_fasta
+        ch_fasta,
+        ''
     )
     ch_filtered_bam_pe = SAMTOOLS_SORT.out.bam
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     //
     // MODULE: Remove orphan reads left by SAMBAMBA's blacklist filtering

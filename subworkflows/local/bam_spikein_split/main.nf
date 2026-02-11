@@ -59,10 +59,10 @@ workflow BAM_SPIKEIN_SPLIT {
     //
     SAMTOOLS_SORT (
         ch_bam.pe,
-        ch_fasta
+        ch_fasta,
+        ''
     )
     ch_bam_pe = SAMTOOLS_SORT.out.bam
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     //
     // MODULE: Remove orphan reads left by splitting by genome (only for paired-end BAMs)
