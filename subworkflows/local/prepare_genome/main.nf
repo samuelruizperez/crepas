@@ -434,7 +434,7 @@ workflow PREPARE_GENOME {
     ch_hisat2_index = channel.empty()
     if (prepare_tool_index == 'hisat2') {
         if (!splicesites) {
-            ch_splicesites = HISAT2_EXTRACTSPLICESITES ( ch_gtf.map { it -> [ [:], it ] } ).txt.map { it -> it[1] }
+            ch_splicesites = HISAT2_EXTRACTSPLICESITES ( ch_gtf ).txt
         } else {
             if (splicesites.endsWith('.gz')) {
                 ch_splicesites = GUNZIP_SPLICESITES ( [ [id:'splicesites'], file(splicesites, checkIfExists: true) ] ).gunzip
