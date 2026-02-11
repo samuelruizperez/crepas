@@ -15,7 +15,8 @@ process TELOCAL {
 
     output:
     tuple val(meta), path("*.cntTable*"),                        emit: counts
-    path "versions.yml",                                        emit: versions
+    tuple val("${task.process}"), val('TElocal'), eval("TElocal --version 2>&1 | sed 's/TElocal //g'"), emit: versions_telocal, topic: versions
+    tuple val("${task.process}"), val('gzip'), eval("gzip --version | sed -n '1s/.*gzip[[:space:]]*//p'"), emit: versions_gzip, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -33,13 +34,6 @@ process TELOCAL {
         --project ${prefix}
 
     ${gzip_cmd}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TElocal: \$(TElocal --version | sed 's/TElocal //g')
-        gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip[[:space:]]*//' )
-
-    END_VERSIONS
     """
 
     stub:
@@ -48,11 +42,5 @@ process TELOCAL {
 
     """
     ${cmd}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TElocal: \$(TElocal --version | sed 's/TElocal //g')
-        gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip[[:space:]]*//' )
-    END_VERSIONS
     """
 }

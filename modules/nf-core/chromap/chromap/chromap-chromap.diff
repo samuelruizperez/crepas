@@ -3,6 +3,17 @@ Changes in component 'nf-core/chromap/chromap'
 Changes in 'chromap/chromap/main.nf':
 --- modules/nf-core/chromap/chromap/main.nf
 +++ modules/nf-core/chromap/chromap/main.nf
+@@ -4,8 +4,8 @@
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' :
+-        'biocontainers/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' }"
++        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ed/ed15f835e0883dfa27385f663655ad76280cba832c5a2db280ecd69f46877e91/data' :
++        'community.wave.seqera.io/library/chromap_samtools:f82d647d01e30c96' }"
+ 
+     input:
+     tuple val(meta), path(reads)
 @@ -29,6 +29,9 @@
      script:
      def args = task.ext.args ?: ''
@@ -35,7 +46,18 @@ Changes in 'chromap/chromap/main.nf':
  
          cat <<-END_VERSIONS > versions.yml
 
-'modules/nf-core/chromap/chromap/environment.yml' is unchanged
+Changes in 'chromap/chromap/environment.yml':
+--- modules/nf-core/chromap/chromap/environment.yml
++++ modules/nf-core/chromap/chromap/environment.yml
+@@ -4,5 +4,5 @@
+   - conda-forge
+   - bioconda
+ dependencies:
+-  - bioconda::chromap=0.2.6
+-  - bioconda::samtools=1.20
++  - bioconda::chromap=0.3.2
++  - bioconda::samtools=1.23
+
 'modules/nf-core/chromap/chromap/tests/main.nf.test' is unchanged
 'modules/nf-core/chromap/chromap/tests/nextflow.config' is unchanged
 'modules/nf-core/chromap/chromap/tests/main.nf.test.snap' is unchanged

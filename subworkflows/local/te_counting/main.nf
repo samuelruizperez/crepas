@@ -21,9 +21,6 @@ workflow TE_COUNTING {
 
     main:
 
-    ch_versions = channel.empty()
-
-
     if (!skip_name_sort) {
         //
         // MODULE: Sort BAM files (name sort order)
@@ -61,7 +58,6 @@ workflow TE_COUNTING {
         ch_tecount_te_index,
         skip_tecount_gz
     )
-    ch_versions = ch_versions.mix(TECOUNT.out.versions.first())
 
     //
     // MODULE: Count reads in transposable elements (TEs) at the instance (location) level
@@ -75,7 +71,6 @@ workflow TE_COUNTING {
             skip_telocal_gz
         )
         ch_telocal_counts = TELOCAL.out.counts
-        ch_versions = ch_versions.mix(TELOCAL.out.versions.first())
     }
 
     emit:
@@ -83,5 +78,4 @@ workflow TE_COUNTING {
     tecount_counts     = TECOUNT.out.counts    // channel: [ te_counts.tsv ]
     telocal_counts     = ch_telocal_counts    // channel: [ te_local_counts.tsv ]
     
-    versions    = ch_versions               // channel: [ versions.yml ]
 }
