@@ -894,7 +894,6 @@ workflow CREPAS {
             params.skip_tecount_gz,
             params.skip_telocal_gz
         )
-        ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
     }
 
 
