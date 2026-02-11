@@ -34,7 +34,7 @@ include {
     } from '../../../modules/nf-core/untar/main'
 
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
-include { CUSTOM_GETCHROMSIZES } from '../../../modules/nf-core/custom/getchromsizes/main'
+include { SAMTOOLS_FAIDX         } from '../../../modules/nf-core/samtools/faidx/main'
 include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
 include { BWAMEM2_INDEX        } from '../../../modules/nf-core/bwamem2/index/main'
 include { BOWTIE_BUILD        } from '../../../modules/nf-core/bowtie/build/main'
@@ -216,13 +216,18 @@ workflow PREPARE_GENOME {
         }
     }
 
+    // Create channel: [ val(meta), fasta, fai ]
+    // we do not have a fai
+    ch_fasta
+        .combine(channel.value([[]]))
+        .set { ch_fasta_fai }
+
     //
-    // Create chromosome sizes file
+    // MODULE: Create chromosome sizes file
     //
-    CUSTOM_GETCHROMSIZES ( ch_fasta )
-    ch_chrom_sizes_endo = CUSTOM_GETCHROMSIZES.out.sizes
-    ch_fai         = CUSTOM_GETCHROMSIZES.out.fai
-    ch_versions    = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
+    SAMTOOLS_FAIDX ( ch_fasta_fai, true )
+    ch_chrom_sizes_endo = SAMTOOLS_FAIDX.out.sizes
+    ch_fai              = SAMTOOLS_FAIDX.out.fai
 
     //
     // Create endogenous genome chromosome sizes file
@@ -230,8 +235,8 @@ workflow PREPARE_GENOME {
     ch_chrom_sizes_exo = channel.empty()
     if (spikein_genome) {
         CHROM_SIZES_SPIKEIN_SPLIT ( ch_chrom_sizes_endo, spikein_genome, genome )
-        ch_chrom_sizes_endo = CHROM_SIZES_SPIKEIN_SPLIT.out.endo_sizes.map { [ it[0] + [ genome: genome ], it[1] ] }
-        ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { [ it[0] + [ genome: spikein_genome ], it[1] ] }
+        ch_chrom_sizes_endo = CHROM_SIZES_SPIKEIN_SPLIT.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
+        ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
         ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
     }
 
