@@ -152,6 +152,13 @@
                     "fa_icon": "fas fa-bezier-curve",
                     "description": "Path to directory or tar.gz archive for pre-built Minimap2 index."
                 },
+                "strobealign_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.sti(\\.gz)?$",
+                    "fa_icon": "fas fa-procedures",
+                    "description": "Path to Strobealign index file with extension '.sti'. This will be created from the FASTA file if not specified and the aligner is set to strobealign."
+                },
                 "gene_bed": {
                     "type": "string",
                     "format": "file-path",
