@@ -1,0 +1,28 @@
+Changes in component 'nf-core/hisat2/align'
+'modules/nf-core/hisat2/align/meta.yml' is unchanged
+Changes in 'hisat2/align/main.nf':
+--- modules/nf-core/hisat2/align/main.nf
++++ modules/nf-core/hisat2/align/main.nf
+@@ -48,7 +48,7 @@
+             $seq_center \\
+             $unaligned \\
+             $args \\
+-            | samtools view -bS -F 4 -F 256 - > ${prefix}.bam
++            | samtools view -bS -F 4 - > ${prefix}.bam
+         """
+     } else {
+         def unaligned = params.save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ''
+@@ -67,7 +67,7 @@
+             --no-mixed \\
+             --no-discordant \\
+             $args \\
+-            | samtools view -bS -F 4 -F 8 -F 256 - > ${prefix}.bam
++            | samtools view -bS -F 4 -F 8 - > ${prefix}.bam
+ 
+         if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
+             mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz
+
+'modules/nf-core/hisat2/align/environment.yml' is unchanged
+'modules/nf-core/hisat2/align/tests/main.nf.test' is unchanged
+'modules/nf-core/hisat2/align/tests/main.nf.test.snap' is unchanged
+************************************************************
