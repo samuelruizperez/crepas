@@ -4,89 +4,102 @@ process HISAT2_ALIGN {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d2/d2ec9b73c6b92e99334c6500b1b622edaac316315ac1708f0b425df3131d0a83/data' :
-        'community.wave.seqera.io/library/hisat2_samtools:6be64e12472a7b75' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c3/c36472269e8898f63b7b65dd40433462d541f9e75f9401f0bf8488021275d006/data' :
+        'community.wave.seqera.io/library/hisat2_samtools:6ca0ef72b662d5c8' }"
 
     input:
     tuple val(meta), path(reads)
     tuple val(meta2), path(index)
     tuple val(meta3), path(splicesites)
+    tuple val(meta4), path(fasta)
+    val   save_unaligned
+    val   sort_bam
 
     output:
-    tuple val(meta), path("*.bam")                   , emit: bam
-    tuple val(meta), path("*.log")                   , emit: summary
-    tuple val(meta), path("*fastq.gz"), optional:true, emit: fastq
+    tuple val(meta), path("*.sam")      , emit: sam     , optional:true
+    tuple val(meta), path("*.bam")      , emit: bam     , optional:true
+    tuple val(meta), path("*.cram")     , emit: cram    , optional:true
+    tuple val(meta), path("*.csi")      , emit: csi     , optional:true
+    tuple val(meta), path("*.crai")     , emit: crai    , optional:true
+    tuple val(meta), path("*.log")      , emit: log
+    tuple val(meta), path("*fastq.gz")  , emit: fastq   , optional:true
     tuple val("${task.process}"), val('hisat2'), eval("hisat2 --version | sed -n '1s/.*version //p'"), emit: versions_hisat2, topic: versions
     tuple val("${task.process}"), val('samtools'), eval("samtools --version | sed -n '1s/samtools //p'"), emit: versions_samtools, topic: versions
+    tuple val("${task.process}"), val('pigz'), eval("pigz --version 2>&1 | sed 's/pigz //'"), emit: versions_pigz, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
-
-    def strandedness = ''
-    if (meta.strandedness == 'forward') {
-        strandedness = meta.single_end ? '--rna-strandness F' : '--rna-strandness FR'
-    } else if (meta.strandedness == 'reverse') {
-        strandedness = meta.single_end ? '--rna-strandness R' : '--rna-strandness RF'
-    }
-    ss = "$splicesites" ? "--known-splicesite-infile $splicesites" : ''
-    def seq_center = params.seq_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${params.seq_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
+    
+    def unaligned = ""
+    def reads_args = ""
     if (meta.single_end) {
-        def unaligned = params.save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ''
-        """
-        INDEX=`find -L ./ -name "*.1.ht2*" | sed 's/\\.1.ht2.*\$//'`
-        hisat2 \\
-            -x \$INDEX \\
-            -U $reads \\
-            $strandedness \\
-            $ss \\
-            --summary-file ${prefix}.hisat2.summary.log \\
-            --threads $task.cpus \\
-            $seq_center \\
-            $unaligned \\
-            $args \\
-            | samtools view -bS -F 4 -F 256 - > ${prefix}.bam
-        """
+        unaligned = save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ""
+        reads_args = "-U ${reads}"
     } else {
-        def unaligned = params.save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ''
-        """
-        INDEX=`find -L ./ -name "*.1.ht2*" | sed 's/\\.1.ht2.*\$//'`
-        hisat2 \\
-            -x \$INDEX \\
-            -1 ${reads[0]} \\
-            -2 ${reads[1]} \\
-            $strandedness \\
-            $ss \\
-            --summary-file ${prefix}.hisat2.summary.log \\
-            --threads $task.cpus \\
-            $seq_center \\
-            $unaligned \\
-            --no-mixed \\
-            --no-discordant \\
-            $args \\
-            | samtools view -bS -F 4 -F 8 -F 256 - > ${prefix}.bam
-
-        if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
-            mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz
-        fi
-        if [ -f ${prefix}.unmapped.fastq.2.gz ]; then
-            mv ${prefix}.unmapped.fastq.2.gz ${prefix}.unmapped_2.fastq.gz
-        fi
-        """
+        unaligned = save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ""
+        reads_args = "-1 ${reads[0]} -2 ${reads[1]}"
     }
 
+    def ss = splicesites ? "--known-splicesite-infile ${splicesites}" : ""
+    def samtools_command = sort_bam ? 'sort' : 'view'
+    def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+    def extension_matcher =  (args2 =~ extension_pattern)
+    def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
+    def reference = fasta && extension == "cram" ? "--reference ${fasta}" : ""
+    if (!fasta && extension=="cram") error "Fasta reference is required for CRAM output"
+
+    """
+    INDEX=`find -L ./ -name "*.1.ht2*" | sed 's/\\.1.ht2.*\$//'`
+    hisat2 \\
+        -x \$INDEX \\
+        ${reads_args} \\
+        ${ss} \\
+        --summary-file ${prefix}.hisat2.summary.log \\
+        --threads ${task.cpus} \\
+        ${unaligned} \\
+        ${args} \\
+        --temp-directory ./tmp \\
+        | samtools ${samtools_command} ${args2} --threads ${task.cpus} ${reference} -o ${prefix}.${extension} -
+   
+    if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
+        mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz
+    fi
+
+    if [ -f ${prefix}.unmapped.fastq.2.gz ]; then
+        mv ${prefix}.unmapped.fastq.2.gz ${prefix}.unmapped_2.fastq.gz
+    fi
+    """
+    
     stub:
+    def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def unaligned = params.save_unaligned ? "echo '' | gzip >  ${prefix}.unmapped_1.fastq.gz \n echo '' | gzip >  ${prefix}.unmapped_2.fastq.gz" : ''
-    """
-    ${unaligned}
+    def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+    def extension = (args2 ==~ extension_pattern) ? (args2 =~ extension_pattern)[0][2].toLowerCase() : "bam"
+    def create_unmapped = ""
+    if (meta.single_end) {
+        create_unmapped = save_unaligned ? "touch ${prefix}.unmapped.fastq.gz" : ""
+    } else {
+        create_unmapped = save_unaligned ? "touch ${prefix}.unmapped_1.fastq.gz && touch ${prefix}.unmapped_2.fastq.gz" : ""
+    }
+    if (!fasta && extension=="cram") error "Fasta reference is required for CRAM output"
 
+    def create_index = ""
+    if (extension == "cram") {
+        create_index = "touch ${prefix}.crai"
+    } else if (extension == "bam") {
+        create_index = "touch ${prefix}.csi"
+    }
+
+    """
+    touch ${prefix}.${extension}
+    ${create_index}
     touch ${prefix}.hisat2.summary.log
-    touch ${prefix}.bam
+    ${create_unmapped}
     """
-
 
 }
