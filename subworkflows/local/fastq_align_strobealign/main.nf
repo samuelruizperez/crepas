@@ -33,9 +33,7 @@ workflow FASTQ_ALIGN_STROBEALIGN {
     // MODULE: Index BAM file with samtools
     //
     SAMTOOLS_INDEX ( ch_bam )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
-
-
+    
     ch_bam_bai = ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
 
 
