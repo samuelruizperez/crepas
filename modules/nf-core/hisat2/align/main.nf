@@ -21,7 +21,7 @@ process HISAT2_ALIGN {
     tuple val(meta), path("*.cram")     , emit: cram    , optional:true
     tuple val(meta), path("*.csi")      , emit: csi     , optional:true
     tuple val(meta), path("*.crai")     , emit: crai    , optional:true
-    tuple val(meta), path("*.log")      , emit: log
+    tuple val(meta), path("*.log")      , emit: summary
     tuple val(meta), path("*fastq.gz")  , emit: fastq   , optional:true
     tuple val("${task.process}"), val('hisat2'), eval("hisat2 --version | sed -n '1s/.*version //p'"), emit: versions_hisat2, topic: versions
     tuple val("${task.process}"), val('samtools'), eval("samtools --version | sed -n '1s/samtools //p'"), emit: versions_samtools, topic: versions
