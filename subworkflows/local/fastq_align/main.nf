@@ -179,7 +179,9 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_hisat2_index,
             ch_splicesites,
-            ch_fasta
+            ch_fasta,
+            save_unaligned,
+            sort_bam
         )
         ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
