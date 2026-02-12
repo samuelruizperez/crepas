@@ -54,6 +54,8 @@ process HISAT2_ALIGN {
     if (!fasta && extension=="cram") error "Fasta reference is required for CRAM output"
 
     """
+    mkdir ./tmp && chmod 777 ./tmp
+
     INDEX=`find -L ./ -name "*.1.ht2*" | sed 's/\\.1.ht2.*\$//'`
     hisat2 \\
         -x \$INDEX \\
