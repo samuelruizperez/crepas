@@ -220,14 +220,16 @@
                         "git_sha": "66391ca86ea6a081d288afe6a93d242fefcd8c2c",
                         "installed_by": [
                             "modules"
-                        ]
+                        ],
+                        "patch": "modules/nf-core/hisat2/build/hisat2-build.diff"
                     },
                     "hisat2/extractsplicesites": {
                         "branch": "master",
                         "git_sha": "004e773fc35ebd24063ca4cbef057c94a24208aa",
                         "installed_by": [
                             "modules"
-                        ]
+                        ],
+                        "patch": "modules/nf-core/hisat2/extractsplicesites/hisat2-extractsplicesites.diff"
                     },
                     "homer/annotatepeaks": {
                         "branch": "master",
