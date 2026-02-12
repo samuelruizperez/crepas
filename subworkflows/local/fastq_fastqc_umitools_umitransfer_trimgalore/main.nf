@@ -44,7 +44,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
         FASTQC (reads)
         fastqc_html = FASTQC.out.html
         fastqc_zip  = FASTQC.out.zip
-        ch_versions = ch_versions.mix(FASTQC.out.versions.first())
     }
 
     umi_reads = reads
@@ -74,7 +73,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
         UMITOOLS_EXTRACT (ch_no_sep_umi_fq)
         ch_no_sep_umi_fq = UMITOOLS_EXTRACT.out.reads
         no_sep_umi_fq_log   = UMITOOLS_EXTRACT.out.log
-        ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions.first())
 
         // Discard R1 / R2 if required
         if (umi_discard_read in [1,2]) {
@@ -105,7 +103,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
         trim_html     = TRIMGALORE.out.html
         trim_zip      = TRIMGALORE.out.zip
         trim_log      = TRIMGALORE.out.log
-        ch_versions   = ch_versions.mix(TRIMGALORE.out.versions.first())
 
         //
         // Filter FastQ files based on minimum trimmed read count after adapter trimming
@@ -146,7 +143,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
             htrim_html      = TRIMGALORE_HARDTRIM.out.html
             htrim_zip       = TRIMGALORE_HARDTRIM.out.zip
             htrim_log       = TRIMGALORE_HARDTRIM.out.log
-            ch_versions     = ch_versions.mix(TRIMGALORE_HARDTRIM.out.versions.first())
         }
 
     }

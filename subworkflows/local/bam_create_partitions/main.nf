@@ -102,7 +102,6 @@ workflow BAM_CREATE_PARTITIONS {
     SAMTOOLS_INDEX (
         ch_bam
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
     //
     // MODULE: Run samtools stats, flagstat and idxstats per strand
@@ -111,8 +110,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0),
         ch_fasta
     )
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
-
 
     // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
     ch_bam
@@ -138,7 +135,6 @@ workflow BAM_CREATE_PARTITIONS {
         'bdg',
         true
     )
-    ch_versions  = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
 
     //
     // MODULE: Sort the bedgraph so that it works with bedgraphtobigwig
@@ -157,7 +153,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_chrom_sizes.map { it -> it[1] }
     )
     ch_bigwig = UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.bigwig
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_WINDOWS.out.versions.first())
 
     // TODO: print for debugging
     ch_bigwig
@@ -186,7 +181,6 @@ workflow BAM_CREATE_PARTITIONS {
 
     // count number of lines in the windows file
     ch_num_windows = ch_windows.map { meta, windows -> windows.countLines() }
-    ch_versions = ch_versions.mix(BEDTOOLS_MAKEWINDOWS.out.versions)
 
     // TODO: print for debugging
     ch_num_windows
@@ -516,8 +510,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_partitions_filtered_bdg.mix(ch_part_avg_filtered_bdg),
         ch_chrom_sizes.map { it -> it[1] }
     )
-    ch_versions = ch_versions.mix(UCSC_BEDGRAPHTOBIGWIG_PARTITIONS.out.versions.first())
-
 
     // Mix individual and averaged RFD (OK-seq) files
     ch_partitions_filtered

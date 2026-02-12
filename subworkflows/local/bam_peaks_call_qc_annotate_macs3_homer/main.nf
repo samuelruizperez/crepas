@@ -72,9 +72,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
         BEDTOOLS_SLOP (
             MACS3_BDGCMP.out.bdg,
-            ch_chrom_sizes.map{ it[1] }
+            ch_chrom_sizes.map{ it -> it[1] }
         )
-        ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
 
         AWK_FIX_MACS3_BDGCMP (
             BEDTOOLS_SLOP.out.bed,
@@ -83,9 +82,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
         UCSC_BEDCLIP (
             AWK_FIX_MACS3_BDGCMP.out.bed,
-            ch_chrom_sizes.map{ it[1] }
+            ch_chrom_sizes.map{ it -> it[1] }
         )
-        ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
 
         // TODO: maybe a whole module for this is overkill
         FILE_SORT (

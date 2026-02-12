@@ -44,11 +44,13 @@ workflow GROTHLAB_CREPAS {
     // TODO: simplify, readability
     def fasta                 = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
     def bwa_index             = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
+    def bwamem2_index         = params.containsKey('bwamem2_index') ? params.bwamem2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwamem2'))
     def bowtie_index          = params.containsKey('bowtie_index') ? params.bowtie_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie'))
     def bowtie2_index         = params.containsKey('bowtie2_index') ? params.bowtie2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie2_index'))
     def chromap_index         = params.containsKey('chromap_index') ? params.chromap_index : (params.refgenie_ignore ? null : getGenomeAttribute('chromap'))
     def star_index            = params.containsKey('star_index') ? params.star_index : (params.refgenie_ignore ? null : getGenomeAttribute('star'))
     def hisat2_index          = params.containsKey('hisat2_index') ? params.hisat2_index : (params.refgenie_ignore ? null : getGenomeAttribute('hisat2'))
+    def minimap2_index        = params.containsKey('minimap2_index') ? params.minimap2_index : (params.refgenie_ignore ? null : getGenomeAttribute('minimap2'))
     def gtf                   = params.containsKey('gtf') ? params.gtf : (params.refgenie_ignore ? null : getGenomeAttribute('gtf'))
     def gff                   = params.containsKey('gff') ? params.gff : (params.refgenie_ignore ? null : getGenomeAttribute('gff'))
     def gene_bed              = params.containsKey('gene_bed') ? params.gene_bed : (params.refgenie_ignore ? null : getGenomeAttribute('gene_bed'))
@@ -87,11 +89,13 @@ workflow GROTHLAB_CREPAS {
         params.skip_gtf_index,
         gene_bed,
         bwa_index,
+        bwamem2_index,
         bowtie_index,
         bowtie2_index,
         chromap_index,
         star_index,
         hisat2_index,
+        minimap2_index,
         splicesites,
         okseq_rfd_file,
         initiation_zones,
@@ -129,11 +133,13 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.okseq_rfd_file,
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
+        PREPARE_GENOME.out.bwamem2_index,
         PREPARE_GENOME.out.bowtie_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,
         PREPARE_GENOME.out.star_index,
         PREPARE_GENOME.out.hisat2_index,
+        PREPARE_GENOME.out.minimap2_index,
         PREPARE_GENOME.out.splicesites,
         PREPARE_GENOME.out.tecount_gene_index,
         PREPARE_GENOME.out.telocal_gene_index,

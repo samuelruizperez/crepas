@@ -79,8 +79,6 @@ workflow COUNT_READS_IN_BINS {
     SUBREAD_FEATURECOUNTS (
         ch_bam_windows
     )
-    ch_versions = ch_versions.mix(SUBREAD_FEATURECOUNTS.out.versions.first())
-
 
     emit:
     windows_counts  = SUBREAD_FEATURECOUNTS.out.counts      // channel: [ val(meta), [ counts ] ]

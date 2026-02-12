@@ -20,7 +20,7 @@ workflow BAM_FILTER_BLACKLIST {
     //
     // MODULE: Filter BAM file with SAMBAMBA using blacklist
     //
-    BAM_FILTER_SAMBAMBA(
+    BAM_FILTER_SAMBAMBA (
         ch_bam_index,
         ch_whitelist_bed,
         ch_fasta
@@ -31,7 +31,15 @@ workflow BAM_FILTER_BLACKLIST {
     ch_multiqc_files = BAM_FILTER_SAMBAMBA.out.stats.collect { it -> it[1] }
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions)
+    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA.out.versions.first())
+
+    // Print debug info
+    ch_filtered_bam
+        .map { meta, bam ->
+            "${meta}\t${bam}"
+        }
+        .collectFile(name: 'ch_filtered_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_FILTER_BLACKLIST")
+    
 
     // Separate single-end and paired-end BAM files (SE do not have orphans)
     ch_filtered_bam
@@ -60,15 +68,15 @@ workflow BAM_FILTER_BLACKLIST {
     //
     SAMTOOLS_SORT(
         ch_filtered_bam.pe,
-        ch_fasta
+        ch_fasta,
+        ''
     )
     ch_filtered_bam_pe = SAMTOOLS_SORT.out.bam
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     //
     // MODULE: Remove orphan reads left by SAMBAMBA's blacklist filtering
     //
-    BAM_REMOVE_ORPHANS(
+    BAM_REMOVE_ORPHANS (
         ch_filtered_bam_pe,
         true
     )
@@ -84,7 +92,6 @@ workflow BAM_FILTER_BLACKLIST {
     ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
 
     // Mixing SE and PE (removed orphans) files
@@ -110,9 +117,6 @@ workflow BAM_FILTER_BLACKLIST {
     // Add the total_mapped_reads to the bams' and bais' metas
     ch_filtered_bam
         .combine(ch_filtered_index, by: 0)
-        .map { meta, bam, bai ->
-            [meta, bam, bai]
-        }
         .combine(ch_flTbl_total, by: 0)
         .map { meta, bam, bai, total ->
             def meta_clone = meta.clone()

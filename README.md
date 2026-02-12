@@ -26,7 +26,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 3. Adapter, quality or hard trimming ([`Trim Galore!`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
 
-4. Alignment to reference genome ([`BWA`](https://sourceforge.net/projects/bio-bwa/files/), [`Chromap`](https://github.com/haowenz/chromap), [`Bowtie2`](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [`STAR`](https://github.com/alexdobin/STAR), or [`HISAT2`](https://daehwankimlab.github.io/hisat2/))
+4. Alignment to reference genome ([`BWA MEM`](https://sourceforge.net/projects/bio-bwa/files/), [`BWA MEM2`](https://github.com/bwa-mem2/bwa-mem2), [`Chromap`](https://github.com/haowenz/chromap), [`Bowtie`](https://bowtie-bio.sourceforge.net/manual.shtml), [`Bowtie2`](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [`STAR`](https://github.com/alexdobin/STAR), [`HISAT2`](https://daehwankimlab.github.io/hisat2/), [`minimap2`](https://lh3.github.io/minimap2/minimap2.html) or [`strobealign`](https://github.com/ksahlin/strobealign))
 
 5. Merging of alignments from multiple libraries of the same sample (technical replicates) ([`picard`](https://broadinstitute.github.io/picard/))
 

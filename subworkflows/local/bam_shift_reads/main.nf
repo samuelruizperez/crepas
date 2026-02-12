@@ -27,7 +27,6 @@ workflow BAM_SHIFT_READS {
         DEEPTOOLS_ALIGNMENTSIEVE.out.bam,
         ch_fasta
     )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
 
     emit:
     bam      = BAM_SORT_STATS_SAMTOOLS.out.bam      // channel: [ val(meta), [ bam ] ]

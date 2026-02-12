@@ -29,12 +29,12 @@ include {
 include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
-include { BAM_ENCODE_PIPELINE                                       } from '../../subworkflows/local/bam_encode_pipeline/main'
+include { BAM_ENCODE_PIPELINE                                         } from '../../subworkflows/local/bam_encode_pipeline/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_PARTITIONS                                       } from '../../subworkflows/local/bam_create_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../../subworkflows/local/bam_allocate_multimappers/main'
@@ -46,8 +46,8 @@ include { BAM_FILTER_BLACKLIST                                        } from '..
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                              } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
 include { BAM_DOWNSAMPLE                                              } from '../../subworkflows/local/bam_downsample/main'
 include { TE_COUNTING                                                 } from '../../subworkflows/local/te_counting/main'
-include { DENOPA                                                       } from '../../modules/local/denopa/main'
-
+include { DENOPA                                                      } from '../../modules/local/denopa/main'
+include { FASTQ_ALIGN                                                 } from '../../subworkflows/local/fastq_align/main'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -59,7 +59,6 @@ include { DENOPA                                                       } from '.
 //
 
 include { SAMTOOLS_INDEX                                              } from '../../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_COLLATE                                            } from '../../modules/nf-core/samtools/collate/main'
 include { PICARD_MERGESAMFILES                                        } from '../../modules/nf-core/picard/mergesamfiles/main'
 include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP                                             } from '../../modules/nf-core/preseq/lcextrap/main'
@@ -75,16 +74,9 @@ include { MULTIQC                                                     } from '..
 //
 
 // include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
-include { FASTQ_ALIGN_BWA                                             } from '../../subworkflows/nf-core/fastq_align_bwa'
-include { FASTQ_ALIGN_BOWTIE2                                         } from '../../subworkflows/nf-core/fastq_align_bowtie2'
-include { FASTQ_ALIGN_BOWTIE                                         } from '../../subworkflows/local/fastq_align_bowtie'
-include { FASTQ_ALIGN_CHROMAP                                         } from '../../subworkflows/nf-core/fastq_align_chromap'
-include { FASTQ_ALIGN_STAR                                            } from '../../subworkflows/nf-core/fastq_align_star'
-include { FASTQ_ALIGN_HISAT2                                          } from '../../subworkflows/nf-core/fastq_align_hisat2'
 include { BAM_MARKDUPLICATES_PICARD                                   } from '../../subworkflows/nf-core/bam_markduplicates_picard'
 include { BAM_DEDUP_UMI                                               } from '../../subworkflows/nf-core/bam_dedup_umi'
 include { BAM_STATS_SAMTOOLS                                          } from '../../subworkflows/nf-core/bam_stats_samtools'
-include { BAM_SORT_STATS_SAMTOOLS                                     } from '../../subworkflows/nf-core/bam_sort_stats_samtools'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,11 +104,13 @@ workflow CREPAS {
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
+    ch_bwamem2_index        // channel: path(bwamem2/index/)
     ch_bowtie_index            // channel: path(bowtie/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
     ch_chromap_index          // channel: path(chromap.index)
     ch_star_index             // channel: path(star/index/)
     ch_hisat2_index           // channel: path(hisat2/index)
+    ch_minimap2_index         // channel: path(minimap2/index/)
     ch_splicesites            // channel: path(splicesites)
     ch_tecount_gene_index // channel: val(meta), path(tecount_gene_index.Ind)
     ch_telocal_gene_index // channel: val(meta), path(telocal_gene_index.Ind)
@@ -207,129 +201,33 @@ workflow CREPAS {
     ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.versions)
 
     //
-    // SUBWORKFLOW: Alignment with BWA & BAM QC
+    // SUBWORKFLOW: Alignment
     //
     ch_genome_bam = channel.empty()
-    ch_genome_bam_index = channel.empty()
-    if (params.aligner == 'bwa') {
-        FASTQ_ALIGN_BWA(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_bwa_index,
-            false,
-            ch_fasta
-        )
-        ch_genome_bam = FASTQ_ALIGN_BWA.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BWA.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWA.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BWA.out.versions.first())
-    }
+    FASTQ_ALIGN (
+        FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
+        ch_fasta,
+        params.aligner,
+        ch_bwa_index,
+        ch_bwamem2_index,
+        ch_bowtie_index,
+        ch_bowtie2_index,
+        ch_chromap_index,
+        ch_star_index,
+        ch_hisat2_index,
+        ch_minimap2_index,
+        ch_gtf,
+        ch_splicesites,
+        params.save_unaligned,
+        params.seq_platform,
+        params.seq_center,
+        params.sort_bam
 
-    //
-    // SUBWORKFLOW: Alignment with Bowtie & BAM QC
-    //
-    if (params.aligner == 'bowtie') {
-        FASTQ_ALIGN_BOWTIE(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_bowtie_index,
-            params.save_unaligned,
-            ch_fasta
-        )
-        ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE.out.versions.first())
-    }
-
-    //
-    // SUBWORKFLOW: Alignment with Bowtie2 & BAM QC
-    //
-    if (params.aligner == 'bowtie2') {
-        FASTQ_ALIGN_BOWTIE2(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_bowtie2_index,
-            params.save_unaligned,
-            params.sort_bam,
-            ch_fasta
-        )
-        ch_genome_bam = FASTQ_ALIGN_BOWTIE2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE2.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE2.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE2.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE2.out.versions.first())
-    }
-
-    //
-    // SUBWORKFLOW: Alignment with Chromap & BAM QC
-    //
-    if (params.aligner == 'chromap') {
-        FASTQ_ALIGN_CHROMAP(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_chromap_index,
-            ch_fasta,
-            [],
-            [],
-            [],
-            []
-        )
-
-        ch_genome_bam = FASTQ_ALIGN_CHROMAP.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_CHROMAP.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_CHROMAP.out.versions.first())
-    }
-
-    //
-    // SUBWORKFLOW: Alignment with STAR & BAM QC
-    //
-    if (params.aligner == 'star') {
-        FASTQ_ALIGN_STAR(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_star_index,
-            ch_gtf,
-            true,
-            params.seq_platform ?: '',
-            params.seq_center ?: '',
-            ch_fasta,
-            channel.value([[:], []])
-        )
-        ch_genome_bam = FASTQ_ALIGN_STAR.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_STAR.out.bai
-        ch_transcriptome_bam = FASTQ_ALIGN_STAR.out.bam_transcript
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.log_final.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_STAR.out.versions)
-    }
-
-    if (params.aligner == 'hisat2') {
-        FASTQ_ALIGN_HISAT2(
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-            ch_hisat2_index,
-            ch_splicesites,
-            ch_fasta
-        )
-        ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.summary.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_HISAT2.out.versions)
-    }
+    )
+    ch_genome_bam = FASTQ_ALIGN.out.bam
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN.out.samtools_stats_summary)
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN.out.multiqc_files)
+    ch_versions = ch_versions.mix(FASTQ_ALIGN.out.versions)
 
     //
     // MODULE: Merge resequenced BAM files
@@ -358,13 +256,12 @@ workflow CREPAS {
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
     ch_versions = ch_versions.mix(PICARD_MERGESAMFILES.out.versions.first())
 
-    SAMTOOLS_INDEX(
+    SAMTOOLS_INDEX (
         ch_merged_bam
     )
     ch_merged_bam_bai = ch_merged_bam.join(SAMTOOLS_INDEX.out.bai, by: 0)
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions.first())
 
-    BAM_STATS_SAMTOOLS(
+    BAM_STATS_SAMTOOLS (
         ch_merged_bam_bai,
         ch_fasta
     )
@@ -372,7 +269,6 @@ workflow CREPAS {
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
 
     if (params.with_umi) {
@@ -405,20 +301,13 @@ workflow CREPAS {
         )
         ch_dedup_bam = BAM_DEDUP_UMI.out.bam
         ch_dedup_index = BAM_DEDUP_UMI.out.bai
-        ch_dedup_umi_stats = BAM_DEDUP_UMI.out.stats
-        ch_dedup_umi_flagstat = BAM_DEDUP_UMI.out.flagstat
-        ch_dedup_umi_idxstats = BAM_DEDUP_UMI.out.idxstats
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(ch_dedup_umi_idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.dedup_log.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_DEDUP_UMI.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.multiqc_files)
     }
     else {
         //
         // SUBWORKFLOW: Mark duplicates & filter BAM files
         //
-        BAM_MARKDUPLICATES_PICARD(
+        BAM_MARKDUPLICATES_PICARD (
             ch_merged_bam,
             ch_fasta,
             ch_fai
@@ -430,7 +319,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.metrics.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_MARKDUPLICATES_PICARD.out.versions)
 
         //
         // MODULE: Preseq coverage analysis
@@ -509,32 +397,25 @@ workflow CREPAS {
     ch_filtered_exo_bam = channel.empty()
     ch_filtered_exo_index = channel.empty()
     if (params.spikein_genome) {
-        BAM_SPIKEIN_SPLIT(
+        BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
             ch_fasta,
-            channel.value([[:], []]),
             params.genome,
             params.spikein_genome
         )
-        ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.bam
+        ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.endo_bam
         ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
-        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.bai
+        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.endo_bai
         ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_bai
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.exo_stats)
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.idxstats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.exo_idxstats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
 
         //
         // MODULE: Extract total mapped reads from flagstats
         //
-        BAM_FLAGSTAT_MAPPED_FLT2(
-            BAM_SPIKEIN_SPLIT.out.flagstat.mix(BAM_SPIKEIN_SPLIT.out.exo_flagstat)
+        BAM_FLAGSTAT_MAPPED_FLT2 (
+            BAM_SPIKEIN_SPLIT.out.flagstat
         )
         ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT2.out.versions)
 
@@ -605,7 +486,7 @@ workflow CREPAS {
     // SUBWORKFLOW: Allocation of multimappers
     //
     if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
-        BAM_ALLOCATE_MULTIMAPPERS_ENDO(
+        BAM_ALLOCATE_MULTIMAPPERS_ENDO (
             ch_filtered_bam,
             ch_fasta,
             params.multimap_allocation_method
@@ -619,7 +500,7 @@ workflow CREPAS {
         ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.versions)
 
         if (params.allocate_exogenous) {
-            BAM_ALLOCATE_MULTIMAPPERS_EXO(
+            BAM_ALLOCATE_MULTIMAPPERS_EXO (
                 ch_filtered_exo_bam,
                 ch_fasta,
                 params.multimap_allocation_method
@@ -644,7 +525,6 @@ workflow CREPAS {
             ch_fai
         )
         ch_multiqc_files = ch_multiqc_files.mix(PICARD_COLLECTMULTIPLEMETRICS.out.metrics.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PICARD_COLLECTMULTIPLEMETRICS.out.versions.first())
     }
 
     // Mix the exogenous and endogenous BAM and index files
@@ -1014,7 +894,6 @@ workflow CREPAS {
             params.skip_tecount_gz,
             params.skip_telocal_gz
         )
-        ch_versions = ch_versions.mix(TE_COUNTING.out.versions.first())
     }
 
 
@@ -1537,8 +1416,31 @@ workflow CREPAS {
     //
     // Collate and save software versions
     //
-    softwareVersionsToYAML(ch_versions)
-        .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'crepas_software_mqc_versions.yml', sort: true, newLine: true)
+    def topic_versions = channel.topic("versions")
+        .distinct()
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
+    softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
+        .mix(topic_versions_string)
+        .collectFile(
+            storeDir: "${params.outdir}/pipeline_info",
+            name: 'grothlab' + 'crepas_software_' + 'mqc_' + 'versions.yml',
+            sort: true,
+            newLine: true,
+        )
         .set { ch_collated_versions }
 
     //
@@ -1583,6 +1485,7 @@ workflow CREPAS {
             []
         )
         ch_multiqc_report = MULTIQC.out.report
+        ch_versions = ch_versions.mix(MULTIQC.out.versions)
     }
 
     emit:
