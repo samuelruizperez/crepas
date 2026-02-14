@@ -455,14 +455,14 @@ workflow BAM_CREATE_PARTITIONS {
             def antibody = meta.antibody ?: meta.input_control_of_antibody
             meta_clone.id = meta.id - ~/_bRep_.*$/
             meta_clone.input_control = meta.input_control - ~/_bRep_.*$/
-            [ meta_clone.id, antibody, meta.signal_minus_input, meta_clone, partition ]
+            [ meta_clone.id, antibody, meta.aligner, meta.signal_minus_input, meta_clone, partition ]
         }
-        .groupTuple(by: [0, 1, 2])
+        .groupTuple(by: [0, 1, 2, 3])
         // remove elements where there is only one biological replicate
-        .filter { id, antibody, smi, metas, partitions ->
+        .filter { id, antibody, aligner, smi, metas, partitions ->
             partitions.size() > 1
         }
-        .map { id, antibody, smi, metas, partitions ->
+        .map { id, antibody, aligner, smi, metas, partitions ->
             def meta_clone = metas[0].clone()
             meta_clone.averaged_brep = true
             [meta_clone, partitions.flatten()]

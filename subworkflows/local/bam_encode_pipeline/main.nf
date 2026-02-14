@@ -72,10 +72,10 @@ workflow BAM_ENCODE_PIPELINE {
             meta_clone.input_control = meta_clone.input_control - ~/_bRep_.*$/
             def antibody = meta.input_control_of_antibody ?: meta.antibody
             def pseudoreplicate = meta.pseudoreplicate ?: false
-            [  meta_clone.id, antibody, pseudoreplicate, meta_clone, tagalign ]
+            [  meta_clone.id, antibody, pseudoreplicate, meta_clone.aligner, meta_clone, tagalign ]
         }
-        .groupTuple(by: [0, 1, 2])
-        .map { id, antibody, pseudoreplicate, metas, tagaligns ->
+        .groupTuple(by: [0, 1, 2, 3])
+        .map { id, antibody, pseudoreplicate, aligner, metas, tagaligns ->
             [ metas[0], tagaligns.flatten() ]
         }
         .set { ch_tas_reps_and_pseudoreps_to_pool }
@@ -101,24 +101,24 @@ workflow BAM_ENCODE_PIPELINE {
         .mix(ch_tagalign_pool)
         .branch { meta, tagalign ->
             ips_with_ipcontrol: meta.input_control
-                return [meta.input_control, meta.antibody, meta, tagalign]
+                return [meta.input_control, meta.antibody, meta.aligner, meta, tagalign]
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                return [meta, tagalign]
+                return [meta.aligner, meta, tagalign]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta.input_control_of_antibody, meta, tagalign]
+                return [meta.id, meta.input_control_of_antibody, meta.aligner, meta, tagalign]
         }
         .set { ch_tagalign_by_type }
 
     // `ctl_depth_ratio` | 1.2 | If ratio of depth between controls is higher than this. then always use a pooled control for all replicates.
     ch_tagalign_by_type
         .ips_with_ipcontrol
-        .combine(ch_tagalign_by_type.ipcontrols.filter { id, antibody, meta, tagalign -> !meta.pooled }, by: [0,1])
-        .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
+        .combine(ch_tagalign_by_type.ipcontrols.filter { id, antibody, aligner, meta, tagalign -> !meta.pooled }, by: [0,1,2])
+        .map { ipcontrol_id, antibody, aligner, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             def pooled_ipcontrol_id = ipcontrol_id - ~/_bRep_.*$/
-            [ pooled_ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ]
+            [ pooled_ipcontrol_id, antibody, aligner, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ]
         }
-        .groupTuple(by: [0,1])
-        .map { pooled_ipcontrol_id, antibody, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ->
+        .groupTuple(by: [0,1,2])
+        .map { pooled_ipcontrol_id, antibody, aligner, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ->
             // if depth ratio between controls is higher than ctl_depth_ratio, then use pooled control
             def ipcontrol_depths = ipcontrol_metas.collect { meta ->
                 meta[meta.ref_total_mapped_reads_for_rpm]
@@ -127,10 +127,10 @@ workflow BAM_ENCODE_PIPELINE {
             def ctl_depth_min = ipcontrol_depths.min()
             def ctl_depth_ratio = ctl_depth_max / ctl_depth_min
             def ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio > ctl_depth_ratio_threshold
-            [ pooled_ipcontrol_id, antibody, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ]
+            [ pooled_ipcontrol_id, antibody, aligner, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ]
         }
         .transpose()
-        .map { pooled_ipcontrol_id, antibody, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
+        .map { pooled_ipcontrol_id, antibody, aligner, ctl_depth_max, ctl_depth_min, ctl_depth_ratio, ctl_depth_ratio_threshold_exceeded, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             def meta_clone = ip_meta.clone()
             if (ctl_depth_ratio_threshold_exceeded) {
                 meta_clone.input_control = pooled_ipcontrol_id
@@ -140,27 +140,27 @@ workflow BAM_ENCODE_PIPELINE {
             meta_clone.ctl_depth_ratio = ctl_depth_ratio
             meta_clone.ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio_threshold_exceeded
             meta_clone.pooled_ipcontrol = ctl_depth_ratio_threshold_exceeded ?: false
-            [ meta_clone.input_control, meta_clone.antibody, meta_clone, ip_tagalign]
+            [ meta_clone.input_control, meta_clone.antibody, aligner, meta_clone, ip_tagalign]
         }
         .set { ch_tagalign_ips_with_ipcontrol }
 
 
     // TODO: save for debugging
     ch_tagalign_ips_with_ipcontrol
-        .map { ipcontrol_id, antibody, meta, ip_tagalign ->
-            "${ipcontrol_id}\t${antibody}\t${meta}\t${ip_tagalign}"
+        .map { ipcontrol_id, antibody, aligner, meta, ip_tagalign ->
+            "${ipcontrol_id}\t${antibody}\t${aligner}\t${meta}\t${ip_tagalign}"
         }
         .collectFile(name: 'ch_tagalign_ips_with_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
     // Create channel: [ meta, ip_tagalign, ipcontrol_tagalign ]
     ch_tagalign_ips_with_ipcontrol
-        .combine(ch_tagalign_by_type.ipcontrols, by: [0,1])
-        .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
-            [ ip_meta, ip_tagalign, ipcontrol_tagalign ]
+        .combine(ch_tagalign_by_type.ipcontrols, by: [0,1,2])
+        .map { ipcontrol_id, antibody, aligner, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
+            [ aligner, ip_meta, ip_tagalign, ipcontrol_tagalign ]
         }
         .mix(ch_tagalign_by_type.ips_wo_ipcontrol)
         .map { it -> 
-            [ it[0], it[1], it[2] ?: []]
+            [ it[1], it[2], it[3] ?: []]
         }
         .set { ch_ip_ipcontrol_tagalign }
 

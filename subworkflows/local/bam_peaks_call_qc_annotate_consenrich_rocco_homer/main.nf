@@ -53,10 +53,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
             meta_clone.id = meta_clone.id - ~/_bRep_.*$/
             meta_clone.input_control = meta_clone.input_control - ~/_bRep_.*$/
             // ips_wo_ipcontrol do not have ipcontrol_bam (it[5]) and ipcontrol_bai (it[6])
-            [meta_clone.id, it[1], meta_clone, it[3], it[4], it[5] ?: [], it[6] ?: []]
+            [meta_clone.id, meta_clone.aligner, it[1], meta_clone, it[3], it[4], it[5] ?: [], it[6] ?: []]
         }
-        .groupTuple(by: [0, 1])
-        .map { id, antibody, metas, ip_bams, ip_bais, ipcontrol_bams, ipcontrol_bais ->
+        .groupTuple(by: [0, 1, 2])
+        .map { id, antibody, aligner, metas, ip_bams, ip_bais, ipcontrol_bams, ipcontrol_bais ->
             [metas[0], ip_bams.flatten(), ip_bais.flatten(), ipcontrol_bams.flatten(), ipcontrol_bais.flatten()]
         }
         .set { ch_ip_ipcontrol_bam_bai_merged_reps }

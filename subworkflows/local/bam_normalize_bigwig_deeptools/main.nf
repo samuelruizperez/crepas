@@ -466,16 +466,16 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_bigwig
             .branch { meta, bw ->
                 ips_with_ipcontrol: meta.input_control
-                    return [ meta.input_control, meta.antibody, meta.genome, meta.norm_factor_type, meta, bw ]
+                    return [ meta.input_control, meta.antibody, meta.genome, meta.norm_factor_type, meta.aligner, meta, bw ]
                 ipcontrols: !meta.input_control && meta.is_input_control
-                    return [ meta.id, meta.input_control_of_antibody, meta.genome, meta.norm_factor_type, meta, bw ]
+                    return [ meta.id, meta.input_control_of_antibody, meta.genome, meta.norm_factor_type, meta.aligner, meta, bw ]
             }
             .set { ch_bigwig_per_type }
 
         ch_bigwig_per_type
             .ips_with_ipcontrol
-            .combine(ch_bigwig_per_type.ipcontrols, by: [0, 1, 2, 3])
-            .map { ipcontrol_id, ip_antibody, ip_genome, ip_norm_factor_type, ip_meta, ip_bw, ipcontrol_meta, ipcontrol_bw ->
+            .combine(ch_bigwig_per_type.ipcontrols, by: [0, 1, 2, 3, 4])
+            .map { ipcontrol_id, ip_antibody, ip_genome, ip_norm_factor_type, ip_aligner, ip_meta, ip_bw, ipcontrol_meta, ipcontrol_bw ->
                 def meta_clone = ip_meta.clone()
                     meta_clone.signal_vs_input = true
                     meta_clone.signal_vs_input_operation = signal_vs_input_operation
@@ -505,10 +505,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 def meta_clone = meta.clone()
                 def antibody = meta.antibody ?: meta.input_control_of_antibody
                 meta_clone.id = meta_clone.id - ~/_bRep_.*$/
-                [ meta_clone.id, antibody, meta_clone.genome, meta_clone.norm_factor_type, meta_clone.signal_vs_input, meta_clone, bw ]
+                [ meta_clone.id, antibody, meta_clone.genome, meta_clone.norm_factor_type, meta_clone.signal_vs_input, meta.aligner, meta_clone, bw ]
             }
-            .groupTuple(by: [0, 1, 2, 3, 4])
-            .map { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
+            .groupTuple(by: [0, 1, 2, 3, 4, 5])
+            .map { id, antibody, meta_genome, norm_factor_type, signal_vs_input, aligner, metas, bws ->
                 def meta_clone = metas[0].clone()
                 meta_clone.averaged_brep = true
                 [meta_clone, bws.flatten()]
