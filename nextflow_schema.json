@@ -1162,6 +1162,44 @@
                     "description": "Skip deepTools plotProfile.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "compute_mat_mode": {
+                    "type": "string",
+                    "default": "scale_regions",
+                    "description": "Mode to compute the matrix for deepTools plotProfile. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["scale_regions", "reference_point"]
+                },
+                "compute_mat_ref_point": {
+                    "type": "string",
+                    "default": "TSS",
+                    "description": "Reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["TSS", "TES", "center"]
+                },
+                "compute_mat_region_body_length": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Region body length (in bp) for deepTools plotProfile when `--compute_mat_mode` is `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "compute_mat_upstream": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Upstream distance (in bp) from the reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "compute_mat_downstream": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Downstream distance (in bp) from the reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "compute_mat_skip_zeros": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip regions with zero coverage in all samples when computing the matrix for deepTools plotProfile. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_plot_fingerprint": {
                     "type": "boolean",
                     "description": "Skip deepTools plotFingerprint.",
