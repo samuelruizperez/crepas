@@ -88,7 +88,6 @@ workflow CREPAS {
     take:
     ch_samplesheet                  // channel: path(sample_sheet.csv)
     ch_versions               // channel: [ path(versions.yml) ]
-    aligners
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
     ch_gtf                    // channel: path(genome.gtf)
@@ -208,7 +207,7 @@ workflow CREPAS {
     FASTQ_ALIGN (
         FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
         ch_fasta,
-        aligners,
+        params.aligner,
         ch_bwa_index,
         ch_bwamem2_index,
         ch_bowtie_index,

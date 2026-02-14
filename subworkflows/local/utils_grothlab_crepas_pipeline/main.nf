@@ -450,20 +450,9 @@ def validateInputParameters() {
         }
     }
 
-    // Check aligner parameter
-    def aligner_options = ['bwa', 'bwamem2', 'bowtie', 'bowtie2', 'strobealign', 'chromap', 'star', 'hisat2', 'minimap2']
-    def aligners  = params.aligner.split(',').collect { it -> it.trim().toLowerCase() }
-    def invalid_aligners = aligners.findAll { it -> !aligner_options.contains(it) }.unique()
-    if (invalid_aligners) {
-        error("Invalid aligner option(s): ${invalid_aligners.join(', ')}. Valid options: ${aligner_options.join(', ')}")
-    }
-    if (!aligners) {
-        error("No valid aligner option provided. Valid options: ${aligner_options.join(', ')}")
-    }
-
     if (params.map_n_multimappers) {
         def multimapper_aligners = ['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2']
-        def invalid_multimapper_aligners = aligners.findAll { it -> !multimapper_aligners.contains(it) }.unique()
+        def invalid_multimapper_aligners = params.aligner.findAll { it -> !multimapper_aligners.contains(it) }.unique()
         if (invalid_multimapper_aligners) {
             error("The `--map_n_multimappers` parameter requires aligner(s) to be one of: ${multimapper_aligners.join(', ')}. Unsupported aligner(s): ${invalid_multimapper_aligners.join(', ')}")
         }

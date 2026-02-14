@@ -68,7 +68,7 @@ workflow PREPARE_GENOME {
     take:
     genome             //    string: genome name
     spikein_genome     //    string: spikein genome name
-    prepare_tool_index //    string  : tool to prepare index for
+    aligners //    string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
@@ -329,7 +329,7 @@ workflow PREPARE_GENOME {
     // Uncompress BWA index or generate from scratch if required
     //
     ch_bwa_index = channel.empty()
-    if (prepare_tool_index == 'bwa') {
+    if (aligners.contains('bwa')) {
         if (bwa_index) {
             if (bwa_index.endsWith('.tar.gz')) {
                 ch_bwa_index = UNTAR_BWA_INDEX ( [ [id:'bwa_index'], file(bwa_index, checkIfExists: true) ] ).untar
@@ -346,7 +346,7 @@ workflow PREPARE_GENOME {
     // Uncompress BWAMEM2 index or generate from scratch if required
     //
     ch_bwamem2_index = channel.empty()
-    if (prepare_tool_index == 'bwamem2') {
+    if (aligners.contains('bwamem2')) {
         if (bwamem2_index) {
             if (bwamem2_index.endsWith('.tar.gz')) {
                 ch_bwamem2_index = UNTAR_BWAMEM2_INDEX ( [ [id:'bwamem2_index'], file(bwamem2_index, checkIfExists: true) ] ).untar
@@ -363,7 +363,7 @@ workflow PREPARE_GENOME {
     // Uncompress Bowtie index or generate from scratch if required
     //
     ch_bowtie_index = channel.empty()
-    if (prepare_tool_index == 'bowtie') {
+    if (aligners.contains('bowtie')) {
         if (bowtie_index) {
             if (bowtie_index.endsWith('.tar.gz')) {
                 ch_bowtie_index = UNTAR_BOWTIE_INDEX ( [ [id:'bowtie_index'], file(bowtie_index, checkIfExists: true) ] ).untar
@@ -380,7 +380,7 @@ workflow PREPARE_GENOME {
     // Uncompress Bowtie2 index or generate from scratch if required
     //
     ch_bowtie2_index = channel.empty()
-    if (prepare_tool_index == 'bowtie2') {
+    if (aligners.contains('bowtie2')) {
         if (bowtie2_index) {
             if (bowtie2_index.endsWith('.tar.gz')) {
                 ch_bowtie2_index = UNTAR_BOWTIE2_INDEX ( [ [id:'bowtie2_index'], file(bowtie2_index, checkIfExists: true) ] ).untar
@@ -397,7 +397,7 @@ workflow PREPARE_GENOME {
     // Uncompress CHROMAP index or generate from scratch if required
     //
     ch_chromap_index = channel.empty()
-    if (prepare_tool_index == 'chromap') {
+    if (aligners.contains('chromap')) {
         if (chromap_index) {
             if (chromap_index.endsWith('.tar.gz')) {
                 ch_chromap_index = UNTAR_CHROMAP_INDEX ( [ [id:'chromap_index'], file(chromap_index, checkIfExists: true) ] ).untar
@@ -414,7 +414,7 @@ workflow PREPARE_GENOME {
     // Uncompress STAR index or generate from scratch if required
     //
     ch_star_index = channel.empty()
-    if (prepare_tool_index == 'star') {
+    if (aligners.contains('star')) {
         if (star_index) {
             if (star_index.endsWith('.tar.gz')) {
                 ch_star_index = UNTAR_STAR_INDEX ( [ [id:'star_index'], file(star_index, checkIfExists: true) ] ).untar
@@ -432,7 +432,7 @@ workflow PREPARE_GENOME {
     //
     ch_splicesites  = channel.empty()
     ch_hisat2_index = channel.empty()
-    if (prepare_tool_index == 'hisat2') {
+    if (aligners.contains('hisat2')) {
         if (!splicesites) {
             ch_splicesites = HISAT2_EXTRACTSPLICESITES ( ch_gtf ).txt
         } else {
@@ -457,7 +457,7 @@ workflow PREPARE_GENOME {
     // Uncompress Minimap2 index or generate from scratch if required
     //
     ch_minimap2_index = channel.empty()
-    if (prepare_tool_index == 'minimap2') {
+    if (aligners.contains('minimap2')) {
         if (minimap2_index) {
             if (minimap2_index.endsWith('.tar.gz')) {
                 ch_minimap2_index = UNTAR_MINIMAP2_INDEX ( [ [id:'minimap2_index'], file(minimap2_index, checkIfExists: true) ] ).untar
