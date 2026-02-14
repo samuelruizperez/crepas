@@ -1,4 +1,4 @@
-process CHROM_SIZES_SPIKEIN_SPLIT {
+process CHROMSIZES_SPLIT_BY_GENOME {
     tag "$sizes"
     label 'process_single'
 
@@ -32,9 +32,10 @@ process CHROM_SIZES_SPIKEIN_SPLIT {
 
     awk \\
         ${args} \\
-        '(\$1 ~ /_${exo_genome_string}\$/)' \\
+        '(\$1 ~ /_${exo_genome_string}\$/) {sub(/_${exo_genome_string}\$/, "", \$1); print}' \\
         ${sizes} \\
         > ${prefix}.${exo_genome_string}.sizes
+
 
 
     cat <<-END_VERSIONS > versions.yml

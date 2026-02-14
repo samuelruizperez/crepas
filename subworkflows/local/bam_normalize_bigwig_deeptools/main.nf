@@ -29,6 +29,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     min_reads_for_norm
     skip_rpm_lfc
     skip_bw_average
+    skip_exo_bw             // boolean: skip generating bigwigs for the exogenous genome
 
     main:
 
@@ -40,11 +41,52 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             def meta_clone = meta.clone()
             meta_clone.norm_factor_val = 1
             meta_clone.norm_factor_type = 'raw'
+            meta_clone.coverage_bin_size = coverage_bin_size
             [ meta_clone, bam, bai ]
         }
         // Remove empty BAMs to prevent bamCoverage errors
         .filter { meta, bam, bai -> meta[meta.last_total_mapped_reads_key] >= min_reads_for_norm }
         .set { ch_bam_bai }
+
+    // Copy exogenous total_mapped_reads meta fields to their corresponding endogenous samples    
+    ch_bam_bai
+        .map { meta, bam, bai ->
+            // samples have meta.antibody, while input controls have meta.input_control_of_antibody
+            def antibody = meta.antibody ?: meta.input_control_of_antibody
+            [ meta.id, antibody, meta, bam, bai ]
+        }
+        .branch { id, antibody, meta, bam, bai ->
+            endo: meta.genome == genome
+            exo: meta.genome == spikein_genome
+        }
+        .set { ch_bam_bai_genome }
+
+    ch_bam_bai_genome
+        .endo
+        .combine(ch_bam_bai_genome.exo, by: [0,1])
+        .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
+            def meta_clone = endo_meta.clone()
+            meta_clone.exo_flT1_total_mapped_reads = exo_meta.flT1_total_mapped_reads
+            meta_clone.exo_flT2_total_mapped_reads = exo_meta.flT2_total_mapped_reads ?: null
+            meta_clone.exo_flT3_total_mapped_reads = exo_meta.flT3_total_mapped_reads ?: null
+            meta_clone.exo_flTbl_total_mapped_reads = exo_meta.flTbl_total_mapped_reads ?: null
+            meta_clone.exo_dSp_total_mapped_reads = exo_meta.dSp_total_mapped_reads ?: null
+            meta_clone.exo_ref_total_mapped_reads_key = "exo_" + exo_meta.last_total_mapped_reads_key
+            meta_clone.exo_ref_total_mapped_reads_for_dSp_key = "exo_" + exo_meta.ref_total_mapped_reads_for_dSp_key
+            meta_clone.exo_ref_total_mapped_reads_for_rpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_rpm_key
+            meta_clone.exo_ref_total_mapped_reads_for_srpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_srpm_key
+            meta_clone.exo_ref_total_mapped_reads_for_cisrpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_cisrpm_key
+            [ meta_clone, endo_bam, endo_bai ]
+        }
+        .set { ch_bam_bai_endo }
+
+
+    if (!skip_exo_bw) {
+        // Mix back the exogenous BAMs to process them together with the endogenous ones
+        ch_bam_bai = ch_bam_bai_endo.mix(ch_bam_bai_genome.exo)
+    } else {
+        ch_bam_bai = ch_bam_bai_endo
+    }
 
     //
     // MODULE: Calculate raw coverage per bin
@@ -102,7 +144,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map = ch_bdg_map_endo
     ch_windows_exo = channel.empty()
     ch_windows_exo_bdg_raw = channel.empty()
-    if (spikein_genome) {
+    if (spikein_genome && !skip_exo_bw) {
         BEDTOOLS_MAKEWINDOWS_EXO (
             ch_chrom_sizes_exo
         )
@@ -144,7 +186,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map
         .map { meta, bdg ->
             def meta_clone = meta.clone()
-            meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm]
+            meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm_key]
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bdg ]
         }
@@ -187,19 +229,32 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .collectFile( name: 'ch_bdg_srpm_genome_exo.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
-
-        ch_bdg_genome.endo
-            .combine(ch_bdg_genome.exo, by: [0,1])
-            .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
-                def meta_clone = endo_meta.clone()
-                meta_clone.norm_factor_val = 1e6 / exo_meta[exo_meta.ref_total_mapped_reads_for_srpm]
-                meta_clone.norm_factor_type = 'srpm'
-                [ meta_clone, endo_bdg ]
-            }
-            .set { ch_bdg_srpm }
+        // Combine the endo and exo BAMs if we want to produce exogenous bigWigs
+        if (!skip_exo_bw) {
+            ch_bdg_genome
+                .endo
+                .combine(ch_bdg_genome.exo, by: [0,1])
+                .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
+                    def meta_clone = endo_meta.clone()
+                    meta_clone.norm_factor_val = 1e6 / exo_meta[exo_meta.ref_total_mapped_reads_for_srpm_key]
+                    meta_clone.norm_factor_type = 'srpm'
+                    [ meta_clone, endo_bdg ]
+                }
+                .set { ch_bdg_srpm }
+        // Use the exogenous totals saved in the the endogenous metadata otherwise
+        } else {
+            ch_bdg_genome
+                .endo
+                .map { id, antibody, endo_meta, endo_bdg ->
+                    def meta_clone = endo_meta.clone()
+                    meta_clone.norm_factor_val = 1e6 / endo_meta[endo_meta.exo_ref_total_mapped_reads_for_srpm_key]
+                    meta_clone.norm_factor_type = 'srpm'
+                    [ meta_clone, endo_bdg ]
+                }
+                .set { ch_bdg_srpm }
+        }
 
     }
-
 
     // TODO: print for debugging
     ch_bdg_srpm
@@ -217,7 +272,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_ipcontrol_cisrpm = channel.empty()
     ch_bdg_cisrpm = channel.empty()
     // "if (spikein_genome)" is needed, otherwise cisrpm will be attempted for
-    // controls, and this will fail, since there is no ref_total_mapped_reads_for_cisrpm
+    // controls, and this will fail, since there is no ref_total_mapped_reads_for_cisrpm_key
     if (spikein_genome && !skip_cisrpm) {
         // Split BAMs by genome (endo and exo) and by type (ip and ipcontrol)
         ch_bdg_map
@@ -234,84 +289,91 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .set { ch_bdg_genome_type }
 
-        // Combine the endo and exo BAMs (ChIPs)
-        ch_bdg_genome_type.endo_ip
-            .combine(ch_bdg_genome_type.exo_ip, by: [0,1])
-            .map { ip_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
-                    [ endo_ip_meta.input_control, endo_ip_meta.antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
-            }
-            .set { ch_bdg_genome_ip }
 
-        // TODO: print for debugging
-        ch_bdg_genome_ip
-            .map {
-                ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
-                    "${ipcontrol_id}\t${ip_antibody}\t${endo_ip_meta}\t${endo_ip_bdg}\t${exo_ip_meta}\t${exo_ip_bdg}"
-            }
-            .collectFile( name: 'ch_bdg_genome_ip.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+        // Combine the endo and exo BAMs if we want to produce exogenous bigWigs
+        if (!skip_exo_bw) {
 
-        // Combine the endo and exo BAMs (inputs)
-        ch_bdg_genome_type.endo_ipcontrol
-            .combine(ch_bdg_genome_type.exo_ipcontrol, by: [0,1])
-            .map { ipcontrol_id, ipcontrol_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
-                [ endo_ipcontrol_meta.id, endo_ipcontrol_meta.input_control_of_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ]
-            }
-            .set { ch_bdg_genome_ipcontrol }
-        
-        // TODO: print for debugging
-        ch_bdg_genome_ipcontrol
-            .map {
-                ipcontrol_id, ipcontrol_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
-                    "${ipcontrol_id}\t${ipcontrol_antibody}\t${endo_ipcontrol_meta}\t${endo_ipcontrol_bdg}\t${exo_ipcontrol_meta}\t${exo_ipcontrol_bdg}"
-            }
-            .collectFile( name: 'ch_bdg_genome_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
+            // Combine the endo and exo BAMs (ChIPs)
+            ch_bdg_genome_type.endo_ip
+                .combine(ch_bdg_genome_type.exo_ip, by: [0,1])
+                .map { ip_id, ip_antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ->
+                        [ endo_ip_meta.input_control, endo_ip_meta.antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg ]
+                }
+                .set { ch_bdg_genome_ip }
 
-        // Combine the combined ChIPs with the combined inputs
-        ch_bdg_genome_ip
-            .combine(ch_bdg_genome_ipcontrol, by: [0,1])
-            .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
-                    def meta_clone = endo_ip_meta.clone()
-                    meta_clone.norm_factor_val = (1e6 / exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm]) * (exo_ipcontrol_meta[exo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm] / endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm])
-                    meta_clone.norm_factor_type = 'cisrpm'
-                    [ meta_clone, endo_ip_bdg ]
-            }
-            .set { ch_bdg_ip_cisrpm }
+            // Combine the endo and exo BAMs (inputs)
+            ch_bdg_genome_type.endo_ipcontrol
+                .combine(ch_bdg_genome_type.exo_ipcontrol, by: [0,1])
+                .map { ipcontrol_id, ipcontrol_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
+                    [ endo_ipcontrol_meta.id, endo_ipcontrol_meta.input_control_of_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ]
+                }
+                .set { ch_bdg_genome_ipcontrol }
+            
+            // Combine the combined ChIPs with the combined inputs
+            ch_bdg_genome_ip
+                .combine(ch_bdg_genome_ipcontrol, by: [0,1])
+                .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
+                        def meta_clone = endo_ip_meta.clone()
+                        meta_clone.norm_factor_val = (1e6 / exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm_key]) * (exo_ipcontrol_meta[exo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key] / endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key])
+                        meta_clone.norm_factor_type = 'cisrpm'
+                        [ meta_clone, endo_ip_bdg ]
+                }
+                .set { ch_bdg_ip_cisrpm }
 
-        // TODO: print for debugging
-        ch_bdg_ip_cisrpm
-            .map {
-                meta, bdg ->
-                    "${meta}\t${bdg}"
-            }
-            .collectFile( name: 'ch_bdg_ip_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
-        
-        // Now do the missing CISRPM for the endogenous inputs
-        // In this case CISRPM is the same as RPM, but we cannot
-        // just copy the RPM from before, since ref_total_mapped_reads_for_cisrpm
-        // can be different than ref_total_mapped_reads_for_rpm
-        ch_bdg_map
-            .filter { meta, bdg ->
-                meta.genome == genome && meta.is_input_control
-            }
-            .map { meta, bdg ->
-                def meta_clone = meta.clone()
-                meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_cisrpm]
-                meta_clone.norm_factor_type = 'cisrpm'
-                [ meta_clone, bdg ]
-            }
-            .set { ch_bdg_ipcontrol_cisrpm }
+        // Use the exogenous totals saved in the the endogenous metadata otherwise
+        } else {
+            ch_bdg_genome_type
+                .endo_ip
+                .map { ip_id, ip_antibody, endo_ip_meta, endo_ip_bdg ->
+                        [ endo_ip_meta.input_control, endo_ip_meta.antibody, endo_ip_meta, endo_ip_bdg ]
+                }
+                .set { ch_bdg_genome_ip }
 
+            ch_bdg_genome_type
+                .endo_ipcontrol
+                .map { ipcontrol_id, ipcontrol_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
+                    [ endo_ipcontrol_meta.id, ipcontrol_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg ]
+                }
+                .set { ch_bdg_genome_ipcontrol }
 
-        // TODO: print for debugging
-        ch_bdg_ipcontrol_cisrpm
-            .map {
-                meta, bdg ->
-                    "${meta}\t${bdg}"
-            }
-            .collectFile( name: 'ch_bdg_ipcontrol_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
-
-        ch_bdg_cisrpm = ch_bdg_ip_cisrpm.mix(ch_bdg_ipcontrol_cisrpm)
+            ch_bdg_genome_ip
+                .combine(ch_bdg_genome_ipcontrol, by: [0,1])
+                .map { ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
+                        def meta_clone = endo_ip_meta.clone()
+                        meta_clone.norm_factor_val = (1e6 / endo_ip_meta[endo_ip_meta.exo_ref_total_mapped_reads_for_cisrpm_key]) * (endo_ipcontrol_meta[endo_ipcontrol_meta.exo_ref_total_mapped_reads_for_cisrpm_key] / endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key])
+                        meta_clone.norm_factor_type = 'cisrpm'
+                        [ meta_clone, endo_ip_bdg ]
+                }
+                .set { ch_bdg_ip_cisrpm }
+        }
     }
+
+
+    // Now do the missing CISRPM for the endogenous inputs
+    // In this case CISRPM is the same as RPM, but we cannot
+    // just copy the RPM from before, since ref_total_mapped_reads_for_cisrpm_key
+    // can be different than ref_total_mapped_reads_for_rpm_key
+    ch_bdg_map
+        .filter { meta, bdg ->
+            meta.genome == genome && meta.is_input_control
+        }
+        .map { meta, bdg ->
+            def meta_clone = meta.clone()
+            meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_cisrpm_key]
+            meta_clone.norm_factor_type = 'cisrpm'
+            [ meta_clone, bdg ]
+        }
+        .set { ch_bdg_ipcontrol_cisrpm }
+
+    ch_bdg_cisrpm = ch_bdg_ip_cisrpm.mix(ch_bdg_ipcontrol_cisrpm)
+
+    // TODO: print for debugging
+    ch_bdg_cisrpm
+        .map {
+            meta, bdg ->
+                "${meta}\t${bdg}"
+        }
+        .collectFile( name: 'ch_bdg_cisrpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
     ch_bdg_rpm
         .mix(ch_bdg_srpm)
@@ -529,7 +591,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .map { meta, bam, bai ->
                 def meta_clone = meta.clone()
-                meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm]
+                meta_clone.coverage_bin_size = coverage_bin_size
+                meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm_key]
                 meta_clone.norm_factor_type = 'rpm'
                     [ meta_clone, bam, bai ]
             }

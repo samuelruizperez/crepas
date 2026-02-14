@@ -52,7 +52,7 @@ include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/mai
 include { TABIX_TABIX           } from '../../../modules/nf-core/tabix/tabix/main'
 include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
-include { CHROM_SIZES_SPIKEIN_SPLIT  } from '../../../modules/local/chrom_sizes_spikein_split/main'
+include { CHROMSIZES_SPLIT_BY_GENOME  } from '../../../modules/local/chromsizes_split_by_genome/main'
 
 include {
     TETRANSCRIPTS_INDEXER as TETRANSCRIPTS_INDEXER_GENE
@@ -235,10 +235,10 @@ workflow PREPARE_GENOME {
     //
     ch_chrom_sizes_exo = channel.empty()
     if (spikein_genome) {
-        CHROM_SIZES_SPIKEIN_SPLIT ( ch_chrom_sizes_endo, spikein_genome, genome )
-        ch_chrom_sizes_endo = CHROM_SIZES_SPIKEIN_SPLIT.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
-        ch_chrom_sizes_exo = CHROM_SIZES_SPIKEIN_SPLIT.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
-        ch_versions        = ch_versions.mix(CHROM_SIZES_SPIKEIN_SPLIT.out.versions)
+        CHROMSIZES_SPLIT_BY_GENOME ( ch_chrom_sizes_endo, spikein_genome, genome )
+        ch_chrom_sizes_endo = CHROMSIZES_SPLIT_BY_GENOME.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
+        ch_chrom_sizes_exo = CHROMSIZES_SPLIT_BY_GENOME.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
+        ch_versions        = ch_versions.mix(CHROMSIZES_SPLIT_BY_GENOME.out.versions)
     }
 
     ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel
@@ -283,7 +283,7 @@ workflow PREPARE_GENOME {
             ch_fasta,
             read_length
         )
-        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it[1].text.trim() }
+        ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it -> it[1].text.trim() }
     }
 
     // Create a channel with the effective genome fraction
