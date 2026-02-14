@@ -639,18 +639,6 @@
                     "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "skip_cisrpmsoi": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
-                    "fa_icon": "fas fa-chart-area"
-                },
-                "soi_min_count": {
-                    "type": "number",
-                    "default": 0.00001,
-                    "description": "Minimum CISRPM value required in a bin to be included in the signal over input (SOI) calculation.",
-                    "fa_icon": "fas fa-chart-area"
-                },
                 "coverage_extend_reads": {
                     "type": "integer",
                     "default": 250,
@@ -662,6 +650,37 @@
                     "type": "integer",
                     "default": 250,
                     "description": "Size of the bins, in bases, for the output of the coverage calculation.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "coverage_skip_nas": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "This parameter determines if non-covered regions (regions without overlapping reads) should be skipped. The default is to treat those regions as having a value of zero. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-coverage-normalization-options) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_bw_compare": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the generation of bigWig files comparing IP and input coverage.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "bw_compare_operation": {
+                    "type": "string",
+                    "default": "ratio",
+                    "description": "Operation to perform when comparing IP and input coverage. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["log2", "ratio", "subtract", "add", "mean", "reciprocal_ratio", "first", "second"]
+                },
+                "bw_compare_pseudocount": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "A small number to avoid x/0. Only useful together with `--operation log2` or `--operation ratio`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "bw_compare_skip_zero_over_zero": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "This parameter determines if regions with zero coverage in both the IP and input should be skipped when comparing IP and input coverage. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "use_flT2_as_total_ref": {
@@ -680,12 +699,6 @@
                     "type": "integer",
                     "default": 1,
                     "description": "Minimum number of total mapped reads required to include a BAM in any normalization. For example, this prevents having an empty exogenous input control BAM when no reads map to the spike-in genome.",
-                    "fa_icon": "fas fa-chart-area"
-                },
-                "skip_rpm_lfc": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Whether to skip the calculation of the log2ratio between RPM-normalized IP and RPM-normalized input bigWig files.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_bw_average": {

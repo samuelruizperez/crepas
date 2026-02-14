@@ -823,21 +823,18 @@ workflow CREPAS {
         .collectFile(name: 'ch_filtered_bam_bai_after_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     //
-    // SUBWORKFLOW: Normalized bigWig coverage tracks
+    // SUBWORKFLOW: Generate normalized bigWig coverage tracks
     //
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_bai,
         ch_chrom_sizes_endo,
         ch_chrom_sizes_exo,
-        params.coverage_bin_size,
         params.genome,
         params.spikein_genome,
+        params.min_reads_for_norm,
         params.skip_srpm,
         params.skip_cisrpm,
-        params.skip_cisrpmsoi,
-        params.skip_plot_profile,
-        params.min_reads_for_norm,
-        params.skip_rpm_lfc,
+        params.skip_bw_compare,
         params.skip_bw_average,
         params.skip_exo_bw
     )
@@ -848,8 +845,8 @@ workflow CREPAS {
         //
         // MODULE: deepTools matrix generation for plotting
         //
-        DEEPTOOLS_COMPUTEMATRIX(
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1,
+        DEEPTOOLS_COMPUTEMATRIX (
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
             ch_gene_bed.map { it -> it[1] }
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
@@ -908,7 +905,7 @@ workflow CREPAS {
         // Including ips_wo_ipcontrol as they will be used for peak calling without control
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bedgraph_endo
             .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
-            .filter { it -> !(it[0].signal_over_input)}
+            .filter { it -> !(it[0].signal_vs_input)}
             .branch { meta, bdg ->
                 ips_with_ipcontrol: meta.input_control
                     return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
@@ -1253,18 +1250,16 @@ workflow CREPAS {
     if (!params.skip_igv) {
 
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
-        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1)
+        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_cmp_endo)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
-        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo_rpm_lfc)
-        .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_binsize1_avg)
             .map { meta, bw -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
                     "${meta.downsampling_method ? '/downsampled' : ''}" +
                     "/coverage/" +
-                    "/${meta.coverage_bin_size}" + "_bp_bins" +
-                    "/${meta.signal_over_input ? '/cisrpm_soi' : meta.norm_factor_type}" +
+                    "/${params.coverage_bin_size}" + "_bp_bins" +
+                    "/${meta.signal_vs_input ? '/cisrpm_soi' : meta.norm_factor_type}" +
                     "${meta.log2FC ? '/log2FC' : ''}" +
                     "${meta.averaged_brep ? '/bRep_avg' : ''}" +
                     "/${bw.getName()}"
