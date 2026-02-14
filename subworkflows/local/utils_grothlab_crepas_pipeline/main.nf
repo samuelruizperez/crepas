@@ -450,6 +450,29 @@ def validateInputParameters() {
         }
     }
 
+    // Check aligner parameter
+    def aligner_options = ['bwa', 'bwamem2', 'bowtie', 'bowtie2', 'strobealign', 'chromap', 'star', 'hisat2', 'minimap2']
+    def aligners  = params.aligner.split(',').collect { it -> it.trim().toLowerCase() }
+    def invalid_aligners = aligners.findAll { it -> !aligner_options.contains(it) }.unique()
+    if (invalid_aligners) {
+        error("Invalid aligner option(s): ${invalid_aligners.join(', ')}. Valid options: ${aligner_options.join(', ')}")
+    }
+    if (!aligners) {
+        error("No valid aligner option provided. Valid options: ${aligner_options.join(', ')}")
+    }
+
+    if (params.map_n_multimappers) {
+        def multimapper_aligners = ['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2']
+        def invalid_multimapper_aligners = aligners.findAll { it -> !multimapper_aligners.contains(it) }.unique()
+        if (invalid_multimapper_aligners) {
+            error("The `--map_n_multimappers` parameter requires aligner(s) to be one of: ${multimapper_aligners.join(', ')}. Unsupported aligner(s): ${invalid_multimapper_aligners.join(', ')}")
+        }
+    }
+
+    if (params.multimap_allocation_method == 'chromap' && params.aligner != 'chromap') {
+        error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
+    }
+
     if (!params.skip_te_counting) {
         if (!params.containsKey('tecount_te_index') && !params.containsKey('te_gtf')) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
@@ -497,16 +520,6 @@ def validateInputParameters() {
         if (params.hardtrim5_length && params.hardtrim5_length != params.read_length) {
             error("The `--read_length` and `--hardtrim5_length` parameters must be equal.")
         }
-    }
-
-    if (params.map_n_multimappers) {
-        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2'].contains(params.aligner)) {
-            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', or 'minimap2'.")
-        }
-    }
-
-    if (params.multimap_allocation_method == 'chromap' && params.aligner != 'chromap') {
-        error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
     }
     
 }

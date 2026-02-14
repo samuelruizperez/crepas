@@ -470,11 +470,14 @@
             "description": "Options to adjust parameters and filtering criteria for read alignments.",
             "properties": {
                 "aligner": {
-                    "type": "string",
-                    "default": "chromap",
-                    "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
+                    "description": "Alignment algorithm to use. If you want to use more than one aligner in a single run, you must provide them as an array through the `-params-file`, e.g., `aligner: [bwa, star]`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
+                    "type": "array",
+                    "items": {
+                        "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
+                    },
+                    "uniqueItems": true,
+                    "minItems": 1
                 },
                 "bwa_min_score": {
                     "type": "integer",

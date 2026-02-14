@@ -68,7 +68,8 @@ workflow GROTHLAB_CREPAS {
     def tecount_te_index      = params.containsKey('tecount_te_index') ? params.tecount_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('tecount_te_index'))
     def telocal_te_index      = params.containsKey('telocal_te_index') ? params.telocal_te_index : (params.refgenie_ignore ? null : getGenomeAttribute('telocal_te_index'))
     def macs_gsize            = params.containsKey('macs_gsize') ? params.macs_gsize : getMacsGsize(params)
-
+    
+    def aligners  = params.aligner.split(',').collect { it -> it.trim().toLowerCase() }
 
     //
     // SUBWORKFLOW: Prepare reference genome files
@@ -76,7 +77,7 @@ workflow GROTHLAB_CREPAS {
     PREPARE_GENOME (
         params.genome,
         params.spikein_genome,
-        params.aligner,
+        aligners,
         fasta,
         gtf,
         gff,
@@ -117,6 +118,7 @@ workflow GROTHLAB_CREPAS {
     CREPAS (
         ch_samplesheet,
         ch_versions,
+        aligners,
         PREPARE_GENOME.out.fasta,
         PREPARE_GENOME.out.fai,
         PREPARE_GENOME.out.gtf,
