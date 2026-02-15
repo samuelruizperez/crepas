@@ -654,7 +654,7 @@
                 },
                 "coverage_skip_nas": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "This parameter determines if non-covered regions (regions without overlapping reads) should be skipped. The default is to treat those regions as having a value of zero. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-coverage-normalization-options) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
