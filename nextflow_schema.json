@@ -1205,9 +1205,9 @@
                     "description": "Skip deepTools plotFingerprint.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_spp": {
+                "skip_spp_qc": {
                     "type": "boolean",
-                    "description": "Skip Phantompeakqualtools.",
+                    "description": "Skip Phantompeakqualtools QC metrics and plots.",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_deseq2_qc": {
