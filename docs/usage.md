@@ -411,7 +411,7 @@ Options to skip various steps within the workflow.
 | `deseq2_vst` | Use vst transformation instead of rlog with DESeq2. <details><summary>Help</summary><small>See [DESeq2 docs](http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#data-transformations-and-visualization).</small></details>| `boolean` | true |  |  |
 | `skip_plot_profile` | Skip deepTools plotProfile. | `boolean` |  |  |  |
 | `skip_plot_fingerprint` | Skip deepTools plotFingerprint. | `boolean` |  |  |  |
-| `skip_spp` | Skip Phantompeakqualtools. | `boolean` |  |  |  |
+| `skip_spp_qc` | Skip Phantompeakqualtools QC metrics and plots. | `boolean` |  |  |  |
 | `skip_deseq2_qc` | Skip DESeq2 PCA and heatmap plotting. | `boolean` |  |  |  |
 | `skip_igv` | Skip IGV. | `boolean` |  |  |  |
 | `skip_multiqc` | Skip MultiQC. | `boolean` |  |  |  |
