@@ -684,7 +684,7 @@ workflow CREPAS {
     //
     // MODULE: Phantompeaktools strand cross-correlation and QC metrics
     //
-    if (!params.skip_spp) {
+    if (!params.skip_spp_qc) {
 
         // Remove exogenous samples from SPP analysis
         ch_filtered_bam
