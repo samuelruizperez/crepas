@@ -834,7 +834,8 @@ workflow CREPAS {
         params.min_reads_for_norm,
         params.skip_srpm,
         params.skip_cisrpm,
-        params.skip_bw_compare,
+        params.skip_signal_vs_input,
+        params.signal_vs_input_operation,
         params.skip_bw_average,
         params.skip_exo_bw
     )
