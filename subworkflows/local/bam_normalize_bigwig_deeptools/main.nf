@@ -5,6 +5,7 @@ include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO                             } from '
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO                              } from '../../../modules/nf-core/bedtools/map/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT                                            } from '../../../modules/local/bedgraph_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO           } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO            } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { DEEPTOOLS_BIGWIGCOMPARE                                       } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
@@ -21,7 +22,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     min_reads_for_norm
     skip_srpm               // boolean: skip the SRPM normalization step
     skip_cisrpm             // boolean: skip the CISRPM normalization step
-    skip_bw_compare          // boolean: skip the CISRPM-SOI normalization step
+    skip_signal_vs_input          // boolean: skip the CISRPM-SOI normalization step
+    signal_vs_input_operation
     skip_bw_average
     skip_exo_bw             // boolean: skip generating bigwigs for the exogenous genome
 
@@ -401,6 +403,37 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
     ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
+
+    if (!skip_signal_vs_input && signal_vs_input_operation == 'soi') {
+        ch_bdg_all
+            .branch { meta, bdg ->
+                ips_with_ipcontrol: meta.input_control
+                    return [ meta.input_control, meta.antibody, meta.genome, meta.norm_factor_type, meta, bdg ]
+                ipcontrols: !meta.input_control && meta.is_input_control
+                    return [ meta.id, meta.input_control_of_antibody, meta.genome, meta.norm_factor_type, meta, bdg ]
+            }
+            .set { ch_bdg_per_type }
+
+        ch_bdg_per_type
+            .ips_with_ipcontrol
+            .combine(ch_bdg_per_type.ipcontrols, by: [0, 1, 2, 3])
+            .map { ipcontrol_id, ip_antibody, ip_genome, ip_norm_factor_type, ip_meta, ip_bdg, ipcontrol_meta, ipcontrol_bdg ->
+                def meta_clone = ip_meta.clone()
+                    meta_clone.signal_vs_input = true
+                    meta_clone.signal_vs_input_operation = signal_vs_input_operation
+                    [ meta_clone, ip_bdg, ipcontrol_bdg ]
+            }
+            .set { ch_bdg_ip_control_soi }
+
+        //
+        // MODULE: Calculate signal over input
+        //
+        BEDGRAPH_SIGNAL_OVER_INPUT (
+            ch_bdg_ip_control_soi
+        )
+        ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_all)
+    }
+
     //
     // MODULE: Convert bedgraph to bigwig
     //
@@ -426,7 +459,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
 
     ch_bw_compare = channel.empty()
-    if (!skip_bw_compare) {
+    if (!skip_signal_vs_input && signal_vs_input_operation != 'soi') {
 
         ch_bigwig
             .branch { meta, bw ->
@@ -443,6 +476,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             .map { ipcontrol_id, ip_antibody, ip_genome, ip_norm_factor_type, ip_meta, ip_bw, ipcontrol_meta, ipcontrol_bw ->
                 def meta_clone = ip_meta.clone()
                     meta_clone.signal_vs_input = true
+                    meta_clone.signal_vs_input_operation = signal_vs_input_operation
                     [ meta_clone, ip_bw, ipcontrol_bw ]
             }
             .set { ch_bigwig_ip_control_compare }

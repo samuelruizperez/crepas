@@ -658,18 +658,30 @@
                     "description": "This parameter determines if non-covered regions (regions without overlapping reads) should be skipped. The default is to treat those regions as having a value of zero. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-coverage-normalization-options) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "skip_bw_compare": {
+                "skip_signal_vs_input": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to skip the generation of bigWig files comparing IP and input coverage.",
+                    "description": "Whether to skip the signal vs input comparison step.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "bw_compare_operation": {
+                "signal_vs_input_operation": {
                     "type": "string",
-                    "default": "ratio",
-                    "description": "Operation to perform when comparing IP and input coverage. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "default": "soi",
+                    "description": "Operation to perform when comparing IP and input coverage. `soi` is basically the same as `ratio`, although it is computed with a special script. For the rest of the operations, see the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": ["log2", "ratio", "subtract", "add", "mean", "reciprocal_ratio", "first", "second"]
+                    "enum": ["soi", "log2", "ratio", "subtract", "add", "mean", "reciprocal_ratio", "first", "second"]
+                },
+                "min_signal_for_soi": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Minimum signal in the IP bin to be included in the signal over input (SOI) calculation. Otherwise, the the score of that bin is set to `NaN`.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "min_input_for_soi": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "Minimum input signal in the input bin to be included in the signal over input (SOI) calculation. Otherwise, the the score of that bin is set to `NaN`.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "bw_compare_pseudocount": {
                     "type": "number",
