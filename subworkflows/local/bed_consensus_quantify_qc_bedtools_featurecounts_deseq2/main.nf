@@ -228,7 +228,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         DEEPTOOLS_COMPUTEMATRIX_PEAKS (
             ch_bigwigs_peaks
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX_PEAKS.out.versions.first())
 
         //
         // MODULE: deepTools profile plots
