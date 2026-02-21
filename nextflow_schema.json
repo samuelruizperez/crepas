@@ -926,6 +926,55 @@
                     "description": "Skip consensus peak generation, annotation and counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "skip_consensus_plotprofile": {
+                    "type": "boolean",
+                    "description": "Skip generation of the consensus peak profile plot.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "consensus_plotprofile_mode": {
+                    "type": "string",
+                    "default": "reference_point",
+                    "description": "Mode to use for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#mode) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["reference_point", "scale_regions"]
+                },
+                "consensus_plotprofile_ref_point": {
+                    "type": "string",
+                    "default": "center",
+                    "description": "Reference point to use for the consensus peak profile plot when `--consensus_plotprofile_mode` is set to `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#reference-point) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["TSS", "TES", "center"]
+                },
+                "consensus_plotprofile_region_body_length": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Length of the region body to plot for the consensus peak profile plot when `--consensus_plotprofile_mode` is set to `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#scale-regions) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_upstream": {
+                    "type": "integer",
+                    "default": 6000,
+                    "description": "Length of the upstream region to plot for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#upstream-and-downstream) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_downstream": {
+                    "type": "integer",
+                    "default": 6000,
+                    "description": "Length of the downstream region to plot for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#upstream-and-downstream) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_skip_zeros": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip regions with zero coverage in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#skip-zeros) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_per_group": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to plot all samples in a group together in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#per-group) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_bdgcmp": {
                     "type": "boolean",
                     "default": true,
@@ -1169,44 +1218,45 @@
                     "fa_icon": "fas fa-dolly",
                     "default": true
                 },
-                "skip_plot_profile": {
+                "skip_genes_plotprofile": {
                     "type": "boolean",
                     "description": "Skip deepTools plotProfile.",
-                    "fa_icon": "fas fa-fast-forward"
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": false
                 },
-                "compute_mat_mode": {
+                "genes_plotprofile_mode": {
                     "type": "string",
                     "default": "scale_regions",
                     "description": "Mode to compute the matrix for deepTools plotProfile. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area",
                     "enum": ["scale_regions", "reference_point"]
                 },
-                "compute_mat_ref_point": {
+                "genes_plotprofile_ref_point": {
                     "type": "string",
                     "default": "TSS",
-                    "description": "Reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "description": "Reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area",
                     "enum": ["TSS", "TES", "center"]
                 },
-                "compute_mat_region_body_length": {
+                "genes_plotprofile_region_body_length": {
                     "type": "integer",
                     "default": 3000,
-                    "description": "Region body length (in bp) for deepTools plotProfile when `--compute_mat_mode` is `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "description": "Region body length (in bp) for deepTools plotProfile when `--genes_plotprofile_mode` is `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "compute_mat_upstream": {
+                "genes_plotprofile_upstream": {
                     "type": "integer",
                     "default": 3000,
-                    "description": "Upstream distance (in bp) from the reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "description": "Upstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "compute_mat_downstream": {
+                "genes_plotprofile_downstream": {
                     "type": "integer",
                     "default": 3000,
-                    "description": "Downstream distance (in bp) from the reference point for deepTools plotProfile when `--compute_mat_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "description": "Downstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "compute_mat_skip_zeros": {
+                "genes_plotprofile_skip_zeros": {
                     "type": "boolean",
                     "default": false,
                     "description": "Whether to skip regions with zero coverage in all samples when computing the matrix for deepTools plotProfile. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",

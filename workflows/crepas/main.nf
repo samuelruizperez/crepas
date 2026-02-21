@@ -63,9 +63,9 @@ include { PICARD_MERGESAMFILES                                        } from '..
 include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP                                             } from '../../modules/nf-core/preseq/lcextrap/main'
 include { PHANTOMPEAKQUALTOOLS                                        } from '../../modules/nf-core/phantompeakqualtools/main'
-include { DEEPTOOLS_COMPUTEMATRIX                                     } from '../../modules/nf-core/deeptools/computematrix/main'
-include { DEEPTOOLS_PLOTPROFILE                                       } from '../../modules/nf-core/deeptools/plotprofile/main'
-include { DEEPTOOLS_PLOTHEATMAP                                       } from '../../modules/nf-core/deeptools/plotheatmap/main'
+include { DEEPTOOLS_COMPUTEMATRIX as DEEPTOOLS_COMPUTEMATRIX_GENES    } from '../../modules/nf-core/deeptools/computematrix/main'
+include { DEEPTOOLS_PLOTPROFILE as DEEPTOOLS_PLOTPROFILE_GENES        } from '../../modules/nf-core/deeptools/plotprofile/main'
+include { DEEPTOOLS_PLOTHEATMAP as DEEPTOOLS_PLOTHEATMAP_GENES        } from '../../modules/nf-core/deeptools/plotheatmap/main'
 include { DEEPTOOLS_PLOTFINGERPRINT                                   } from '../../modules/nf-core/deeptools/plotfingerprint/main'
 include { MULTIQC                                                     } from '../../modules/nf-core/multiqc/main'
 
@@ -842,32 +842,31 @@ workflow CREPAS {
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
 
-    if (!params.skip_plot_profile) {
+    if (!params.skip_genes_plotprofile) {
         //
         // MODULE: deepTools matrix generation for plotting
         //
-        DEEPTOOLS_COMPUTEMATRIX (
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
-            ch_gene_bed.map { it -> it[1] }
+        DEEPTOOLS_COMPUTEMATRIX_GENES (
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo.combine(ch_gene_bed.map { it -> it[1] })
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX.out.versions.first())
+        ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX_GENES.out.versions.first())
 
         //
         // MODULE: deepTools profile plots
         //
-        DEEPTOOLS_PLOTPROFILE(
-            DEEPTOOLS_COMPUTEMATRIX.out.matrix
+        DEEPTOOLS_PLOTPROFILE_GENES (
+            DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
-        ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPROFILE.out.table.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTPROFILE.out.versions.first())
+        ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.table.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.versions.first())
 
         //
         // MODULE: deepTools heatmaps
         //
-        DEEPTOOLS_PLOTHEATMAP(
-            DEEPTOOLS_COMPUTEMATRIX.out.matrix
+        DEEPTOOLS_PLOTHEATMAP_GENES (
+            DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP.out.versions.first())
+        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP_GENES.out.versions.first())
     }
 
     // Removing the exogenous samples from the filtered_bam_bai channel
@@ -1185,19 +1184,19 @@ workflow CREPAS {
         BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2(
             ch_macs3_peaks,
             ch_antibody_bams,
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
             ch_fasta.map { it -> it[1] },
             ch_gtf.map { it -> it[1] },
             ch_deseq2_pca_header,
             ch_deseq2_clustering_header,
             params.narrow_peak,
             params.skip_peak_annotation,
-            params.skip_deseq2_qc
+            params.skip_deseq2_qc,
+            params.skip_consensus_plotprofile
         )
         ch_consensus_bed = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
         ch_consensus_txt = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
-        ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.featurecounts_summary.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_pca_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.deseq2_qc_dists_multiqc.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.multiqc_files)
         ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
