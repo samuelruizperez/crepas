@@ -849,7 +849,6 @@ workflow CREPAS {
         DEEPTOOLS_COMPUTEMATRIX_GENES (
             BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo.combine(ch_gene_bed.map { it -> it[1] })
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_COMPUTEMATRIX_GENES.out.versions.first())
 
         //
         // MODULE: deepTools profile plots
