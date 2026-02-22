@@ -13,9 +13,9 @@ process PLOT_HOMER_ANNOTATEPEAKS {
     val suffix
 
     output:
-    path '*.txt'       , emit: txt
-    path '*.pdf'       , emit: pdf
-    path '*.tsv'       , emit: tsv
+    tuple val(meta), path("*.txt")       , emit: txt
+    tuple val(meta), path("*.pdf")       , emit: pdf
+    tuple val(meta), path("*.tsv")       , emit: tsv
     path "versions.yml", emit: versions
 
     when:
