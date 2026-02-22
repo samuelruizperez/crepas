@@ -12,7 +12,7 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
 
     output:
     tuple val(meta), path("*.bedgraph") , emit: bedgraph
-    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//'"), emit: versions_awk, topic: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | sed -n '1s/^awk: //p'"), emit: versions_awk, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
