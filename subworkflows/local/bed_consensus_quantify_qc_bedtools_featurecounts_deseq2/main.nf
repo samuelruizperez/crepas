@@ -48,22 +48,23 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.exp_type, meta.id - ~/_bRep_.*$/, peak ]
+                [ meta.antibody, meta.exp_type, meta.downsampling_method, meta.id - ~/_bRep_.*$/, peak ]
         }
         .tap { ch_antibody_peaks0 }
         .groupTuple(by: [0, 1])
             .map {
-                antibody, exp_type, groups, peaks ->
+                antibody, exp_type, dSp_method, groups, peaks ->
                 [
                     antibody,
                     exp_type,
+                    dSp_method,
                     groups.groupBy().collectEntries { [(it.key) : it.value.size()] },
                     peaks
                 ]
             }
             .tap { ch_antibody_peaks1 }
             .map {
-                antibody, exp_type, groups, peaks ->
+                antibody, exp_type, dSp_method, groups, peaks ->
                 def meta_new = [:]
                 // Set meta_new.id based on exp_type and antibody presence
                 if (antibody) {
@@ -79,6 +80,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                 meta_new.exp_type = exp_type
                 meta_new.multiple_groups = groups.size() > 1
                 meta_new.replicates_exist = groups.max { it.value }.value > 1
+                meta_new.downsampling_method = dSp_method
                 [ meta_new, peaks ]
         }
         .set { ch_antibody_peaks }
@@ -200,13 +202,13 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         ch_bigwigs
             .map { meta, bw ->
                 def antibody = meta.antibody ?: meta.input_control_of_antibody
-                [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, bw ]
+                [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.downsampling_method, meta.id, bw ]
             }
-            .groupTuple(by: [0, 1, 2, 3, 4])
-            // antibody, norm_factor_type, signal_vs_input, averaged_brep, bws
+            .groupTuple(by: [0, 1, 2, 3, 4, 5])
+            // antibody, norm_factor_type, signal_vs_input, averaged_brep, downsampling_method, ids, bws
             .combine(ch_cons_peaks, by: [0, 1])
             .map {
-                antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, bws, cons_peaks ->
+                antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, downsampling_method, ids, bws, cons_peaks ->
                     def meta_new = [:]
                     meta_new.id = exp_type + '_' +
                         (antibody ? antibody : 'no_antibody') +
@@ -215,9 +217,11 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                         (averaged_brep ? '_' + 'bRep_avg' : '')
                     meta_new.antibody = antibody
                     meta_new.exp_type = exp_type
+                    meta_new.downsampling_method = downsampling_method
                     meta_new.norm_factor_type = norm_factor_type
                     meta_new.signal_vs_input_operation = signal_vs_input_op
                     meta_new.averaged_brep = averaged_brep
+                    meta_new.ids = ids
                     [ meta_new, bws.flatten(), cons_peaks ]
             }
             .set { ch_bigwigs_peaks }
@@ -241,7 +245,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         //
         // MODULE: deepTools heatmaps
         //
-        DEEPTOOLS_PLOTHEATMAP_PEAKS(
+        DEEPTOOLS_PLOTHEATMAP_PEAKS (
             DEEPTOOLS_COMPUTEMATRIX_PEAKS.out.matrix
         )
         ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP_PEAKS.out.versions.first())
