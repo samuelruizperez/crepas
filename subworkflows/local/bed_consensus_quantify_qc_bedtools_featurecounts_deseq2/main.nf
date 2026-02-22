@@ -48,15 +48,16 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_peaks
         .map {
             meta, peak ->
-                [ meta.antibody, meta.exp_type, meta.id - ~/_bRep_.*$/, meta, peak ]
+                [ meta.antibody, meta.exp_type, meta.aligner, meta.id - ~/_bRep_.*$/, meta, peak ]
         }
         .tap { ch_antibody_peaks0 }
-        .groupTuple(by: [0, 1])
+        .groupTuple(by: [0, 1, 2])
             .map {
-                antibody, exp_type, groups, metas, peaks ->
+                antibody, exp_type, aligner, groups, metas, peaks ->
                 [
                     antibody,
                     exp_type,
+                    aligner,
                     metas,
                     groups.groupBy().collectEntries { [(it.key) : it.value.size()] },
                     peaks
@@ -64,7 +65,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             }
             .tap { ch_antibody_peaks1 }
             .map {
-                antibody, exp_type, metas, groups, peaks ->
+                antibody, exp_type, aligner, metas, groups, peaks ->
                 def meta_new = metas[0].clone()
                 // Set meta_new.id based on exp_type and antibody presence
                 if (antibody) {
@@ -202,13 +203,13 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         ch_bigwigs
             .map { meta, bw ->
                 def antibody = meta.antibody ?: meta.input_control_of_antibody
-                [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
+                [ antibody, meta.exp_type, meta.aligner, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
             }
-            .groupTuple(by: [0, 1, 2, 3, 4])
-            // antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws
+            .groupTuple(by: [0, 1, 2, 3, 4, 5])
+            // antibody, exp_type, aligner, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws
             .combine(ch_cons_peaks, by: [0, 1])
             .map {
-                antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws, cons_peaks ->
+                antibody, exp_type, aligner, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws, cons_peaks ->
                     def meta_new = metas[0].clone()
                     meta_new.id = exp_type + '_' +
                         (antibody ? antibody : 'no_antibody') +
@@ -216,6 +217,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                         (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
                         (averaged_brep ? '_' + 'bRep_avg' : '')
                     meta_new.antibody = antibody
+                    meta_new.aligner = aligner
                     meta_new.ids = ids
                     [ meta_new, bws.flatten(), cons_peaks ]
             }
