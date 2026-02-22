@@ -190,7 +190,9 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     }
 
     if (!skip_consensus_plotprofile) {
-        ch_antibody_peaks
+        MACS3_CONSENSUS
+            .out
+            .bed
             .map { meta, peaks ->
                 [ meta.antibody, meta.exp_type, peaks ]
             }
