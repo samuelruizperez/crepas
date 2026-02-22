@@ -703,7 +703,7 @@ workflow CREPAS {
         //
         // MODULE: MultiQC custom content for Phantompeaktools
         //
-        MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS(
+        MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS (
             PHANTOMPEAKQUALTOOLS.out.ccscores.join(PHANTOMPEAKQUALTOOLS.out.rdata, by: 0),
             ch_spp_nsc_header,
             ch_spp_rsc_header,
@@ -794,7 +794,7 @@ workflow CREPAS {
         //
         // SUBWORKFLOW: Downsample IP and input control BAM files
         //
-        BAM_DOWNSAMPLE(
+        BAM_DOWNSAMPLE (
             ch_filtered_bam_bai,
             ch_fasta,
             ch_fai,
@@ -1253,16 +1253,14 @@ workflow CREPAS {
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
             .map { meta, bw -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
-                    "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
-                    "/${meta.exp_type}" +
-                    "${meta.downsampling_method ? '/downsampled' : ''}" +
-                    "/coverage/" +
-                    "/${params.coverage_bin_size}" + "_bp_bins" +
-                    "/${meta.signal_vs_input ? '/cisrpm_soi' : meta.norm_factor_type}" +
-                    "${meta.log2FC ? '/log2FC' : ''}" +
-                    "${meta.averaged_brep ? '/bRep_avg' : ''}" +
-                    "/${bw.getName()}"
-
+                "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
+                "/${meta.exp_type}" +
+                "${meta.downsampling_method ? '/downsampled' : ''}" +
+                "/coverage/" +
+                "/${meta.norm_factor_type}" +
+                "/${meta.signal_vs_input_operation ? 'signal_vs_input/' + meta.signal_vs_input_operation : ''}" +
+                "${meta.averaged_brep ? '/bRep_avg' : ''}" +
+                "/${bw.getName()}"
                 [meta, bw, outpath, "0,0,178"] // dark blue
             }
             .mix(ch_files_and_outpaths)
