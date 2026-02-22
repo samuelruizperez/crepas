@@ -432,6 +432,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bdg_ip_control_soi
         )
         ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_all)
+        ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
+
     }
 
     //

@@ -12,7 +12,7 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
 
     output:
     tuple val(meta), path("*.bedgraph") , emit: bedgraph
-    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//'"), emit: versions_awk, topic: versions
+    path  "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -39,11 +39,21 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
         $control_bedgraph \\
         $ip_bedgraph \\
     > ${prefix}.bedgraph
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch  ${prefix}.bedgraph
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
+    END_VERSIONS
     """
 }
