@@ -204,7 +204,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                 [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
             }
             .groupTuple(by: [0, 1, 2, 3, 4])
-            // antibody, norm_factor_type, signal_vs_input, averaged_brep, ids, metas, bws
+            // antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws
             .combine(ch_cons_peaks, by: [0, 1])
             .map {
                 antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws, cons_peaks ->
@@ -214,6 +214,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                         '_' + norm_factor_type +
                         (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
                         (averaged_brep ? '_' + 'bRep_avg' : '')
+                    meta_new.antibody = antibody
                     meta_new.ids = ids
                     [ meta_new, bws.flatten(), cons_peaks ]
             }
