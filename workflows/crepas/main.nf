@@ -843,11 +843,37 @@ workflow CREPAS {
 
 
     if (!params.skip_genes_plotprofile) {
+
+        BAM_NORMALIZE_BIGWIG_DEEPTOOLS
+            .out
+            .bigwig_all_endo
+            .map { meta, bw ->
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
+            }
+            .groupTuple(by: [0, 1, 2, 3, 4])
+            // antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws
+            .combine(ch_gene_bed.map { it -> it[1] })
+            .map {
+                antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws, gene_bed ->
+                    def meta_new = metas[0].clone()
+                    meta_new.id = exp_type + '_' +
+                        (antibody ? antibody : 'no_antibody') +
+                        '_' + norm_factor_type +
+                        (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
+                        (averaged_brep ? '_' + 'bRep_avg' : '')
+                    meta_new.antibody = antibody
+                    meta_new.ids = ids
+                    [ meta_new, bws.flatten(), gene_bed ]
+            }
+            .set { ch_bigwigs_genes }
+
+
         //
         // MODULE: deepTools matrix generation for plotting
         //
         DEEPTOOLS_COMPUTEMATRIX_GENES (
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo.combine(ch_gene_bed.map { it -> it[1] })
+            ch_bigwigs_genes
         )
 
         //
