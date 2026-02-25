@@ -28,6 +28,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     skip_peak_annotation                // boolean: true/false
     skip_deseq2_qc                      // boolean: true/false
     skip_consensus_plotprofile          // boolean: true/false
+    input_cisrpm_in_plotprofile       // boolean: true/false
 
     main:
 
@@ -197,6 +198,10 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                 [ meta.antibody, meta.exp_type, peaks ]
             }
             .set { ch_cons_peaks }
+
+        if (!input_cisrpm_in_plotprofile) {
+            ch_bigwigs = ch_bigwigs.filter { meta, bws -> !(meta.is_input_control && meta.norm_factor_type == 'cisrpm') }
+        }
 
         ch_bigwigs
             .map { meta, bw ->

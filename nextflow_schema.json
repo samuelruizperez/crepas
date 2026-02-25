@@ -975,6 +975,12 @@
                     "description": "Whether to plot all samples in a group together in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#per-group) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
+                "input_cisrpm_in_plotprofile" : {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to include the input CISRPM signal in the gene or consensus peak profile plots.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_bdgcmp": {
                     "type": "boolean",
                     "default": true,

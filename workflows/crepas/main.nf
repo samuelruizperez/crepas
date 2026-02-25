@@ -844,9 +844,17 @@ workflow CREPAS {
 
     if (!params.skip_genes_plotprofile) {
 
-        BAM_NORMALIZE_BIGWIG_DEEPTOOLS
-            .out
-            .bigwig_all_endo
+        ch_bigwigs_genes = BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo
+
+        if (!params.input_cisrpm_in_plotprofile) {
+            ch_bigwigs_genes
+                .filter { meta, bws -> 
+                    !(meta.is_input_control && meta.norm_factor_type == 'cisrpm')
+                }
+                .set { ch_bigwigs_genes }
+        }
+
+       ch_bigwigs_genes
             .map { meta, bw ->
                 def antibody = meta.antibody ?: meta.input_control_of_antibody
                 [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
@@ -1217,7 +1225,8 @@ workflow CREPAS {
             params.narrow_peak,
             params.skip_peak_annotation,
             params.skip_deseq2_qc,
-            params.skip_consensus_plotprofile
+            params.skip_consensus_plotprofile,
+            params.input_cisrpm_in_plotprofile
         )
         ch_consensus_bed = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
         ch_consensus_txt = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
