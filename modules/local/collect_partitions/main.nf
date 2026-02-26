@@ -28,7 +28,7 @@ process COLLECT_PARTITIONS {
     def args2 = task.ext.args2 ?: ''
     prefix = task.ext.prefix ?: "${meta.id}.collect"
     def buffer = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
-    def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1V -k2,2n"
+    def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1 -k2,2n"
 
     """
     # Check that all input files have the same number of lines
