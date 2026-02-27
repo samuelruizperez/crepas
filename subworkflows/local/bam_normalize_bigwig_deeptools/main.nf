@@ -199,7 +199,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     // Copy and modify channel meta to add SRPM normalization factors (for ChIPs)
     ch_bdg_srpm = channel.empty()
-    if (!skip_srpm) {
+    if (spikein_genome && !skip_srpm) {
         ch_bdg_map
             .map { meta, bdg ->
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
