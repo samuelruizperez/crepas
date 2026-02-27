@@ -43,44 +43,46 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .filter { meta, bam, bai -> meta[meta.last_total_mapped_reads_key] >= min_reads_for_norm }
         .set { ch_bam_bai }
 
-    // Copy exogenous total_mapped_reads meta fields to their corresponding endogenous samples    
-    ch_bam_bai
-        .map { meta, bam, bai ->
-            // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-            def antibody = meta.antibody ?: meta.input_control_of_antibody
-            [ meta.id, antibody, meta, bam, bai ]
-        }
-        .branch { id, antibody, meta, bam, bai ->
-            endo: meta.genome == genome
-            exo: meta.genome == spikein_genome
-        }
-        .set { ch_bam_bai_genome }
 
-    ch_bam_bai_genome
-        .endo
-        .combine(ch_bam_bai_genome.exo, by: [0,1])
-        .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
-            def meta_clone = endo_meta.clone()
-            meta_clone.exo_flT1_total_mapped_reads = exo_meta.flT1_total_mapped_reads
-            meta_clone.exo_flT2_total_mapped_reads = exo_meta.flT2_total_mapped_reads ?: null
-            meta_clone.exo_flT3_total_mapped_reads = exo_meta.flT3_total_mapped_reads ?: null
-            meta_clone.exo_flTbl_total_mapped_reads = exo_meta.flTbl_total_mapped_reads ?: null
-            meta_clone.exo_dSp_total_mapped_reads = exo_meta.dSp_total_mapped_reads ?: null
-            meta_clone.exo_ref_total_mapped_reads_key = "exo_" + exo_meta.last_total_mapped_reads_key
-            meta_clone.exo_ref_total_mapped_reads_for_dSp_key = "exo_" + exo_meta.ref_total_mapped_reads_for_dSp_key
-            meta_clone.exo_ref_total_mapped_reads_for_rpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_rpm_key
-            meta_clone.exo_ref_total_mapped_reads_for_srpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_srpm_key
-            meta_clone.exo_ref_total_mapped_reads_for_cisrpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_cisrpm_key
-            [ meta_clone, endo_bam, endo_bai ]
-        }
-        .set { ch_bam_bai_endo }
+    if (spikein_genome) {
+        // Copy exogenous total_mapped_reads meta fields to their corresponding endogenous samples    
+        ch_bam_bai
+            .map { meta, bam, bai ->
+                // samples have meta.antibody, while input controls have meta.input_control_of_antibody
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [ meta.id, antibody, meta, bam, bai ]
+            }
+            .branch { id, antibody, meta, bam, bai ->
+                endo: meta.genome == genome
+                exo: meta.genome == spikein_genome
+            }
+            .set { ch_bam_bai_genome }
 
+            ch_bam_bai_genome
+                .endo
+                .combine(ch_bam_bai_genome.exo, by: [0,1])
+                .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
+                    def meta_clone = endo_meta.clone()
+                    meta_clone.exo_flT1_total_mapped_reads = exo_meta.flT1_total_mapped_reads
+                    meta_clone.exo_flT2_total_mapped_reads = exo_meta.flT2_total_mapped_reads ?: null
+                    meta_clone.exo_flT3_total_mapped_reads = exo_meta.flT3_total_mapped_reads ?: null
+                    meta_clone.exo_flTbl_total_mapped_reads = exo_meta.flTbl_total_mapped_reads ?: null
+                    meta_clone.exo_dSp_total_mapped_reads = exo_meta.dSp_total_mapped_reads ?: null
+                    meta_clone.exo_ref_total_mapped_reads_key = "exo_" + exo_meta.last_total_mapped_reads_key
+                    meta_clone.exo_ref_total_mapped_reads_for_dSp_key = "exo_" + exo_meta.ref_total_mapped_reads_for_dSp_key
+                    meta_clone.exo_ref_total_mapped_reads_for_rpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_rpm_key
+                    meta_clone.exo_ref_total_mapped_reads_for_srpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_srpm_key
+                    meta_clone.exo_ref_total_mapped_reads_for_cisrpm_key = "exo_" + exo_meta.ref_total_mapped_reads_for_cisrpm_key
+                    [ meta_clone, endo_bam, endo_bai ]
+                }
+                .set { ch_bam_bai_endo }
 
-    if (!skip_exo_bw) {
-        // Mix back the exogenous BAMs to process them together with the endogenous ones
-        ch_bam_bai = ch_bam_bai_endo.mix(ch_bam_bai_genome.exo)
-    } else {
-        ch_bam_bai = ch_bam_bai_endo
+            if (!skip_exo_bw) {
+                // Mix back the exogenous BAMs to process them together with the endogenous ones
+                ch_bam_bai = ch_bam_bai_endo.mix(ch_bam_bai_genome.exo)
+            } else {
+                ch_bam_bai = ch_bam_bai_endo
+            }
     }
 
     //
