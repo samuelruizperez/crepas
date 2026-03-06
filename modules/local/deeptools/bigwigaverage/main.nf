@@ -13,7 +13,7 @@ process DEEPTOOLS_BIGWIGAVERAGE {
 
     output:
     tuple val(meta), path("*.bigWig"), emit: bigwig, optional: true
-    tuple val(meta), path("*.bedgraph"), emit: bedgraph, optional: true
+    tuple val(meta), path("*.bedGraph"), emit: bedgraph, optional: true
     path  "versions.yml"          , emit: versions
 
     when:
@@ -23,25 +23,37 @@ process DEEPTOOLS_BIGWIGAVERAGE {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.bigwigAverage"
     def blacklist_cmd = blacklist ? "--blackListFileName ${blacklist}" : ""
-    """
-    bigwigAverage \\
-        ${args} \\
-        --bigwigs ${bigwigs.join(' ')} \\
-        --numberOfProcessors ${task.cpus} \\
-        --outFileName ${prefix}.bigWig \\
-        $blacklist_cmd
+    def extension = args.contains("--outFileFormat bigwig") ? "bigWig" : "bedGraph"
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        deeptools: \$(bigwigAverage --version | sed -e "s/bigwigAverage //g")
-    END_VERSIONS
-    """
+    if (bigwigs.size() > 1) {
+        """
+        bigwigAverage \\
+            ${args} \\
+            --bigwigs ${bigwigs.join(' ')} \\
+            --numberOfProcessors ${task.cpus} \\
+            --outFileName ${prefix}.${extension} \\
+            $blacklist_cmd
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            deeptools: \$(bigwigAverage --version | sed -e "s/bigwigAverage //g")
+        END_VERSIONS
+        """
+    } else {
+        """
+        ln -s ${bigwigs[0]} ${prefix}.${extension}
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            deeptools: \$(bigwigAverage --version | sed -e "s/bigwigAverage //g")
+        END_VERSIONS
+        """
+    }
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}.bigwigAverage"
+    def extension = args.contains("--outFileFormat bigwig") ? "bigWig" : "bedGraph"
     """
-    touch ${prefix}.bigWig
-    touch ${prefix}.bedgraph
+    touch ${prefix}.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
