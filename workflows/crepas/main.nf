@@ -401,7 +401,7 @@ workflow CREPAS {
         // MODULE: Merge spikein barcode counts of resequenced samples
         //
         SPIKEIN_BARCODES (
-            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.counts,
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.barcode_counts,
             ch_flT1_total
         )
         ch_versions = ch_versions.mix(SPIKEIN_BARCODES.out.versions.first())
