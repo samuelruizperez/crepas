@@ -3,6 +3,7 @@
 //
 
 include { FASTQC                            } from '../../../modules/nf-core/fastqc/main'
+include { FASTQ_EXTRACT_SPIKEIN_BARCODES } from '../../../modules/local/fastq_extract_spikein_barcodes/main'
 include { UMITOOLS_EXTRACT                  } from '../../../modules/nf-core/umitools/extract/main'
 include { UMITRANSFER                       } from '../../../modules/local/umitransfer/main'
 include { TRIMGALORE as TRIMGALORE          } from '../../../modules/nf-core/trimgalore/main'
@@ -27,6 +28,8 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     take:
     reads             // channel: [ val(meta), [ reads ] ]
     skip_fastqc       // boolean: true/false
+    skip_spikein_barcode_extract // boolean: true/false
+    ch_spikein_barcode_table  // channel: [ val(meta), path(spikein_barcode_table.tsv) ]
     with_umi          // boolean: true/false
     skip_umi_extract  // boolean: true/false
     skip_trimming     // boolean: true/false
@@ -51,6 +54,15 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     ch_no_sep_umi_fq    = channel.empty()
     sep_umi_fq_log             = channel.empty()
     no_sep_umi_fq_log          = channel.empty()
+
+    if (!skip_spikein_barcode_extract) {
+        FASTQ_EXTRACT_SPIKEIN_BARCODES (
+            reads,
+            ch_spikein_barcode_table
+        )
+        ch_versions = ch_versions.mix(FASTQ_EXTRACT_SPIKEIN_BARCODES.out.versions.first())
+    }
+
     if (with_umi && !skip_umi_extract) {
 
         // split umi_reads channel into the ones that have meta.sep_umi_fq and the ones that don't
@@ -149,6 +161,8 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
 
     emit:
     reads = htrim_reads // channel: [ val(meta), [ reads ] ]
+
+    barcode_counts = FASTQ_EXTRACT_SPIKEIN_BARCODES.out.counts // channel: [ val(meta), path(*.tsv) ]
 
     fastqc_html        // channel: [ val(meta), [ html ] ]
     fastqc_zip         // channel: [ val(meta), [ zip ] ]
