@@ -30,7 +30,7 @@ workflow SPIKEIN_BARCODES {
     // TODO: print for debugging
     ch_barcode_counts
         .map {
-            meta, peaks ->
+            meta, counts ->
                 "${meta}\t${counts}"
         }
         .collectFile( name: 'ch_barcode_counts.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/SPIKEIN_BARCODES" )
