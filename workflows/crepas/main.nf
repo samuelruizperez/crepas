@@ -255,7 +255,16 @@ workflow CREPAS {
         }
         .set { ch_sort_bam }
 
-    PICARD_MERGESAMFILES(
+    // TODO: print for debugging
+    ch_sort_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_sort_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/" )
+
+
+    PICARD_MERGESAMFILES (
         ch_sort_bam
     )
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
