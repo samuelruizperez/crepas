@@ -27,6 +27,13 @@ workflow SPIKEIN_BARCODES {
         }
         .set { ch_barcode_counts }
 
+    // TODO: print for debugging
+    ch_barcode_counts
+        .map {
+            meta, peaks ->
+                "${meta}\t${counts}"
+        }
+        .collectFile( name: 'ch_barcode_counts.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/SPIKEIN_BARCODES" )
 
     //
     // MODULE: Merge spikein barcode counts of resequenced samples
