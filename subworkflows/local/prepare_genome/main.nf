@@ -11,6 +11,7 @@ include {
     GUNZIP as GUNZIP_ACTIVE_REGIONS
     GUNZIP as GUNZIP_ROCCO_PARAMS
     GUNZIP as GUNZIP_BLACKLIST
+    GUNZIP as GUNZIP_SPIKEIN_BARCODE_TABLE
     GUNZIP as GUNZIP_INITIATION_ZONES
     GUNZIP as GUNZIP_OKSEQ_RFD_FILE
     GUNZIP as GUNZIP_SPLICESITES
@@ -73,6 +74,7 @@ workflow PREPARE_GENOME {
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
     blacklist          //    file: /path/to/blacklist.bed
+    spikein_barcode_table //    file: /path/to/spikein_barcode_table.tsv
     read_length        //    integer: read length for khmer
     macs_gsize         //    string: genome size for MACS2
     sparsebed          //    file: /path/to/sparsebed.bed
@@ -157,6 +159,16 @@ workflow PREPARE_GENOME {
         //
         TABIX_TABIX ( TABIX_BGZIP.out.output )
 
+    }
+
+    if (spikein_barcode_table) {
+        if (spikein_barcode_table.endsWith('.gz')) {
+            ch_spikein_barcode_table = GUNZIP_SPIKEIN_BARCODE_TABLE ( [ [id:'spikein_barcode_table'], file(spikein_barcode_table, checkIfExists: true) ] ).gunzip
+        } else {
+            ch_spikein_barcode_table = channel.value( [ [id:'spikein_barcode_table'], file(spikein_barcode_table, checkIfExists: true) ] )
+        }
+    } else {
+        ch_spikein_barcode_table = channel.value( [ [id:'spikein_barcode_table'], file("${projectDir}/assets/sc_spikein_barcodes.tsv", checkIfExists: true) ] )
     }
 
     ch_sparsebed = channel.empty()
@@ -552,6 +564,7 @@ workflow PREPARE_GENOME {
     effective_gfraction    = ch_effective_gfraction
     whitelist              = ch_whitelist              //    channel: [ val(meta), [ *.include_regions.bed ]]
     blacklist              = ch_blacklist              //    channel: [  blacklist.bed ]
+    spikein_barcode_table  = ch_spikein_barcode_table  //    channel: [ val(meta), [ spikein_barcode_table.tsv ]]
     sparsebed              = ch_sparsebed              //    channel: [ val(meta), [ sparsebed.bed ]]
     active_regions         = ch_active_regions         //    channel: [ val(meta), [ active_regions.bed ]]
     rocco_params           = ch_rocco_params           //    channel: [ val(meta), [ rocco_params.yml ]]
