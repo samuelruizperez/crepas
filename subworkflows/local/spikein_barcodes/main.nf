@@ -63,7 +63,7 @@ workflow SPIKEIN_BARCODES {
 
   
     emit:
-    spikein_barcode_qc = SPIKEIN_BARCODE_QC.out.tsv // channel: [ val(meta), path(tsv) ]
+    spikein_barcode_summary = SPIKEIN_BARCODE_QC.out.summary // channel: [ val(meta), path(tsv) ]
 
     versions = ch_versions // channel: [ versions.yml ]
 }
