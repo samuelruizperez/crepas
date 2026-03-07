@@ -23,7 +23,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
     task.ext.when == null || task.ext.when
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}.extract_barcodes"
+    prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_extract"
     """
     printf "barcode_target\\tbarcode_id\\tbarcode_sequence\\tR1_count\\tR2_count\\n" > ${prefix}.tsv
 
@@ -42,7 +42,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}.extract_barcodes"
+    prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_extract"
     """
     touch  ${prefix}.tsv
 

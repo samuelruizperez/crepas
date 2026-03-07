@@ -19,7 +19,7 @@ process SPIKEIN_BARCODE_MERGE {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.merged_counts"
+    def prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_merged"
     def count_files = counts.sort()
     if (count_files.size() > 1) {
         """
@@ -45,7 +45,7 @@ process SPIKEIN_BARCODE_MERGE {
     }
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}.merged_counts"
+    def prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_merged"
     """
     touch ${prefix}.tsv
 
