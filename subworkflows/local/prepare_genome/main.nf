@@ -168,7 +168,7 @@ workflow PREPARE_GENOME {
             ch_spikein_barcode_table = channel.value( [ [id:'spikein_barcode_table'], file(spikein_barcode_table, checkIfExists: true) ] )
         }
     } else {
-        ch_spikein_barcode_table = channel.value( [ [id:'spikein_barcode_table'], file("${projectDir}/assets/sc_spikein_barcodes.tsv", checkIfExists: true) ] )
+        ch_spikein_barcode_table = channel.value( [ [id:'spikein_barcode_table'], file("${projectDir}/assets/barcodes/sc_spikein_barcodes.tsv", checkIfExists: true) ] )
     }
 
     ch_sparsebed = channel.empty()
