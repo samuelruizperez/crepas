@@ -21,7 +21,7 @@ process SPIKEIN_BARCODE_QC {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.summary"
+    def prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_summary"
     """
     spikein_barcode_qc.R \\
         ${args} \\
@@ -36,7 +36,7 @@ process SPIKEIN_BARCODE_QC {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}.summary"
+    def prefix = task.ext.prefix ?: "${meta.id}.spikein_barcode_summary"
     """
     touch ${prefix}.tsv
     touch ${prefix}.pdf
