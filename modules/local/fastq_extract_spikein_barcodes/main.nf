@@ -38,7 +38,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(grep --version | head -n 1 | sed 's/grep //; s/ .*\\$//')
+        grep: \$(grep --version | head -n 1 | sed 's/grep //; s/ .*\$//')
     END_VERSIONS
     """
 
@@ -49,7 +49,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(grep --version | head -n 1 | sed 's/grep //; s/ .*\\$//')
+        grep: \$(grep --version | head -n 1 | sed 's/grep //; s/ .*\$//')
     END_VERSIONS
     """
 }
