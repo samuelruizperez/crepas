@@ -20,12 +20,13 @@ process SPIKEIN_BARCODE_MERGE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.merged_counts"
-    if (counts.size() > 1) {
+    def count_files = counts.sort()
+    if (count_files.size() > 1) {
         """
         spikein_barcode_merge.R \\
             ${args} \\
-            --count_tables ${counts.join(' ')} \\
-            --output ${prefix}
+            --count_tables ${count_files.join(' ')} \\
+            --prefix ${prefix}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -34,7 +35,7 @@ process SPIKEIN_BARCODE_MERGE {
         """
     } else {
         """
-        ln -s ${counts[0]} ${prefix}.tsv
+        ln -s ${count_files[0]} ${prefix}.tsv
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

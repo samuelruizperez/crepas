@@ -27,7 +27,7 @@ process SPIKEIN_BARCODE_QC {
         ${args} \\
         --count_tables ${counts.join(' ')} \\
         --uniq_totals ${uniq_totals.join(' ')} \\
-        --output ${prefix}
+        --prefix ${prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
