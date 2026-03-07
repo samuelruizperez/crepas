@@ -35,7 +35,6 @@ process SPIKEIN_BARCODE_QC {
     END_VERSIONS
     """
 
-
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}.summary"
     """

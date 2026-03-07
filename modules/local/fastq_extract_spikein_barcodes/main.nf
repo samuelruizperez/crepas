@@ -24,21 +24,20 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}.extract_barcodes"
-
     """
-    printf "barcode_target\tbarcode_id\tbarcode_sequence\tR1_count\tR2_count\n" > ${prefix}.tsv
+    printf "barcode_target\\tbarcode_id\\tbarcode_sequence\\tR1_count\\tR2_count\\n" > ${prefix}.tsv
 
     while IFS=\$'\\t' read -r barcode_target barcode_id barcode_sequence; do
         [[ "\$barcode_target" == "barcode_target" ]] && continue
         [[ -z "\$barcode_target" || -z "\$barcode_id" || -z "\$barcode_sequence" ]] && continue
-        r1_count=\$(grep -cF "\$barcode_sequence" "${reads[0]}" || true)
-        r2_count=\$(grep -cF "\$barcode_sequence" "${reads[1]}" || true)
-        printf "%s\\t%s\\t%s\\t%s\\t%s\n" "\$barcode_target" "\$barcode_id" "\$barcode_sequence" "\$r1_count" "\$r2_count" >> ${prefix}.tsv
+        r1_count=\$(zgrep -cF "\$barcode_sequence" "${reads[0]}" || true)
+        r2_count=\$(zgrep -cF "\$barcode_sequence" "${reads[1]}" || true)
+        printf "%s\\t%s\\t%s\\t%s\\t%s\\n" "\$barcode_target" "\$barcode_id" "\$barcode_sequence" "\$r1_count" "\$r2_count" >> ${prefix}.tsv
     done < "${barcode_table}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(echo \$(grep --version | grep -oP '\\d+\\.\\d+' | head -1))
+        zgrep: \$(echo \$(zgrep --version | zgrep -oP '\\d+\\.\\d+' | head -1))
     END_VERSIONS
     """
 
@@ -49,7 +48,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(echo \$(grep --version | grep -oP '\\d+\\.\\d+' | head -1))
+        zgrep: \$(echo \$(zgrep --version | zgrep -oP '\\d+\\.\\d+' | head -1))
     END_VERSIONS
     """
 }
