@@ -44,7 +44,7 @@ workflow SPIKEIN_BARCODES {
     ch_versions = ch_versions.mix(SPIKEIN_BARCODE_MERGE.out.versions.first())
 
 
-    ch_uniq_total = ch_uniq_total.map { meta, uniq_total -> [ meta.id, meta, uniq_total ]}
+    ch_uniq_total = ch_uniq_total.map { meta, uniq_total -> [ meta.id, uniq_total ]}
 
     SPIKEIN_BARCODE_MERGE
         .out
