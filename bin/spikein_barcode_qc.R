@@ -41,7 +41,7 @@ parser$add_argument(
   type = "character",
   nargs = "+",
   required = TRUE,
-  help = "One or more count tables with columns: barcode_target, barcode_id, barcode_sequence, r1_count, r2_count"
+  help = "One or more count tables with columns: barcode_target, barcode_id, barcode_sequence, R1_count, R2_count"
 )
 
 parser$add_argument(
@@ -90,8 +90,8 @@ required_cols <- c(
   "barcode_target",
   "barcode_id",
   "barcode_sequence",
-  "r1_count",
-  "r2_count"
+  "R1_count",
+  "R2_count"
 )
 
 sample_id_from_path <- function(path) {
@@ -119,16 +119,16 @@ read_count_table <- function(path, sample_id, uniq_total) {
       barcode_target = as.character(barcode_target),
       barcode_id = as.character(barcode_id),
       barcode_sequence = as.character(barcode_sequence),
-      r1_count = as.numeric(r1_count),
-      r2_count = as.numeric(r2_count),
+      R1_count = as.numeric(R1_count),
+      R2_count = as.numeric(R2_count),
       sample_id = sample_id,
       uniq_total = uniq_total
     )
 
-  bad_rows <- which(is.na(df$r1_count) | is.na(df$r2_count))
+  bad_rows <- which(is.na(df$R1_count) | is.na(df$R2_count))
   if (length(bad_rows) > 0) {
     stop(
-      "Table '", path, "' has non-numeric values in r1_count/r2_count at rows: ",
+      "Table '", path, "' has non-numeric values in R1_count/R2_count at rows: ",
       paste(head(bad_rows, 10), collapse = ", "),
       if (length(bad_rows) > 10) " ..." else ""
     )
@@ -159,7 +159,7 @@ long_df <- dplyr::bind_rows(table_list) %>%
 # ===============================================================================
 
 summary_df <- long_df %>%
-  dplyr::mutate(total_count = r1_count + r2_count) %>%
+  dplyr::mutate(total_count = R1_count + R2_count) %>%
   dplyr::group_by(sample_id, barcode_target) %>%
   dplyr::summarise(
     barcode_ab_count = sum(total_count, na.rm = TRUE),
