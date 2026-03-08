@@ -8,8 +8,8 @@
 #     https://github.com/grothlab/crepas/
 #
 # Description:
-#     Merge one or more spike-in barcode count tables by summing r1_count and
-#     r2_count for each unique barcode_target/barcode_id/barcode_sequence.
+#     Merge one or more spike-in barcode count tables by summing R1_count and
+#     R2_count for each unique barcode_target/barcode_id/barcode_sequence.
 # ===============================================================================
 
 options(show.error.locations = TRUE)
@@ -38,7 +38,7 @@ parser$add_argument(
   type = "character",
   nargs = "+",
   required = TRUE,
-  help = "One or more count tables with columns: barcode_target, barcode_id, barcode_sequence, r1_count, r2_count"
+  help = "One or more count tables with columns: barcode_target, barcode_id, barcode_sequence, R1_count, R2_count"
 )
 
 parser$add_argument(
@@ -70,8 +70,8 @@ required_cols <- c(
   "barcode_target",
   "barcode_id",
   "barcode_sequence",
-  "r1_count",
-  "r2_count"
+  "R1_count",
+  "R2_count"
 )
 
 read_count_table <- function(path) {
@@ -102,8 +102,8 @@ all_counts <- dplyr::bind_rows(table_list)
 merged_counts <- all_counts %>%
   dplyr::group_by(barcode_target, barcode_id, barcode_sequence) %>%
   dplyr::summarise(
-    r1_count = sum(r1_count, na.rm = TRUE),
-    r2_count = sum(r2_count, na.rm = TRUE),
+    R1_count = sum(R1_count, na.rm = TRUE),
+    R2_count = sum(R2_count, na.rm = TRUE),
     .groups = "drop"
   ) %>%
   dplyr::arrange(barcode_target, barcode_id)
