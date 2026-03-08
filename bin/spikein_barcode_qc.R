@@ -177,10 +177,23 @@ summary_df <- long_df %>%
 # Build heatmap
 # ===============================================================================
 
+recovery_col_label <- "Total barcode / uniq reads"
+
+sample_recovery_df <- long_df %>%
+  dplyr::group_by(sample_id) %>%
+  dplyr::summarise(
+    target = recovery_col_label,
+    on_target_normalization = sum(R1_count + R2_count, na.rm = TRUE) / dplyr::first(uniq_total),
+    .groups = "drop"
+  )
+
 heatmap_df <- summary_df %>%
+  dplyr::select(sample_id, target, on_target_normalization) %>%
+  dplyr::bind_rows(sample_recovery_df) %>%
   dplyr::mutate(
+    sample_id = sub("^[^.]*\\.", "", sample_id),
     sample_id = factor(sample_id, levels = unique(sample_id)),
-    target = factor(target, levels = sort(unique(target)))
+    target = factor(target, levels = c(sort(unique(summary_df$target)), recovery_col_label))
   )
 
 heatmap_plot <- ggplot2::ggplot(
@@ -193,9 +206,10 @@ heatmap_plot <- ggplot2::ggplot(
     size = 2.5
   ) +
   ggplot2::scale_fill_gradient(
-    low = "#f7fbff",
-    high = "#08306b",
-    name = "On-target\nnormalization"
+    low = "#f8c22dff",
+    high = "#54a7d3ff",
+    limits = c(0, 1),
+    name = "On-target recovery"
   ) +
   ggplot2::labs(x = "barcode_target", y = "sample_id") +
   ggplot2::theme_bw(base_size = 10) +
@@ -219,8 +233,8 @@ heatmap_png <- file.path(opt_outdir, paste0(opt_prefix, ".heatmap.png"))
 
 readr::write_tsv(long_df, long_file, col_names = TRUE)
 readr::write_tsv(summary_df, summary_file, col_names = TRUE)
-ggplot2::ggsave(filename = heatmap_pdf, plot = heatmap_plot, width = 10, height = 4, units = "in")
-ggplot2::ggsave(filename = heatmap_png, plot = heatmap_plot, width = 10, height = 4, units = "in", dpi = 300)
+ggplot2::ggsave(filename = heatmap_pdf, plot = heatmap_plot, width = 14, height = 6, units = "in")
+ggplot2::ggsave(filename = heatmap_png, plot = heatmap_plot, width = 14, height = 6, units = "in", dpi = 300)
 
 message("[", Sys.time(), "] Wrote long table: ", long_file)
 message("[", Sys.time(), "] Long table rows: ", nrow(long_df))
