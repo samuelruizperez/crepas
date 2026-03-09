@@ -17,7 +17,7 @@
 
 options(show.error.locations = TRUE)
 
-required.libs <- c("readr", "dplyr", "argparse", "ggplot2")
+required.libs <- c("readr", "dplyr", "argparse", "ComplexHeatmap", "circlize")
 
 for (lib in required.libs) {
   suppressPackageStartupMessages({
@@ -183,40 +183,80 @@ sample_recovery_df <- long_df %>%
   dplyr::group_by(sample_id) %>%
   dplyr::summarise(
     target = recovery_col_label,
-    on_target_normalization = sum(R1_count + R2_count, na.rm = TRUE) / dplyr::first(uniq_total),
+    recovery_ratio = sum(R1_count + R2_count, na.rm = TRUE) / dplyr::first(uniq_total),
     .groups = "drop"
   )
 
-heatmap_df <- summary_df %>%
+target_levels <- c(sort(unique(summary_df$target)), recovery_col_label)
+sample_levels <- summary_df$sample_id %>% unique()
+
+target_heatmap_df <- summary_df %>%
   dplyr::select(sample_id, target, on_target_normalization) %>%
-  dplyr::bind_rows(sample_recovery_df) %>%
   dplyr::mutate(
-    sample_id = sub("\\..*$", "", sample_id),
-    sample_id = factor(sample_id, levels = unique(sample_id)),
-    target = factor(target, levels = c(sort(unique(summary_df$target)), recovery_col_label))
+    sample_id = sub("\\..*$", "", sample_id)
   )
 
-heatmap_plot <- ggplot2::ggplot(
-  heatmap_df,
-  ggplot2::aes(x = target, y = sample_id, fill = on_target_normalization)
-) +
-  ggplot2::geom_tile(color = "white", linewidth = 0.25) +
-  ggplot2::geom_text(
-    ggplot2::aes(label = sprintf("%.3f", on_target_normalization)),
-    size = 2.5
-  ) +
-  ggplot2::scale_fill_gradient(
-    low = "#f8c22dff",
-    high = "#54a7d3ff",
-    limits = c(0, 1),
-    name = "On-target recovery"
-  ) +
-  ggplot2::labs(x = "barcode_target", y = "sample_id") +
-  ggplot2::theme_bw(base_size = 10) +
-  ggplot2::theme(
-    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
-    panel.grid = ggplot2::element_blank()
+recovery_heatmap_df <- sample_recovery_df %>%
+  dplyr::mutate(
+    sample_id = sub("\\..*$", "", sample_id)
   )
+
+sample_levels_clean <- sub("\\..*$", "", sample_levels)
+target_only_levels <- sort(unique(summary_df$target))
+
+target_matrix <- with(
+  target_heatmap_df,
+  tapply(
+    on_target_normalization,
+    list(
+      factor(sample_id, levels = sample_levels_clean),
+      factor(target, levels = target_only_levels)
+    ),
+    identity
+  )
+)
+
+recovery_by_sample <- setNames(recovery_heatmap_df$recovery_ratio, recovery_heatmap_df$sample_id)
+recovery_matrix <- matrix(
+  recovery_by_sample[sample_levels_clean],
+  ncol = 1,
+  dimnames = list(sample_levels_clean, recovery_col_label)
+)
+
+target_col_fun <- circlize::colorRamp2(c(0, 1), c("#f8c22dff", "#54a7d3ff"))
+max_recovery <- max(recovery_matrix, na.rm = TRUE)
+if (!is.finite(max_recovery) || max_recovery <= 0) {
+  max_recovery <- 1
+}
+recovery_col_fun <- circlize::colorRamp2(c(0, max_recovery), c("#fff5f0", "#cb181d"))
+
+target_ht <- ComplexHeatmap::Heatmap(
+  target_matrix,
+  name = "On-target recovery",
+  col = target_col_fun,
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  rect_gp = grid::gpar(col = "white", lwd = 0.5),
+  cell_fun = function(j, i, x, y, w, h, fill) {
+    grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
+  },
+  column_names_rot = 45
+)
+
+recovery_ht <- ComplexHeatmap::Heatmap(
+  recovery_matrix,
+  name = "Total barcode / uniq reads",
+  col = recovery_col_fun,
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  rect_gp = grid::gpar(col = "white", lwd = 0.5),
+  cell_fun = function(j, i, x, y, w, h, fill) {
+    grid::grid.text(sprintf("%.3f", recovery_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
+  },
+  width = grid::unit(2.4, "cm")
+)
+
+heatmap_obj <- target_ht + recovery_ht
 
 # ===============================================================================
 # Write outputs
@@ -233,8 +273,14 @@ heatmap_png <- file.path(opt_outdir, paste0(opt_prefix, ".heatmap.png"))
 
 readr::write_tsv(long_df, long_file, col_names = TRUE)
 readr::write_tsv(summary_df, summary_file, col_names = TRUE)
-ggplot2::ggsave(filename = heatmap_pdf, plot = heatmap_plot, width = 14, height = 6, units = "in")
-ggplot2::ggsave(filename = heatmap_png, plot = heatmap_plot, width = 14, height = 6, units = "in", dpi = 300)
+
+grDevices::pdf(heatmap_pdf, width = 14, height = 6)
+ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
+grDevices::dev.off()
+
+grDevices::png(heatmap_png, width = 14, height = 6, units = "in", res = 300)
+ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
+grDevices::dev.off()
 
 message("[", Sys.time(), "] Wrote long table: ", long_file)
 message("[", Sys.time(), "] Long table rows: ", nrow(long_df))
