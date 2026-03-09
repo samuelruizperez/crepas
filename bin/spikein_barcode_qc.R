@@ -191,7 +191,7 @@ heatmap_df <- summary_df %>%
   dplyr::select(sample_id, target, on_target_normalization) %>%
   dplyr::bind_rows(sample_recovery_df) %>%
   dplyr::mutate(
-    sample_id = sub("^[^.]*\\.", "", sample_id),
+    sample_id = sub("\\..*$", "", sample_id),
     sample_id = factor(sample_id, levels = unique(sample_id)),
     target = factor(target, levels = c(sort(unique(summary_df$target)), recovery_col_label))
   )
