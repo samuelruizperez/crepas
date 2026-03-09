@@ -1,5 +1,5 @@
 process IDR {
-    tag "$prefix"
+    tag "${meta.id}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -8,14 +8,13 @@ process IDR {
         'biocontainers/idr:2.0.4.2--py39hcbe4a3b_5' }"
 
     input:
-    path peaks
+    tuple val(meta), path(sample_peaks), path(peak_list)
     val peak_type
-    val prefix
 
     output:
-    path "*idrValues.txt", emit: idr
-    path "*log.txt"      , emit: log
-    path "*.png"         , emit: png
+    tuple val(meta), path("*.idrValues.txt"), emit: idr
+    tuple val(meta), path("*.log.txt"      ), emit: log
+    tuple val(meta), path("*.png"         ), emit: png
     path "versions.yml"  , emit: versions
 
     when:
@@ -23,23 +22,24 @@ process IDR {
 
     script:
     def args = task.ext.args ?: ''
-    if (peaks.toList().size < 2) {
+    def prefix = task.ext.prefix ?: "${meta.id}.idr"
+    def peak_list_arg = peak_list ? "--peak-list ${peak_list}" : ''
+    if (sample_peaks.toList().size < 2) {
         log.error "[ERROR] idr needs at least two replicates only one provided."
     }
     def peak_types = ['narrowPeak', 'broadPeak', 'bed']
     if (!peak_types.contains(peak_type)) {
         log.error "[ERROR] Invalid option: '${peak_type}'. Valid options for 'peak_type': ${peak_types.join(', ')}."
     }
-    def idr_vals = prefix ? "${prefix}.idrValues.txt" : "idrValues.txt"
-    def log_file = prefix ? "${prefix}.log.txt" : "log.txt"
     """
     idr \\
-        --samples $peaks \\
-        --input-file-type $peak_type \\
-        --output-file $idr_vals \\
-        --log-output-file $log_file \\
+        --samples ${sample_peaks} \\
+        ${peak_list_arg} \\ 
+        --input-file-type ${peak_type} \\
+        --output-file ${prefix}.idrValues.txt \\
+        --log-output-file ${prefix}.log.txt \\
         --plot \\
-        $args
+        ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -48,7 +48,8 @@ process IDR {
     """
 
     stub:
-    if (peaks.toList().size < 2) {
+    def prefix = task.ext.prefix ?: "${meta.id}.idr"
+    if (sample_peaks.toList().size < 2) {
         log.error "[ERROR] idr needs at least two replicates only one provided."
     }
     def peak_types = ['narrowPeak', 'broadPeak', 'bed']
