@@ -94,7 +94,6 @@ workflow BAM_ENCODE_PIPELINE {
         ch_tas_reps_and_pseudoreps_to_pool
     )
     ch_tagalign_pool = TAGALIGN_POOL.out.file_out.map { meta, tagalign -> [ meta + [ pooled: true ], tagalign ] }
-    ch_versions = ch_versions.mix(TAGALIGN_POOL.out.versions.first())
 
     // TODO: save for debugging
     ch_tagalign_pool
