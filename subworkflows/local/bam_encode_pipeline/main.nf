@@ -1,10 +1,10 @@
-include { SAMTOOLS_SORT               } from '../../../modules/nf-core/samtools/sort/main'
-include { BEDTOOLS_BAMTOBED           } from '../../../modules/nf-core/bedtools/bamtobed/main'
-include { BED_TO_TAGALIGN            } from '../../../modules/local/bed_to_tagalign/main'
-include { TAGALIGN_SELF_PSEUDOREPLICATES } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
-include { CAT_CAT as TAGALIGN_POOL } from '../../../modules/nf-core/cat/cat/main'
-include { PHANTOMPEAKQUALTOOLS } from '../../../modules/nf-core/phantompeakqualtools/main'
-
+include { SAMTOOLS_SORT                                     } from '../../../modules/nf-core/samtools/sort/main'
+include { BEDTOOLS_BAMTOBED                                 } from '../../../modules/nf-core/bedtools/bamtobed/main'
+include { BED_TO_TAGALIGN                                   } from '../../../modules/local/bed_to_tagalign/main'
+include { TAGALIGN_SELF_PSEUDOREPLICATES                    } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
+include { CAT_CAT as TAGALIGN_POOL                          } from '../../../modules/nf-core/cat/cat/main'
+include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP  } from '../../../modules/nf-core/phantompeakqualtools/main'
+include { IDR                                               } from '../../../modules/nf-core/idr/main'
 
 workflow BAM_ENCODE_PIPELINE {
     take:
@@ -96,6 +96,13 @@ workflow BAM_ENCODE_PIPELINE {
     ch_tagalign_pool = TAGALIGN_POOL.out.file_out.map { meta, tagalign -> [ meta + [ pooled: true ], tagalign ] }
     ch_versions = ch_versions.mix(TAGALIGN_POOL.out.versions.first())
 
+    // TODO: save for debugging
+    ch_tagalign_pool
+        .map { meta, tagaligns ->
+            "${meta}\t${tagaligns}"
+        }
+        .collectFile(name: 'ch_tagalign_pool.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+
 
     ch_tas_reps_and_pseudoreps
         .mix(ch_tagalign_pool)
@@ -171,14 +178,21 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .collectFile(name: 'ch_ip_ipcontrol_tagalign.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
-
     //
     // MODULE: Call peaks with phantompeakqualtools SPP
     //
-    PHANTOMPEAKQUALTOOLS (
+    PHANTOMPEAKQUALTOOLS_SPP (
         ch_ip_ipcontrol_tagalign
     )
-    ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
+    ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
+
+
+    // Create channel: [ meta, sample_peaks, peak_list ]
+
+    //
+    // MODULE: IDR analysis
+    //
+
 
 
     emit:
