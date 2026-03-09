@@ -4,12 +4,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bioconda::bioconductor-genomicalignments=1.42.0
-  - bioconda::bioconductor-genomicfeatures=1.58.0
-  - conda-forge::r-argparse=2.2.5
-  - conda-forge::r-ggpmisc=0.6.2
-  - conda-forge::r-ggpubr=0.6.1
-  - conda-forge::r-ggrepel=0.9.6
-  - conda-forge::r-hexbin=1.28.5
-  - conda-forge::r-rcolorbrewer=1.1_3
+  - bioconda::bioconductor-complexheatmap=2.26.1
+  - conda-forge::r-argparse=2.3.1
+  - conda-forge::r-circlize=0.4.17
   - conda-forge::r-tidyverse=2.0.0

@@ -52,11 +52,13 @@ workflow SPIKEIN_BARCODES {
         .map { meta, counts -> [ meta.id, meta, counts ]}
         .combine(ch_uniq_total, by: 0)
         .map { id, meta, counts, uniq_total ->
-            [ "group_all", meta, counts, uniq_total ]
+            [ meta.exp_type, meta, counts, uniq_total ]
         }
         .groupTuple()
-        .map { group_all, metas, counts, uniq_totals ->
-            [ metas[0], counts, uniq_totals ]
+        .map { exp_type, metas, counts, uniq_totals ->
+            def meta_clone = metas[0].clone()
+            meta_clone.id = exp_type
+            [ meta_clone, counts, uniq_totals ]
         }
         .set { ch_barcode_counts_uniq }
 
