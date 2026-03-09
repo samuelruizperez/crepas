@@ -860,7 +860,10 @@ workflow CREPAS {
                 [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
             }
             .groupTuple(by: [0, 1, 2, 3, 4])
-            // antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws
+            .map { antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws ->
+                // Sort ids, metas and bws by id to ensure consistent order in plots
+                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids.sort(), metas.sort{meta -> meta.id}, bws.sort()]
+            }
             .combine(ch_gene_bed.map { it -> it[1] })
             .map {
                 antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws, gene_bed ->
