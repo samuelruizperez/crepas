@@ -230,7 +230,7 @@ workflow BAM_CREATE_PARTITIONS {
         .combine(ch_num_windows)
         .map { meta, bwaob, num_windows ->
             def meta_clone = meta.clone()
-            meta_clone.norm_factor_val = 1e6 / (meta[meta.ref_total_mapped_reads_for_rpm] + (num_windows * 2))
+            meta_clone.norm_factor_val = 1e6 / (meta[meta.ref_total_mapped_reads_for_rpm_key] + (num_windows * 2))
             meta_clone.norm_factor_type = 'rpm'
             [ meta_clone, bwaob ]
         }

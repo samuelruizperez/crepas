@@ -121,7 +121,7 @@ workflow BAM_ENCODE_PIPELINE {
         .map { pooled_ipcontrol_id, antibody, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ->
             // if depth ratio between controls is higher than ctl_depth_ratio, then use pooled control
             def ipcontrol_depths = ipcontrol_metas.collect { meta ->
-                meta[meta.ref_total_mapped_reads_for_rpm]
+                meta[meta.ref_total_mapped_reads_for_rpm_key]
             }
             def ctl_depth_max = ipcontrol_depths.max()
             def ctl_depth_min = ipcontrol_depths.min()
