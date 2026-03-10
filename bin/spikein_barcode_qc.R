@@ -177,7 +177,7 @@ summary_df <- long_df %>%
 # Build heatmap
 # ===============================================================================
 
-recovery_col_label <- "Total barcode / uniq reads"
+recovery_col_label <- "Total barcode /\nuniq reads"
 
 sample_recovery_df <- long_df %>%
   dplyr::group_by(sample_id) %>%
@@ -236,6 +236,7 @@ target_ht <- ComplexHeatmap::Heatmap(
   col = target_col_fun,
   cluster_rows = FALSE,
   cluster_columns = FALSE,
+  row_names_side = "left",
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
     grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
@@ -249,6 +250,8 @@ recovery_ht <- ComplexHeatmap::Heatmap(
   col = recovery_col_fun,
   cluster_rows = FALSE,
   cluster_columns = FALSE,
+  show_row_names = FALSE,
+  column_names_rot = 0,
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
     grid::grid.text(sprintf("%.3f", recovery_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
