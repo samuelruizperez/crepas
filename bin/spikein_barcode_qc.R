@@ -277,11 +277,11 @@ heatmap_png <- file.path(opt_outdir, paste0(opt_prefix, ".heatmap.png"))
 readr::write_tsv(long_df, long_file, col_names = TRUE)
 readr::write_tsv(summary_df, summary_file, col_names = TRUE)
 
-grDevices::pdf(heatmap_pdf, width = 14, height = 6)
+grDevices::pdf(heatmap_pdf, width = 16, height = 6)
 ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
 grDevices::dev.off()
 
-grDevices::png(heatmap_png, width = 14, height = 6, units = "in", res = 300)
+grDevices::png(heatmap_png, width = 16, height = 6, units = "in", res = 300)
 ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
 grDevices::dev.off()
 
