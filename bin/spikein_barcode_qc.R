@@ -237,12 +237,12 @@ target_ht <- ComplexHeatmap::Heatmap(
   cluster_rows = FALSE,
   cluster_columns = FALSE,
   row_names_side = "left",
+  row_names_gp = grid::gpar(fontsize = 9),
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
     grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 7))
   },
-  column_names_rot = 45,
-  width = grid::unit(ncol(target_matrix) * 4.2, "mm")
+  column_names_rot = 45
 )
 
 recovery_ht <- ComplexHeatmap::Heatmap(
@@ -254,11 +254,12 @@ recovery_ht <- ComplexHeatmap::Heatmap(
   show_row_names = FALSE,
   column_names_rot = 0,
   column_names_centered = TRUE,
+  column_names_gp = grid::gpar(fontsize = 11),
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
     grid::grid.text(sprintf("%.3f", recovery_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 7))
   },
-  width = grid::unit(1.8, "cm")
+  width = grid::unit(2.4, "cm")
 )
 
 heatmap_obj <- target_ht + recovery_ht
