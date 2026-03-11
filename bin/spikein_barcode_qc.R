@@ -239,24 +239,26 @@ target_ht <- ComplexHeatmap::Heatmap(
   row_names_side = "left",
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
-    grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
+    grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 7))
   },
-  column_names_rot = 45
+  column_names_rot = 45,
+  width = grid::unit(ncol(target_matrix) * 4.2, "mm")
 )
 
 recovery_ht <- ComplexHeatmap::Heatmap(
   recovery_matrix,
-  name = "Total barcode / uniq reads",
+  name = "Total barcode /\nuniq reads",
   col = recovery_col_fun,
   cluster_rows = FALSE,
   cluster_columns = FALSE,
   show_row_names = FALSE,
   column_names_rot = 0,
+  column_names_centered = TRUE,
   rect_gp = grid::gpar(col = "white", lwd = 0.5),
   cell_fun = function(j, i, x, y, w, h, fill) {
-    grid::grid.text(sprintf("%.3f", recovery_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 8))
+    grid::grid.text(sprintf("%.3f", recovery_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 7))
   },
-  width = grid::unit(2.4, "cm")
+  width = grid::unit(1.8, "cm")
 )
 
 heatmap_obj <- target_ht + recovery_ht
@@ -277,11 +279,11 @@ heatmap_png <- file.path(opt_outdir, paste0(opt_prefix, ".heatmap.png"))
 readr::write_tsv(long_df, long_file, col_names = TRUE)
 readr::write_tsv(summary_df, summary_file, col_names = TRUE)
 
-grDevices::pdf(heatmap_pdf, width = 16, height = 6)
+grDevices::pdf(heatmap_pdf, width = 18, height = 6)
 ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
 grDevices::dev.off()
 
-grDevices::png(heatmap_png, width = 16, height = 6, units = "in", res = 300)
+grDevices::png(heatmap_png, width = 18, height = 6, units = "in", res = 300)
 ComplexHeatmap::draw(heatmap_obj, heatmap_legend_side = "right", merge_legends = FALSE)
 grDevices::dev.off()
 
