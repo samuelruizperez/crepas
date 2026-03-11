@@ -70,7 +70,9 @@ workflow BAM_ENCODE_PIPELINE {
     
 
     // Create channel: [ meta, tagaligns ] to pool replicates and pseudoreplicates
-    BED_TO_TAGALIGN.out.tagalign
+    BED_TO_TAGALIGN
+        .out
+        .tagalign
         .mix(ch_self_pseudoreps)
         .set { ch_tas_reps_and_pseudoreps }
         
@@ -116,8 +118,9 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .collectFile(name: 'ch_tas_reps_and_pseudoreps_pooled.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
-
+    //
     // Create channel: [ meta, tagalign ] with metadata indicating whether to use pooled control or not for each sample
+    //
     ch_tas_reps_and_pseudoreps
         .branch { meta, tagalign ->
             ips_with_ipcontrol: meta.input_control
@@ -159,41 +162,66 @@ workflow BAM_ENCODE_PIPELINE {
             meta_clone.ctl_depth_ratio = ctl_depth_ratio
             meta_clone.ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio_threshold_exceeded
             meta_clone.ipcontrol_is_pooled = ctl_depth_ratio_threshold_exceeded ?: false
-            [ meta_clone.input_control, meta_clone.antibody, meta_clone, ip_tagalign]
+            [ meta_clone, ip_tagalign]
         }
         .set { ch_tas_reps_and_pseudoreps_ips_with_ipcontrol }
-
-
+    
     // TODO: save for debugging
     ch_tas_reps_and_pseudoreps_ips_with_ipcontrol
-        .map { ipcontrol_id, antibody, meta, ip_tagalign ->
-            "${ipcontrol_id}\t${antibody}\t${meta}\t${ip_tagalign}"
+        .map { meta, ip_tagalign ->
+            "${meta}\t${ip_tagalign}"
         }
         .collectFile(name: 'ch_tas_reps_and_pseudoreps_ips_with_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
+    // We remove id and antibody (used when branching above) to mix below
+    ch_tas_reps_and_pseudoreps_by_type
+        .ipcontrols
+        .map { id, antibody, meta, tagalign ->
+            [ meta, tagalign ]
+        }
+        .set { ch_tas_reps_and_pseudoreps_ipcontrols }
+        
+    // We mix back the ips with updated pooled/non-pooled control metadata with the rest
+    ch_tas_reps_and_pseudoreps_by_type.ips_wo_ipcontrol
+        .mix(ch_tas_reps_and_pseudoreps_pooled)
+        .mix(ch_tas_reps_and_pseudoreps_ips_with_ipcontrol)
+        .mix(ch_tas_reps_and_pseudoreps_ipcontrols)
+        .set { ch_tagalign }
 
     // Create channel: [ meta, ip_tagalign, ipcontrol_tagalign ]
-    ch_tas_reps_and_pseudoreps_ips_with_ipcontrol
-        .combine(ch_tas_reps_and_pseudoreps_by_type.ipcontrols, by: [0, 1])
+    ch_tagalign
+        .branch { meta, tagalign ->
+            ips_with_ipcontrol: meta.input_control
+                return [meta.input_control, meta.antibody, meta, tagalign]
+            ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
+                return [meta, tagalign]
+            ipcontrols: !meta.input_control && meta.is_input_control
+                return [meta.id, meta.input_control_of_antibody, meta, tagalign]
+        }
+        .set { ch_tagalign_by_type }
+
+    ch_tagalign_by_type
+        .ips_with_control
+        .combine(ch_tagalign_by_type.ipcontrols, by: [0, 1])
         .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             [ ip_meta, ip_tagalign, ipcontrol_tagalign ]
         }
-        .mix(ch_tas_reps_and_pseudoreps_by_type.ips_wo_ipcontrol)
+        .mix(ch_tagalign_by_type.ips_wo_ipcontrol)
         .map { it -> [ it[0], it[1], it[2] ?: []] }
-        .set { ch_tas_reps_and_pseudoreps_ip_ipcontrol }
+        .set { ch_tagalign_for_spp }
 
     // TODO: save for debugging
-    ch_tas_reps_and_pseudoreps_ip_ipcontrol
+    ch_tagalign_for_spp
         .map { meta, ip_tagalign, ipcontrol_tagalign ->
             "${meta}\t${ip_tagalign}\t${ipcontrol_tagalign}"
         }
-        .collectFile(name: 'ch_tas_reps_and_pseudoreps_ip_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+        .collectFile(name: 'ch_tagalign_for_spp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
     //
     // MODULE: Call peaks with phantompeakqualtools SPP
     //
     PHANTOMPEAKQUALTOOLS_SPP (
-        ch_tas_reps_and_pseudoreps_ip_ipcontrol
+        ch_tagalign_for_spp
     )
     ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
@@ -221,7 +249,6 @@ workflow BAM_ENCODE_PIPELINE {
             [ pooled_id, meta, peak ]
         }
         .set { ch_spp_peaks_true_reps }
-
 
     ch_spp_peaks_true_reps
         .combine(ch_spp_peaks_true_reps, by: 0)
