@@ -181,7 +181,7 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .set { ch_tas_reps_and_pseudoreps_ipcontrols }
         
-    // We mix back the ips with updated pooled/non-pooled control metadata with the rest
+    // We mix back the rest with the ips now with updated pooled/non-pooled control metadata 
     ch_tas_reps_and_pseudoreps_by_type.ips_wo_ipcontrol
         .mix(ch_tas_reps_and_pseudoreps_pooled)
         .mix(ch_tas_reps_and_pseudoreps_ips_with_ipcontrol)
@@ -201,7 +201,7 @@ workflow BAM_ENCODE_PIPELINE {
         .set { ch_tagalign_by_type }
 
     ch_tagalign_by_type
-        .ips_with_control
+        .ips_with_ipcontrol
         .combine(ch_tagalign_by_type.ipcontrols, by: [0, 1])
         .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             [ ip_meta, ip_tagalign, ipcontrol_tagalign ]
