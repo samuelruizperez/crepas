@@ -1155,9 +1155,10 @@ workflow CREPAS {
     //
     if (!params.skip_encode_pipeline) {
         BAM_ENCODE_PIPELINE (
-            ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam,
             ch_fasta,
-            params.ctl_depth_ratio_threshold
+            params.ctl_depth_ratio_threshold,
+            params.narrow_peak ? 'narrowPeak' : 'broadPeak'
         )
         ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 
