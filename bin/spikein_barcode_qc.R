@@ -243,7 +243,7 @@ target_ht <- ComplexHeatmap::Heatmap(
     grid::grid.text(sprintf("%.3f", target_matrix[i, j]), x, y, gp = grid::gpar(fontsize = 7))
   },
   column_names_rot = 45,
-  width = grid::unit(ncol(target_matrix) * 7.0, "mm")
+  width = grid::unit(ncol(target_matrix) * 10.0, "mm")
 )
 
 recovery_ht <- ComplexHeatmap::Heatmap(
