@@ -34,7 +34,7 @@ process IDR {
     """
     idr \\
         --samples ${sample_peaks} \\
-        ${peak_list_arg} \\ 
+        ${peak_list_arg} \\
         --input-file-type ${peak_type} \\
         --output-file ${prefix}.idrValues.txt \\
         --log-output-file ${prefix}.log.txt \\
