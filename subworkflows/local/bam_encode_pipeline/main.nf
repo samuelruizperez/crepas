@@ -87,7 +87,7 @@ workflow BAM_ENCODE_PIPELINE {
         .map { id, antibody, pseudoreplicate, metas, tagaligns ->
             // Sort metas and tagaligns to ensure consistent ordering for caching and resuming
             def sorted_tagaligns = tagaligns.sort { it -> it.name }
-            def sorted_metas = metas.sort { meta -> meta.id }
+            def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
             meta_clone.is_pooled = true
             [ meta_clone, sorted_tagaligns ]
