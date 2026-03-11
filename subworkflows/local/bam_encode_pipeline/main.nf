@@ -192,7 +192,7 @@ workflow BAM_ENCODE_PIPELINE {
     PHANTOMPEAKQUALTOOLS_SPP (
         ch_tas_reps_and_pseudoreps_ip_ipcontrol
     )
-    ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.peaks
+    ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
 
 
