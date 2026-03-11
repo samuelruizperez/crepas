@@ -1086,6 +1086,18 @@
                     "description": "For each sample, if the ratio of depth between input controls is higher than this, then a pooled input control will be used for all sample replicates.",
                     "fa_icon": "fas fa-balance-scale"
                 },
+                "use_best_multisummit_idr": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Set the IDR value for a group of multi summit peaks (a group of peaks with the same chr/start/stop but different summits) to the best value across all of these peaks. This is a work around for peak callers that don't do a good job splitting scores across multi summit peaks (e.g. MACS). If set in conjunction with --plot two plots will be created - one with alternate summits and one without. Use this option with care. See the [IDR documentation](https://github.com/nboley/idr) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "idr_soft_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Report statistics for peaks with a global idr below this value but return all peaks",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_epic2": {
                     "type": "boolean",
                     "default": true,
