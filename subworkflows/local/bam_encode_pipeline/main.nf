@@ -198,15 +198,15 @@ workflow BAM_ENCODE_PIPELINE {
 
     // Create channel: [ meta, [peaks1, peaks2], pooled_peaks ]
     ch_spp_peaks
-        .branch { meta, peaks ->
+        .branch { meta, peak ->
             true_replicates: !meta.pseudoreplicate && !meta.is_pooled
-                return [ meta.id, meta, peaks ]
+                return [ meta.id, meta, peak ]
             pooled_replicates: meta.is_pooled && !meta.pseudoreplicate
-                return [ meta.id, peaks ]
+                return [ meta.id, peak ]
             pseudoreplicates: meta.pseudoreplicate && !meta.is_pooled
-                return [ meta.id, meta, peaks ]
+                return [ meta.id, meta, peak ]
             pooled_pseudoreplicates: meta.pseudoreplicate && meta.is_pooled
-                return [ meta.id, meta, peaks ]
+                return [ meta.id, meta, peak ]
         }
         .set { ch_spp_peaks_by_type }
 
@@ -268,8 +268,9 @@ workflow BAM_ENCODE_PIPELINE {
     ch_spp_peaks_by_type
         .pseudoreplicates
         .groupTuple(by: 0)
+        // id, metas, peaks
         .combine(ch_spp_peaks_by_type.true_replicates, by: 0)
-        .map { id, metas, peaks, true_rep_peak ->
+        .map { id, metas, peaks, true_rep_meta, true_rep_peak ->
             def meta_clone = metas[0].clone()
             meta_clone.id = id
             meta_clone.idr_pair_type = 'self_pseudoreplicate'
