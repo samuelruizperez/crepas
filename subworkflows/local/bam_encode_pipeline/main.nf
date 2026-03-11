@@ -85,9 +85,11 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .groupTuple(by: [0, 1, 2])
         .map { id, antibody, pseudoreplicate, metas, tagaligns ->
-            def meta_clone = metas[0].clone()
+            // Sort metas and tagaligns to ensure consistent ordering for caching and resuming
+            def sorted_metas = metas.sort { meta -> meta.id }
+            def meta_clone = sorted_metas[0].clone()
             meta_clone.is_pooled = true
-            [ meta_clone, tagaligns.flatten() ]
+            [ meta_clone, tagaligns.sort().flatten() ]
         }
         .set { ch_tas_reps_and_pseudoreps_to_pool }
 
