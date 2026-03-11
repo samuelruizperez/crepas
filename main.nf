@@ -43,6 +43,7 @@ workflow GROTHLAB_CREPAS {
     // we cannot overwrite params in the workflow (they stay null as coming from the config file)
     // TODO: simplify, readability
     def fasta                 = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
+    def spikein_barcode_table = params.containsKey('spikein_barcode_table') ? params.spikein_barcode_table : (params.refgenie_ignore ? null : getGenomeAttribute('spikein_barcode_table'))
     def bwa_index             = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
     def bwamem2_index         = params.containsKey('bwamem2_index') ? params.bwamem2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwamem2'))
     def bowtie_index          = params.containsKey('bowtie_index') ? params.bowtie_index : (params.refgenie_ignore ? null : getGenomeAttribute('bowtie'))
@@ -81,6 +82,7 @@ workflow GROTHLAB_CREPAS {
         gtf,
         gff,
         blacklist,
+        spikein_barcode_table,
         params.read_length,
         macs_gsize,
         sparsebed,
@@ -127,6 +129,7 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.effective_gfraction,
         PREPARE_GENOME.out.whitelist,
         PREPARE_GENOME.out.blacklist,
+        PREPARE_GENOME.out.spikein_barcode_table,
         PREPARE_GENOME.out.sparsebed,
         PREPARE_GENOME.out.active_regions,
         PREPARE_GENOME.out.rocco_params,

@@ -48,6 +48,8 @@ include { BAM_DOWNSAMPLE                                              } from '..
 include { TE_COUNTING                                                 } from '../../subworkflows/local/te_counting/main'
 include { DENOPA                                                      } from '../../modules/local/denopa/main'
 include { FASTQ_ALIGN                                                 } from '../../subworkflows/local/fastq_align/main'
+include { SPIKEIN_BARCODES                                          } from '../../subworkflows/local/spikein_barcodes/main'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -98,6 +100,7 @@ workflow CREPAS {
     ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
+    ch_spikein_barcode_table  // channel: [ val(meta), path(spikein_barcode_table.tsv) ]
     ch_sparsebed              // channel: path(sparse.bed)
     ch_active_regions         // channel: path(active_regions.bed)
     ch_rocco_params           // channel: path(params.csv)
@@ -184,9 +187,11 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Read QC and trim adapters
     //
-    FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE(
+    FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE (
         INPUT_CHECK.out.fastq,
         params.skip_fastqc || params.skip_qc,
+        params.skip_spikein_barcode_extract,
+        ch_spikein_barcode_table,
         params.with_umi,
         params.skip_umi_extract,
         params.skip_trimming,
@@ -250,7 +255,16 @@ workflow CREPAS {
         }
         .set { ch_sort_bam }
 
-    PICARD_MERGESAMFILES(
+    // TODO: print for debugging
+    ch_sort_bam
+        .map {
+            meta, bam ->
+                "${meta}\t${bam}"
+        }
+        .collectFile( name: 'ch_sort_bam.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/" )
+
+
+    PICARD_MERGESAMFILES (
         ch_sort_bam
     )
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
@@ -290,7 +304,7 @@ workflow CREPAS {
         //
         ch_transcriptome_bam = channel.empty()
         ch_transcriptome_fasta = channel.empty()
-        BAM_DEDUP_UMI(
+        BAM_DEDUP_UMI (
             ch_merged_bam_bai,
             [],
             params.umi_dedup_tool,
@@ -325,7 +339,7 @@ workflow CREPAS {
         //
         // TODO: this is done on the bams with spike-in included
         if (!params.skip_preseq) {
-            PRESEQ_LCEXTRAP(
+            PRESEQ_LCEXTRAP (
                 ch_dedup_bam
             )
             ch_multiqc_files = ch_multiqc_files.mix(PRESEQ_LCEXTRAP.out.lc_extrap.collect { it -> it[1] })
@@ -337,7 +351,7 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
-    BAM_FILTER_SAMBAMBA_FLT1(
+    BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
         channel.value([[:], []]),
         ch_fasta
@@ -353,7 +367,7 @@ workflow CREPAS {
     //
     // MODULE: Extract total mapped reads from flagstats
     //
-    BAM_FLAGSTAT_MAPPED_FLT1(
+    BAM_FLAGSTAT_MAPPED_FLT1 (
         BAM_FILTER_SAMBAMBA_FLT1.out.flagstat
     )
     ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT1.out.versions)
@@ -388,6 +402,21 @@ workflow CREPAS {
             [meta, bai]
         }
         .set { ch_filtered_index }
+
+
+    if (!params.skip_spikein_barcode_extract) {
+
+        //
+        // MODULE: Merge spikein barcode counts of resequenced samples
+        //
+        SPIKEIN_BARCODES (
+            FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.barcode_counts,
+            ch_flT1_total
+        )
+        ch_versions = ch_versions.mix(SPIKEIN_BARCODES.out.versions.first())
+
+    }
+
 
     //
     // SUBWORKFLOW: Spike-in splitting
