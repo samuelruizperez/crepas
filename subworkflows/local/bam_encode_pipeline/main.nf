@@ -11,6 +11,7 @@ workflow BAM_ENCODE_PIPELINE {
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
     ch_fasta                          // channel: [ fasta ]
     ctl_depth_ratio_threshold
+    peak_type
 
     main:
 
@@ -19,7 +20,6 @@ workflow BAM_ENCODE_PIPELINE {
     //
     // MODULE: Name-sorting BAM files
     //
-
     SAMTOOLS_SORT (
         ch_bam,
         ch_fasta,
@@ -43,11 +43,19 @@ workflow BAM_ENCODE_PIPELINE {
     )
     ch_versions = ch_versions.mix(BED_TO_TAGALIGN.out.versions.first())
 
+
+    BED_TO_TAGALIGN
+        .out
+        .tagalign
+        .filter { meta, tagalign -> !meta.is_input_control } // We do not generate pseudoreplicates for input controls
+        .map { meta, tagalign -> [ meta + [ is_pseudoreplicate: true ], tagalign ]}
+        .set { ch_tagalign_ips_for_pseudoreps }
+
     //
     // MODULE: Generate self-pseudoreplicates of IP samples
     //
     TAGALIGN_SELF_PSEUDOREPLICATES (
-        BED_TO_TAGALIGN.out.tagalign.filter { meta, tagalign -> !meta.is_input_control }
+        ch_tagalign_ips_for_pseudoreps
     )
     ch_versions = ch_versions.mix(TAGALIGN_SELF_PSEUDOREPLICATES.out.versions.first())
 
@@ -60,11 +68,12 @@ workflow BAM_ENCODE_PIPELINE {
         )
         .set {ch_self_pseudoreps}
     
-    // Create channel to pool: [ meta, tagaligns ]
+
+    // Create channel: [ meta, tagaligns ] to pool replicates and pseudoreplicates
     BED_TO_TAGALIGN.out.tagalign
         .mix(ch_self_pseudoreps)
         .set { ch_tas_reps_and_pseudoreps }
-    
+        
     ch_tas_reps_and_pseudoreps
         .map { meta, tagalign ->
             def meta_clone = meta.clone()
@@ -76,7 +85,9 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .groupTuple(by: [0, 1, 2])
         .map { id, antibody, pseudoreplicate, metas, tagaligns ->
-            [ metas[0], tagaligns.flatten() ]
+            def meta_clone = metas[0].clone()
+            meta_clone.is_pooled = true
+            [ meta_clone, tagaligns.flatten() ]
         }
         .set { ch_tas_reps_and_pseudoreps_to_pool }
 
@@ -93,18 +104,18 @@ workflow BAM_ENCODE_PIPELINE {
     TAGALIGN_POOL (
         ch_tas_reps_and_pseudoreps_to_pool
     )
-    ch_tagalign_pool = TAGALIGN_POOL.out.file_out.map { meta, tagalign -> [ meta + [ pooled: true ], tagalign ] }
+    ch_tas_reps_and_pseudoreps_pooled = TAGALIGN_POOL.out.file_out
 
     // TODO: save for debugging
-    ch_tagalign_pool
+    ch_tas_reps_and_pseudoreps_pooled
         .map { meta, tagaligns ->
             "${meta}\t${tagaligns}"
         }
-        .collectFile(name: 'ch_tagalign_pool.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+        .collectFile(name: 'ch_tas_reps_and_pseudoreps_pooled.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
 
+    // Create channel: [ meta, tagalign ] with metadata indicating whether to use pooled control or not for each sample
     ch_tas_reps_and_pseudoreps
-        .mix(ch_tagalign_pool)
         .branch { meta, tagalign ->
             ips_with_ipcontrol: meta.input_control
                 return [meta.input_control, meta.antibody, meta, tagalign]
@@ -113,17 +124,16 @@ workflow BAM_ENCODE_PIPELINE {
             ipcontrols: !meta.input_control && meta.is_input_control
                 return [meta.id, meta.input_control_of_antibody, meta, tagalign]
         }
-        .set { ch_tagalign_by_type }
+        .set { ch_tas_reps_and_pseudoreps_by_type }
 
-    // `ctl_depth_ratio` | 1.2 | If ratio of depth between controls is higher than this. then always use a pooled control for all replicates.
-    ch_tagalign_by_type
+    ch_tas_reps_and_pseudoreps_by_type
         .ips_with_ipcontrol
-        .combine(ch_tagalign_by_type.ipcontrols.filter { id, antibody, meta, tagalign -> !meta.pooled }, by: [0,1])
+        .combine(ch_tas_reps_and_pseudoreps_by_type.ipcontrols, by: [0, 1]) // combine by ipcontrol_id and antibody
         .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             def pooled_ipcontrol_id = ipcontrol_id - ~/_bRep_.*$/
             [ pooled_ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ]
         }
-        .groupTuple(by: [0,1])
+        .groupTuple(by: [0, 1]) // group samples
         .map { pooled_ipcontrol_id, antibody, ip_metas, ip_tagaligns, ipcontrol_metas, ipcontrol_tagaligns ->
             // if depth ratio between controls is higher than ctl_depth_ratio, then use pooled control
             def ipcontrol_depths = ipcontrol_metas.collect { meta ->
@@ -145,57 +155,165 @@ workflow BAM_ENCODE_PIPELINE {
             meta_clone.ctl_depth_min = ctl_depth_min
             meta_clone.ctl_depth_ratio = ctl_depth_ratio
             meta_clone.ctl_depth_ratio_threshold_exceeded = ctl_depth_ratio_threshold_exceeded
-            meta_clone.pooled_ipcontrol = ctl_depth_ratio_threshold_exceeded ?: false
+            meta_clone.ipcontrol_is_pooled = ctl_depth_ratio_threshold_exceeded ?: false
             [ meta_clone.input_control, meta_clone.antibody, meta_clone, ip_tagalign]
         }
-        .set { ch_tagalign_ips_with_ipcontrol }
+        .set { ch_tas_reps_and_pseudoreps_ips_with_ipcontrol }
 
 
     // TODO: save for debugging
-    ch_tagalign_ips_with_ipcontrol
+    ch_tas_reps_and_pseudoreps_ips_with_ipcontrol
         .map { ipcontrol_id, antibody, meta, ip_tagalign ->
             "${ipcontrol_id}\t${antibody}\t${meta}\t${ip_tagalign}"
         }
-        .collectFile(name: 'ch_tagalign_ips_with_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+        .collectFile(name: 'ch_tas_reps_and_pseudoreps_ips_with_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+
 
     // Create channel: [ meta, ip_tagalign, ipcontrol_tagalign ]
-    ch_tagalign_ips_with_ipcontrol
-        .combine(ch_tagalign_by_type.ipcontrols, by: [0,1])
+    ch_tas_reps_and_pseudoreps_ips_with_ipcontrol
+        .combine(ch_tas_reps_and_pseudoreps_by_type.ipcontrols, by: [0, 1])
         .map { ipcontrol_id, antibody, ip_meta, ip_tagalign, ipcontrol_meta, ipcontrol_tagalign ->
             [ ip_meta, ip_tagalign, ipcontrol_tagalign ]
         }
-        .mix(ch_tagalign_by_type.ips_wo_ipcontrol)
-        .map { it -> 
-            [ it[0], it[1], it[2] ?: []]
-        }
-        .set { ch_ip_ipcontrol_tagalign }
+        .mix(ch_tas_reps_and_pseudoreps_by_type.ips_wo_ipcontrol)
+        .map { it -> [ it[0], it[1], it[2] ?: []] }
+        .set { ch_tas_reps_and_pseudoreps_ip_ipcontrol }
 
     // TODO: save for debugging
-    ch_ip_ipcontrol_tagalign
+    ch_tas_reps_and_pseudoreps_ip_ipcontrol
         .map { meta, ip_tagalign, ipcontrol_tagalign ->
             "${meta}\t${ip_tagalign}\t${ipcontrol_tagalign}"
         }
-        .collectFile(name: 'ch_ip_ipcontrol_tagalign.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
+        .collectFile(name: 'ch_tas_reps_and_pseudoreps_ip_ipcontrol.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")    
 
     //
     // MODULE: Call peaks with phantompeakqualtools SPP
     //
     PHANTOMPEAKQUALTOOLS_SPP (
-        ch_ip_ipcontrol_tagalign
+        ch_tas_reps_and_pseudoreps_ip_ipcontrol
     )
+    ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.peaks
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
 
 
-    // Create channel: [ meta, sample_peaks, peak_list ]
+    // Create channel: [ meta, [peaks1, peaks2], pooled_peaks ]
+    ch_spp_peaks
+        .branch { meta, peaks ->
+            true_replicates: !meta.pseudoreplicate && !meta.is_pooled
+                return [ meta.id, meta, peaks ]
+            pooled_replicates: meta.is_pooled && !meta.pseudoreplicate
+                return [ meta.id, peaks ]
+            pseudoreplicates: meta.pseudoreplicate && !meta.is_pooled
+                return [ meta.id, meta, peaks ]
+            pooled_pseudoreplicates: meta.pseudoreplicate && meta.is_pooled
+                return [ meta.id, meta, peaks ]
+        }
+        .set { ch_spp_peaks_by_type }
+
+    // True replicates
+    ch_spp_peaks_by_type
+        .true_replicates
+        .map { id, meta, peak ->
+            def pooled_id = id - ~/_bRep_.*$/
+            [ pooled_id, meta, peak ]
+        }
+        .set { ch_spp_peaks_true_reps }
+
+
+    ch_spp_peaks_true_reps
+        .combine(ch_spp_peaks_true_reps, by: 0)
+        // Ensure unordered combinations without repetition
+        // See https://github.com/nextflow-io/nextflow/discussions/2109#discussioncomment-12501996
+        .filter { id, meta1, peak1, meta2, peak2 -> meta1.id < meta2.id }
+        .map{ id, meta1, peak1, meta2, peak2 ->
+            def meta_clone = meta1.clone()
+            meta_clone.id = id
+            meta_clone.idr_pair_type = 'true_replicate'
+            [ meta_clone.id, meta_clone, [ peak1, peak2 ] ]
+        }
+        .combine(ch_spp_peaks_by_type.pooled_replicates, by: 0)
+        .map { id, meta, peaks, pooled_peak ->
+            [ meta, peaks, pooled_peak ]
+        }
+        .set { ch_spp_peaks_true_reps_for_idr }
+
+    // TODO: save for debugging
+    ch_spp_peaks_true_reps_for_idr
+        .map { meta, peaks, pooled_peak ->
+            "${meta}\t${peaks}\t${pooled_peak}"
+        }
+        .collectFile(name: 'ch_spp_peaks_true_reps_for_idr.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+    // Pooled pseudoreplicates
+    ch_spp_peaks_by_type
+        .pooled_pseudoreplicates
+        .groupTuple(by: 0)
+        .combine(ch_spp_peaks_by_type.pooled_replicates, by: 0)
+        .map { id, metas, peaks, pooled_peak ->
+            def meta_clone = metas[0].clone()
+            meta_clone.id = id
+            meta_clone.idr_pair_type = 'pooled_pseudoreplicate'
+            [ meta_clone, peaks, pooled_peak ]
+        }
+        .set { ch_spp_peaks_pooled_pseudoreps_for_idr }
+
+    // TODO: save for debugging
+    ch_spp_peaks_pooled_pseudoreps_for_idr
+        .map { meta, peaks, pooled_peak ->
+            "${meta}\t${peaks}\t${pooled_peak}"
+        }
+        .collectFile(name: 'ch_spp_peaks_pooled_pseudoreps_for_idr.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+    // Self-pseudoreplicates
+    ch_spp_peaks_by_type
+        .pseudoreplicates
+        .groupTuple(by: 0)
+        .combine(ch_spp_peaks_by_type.true_replicates, by: 0)
+        .map { id, metas, peaks, true_rep_peak ->
+            def meta_clone = metas[0].clone()
+            meta_clone.id = id
+            meta_clone.idr_pair_type = 'self_pseudoreplicate'
+            [ meta_clone, peaks, true_rep_peak ]
+        }
+        .set { ch_spp_peaks_self_pseudoreps_for_idr }
+
+    // TODO: save for debugging
+    ch_spp_peaks_self_pseudoreps_for_idr
+        .map { meta, peaks, true_rep_peak ->
+            "${meta}\t${peaks}\t${true_rep_peak}"
+        }
+        .collectFile(name: 'ch_spp_peaks_self_pseudoreps_for_idr.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+        
+    // Use IDR to compare all pairs of matched replicates
+    // (1) True replicates narrowPeak files: ${REP1_PEAK_FILE} vs. ${REP2_PEAK_FILE} IDR results transferred to Pooled-replicates narrowPeak file  ${POOLED_PEAK_FILE}
+    // (2) Pooled-pseudoreplicates: ${PPR1_PEAK_FILE} vs. ${PPR2_PEAK_FILE} IDR results transferred to Pooled-replicates narrowPeak file ${POOLED_PEAK_FILE}
+    // (3) Rep1 self-pseudoreplicates: ${REP1_PR1_PEAK_FILE} vs. ${REP1_PR2_PEAK_FILE} IDR results transferred to Rep1 narrowPeak file ${REP1_PEAK_FILE}
+    // (4) Rep2 self-pseudoreplicates: ${REP2_PR1_PEAK_FILE} vs. ${REP2_PR2_PEAK_FILE} IDR results transferred to Rep2 narrowPeak file ${REP2_PEAK_FILE}
+    ch_spp_peaks_true_reps_for_idr
+        .mix(ch_spp_peaks_pooled_pseudoreps_for_idr)
+        .mix(ch_spp_peaks_self_pseudoreps_for_idr)
+        .set { ch_for_idr }
+
+        
+    // TODO: save for debugging
+    ch_for_idr
+        .map { meta, peaks, pooled_peak ->
+            "${meta}\t${peaks}\t${pooled_peak}"
+        }
+        .collectFile(name: 'ch_for_idr.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
 
     //
     // MODULE: IDR analysis
     //
-
+    IDR (
+        ch_for_idr,
+        peak_type
+    )
+    ch_versions = ch_versions.mix(IDR.out.versions.first())
 
 
     emit:
-
 
     versions                     = ch_versions                      // channel: [ versions.yml ]
 }
