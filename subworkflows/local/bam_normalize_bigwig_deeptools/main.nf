@@ -511,9 +511,12 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             }
             .groupTuple(by: [0, 1, 2, 3, 4])
             .map { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
-                def meta_clone = metas[0].clone()
+                // Sort metas and bws by id to ensure consistent order
+                def sorted_metas = metas.sort { meta -> meta.brep }
+                def sorted_bws = bws.sort { bw -> bw.name }
+                def meta_clone = sorted_metas[0].clone()
                 meta_clone.averaged_brep = true
-                [meta_clone, bws.flatten()]
+                [ meta_clone, sorted_bws ]
             }
             .set { ch_bdg_all_brep_bw }
 

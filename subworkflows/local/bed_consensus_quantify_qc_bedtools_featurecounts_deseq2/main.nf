@@ -213,7 +213,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
                 // Sort ids, metas and bws by id to ensure consistent order in plots
                 def sorted_ids = ids.sort()
                 def sorted_metas = metas.sort { meta -> meta.id }
-                def sorted_bws = bws.sort { it -> it.name }
+                def sorted_bws = bws.sort { bw -> bw.name }
                 [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, sorted_ids, sorted_metas, sorted_bws ]
             }
             .combine(ch_cons_peaks, by: [0, 1])
