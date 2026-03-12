@@ -211,7 +211,10 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             .groupTuple(by: [0, 1, 2, 3, 4])
             .map { antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws ->
                 // Sort ids, metas and bws by id to ensure consistent order in plots
-                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids.sort(), metas.sort{meta -> meta.id}, bws.sort()]
+                def sorted_ids = ids.sort()
+                def sorted_metas = metas.sort { meta -> meta.id }
+                def sorted_bws = bws.sort { bw -> bw.name }
+                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, sorted_ids, sorted_metas, sorted_bws ]
             }
             .combine(ch_cons_peaks, by: [0, 1])
             .map {

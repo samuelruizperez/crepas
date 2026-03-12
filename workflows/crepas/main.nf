@@ -891,7 +891,10 @@ workflow CREPAS {
             .groupTuple(by: [0, 1, 2, 3, 4])
             .map { antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws ->
                 // Sort ids, metas and bws by id to ensure consistent order in plots
-                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids.sort(), metas.sort{meta -> meta.id}, bws.sort()]
+                def sorted_ids = ids.sort()
+                def sorted_metas = metas.sort { meta -> meta.id }
+                def sorted_bws = bws.sort { it -> it.name }
+                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, sorted_ids, sorted_metas, sorted_bws ]
             }
             .combine(ch_gene_bed.map { it -> it[1] })
             .map {
@@ -1155,9 +1158,10 @@ workflow CREPAS {
     //
     if (!params.skip_encode_pipeline) {
         BAM_ENCODE_PIPELINE (
-            ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_filtered_bam,
             ch_fasta,
-            params.ctl_depth_ratio_threshold
+            params.ctl_depth_ratio_threshold,
+            params.narrow_peak ? 'narrowPeak' : 'broadPeak'
         )
         ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 

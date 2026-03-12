@@ -463,9 +463,12 @@ workflow BAM_CREATE_PARTITIONS {
             partitions.size() > 1
         }
         .map { id, antibody, smi, metas, partitions ->
-            def meta_clone = metas[0].clone()
+            // Sort metas and partitions to ensure consistent order
+            def sorted_metas = metas.sort { meta -> meta.brep }
+            def sorted_partitions = partitions.sort { partition -> partition.name }
+            def meta_clone = sorted_metas[0].clone()
             meta_clone.averaged_brep = true
-            [meta_clone, partitions.flatten()]
+            [meta_clone, sorted_partitions]
         }
         .set { ch_partitions_brep }
 
