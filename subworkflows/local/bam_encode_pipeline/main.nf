@@ -280,10 +280,13 @@ workflow BAM_ENCODE_PIPELINE {
         .groupTuple(by: 0)
         .combine(ch_spp_peaks_by_type.pooled_replicates, by: 0)
         .map { id, metas, peaks, pooled_peak ->
-            def meta_clone = metas[0].clone()
+            // Sort metas and peaks to ensure consistent ordering for caching and resuming
+            def sorted_peaks = peaks.sort { peak -> peak.name }
+            def sorted_metas = metas.sort { meta -> meta.brep }
+            def meta_clone = sorted_metas[0].clone()
             meta_clone.id = id
             meta_clone.idr_pair_type = 'pooled_pseudoreplicate'
-            [ meta_clone, peaks, pooled_peak ]
+            [ meta_clone, sorted_peaks, pooled_peak ]
         }
         .set { ch_spp_peaks_pooled_pseudoreps_for_idr }
 
@@ -301,10 +304,13 @@ workflow BAM_ENCODE_PIPELINE {
         // id, metas, peaks
         .combine(ch_spp_peaks_by_type.true_replicates, by: 0)
         .map { id, metas, peaks, true_rep_meta, true_rep_peak ->
-            def meta_clone = metas[0].clone()
+            // Sort metas and peaks to ensure consistent ordering for caching and resuming
+            def sorted_peaks = peaks.sort { peak -> peak.name }
+            def sorted_metas = metas.sort { meta -> meta.pseudoreplicate }
+            def meta_clone = sorted_metas[0].clone()
             meta_clone.id = id
             meta_clone.idr_pair_type = 'self_pseudoreplicate'
-            [ meta_clone, peaks, true_rep_peak ]
+            [ meta_clone, sorted_peaks, true_rep_peak ]
         }
         .set { ch_spp_peaks_self_pseudoreps_for_idr }
 
