@@ -15,7 +15,7 @@ process TELOCAL {
 
     output:
     tuple val(meta), path("*.cntTable*"),                        emit: counts
-    tuple val("${task.process}"), val('TElocal'), eval("TElocal --version 2>&1 | grep -Eo 'TElocal[[:space:]]+[0-9]+(\.[0-9]+)+' | tail -n 1 | sed 's/^TElocal[[:space:]]*//'"), emit: versions_telocal, topic: versions
+    tuple val("${task.process}"), val('TElocal'), eval("TElocal --version 2>&1 | grep -Eo 'TElocal[[:space:]]+[0-9]+(\\.[0-9]+)+' | tail -n 1 | sed 's/^TElocal[[:space:]]*//'"), emit: versions_telocal, topic: versions
     tuple val("${task.process}"), val('gzip'), eval("gzip --version | sed -n '1s/.*gzip[[:space:]]*//p'"), emit: versions_gzip, topic: versions
 
     when:
