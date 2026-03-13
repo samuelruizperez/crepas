@@ -4,8 +4,8 @@ process TELOCAL {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://mhammelllab/telocal:latest' :
-        'docker://mhammelllab/telocal:latest' }"
+        'docker://mhammelllab/telocal:1.1.2' :
+        'docker://mhammelllab/telocal:1.1.2' }"
 
     input:
     tuple val(meta), path(bam)
@@ -15,7 +15,7 @@ process TELOCAL {
 
     output:
     tuple val(meta), path("*.cntTable*"),                        emit: counts
-    tuple val("${task.process}"), val('TElocal'), eval("TElocal --version 2>&1 | sed 's/TElocal //g'"), emit: versions_telocal, topic: versions
+    tuple val("${task.process}"), val('TElocal'), eval("TElocal --version 2>&1 | grep -Eo 'TElocal[[:space:]]+[0-9]+(\.[0-9]+)+' | tail -n 1 | sed 's/^TElocal[[:space:]]*//'"), emit: versions_telocal, topic: versions
     tuple val("${task.process}"), val('gzip'), eval("gzip --version | sed -n '1s/.*gzip[[:space:]]*//p'"), emit: versions_gzip, topic: versions
 
     when:
