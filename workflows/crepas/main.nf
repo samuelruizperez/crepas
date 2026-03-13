@@ -613,7 +613,7 @@ workflow CREPAS {
         //
         // MODULE: Extract total mapped reads from flagstats
         //
-        BAM_FLAGSTAT_MAPPED_FLT3(
+        BAM_FLAGSTAT_MAPPED_FLT3 (
             BAM_FILTER_SAMBAMBA_FLT3.out.flagstat
         )
         ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT3.out.versions)
