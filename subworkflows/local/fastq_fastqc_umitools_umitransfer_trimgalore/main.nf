@@ -55,11 +55,13 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     sep_umi_fq_log             = channel.empty()
     no_sep_umi_fq_log          = channel.empty()
 
+    ch_barcode_counts = channel.empty()
     if (!skip_spikein_barcode_extract) {
         FASTQ_EXTRACT_SPIKEIN_BARCODES (
             reads,
             ch_spikein_barcode_table
         )
+        ch_barcode_counts = FASTQ_EXTRACT_SPIKEIN_BARCODES.out.counts
         ch_versions = ch_versions.mix(FASTQ_EXTRACT_SPIKEIN_BARCODES.out.versions.first())
     }
 
@@ -162,7 +164,7 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     emit:
     reads = htrim_reads // channel: [ val(meta), [ reads ] ]
 
-    barcode_counts = FASTQ_EXTRACT_SPIKEIN_BARCODES.out.counts // channel: [ val(meta), path(*.tsv) ]
+    barcode_counts = ch_barcode_counts // channel: [ val(meta), path(*.tsv) ]
 
     fastqc_html        // channel: [ val(meta), [ html ] ]
     fastqc_zip         // channel: [ val(meta), [ zip ] ]
