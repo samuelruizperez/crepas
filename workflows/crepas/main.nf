@@ -7,48 +7,49 @@
 include { IGV                                                         } from '../../modules/local/igv/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS                         } from '../../modules/local/multiqc_custom_phantompeakqualtools/main'
 include {
-    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT1 ;
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2 ;
     BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
 } from '../../modules/local/bam_flagstat_mapped/main'
 include { EDD } from '../../modules/local/edd/main'
+include { DENOPA                                                            } from '../../modules/local/denopa/main'
 
 //
-// SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
+// SUBWORKFLOWS: Consisting of a mix of local and nf-core/modules
 //
 include { samplesheetToList                } from 'plugin/nf-schema'
-include { paramsSummaryMap                                            } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc                                        } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML                                      } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText                                      } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
-include { INPUT_CHECK                                                 } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+include { paramsSummaryMap                                                  } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc                                              } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML                                            } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText                                            } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+include { INPUT_CHECK                                                       } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+
 include {
-    BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT1 ;
-    BAM_FILTER_SAMBAMBA as BAM_FILTER_SAMBAMBA_FLT3
-} from '../../subworkflows/local/bam_filter_sambamba/main'
-include { BAM_SPIKEIN_SPLIT                                           } from '../../subworkflows/local/bam_spikein_split/main'
-include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
-include { BAM_ENCODE_PIPELINE                                         } from '../../subworkflows/local/bam_encode_pipeline/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                    } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                       } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                      } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
-include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2     } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
-include { BAM_CREATE_PARTITIONS                                       } from '../../subworkflows/local/bam_create_partitions/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO } from '../../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO  } from '../../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER           } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
-include { BAM_SHIFT_READS                                             } from '../../subworkflows/local/bam_shift_reads/main'
-include { SAMTOOLS_STATS_SUMMARY                                      } from '../../subworkflows/local/samtools_stats_summary/main'
-include { BAM_FILTER_BLACKLIST                                        } from '../../subworkflows/local/bam_filter_blacklist/main'
-include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                              } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
-include { BAM_DOWNSAMPLE                                              } from '../../subworkflows/local/bam_downsample/main'
-include { TE_COUNTING                                                 } from '../../subworkflows/local/te_counting/main'
-include { DENOPA                                                      } from '../../modules/local/denopa/main'
-include { FASTQ_ALIGN                                                 } from '../../subworkflows/local/fastq_align/main'
-include { SPIKEIN_BARCODES                                          } from '../../subworkflows/local/spikein_barcodes/main'
+    BAM_FILTER_SAMBAMBA_RMO_STATS as BAM_FILTER_SAMBAMBA_FLT1
+    BAM_FILTER_SAMBAMBA_RMO_STATS as BAM_FILTER_SAMBAMBA_FLT3
+    BAM_FILTER_SAMBAMBA_RMO_STATS as BAM_FILTER_SAMBAMBA_BLACKLIST
+    } from '../../subworkflows/local/bam_filter_sambamba_rmo_stats/main'
+
+include { BAM_SPIKEIN_SPLIT                                                 } from '../../subworkflows/local/bam_spikein_split/main'
+include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                      } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                          } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
+include { BAM_ENCODE_PIPELINE                                               } from '../../subworkflows/local/bam_encode_pipeline/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                          } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                             } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
+include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2           } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
+include { BAM_CREATE_PARTITIONS                                             } from '../../subworkflows/local/bam_create_partitions/main'
+include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO       } from '../../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO        } from '../../subworkflows/local/bam_allocate_multimappers/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER                 } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
+include { BAM_SHIFT_READS                                                   } from '../../subworkflows/local/bam_shift_reads/main'
+include { SAMTOOLS_STATS_SUMMARY                                            } from '../../subworkflows/local/samtools_stats_summary/main'
+include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                                    } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
+include { BAM_DOWNSAMPLE                                                    } from '../../subworkflows/local/bam_downsample/main'
+include { TE_COUNTING                                                       } from '../../subworkflows/local/te_counting/main'
+include { FASTQ_ALIGN                                                       } from '../../subworkflows/local/fastq_align/main'
+include { SPIKEIN_BARCODES                                                  } from '../../subworkflows/local/spikein_barcodes/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,28 +58,25 @@ include { SPIKEIN_BARCODES                                          } from '../.
 */
 
 //
-// MODULE: Installed directly from nf-core/modules
+// MODULES: Installed directly from nf-core/modules
 //
-
-include { SAMTOOLS_INDEX                                              } from '../../modules/nf-core/samtools/index/main'
-include { PICARD_MERGESAMFILES                                        } from '../../modules/nf-core/picard/mergesamfiles/main'
-include { PICARD_COLLECTMULTIPLEMETRICS                               } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
-include { PRESEQ_LCEXTRAP                                             } from '../../modules/nf-core/preseq/lcextrap/main'
-include { PHANTOMPEAKQUALTOOLS                                        } from '../../modules/nf-core/phantompeakqualtools/main'
-include { DEEPTOOLS_COMPUTEMATRIX as DEEPTOOLS_COMPUTEMATRIX_GENES    } from '../../modules/nf-core/deeptools/computematrix/main'
-include { DEEPTOOLS_PLOTPROFILE as DEEPTOOLS_PLOTPROFILE_GENES        } from '../../modules/nf-core/deeptools/plotprofile/main'
-include { DEEPTOOLS_PLOTHEATMAP as DEEPTOOLS_PLOTHEATMAP_GENES        } from '../../modules/nf-core/deeptools/plotheatmap/main'
-include { DEEPTOOLS_PLOTFINGERPRINT                                   } from '../../modules/nf-core/deeptools/plotfingerprint/main'
-include { MULTIQC                                                     } from '../../modules/nf-core/multiqc/main'
+include { SAMTOOLS_INDEX                                                    } from '../../modules/nf-core/samtools/index/main'
+include { PICARD_MERGESAMFILES                                              } from '../../modules/nf-core/picard/mergesamfiles/main'
+include { PICARD_COLLECTMULTIPLEMETRICS                                     } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
+include { PRESEQ_LCEXTRAP                                                   } from '../../modules/nf-core/preseq/lcextrap/main'
+include { PHANTOMPEAKQUALTOOLS                                              } from '../../modules/nf-core/phantompeakqualtools/main'
+include { DEEPTOOLS_COMPUTEMATRIX as DEEPTOOLS_COMPUTEMATRIX_GENES          } from '../../modules/nf-core/deeptools/computematrix/main'
+include { DEEPTOOLS_PLOTPROFILE as DEEPTOOLS_PLOTPROFILE_GENES              } from '../../modules/nf-core/deeptools/plotprofile/main'
+include { DEEPTOOLS_PLOTHEATMAP as DEEPTOOLS_PLOTHEATMAP_GENES              } from '../../modules/nf-core/deeptools/plotheatmap/main'
+include { DEEPTOOLS_PLOTFINGERPRINT                                         } from '../../modules/nf-core/deeptools/plotfingerprint/main'
+include { MULTIQC                                                           } from '../../modules/nf-core/multiqc/main'
 
 //
-// SUBWORKFLOW: Consisting entirely of nf-core/modules
+// SUBWORKFLOWS: Installed directly from nf-core/modules
 //
-
-// include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE      } from '../../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore'
-include { BAM_MARKDUPLICATES_PICARD                                   } from '../../subworkflows/nf-core/bam_markduplicates_picard'
-include { BAM_DEDUP_UMI                                               } from '../../subworkflows/nf-core/bam_dedup_umi'
-include { BAM_STATS_SAMTOOLS                                          } from '../../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_MARKDUPLICATES_PICARD                                         } from '../../subworkflows/nf-core/bam_markduplicates_picard'
+include { BAM_DEDUP_UMI                                                     } from '../../subworkflows/nf-core/bam_dedup_umi'
+include { BAM_STATS_SAMTOOLS                                                } from '../../subworkflows/nf-core/bam_stats_samtools'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -357,54 +355,18 @@ workflow CREPAS {
     BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
         channel.value([[:], []]),
-        ch_fasta
+        ch_fasta,
+        true, // skip orphan removal
+        'flT1_total_mapped_reads'
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
     ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
+    ch_flT1_total = BAM_FILTER_SAMBAMBA_FLT1.out.total_reads
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats.collect { it -> it[1] })
     ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT1.out.versions)
-
-    //
-    // MODULE: Extract total mapped reads from flagstats
-    //
-    BAM_FLAGSTAT_MAPPED_FLT1 (
-        BAM_FILTER_SAMBAMBA_FLT1.out.flagstat
-    )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT1.out.versions)
-
-    // Extract the total mapped reads from the text file
-    BAM_FLAGSTAT_MAPPED_FLT1.out.txt
-        .map { meta, total ->
-            [meta, total.splitCsv(header: false)[0][0]]
-        }
-        .set { ch_flT1_total }
-
-    // Add the total_mapped_reads to the bams' and bais' metas
-    ch_filtered_bam
-        .join(ch_filtered_index, by: 0)
-        .combine(ch_flT1_total, by: 0)
-        .map { meta, bam, bai, total ->
-            def meta_clone = meta.clone()
-            meta_clone.flT1_total_mapped_reads = total.toDouble()
-            meta_clone.ref_total_mapped_reads_key = 'flT1_total_mapped_reads'
-            [meta_clone, bam, bai]
-        }
-        .set { ch_filtered_bam_bai }
-
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
-            [meta, bam]
-        }
-        .set { ch_filtered_bam }
-
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
-            [meta, bai]
-        }
-        .set { ch_filtered_index }
 
 
     if (!params.skip_spikein_barcode_extract) {
@@ -433,7 +395,8 @@ workflow CREPAS {
             ch_filtered_bam,
             ch_fasta,
             params.genome,
-            params.spikein_genome
+            params.spikein_genome,
+            'flT2_total_mapped_reads'
         )
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.endo_bam
         ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
@@ -442,63 +405,8 @@ workflow CREPAS {
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
         ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
-
-        //
-        // MODULE: Extract total mapped reads from flagstats
-        //
-        BAM_FLAGSTAT_MAPPED_FLT2 (
-            BAM_SPIKEIN_SPLIT.out.flagstat
-        )
-        ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT2.out.versions)
-
-        // Extract the total mapped reads from the text file
-        BAM_FLAGSTAT_MAPPED_FLT2.out.txt
-            .map { meta, total ->
-                [meta, total.splitCsv(header: false)[0][0]]
-            }
-            .set { ch_flT2_total }
-
-        // Add the total_mapped_reads both endo and exo bams' and bais' metas
-        ch_filtered_bam
-            .mix(ch_filtered_exo_bam)
-            .join(ch_filtered_index.mix(ch_filtered_exo_index), by: 0)
-            .combine(ch_flT2_total, by: 0)
-            .map { meta, bam, bai, total ->
-                def meta_clone = meta.clone()
-                meta_clone.flT2_total_mapped_reads = total.toDouble()
-                meta_clone.ref_total_mapped_reads_key = 'flT2_total_mapped_reads'
-                [meta_clone, bam, bai]
-            }
-            .set { ch_filtered2_endo_exo_bam_bai }
-
-        // Create a new channel with just the BAMs    
-        ch_filtered2_endo_exo_bam_bai
-            .map { meta, bam, bai ->
-                [meta, bam]
-            }
-            .branch { meta, bam ->
-                endo: meta.genome == params.genome
-                exo: meta.genome == params.spikein_genome
-            }
-            .set { ch_filtered2_bam }
-
-        // Create a new channel with just the indexes
-        ch_filtered2_endo_exo_bam_bai
-            .map { meta, bam, bai ->
-                [meta, bai]
-            }
-            .branch { meta, bai ->
-                endo: meta.genome == params.genome
-                exo: meta.genome == params.spikein_genome
-            }
-            .set { ch_filtered2_bai }
-
-        ch_filtered_bam = ch_filtered2_bam.endo
-        ch_filtered_exo_bam = ch_filtered2_bam.exo
-        ch_filtered_index = ch_filtered2_bai.endo
-        ch_filtered_exo_index = ch_filtered2_bai.exo
-    }
-    else {
+    
+    } else {
         // If no spike-in genome add genome to metas
         ch_filtered_bam
             .join(ch_filtered_index, by: 0)
@@ -599,11 +507,13 @@ workflow CREPAS {
         //
         // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
         //
-        // TODO: fix that the same blacklist is used for both the endogenous and exogenous BAM files
-        BAM_FILTER_SAMBAMBA_FLT3(
+        BAM_FILTER_SAMBAMBA_FLT3 (
             ch_filtered_bam.join(ch_filtered_index, by: 0),
             channel.value([[:], []]),
-            ch_fasta
+            ch_fasta,
+            params.skip_flTbl, // do orphan removal if flTbl is skipped downstream
+            'flT3_total_mapped_reads'
+
         )
         ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT3.out.bam
         ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.bai
@@ -613,47 +523,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect { it -> it[1] })
         ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
-        //
-        // MODULE: Extract total mapped reads from flagstats
-        //
-        BAM_FLAGSTAT_MAPPED_FLT3 (
-            BAM_FILTER_SAMBAMBA_FLT3.out.flagstat
-        )
-        ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_FLT3.out.versions)
-
-        // Extract the total mapped reads from the text file
-        BAM_FLAGSTAT_MAPPED_FLT3.out.txt
-            .map { meta, total ->
-                [meta, total.splitCsv(header: false)[0][0]]
-            }
-            .set { ch_flT3_total }
-
-        // Add the total_mapped_reads to the bams' and bais' metas
-        ch_filtered_bam
-            .combine(ch_filtered_index, by: 0)
-            .map { meta, bam, bai ->
-                [meta, bam, bai]
-            }
-            .combine(ch_flT3_total, by: 0)
-            .map { meta, bam, bai, total ->
-                def meta_clone = meta.clone()
-                meta_clone.flT3_total_mapped_reads = total.toDouble()
-                meta_clone.ref_total_mapped_reads_key = 'flT3_total_mapped_reads'
-                [meta_clone, bam, bai]
-            }
-            .set { ch_filtered_bam_bai }
-
-        ch_filtered_bam_bai
-            .map { meta, bam, bai ->
-                [meta, bam]
-            }
-            .set { ch_filtered_bam }
-
-        ch_filtered_bam_bai
-            .map { meta, bam, bai ->
-                [meta, bai]
-            }
-            .set { ch_filtered_index }
     }
 
     ch_pre_flTbl_bam = channel.empty()
@@ -692,17 +561,20 @@ workflow CREPAS {
         //
         // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
         //
-        BAM_FILTER_BLACKLIST(
+        BAM_FILTER_SAMBAMBA_BLACKLIST (
             ch_flt_bam_bai_by_genome.endo,
             ch_whitelist,
-            ch_fasta
+            ch_fasta,
+            false, // do not skip orphan removal
+            'flTbl_total_mapped_reads'
         )
-        ch_filtered_bam = BAM_FILTER_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
-        ch_filtered_index = BAM_FILTER_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
+        ch_filtered_bam = BAM_FILTER_SAMBAMBA_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
+        ch_filtered_index = BAM_FILTER_SAMBAMBA_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
         ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_BLACKLIST.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_BLACKLIST.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_FILTER_BLACKLIST.out.versions)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.multiqc_files)
+        ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.versions)
+
     }
 
     // TODO: print for debugging
