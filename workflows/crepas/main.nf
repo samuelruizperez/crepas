@@ -241,7 +241,6 @@ workflow CREPAS {
         .map { meta, bam ->
             def meta_clone = meta.clone()
             meta_clone.remove('read_group')
-            meta_clone.remove('trep')
             meta_clone.id = meta_clone.id.split('_')[0..-3].join('_')
             if (meta_clone.input_control) {
                 meta_clone.input_control = meta_clone.input_control.split('_')[0..-3].join('_')
@@ -250,8 +249,12 @@ workflow CREPAS {
             [key, meta_clone, bam]
         }
         .groupTuple(by: 0)
-        .map { it ->
-            [it[1][0], it[2].flatten()]
+        .map { key, metas, bams ->
+            def sorted_metas = metas.sort { meta -> meta.trep }
+            def meta_clone = sorted_metas[0].clone()
+            meta_clone.remove('trep')
+            def sorted_bams = bams.sort { bam -> bam.name }
+            [meta_clone, sorted_bams]
         }
         .set { ch_sort_bam }
 
