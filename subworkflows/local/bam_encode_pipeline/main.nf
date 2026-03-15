@@ -5,6 +5,9 @@ include { TAGALIGN_SELF_PSEUDOREPLICATES                    } from '../../../mod
 include { CAT_CAT as TAGALIGN_POOL                          } from '../../../modules/nf-core/cat/cat/main'
 include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP  } from '../../../modules/nf-core/phantompeakqualtools/main'
 include { IDR                                               } from '../../../modules/nf-core/idr/main'
+include { PEAKS_FILTER_IDR                                  } from '../../../modules/local/peaks_filter_idr/main'
+include { PEAKS_FILTER_BLACKLIST                            } from '../../../modules/local/peaks_filter_blacklist/main'
+include { PEAKS_NAIVE_OVERLAP                               } from '../../../modules/local/peaks_naive_overlap/main'
 
 workflow BAM_ENCODE_PIPELINE {
     take:
@@ -12,6 +15,9 @@ workflow BAM_ENCODE_PIPELINE {
     ch_fasta                          // channel: [ fasta ]
     ctl_depth_ratio_threshold
     peak_type
+    ch_blacklist
+    idr_filtering_threshold
+    idr_filtering_max_score
 
     main:
 
@@ -25,8 +31,6 @@ workflow BAM_ENCODE_PIPELINE {
         ch_fasta,
         ''
     )
-
-    // 2a section of the ENCODE 3 ChIP-seq pipeline:
 
     //
     // MODULE: Convert BAM to BED
@@ -91,6 +95,7 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_tagaligns = tagaligns.sort { it -> it.name }
             def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
+            meta_clone.remove('pseudoreplicate')
             meta_clone.is_pooled = true
             [ meta_clone, sorted_tagaligns ]
         }
@@ -259,6 +264,7 @@ workflow BAM_ENCODE_PIPELINE {
             def meta_clone = meta1.clone()
             meta_clone.id = id
             meta_clone.idr_pair_type = 'true_replicate'
+            meta_clone.idr_pair_breps = [meta1.brep, meta2.brep]
             [ meta_clone.id, meta_clone, [ peak1, peak2 ] ]
         }
         .combine(ch_spp_peaks_by_type.pooled_replicates, by: 0)
@@ -284,7 +290,6 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_peaks = peaks.sort { peak -> peak.name }
             def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
-            meta_clone.id = id
             meta_clone.idr_pair_type = 'pooled_pseudoreplicate'
             [ meta_clone, sorted_peaks, pooled_peak ]
         }
@@ -308,6 +313,7 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_peaks = peaks.sort { peak -> peak.name }
             def sorted_metas = metas.sort { meta -> meta.pseudoreplicate }
             def meta_clone = sorted_metas[0].clone()
+            meta_clone.remove('pseudoreplicate')
             meta_clone.id = id
             meta_clone.idr_pair_type = 'self_pseudoreplicate'
             [ meta_clone, sorted_peaks, true_rep_peak ]
@@ -348,6 +354,85 @@ workflow BAM_ENCODE_PIPELINE {
         peak_type
     )
     ch_versions = ch_versions.mix(IDR.out.versions.first())
+
+    //
+    // MODULE: Filter peaks by IDR threshold
+    //
+    PEAKS_FILTER_IDR (
+        IDR.out.idr,
+        peak_type,
+        idr_filtering_threshold
+    )
+
+    //
+    // MODULE: Filter peaks by blacklist
+    //
+    PEAKS_FILTER_BLACKLIST (
+            PEAKS_FILTER_IDR.out.peaks,
+            ch_blacklist,
+            true, // filter_chr
+            peak_type,
+            idr_filtering_max_score
+    )
+
+    // Create channel: [ meta, idr_true_reps, idr_pseudo_reps, idr_pooled_pseudoreps ]
+    PEAKS_FILTER_BLACKLIST
+        .out
+        .peaks
+        .map { meta, peak ->
+            // Remove the bRep from pseudoreplicates' ids
+            def pooled_id = meta.id - ~/_bRep_.*$/
+            [ pooled_id, meta, peak ]
+        }
+        .branch { pooled_id, meta, peak ->
+            true_replicates: meta.idr_pair_type == 'true_replicate'
+                return [ pooled_id, meta.antibody, meta, peak ]
+            self_pseudoreplicates: meta.idr_pair_type == 'self_pseudoreplicate'
+                return [ pooled_id, meta.antibody, meta, peak ]
+            pooled_pseudoreplicates: meta.idr_pair_type == 'pooled_pseudoreplicate'
+                return [ pooled_id, meta.antibody, peak ]
+        }
+        .set { ch_idr_peaks }
+
+    ch_idr_peaks
+        .self_pseudoreplicates
+        .groupTuple(by: [0, 1])
+        .map { pooled_id, antibody, metas, peaks ->
+            def sorted_peaks = peaks.sort { peak -> peak.name }
+            [ pooled_id, antibody, peaks ]
+        }
+        .set { ch_idr_peaks_self_pseudoreps }
+
+    ch_idr_peaks
+        .true_replicates
+        .combine(ch_idr_peaks_self_pseudoreps, by: [0,1])
+        .combine(ch_idr_peaks.pooled_pseudoreplicates, by: [0,1])
+        .set { ch_idr_peaks_for_qc }
+
+    // TODO: save for debugging
+    ch_idr_peaks_for_qc
+        .map { meta, true_rep_peaks, self_pseudo_rep_peaks, pooled_pseudo_rep_peaks ->
+            "${meta}\t${true_rep_peaks}\t${self_pseudo_rep_peaks}\t${pooled_pseudo_rep_peaks}"
+        }
+        .collectFile(name: 'ch_idr_peaks_for_qc.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+    //
+    // MODULE: Compute IDR QC scores
+    //
+    // PEAKS_IDR_QC (
+    //     ch_idr_peaks_for_qc
+    // )
+
+
+    //
+    // MODULE: Naive overlap thresholding as an alternative to IDR for histone marks
+    // See Section 6) in https://docs.google.com/document/d/1lG_Rd7fnYgRpSIqrIfuVlAz2dW1VaSQThzk836Db99c/edit?tab=t.0#heading=h.9ecc41kilcvq
+    //
+    PEAKS_NAIVE_OVERLAP (
+        ch_for_idr,
+        peak_type
+    )
+
 
 
     emit:

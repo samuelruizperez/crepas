@@ -1,4 +1,4 @@
-process FILTER_IDR_PEAKS {
+process PEAKS_FILTER_IDR {
     tag "$meta.id"
     label 'process_low'
 
@@ -13,8 +13,8 @@ process FILTER_IDR_PEAKS {
     val idr_threshold
 
     output:
-    tuple val(meta), path("${prefix}.${peak_type}"), emit: filtered_peaks
-    path  "versions.yml"                           , emit: versions
+    tuple val(meta), path("${prefix}.${peak_type}"), emit: peaks
+    tuple val("${task.process}"), val('gawk'), eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'"), topic: versions, emit: versions_gawk
 
     when:
     task.ext.when == null || task.ext.when
@@ -34,15 +34,10 @@ process FILTER_IDR_PEAKS {
         ${args} \\
         'BEGIN{OFS="\\t"} \$12>=\${IDR_THRESH_TRANSFORMED} {print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10}' \\
         ${peak_file} \\
-        | sort \\
+        | LC_COLLATE=C sort -T '.' \\
         | uniq \\
         | sort -k7n,7n \\
         > ${prefix}.${peak_type}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -53,10 +48,5 @@ process FILTER_IDR_PEAKS {
     }
     """
     touch  ${prefix}.${peak_type}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 }
