@@ -26,7 +26,6 @@ process PEAKS_NAIVE_OVERLAP {
     def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.naive_overlap"
     def threshold_arg = threshold ?: 0.05
-    def peak_list_arg = peak_list ? "--peak-list ${peak_list}" : ''
     if (sample_peaks.toList().size < 2) {
         log.error "[ERROR] Naive peak overlapping needs at least two replicates only one provided."
     }
@@ -35,7 +34,7 @@ process PEAKS_NAIVE_OVERLAP {
         log.error "[ERROR] Invalid option: '${peak_type}'. Valid options for 'peak_type': ${peak_types.join(', ')}."
     }
     """
-    intersectBed ${args} -wo -a ${peak_list_arg} -b ${sample_peaks[0]} | \\
+    intersectBed ${args} -wo -a ${peak_list} -b ${sample_peaks[0]} | \\
     awk ${args2} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | sort | uniq | \\
     intersectBed ${args3} -wo -a stdin -b ${sample_peaks[1]} | \\
     awk ${args4} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | sort | uniq \\
