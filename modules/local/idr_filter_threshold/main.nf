@@ -28,11 +28,9 @@ process IDR_FILTER_THRESHOLD {
         log.error "[ERROR] Invalid option: '${peak_type}'. Valid options for 'peak_type': ${peak_types.join(', ')}."
     }
     """
-    IDR_THRESH_TRANSFORMED=\$(awk -v p=${idr_threshold_arg} 'BEGIN{print -log(p)/log(10)}')
-
     awk \\
         ${args} \\
-        'BEGIN{OFS="\\t"} \$12>=\${IDR_THRESH_TRANSFORMED} {print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10}' \\
+        -v p=${idr_threshold_arg} 'BEGIN{OFS="\\t"; th=-log(p)/log(10)} \$12>=th {print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10}' \\
         ${peak_file} \\
         | LC_COLLATE=C sort -T '.' \\
         | uniq \\
