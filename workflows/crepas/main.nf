@@ -1039,7 +1039,7 @@ workflow CREPAS {
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
             ch_blacklist,
             params.idr_filtering_threshold,
-            params.idr_filtering_max_score
+            params.encode_peak_max_score
         )
         ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 
