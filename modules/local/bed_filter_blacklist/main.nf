@@ -40,7 +40,7 @@ process BED_FILTER_BLACKLIST {
         -a ${peaks} \\
         -b ${blacklist} \\
         ${filter_chr_arg} \\
-        | awk ${args2} 'BEGIN{OFS="\\t"; ms="${max_score_arg}"} {if (\$5>ms) \$5=ms; print \$0}' \\
+        | awk ${args2} 'BEGIN{OFS="\\t"; ms="${max_score_arg}"} {if (\$2<0) \$2=0; if (\$5>ms) \$5=ms; print \$0}' \\
         > ${prefix}.${peak_type}
     """
 
