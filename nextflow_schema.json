@@ -1104,6 +1104,12 @@
                     "description": "Filter peaks with an IDR above this value.",
                     "fa_icon": "fas fa-chart-area"
                 },
+                "spp_npeak": {
+                    "type": "integer",
+                    "default": 300000,
+                    "description": "Threshold on the number of peaks to call with SPP for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "encode_peak_max_score": {
                     "type": "number",
                     "default": 1000,
