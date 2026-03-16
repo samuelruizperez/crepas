@@ -4,9 +4,10 @@ include { BED_TO_TAGALIGN                                   } from '../../../mod
 include { TAGALIGN_SELF_PSEUDOREPLICATES                    } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
 include { CAT_CAT as TAGALIGN_POOL                          } from '../../../modules/nf-core/cat/cat/main'
 include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP  } from '../../../modules/nf-core/phantompeakqualtools/main'
+include { BED_FILTER_BLACKLIST as PEAKS_FILTER_BLACKLIST    } from '../../../modules/local/bed_filter_blacklist/main'
 include { IDR                                               } from '../../../modules/nf-core/idr/main'
-include { PEAKS_FILTER_IDR                                  } from '../../../modules/local/peaks_filter_idr/main'
-include { PEAKS_FILTER_BLACKLIST                            } from '../../../modules/local/peaks_filter_blacklist/main'
+include { IDR_FILTER_THRESHOLD                              } from '../../../modules/local/idr_filter_threshold/main'
+include { BED_FILTER_BLACKLIST as IDR_FILTER_BLACKLIST      } from '../../../modules/local/bed_filter_blacklist/main'
 include { PEAKS_NAIVE_OVERLAP                               } from '../../../modules/local/peaks_naive_overlap/main'
 
 workflow BAM_ENCODE_PIPELINE {
@@ -17,7 +18,7 @@ workflow BAM_ENCODE_PIPELINE {
     peak_type
     ch_blacklist
     idr_filtering_threshold
-    idr_filtering_max_score
+    encode_peak_max_score
 
     main:
 
@@ -228,12 +229,23 @@ workflow BAM_ENCODE_PIPELINE {
     PHANTOMPEAKQUALTOOLS_SPP (
         ch_tagalign_for_spp
     )
-    ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
 
+    //
+    // MODULE: Filter peaks by blacklist, chromosomes, and max score
+    //
+    PEAKS_FILTER_BLACKLIST (
+        PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak,
+        ch_blacklist,
+        true, // filter_chr
+        peak_type,
+        encode_peak_max_score
+    )
 
     // Create channel: [ meta, [peaks1, peaks2], pooled_peaks ]
-    ch_spp_peaks
+    PEAKS_FILTER_BLACKLIST
+        .out
+        .peaks
         .branch { meta, peak ->
             true_replicates: !meta.pseudoreplicate && !meta.is_pooled
                 return [ meta.id, meta, peak ]
@@ -358,7 +370,7 @@ workflow BAM_ENCODE_PIPELINE {
     //
     // MODULE: Filter peaks by IDR threshold
     //
-    PEAKS_FILTER_IDR (
+    IDR_FILTER_THRESHOLD (
         IDR.out.idr,
         peak_type,
         idr_filtering_threshold
@@ -367,16 +379,16 @@ workflow BAM_ENCODE_PIPELINE {
     //
     // MODULE: Filter peaks by blacklist
     //
-    PEAKS_FILTER_BLACKLIST (
-            PEAKS_FILTER_IDR.out.peaks,
+    IDR_FILTER_BLACKLIST (
+            IDR_FILTER_THRESHOLD.out.peaks,
             ch_blacklist,
             true, // filter_chr
             peak_type,
-            idr_filtering_max_score
+            encode_peak_max_score
     )
 
     // Create channel: [ meta, idr_true_reps, idr_pseudo_reps, idr_pooled_pseudoreps ]
-    PEAKS_FILTER_BLACKLIST
+    IDR_FILTER_BLACKLIST
         .out
         .peaks
         .map { meta, peak ->

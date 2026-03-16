@@ -1,4 +1,4 @@
-process PEAKS_FILTER_IDR {
+process IDR_FILTER_THRESHOLD {
     tag "$meta.id"
     label 'process_low'
 

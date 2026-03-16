@@ -1,4 +1,4 @@
-process PEAKS_FILTER_BLACKLIST {
+process BED_FILTER_BLACKLIST {
     tag "${meta.id}"
     label 'process_low'
 
