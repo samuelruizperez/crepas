@@ -1104,10 +1104,21 @@
                     "description": "Filter peaks with an IDR above this value.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "idr_filtering_max_score": {
+                "encode_peak_max_score": {
                     "type": "number",
                     "default": 1000,
                     "description": "Set peaks with a score above this value to this value.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_min": {
+                    "type": "integer",
+                    "default": -500,
+                    "description": "Minimum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_max": {
+                    "type": "integer",
+                    "description": "Maximum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing. If not provided `max(params.read_length + 10, 100)` will be used.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_epic2": {
