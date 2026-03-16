@@ -36,7 +36,7 @@ process BED_FILTER_BLACKLIST {
     }
     """
     ${zcat_arg} ${peaks} \\
-         | awk 'BEGIN{OFS="\\t"} {if (\$2<0) \$2=0; print \$0}' \\
+        | awk 'BEGIN{OFS="\\t"} {\$2=int(\$2); \$3=int(\$3); if (\$2<0) \$2=0; print \$0}' \\
          > ${prefix}.tmp.${peak_type}
 
     bedtools intersect \\
