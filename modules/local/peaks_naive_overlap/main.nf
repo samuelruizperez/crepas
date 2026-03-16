@@ -35,9 +35,9 @@ process PEAKS_NAIVE_OVERLAP {
     }
     """
     intersectBed ${args} -wo -a ${peak_list} -b ${sample_peaks[0]} | \\
-    awk ${args2} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | sort | uniq | \\
+    awk ${args2} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | LC_COLLATE=C sort -T '.' | uniq | \\
     intersectBed ${args3} -wo -a stdin -b ${sample_peaks[1]} | \\
-    awk ${args4} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | sort | uniq \\
+    awk ${args4} 'BEGIN{FS="\\t";OFS="\\t"; th="${threshold_arg}"}{s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= th) || (\$21/s2 >= th)) {print \$0}}' | cut -f 1-10 | LC_COLLATE=C sort -T '.' | uniq \\
     > ${prefix}.${peak_type}
     """
 
