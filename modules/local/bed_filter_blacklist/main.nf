@@ -27,6 +27,7 @@ process BED_FILTER_BLACKLIST {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.flTbl"
+    def zcat_arg = peaks.name.endsWith('.gz') ? 'zcat' : 'cat'
     def max_score_arg = max_score ?: 1000
     def filter_chr_arg = filter_chr ? "| grep -P 'chr[\\dXY]+[ \\t]'" : ''
     def peak_types = ['narrowPeak', 'broadPeak', 'bed']
@@ -34,14 +35,20 @@ process BED_FILTER_BLACKLIST {
         log.error "[ERROR] Invalid option: '${peak_type}'. Valid options for 'peak_type': ${peak_types.join(', ')}."
     }
     """
+    ${zcat_arg} ${peaks} \\
+         | awk 'BEGIN{OFS="\\t"} {if (\$2<0) \$2=0; print \$0}' \\
+         > ${prefix}.tmp.${peak_type}
+
     bedtools intersect \\
         ${args} \\
         -v \\
-        -a ${peaks} \\
+        -a ${prefix}.tmp.${peak_type} \\
         -b ${blacklist} \\
         ${filter_chr_arg} \\
-        | awk ${args2} 'BEGIN{OFS="\\t"; ms="${max_score_arg}"} {if (\$2<0) \$2=0; if (\$5>ms) \$5=ms; print \$0}' \\
+        | awk ${args2} 'BEGIN{OFS="\\t"; ms="${max_score_arg}"} {if (\$5>ms) \$5=ms; print \$0}' \\
         > ${prefix}.${peak_type}
+
+    rm ${prefix}.tmp.${peak_type}
     """
 
     stub:
