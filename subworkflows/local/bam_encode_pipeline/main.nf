@@ -96,7 +96,6 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_tagaligns = tagaligns.sort { it -> it.name }
             def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
-            meta_clone.remove('pseudoreplicate')
             meta_clone.is_pooled = true
             [ meta_clone, sorted_tagaligns ]
         }
