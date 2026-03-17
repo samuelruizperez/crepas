@@ -34,7 +34,7 @@ process IDR_FILTER_THRESHOLD {
         ${peak_file} \\
         | LC_COLLATE=C sort -T '.' \\
         | uniq \\
-        | sort -k7n,7n \\
+        | LC_COLLATE=C sort -T '.' -k7n,7n \\
         > ${prefix}.${peak_type}
     """
 
