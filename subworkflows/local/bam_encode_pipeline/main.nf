@@ -247,13 +247,13 @@ workflow BAM_ENCODE_PIPELINE {
         .out
         .peaks
         .branch { meta, peak ->
-            true_replicates: !meta.pseudoreplicate && !meta.is_pooled
+            true_replicates: !meta.is_pseudoreplicate && !meta.is_pooled
                 return [ meta.id, meta, peak ]
-            pooled_replicates: meta.is_pooled && !meta.pseudoreplicate
+            pooled_replicates: meta.is_pooled && !meta.is_pseudoreplicate
                 return [ meta.id, peak ]
-            pseudoreplicates: meta.pseudoreplicate && !meta.is_pooled
+            pseudoreplicates: meta.is_pseudoreplicate && !meta.is_pooled
                 return [ meta.id, meta, peak ]
-            pooled_pseudoreplicates: meta.pseudoreplicate && meta.is_pooled
+            pooled_pseudoreplicates: meta.is_pseudoreplicate && meta.is_pooled
                 return [ meta.id, meta, peak ]
         }
         .set { ch_spp_peaks_by_type }
