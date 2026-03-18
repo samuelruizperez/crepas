@@ -109,12 +109,20 @@ write.table(summary.dat,file=SummaryFile,quote=FALSE,sep="\t",row.names=FALSE,co
 ################################################
 ################################################
 
+# Wrap long axis labels onto multiple lines.
+wrap_x_labels <- function(width = 20) {
+    scale_x_discrete(labels = function(x) {
+        vapply(x, function(lbl) paste(strwrap(lbl, width = width), collapse = "\n"), character(1))
+    })
+}
+
 ## RETURNS VIOLIN PLOT OBJECT
 violin.plot <- function(plot.dat,x,y,ylab,title,log) {
 
     plot  <- ggplot(plot.dat, aes_string(x=x, y=y)) +
                 geom_violin(aes_string(colour=x,fill=x), alpha = 0.3) +
                 geom_boxplot(width=0.1) +
+                wrap_x_labels(20) +
                 xlab("") +
                 ylab(ylab) +
                 ggtitle(title) +
@@ -145,6 +153,7 @@ peak.count.dat <- as.data.frame(table(plot.dat$name))
 colnames(peak.count.dat) <- c("name","count")
 plot  <- ggplot(peak.count.dat, aes(x=name, y=count)) +
             geom_bar(stat="identity",aes(colour=name,fill=name), position = "dodge", width = 0.8, alpha = 0.3) +
+            wrap_x_labels(20) +
             xlab("") +
             ylab("Number of peaks") +
             ggtitle("Peak count") +
