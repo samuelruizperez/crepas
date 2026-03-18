@@ -276,7 +276,7 @@ workflow BAM_ENCODE_PIPELINE {
         .map{ id, meta1, peak1, meta2, peak2 ->
             def meta_clone = meta1.clone()
             meta_clone.id = id
-            meta_clone.consensus_pair_type = 'true_replicate'
+            meta_clone.peak_consensus_pair_type = 'true_replicate'
             meta_clone.idr_pair_breps = [meta1.brep, meta2.brep]
             [ meta_clone.id, meta_clone, [ peak1, peak2 ] ]
         }
@@ -303,7 +303,7 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_peaks = peaks.sort { peak -> peak.name }
             def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
-            meta_clone.consensus_pair_type = 'pooled_pseudoreplicate'
+            meta_clone.peak_consensus_pair_type = 'pooled_pseudoreplicate'
             [ meta_clone, sorted_peaks, pooled_peak ]
         }
         .set { ch_spp_peaks_pooled_pseudoreps_for_idr }
@@ -328,7 +328,7 @@ workflow BAM_ENCODE_PIPELINE {
             def meta_clone = sorted_metas[0].clone()
             meta_clone.remove('pseudoreplicate')
             meta_clone.id = id
-            meta_clone.consensus_pair_type = 'self_pseudoreplicate'
+            meta_clone.peak_consensus_pair_type = 'self_pseudoreplicate'
             [ meta_clone, sorted_peaks, true_rep_peak ]
         }
         .set { ch_spp_peaks_self_pseudoreps_for_idr }
@@ -422,11 +422,11 @@ workflow BAM_ENCODE_PIPELINE {
     //         [ pooled_id, meta, peak ]
     //     }
     //     .branch { pooled_id, meta, peak ->
-    //         true_replicates: meta.consensus_pair_type == 'true_replicate'
+    //         true_replicates: meta.peak_consensus_pair_type == 'true_replicate'
     //             return [ pooled_id, meta.antibody, meta, peak ]
-    //         self_pseudoreplicates: meta.consensus_pair_type == 'self_pseudoreplicate'
+    //         self_pseudoreplicates: meta.peak_consensus_pair_type == 'self_pseudoreplicate'
     //             return [ pooled_id, meta.antibody, meta, peak ]
-    //         pooled_pseudoreplicates: meta.consensus_pair_type == 'pooled_pseudoreplicate'
+    //         pooled_pseudoreplicates: meta.peak_consensus_pair_type == 'pooled_pseudoreplicate'
     //             return [ pooled_id, meta.antibody, peak ]
     //     }
     //     .set { ch_idr_peaks }
@@ -499,6 +499,7 @@ workflow BAM_ENCODE_PIPELINE {
         .map { id, antibody, meta_tagalign, tagalign, ccscores, meta_peak, peak ->
             def meta_clone = meta_tagalign.clone()
             meta_clone.peak_consensus_type = meta_peak.peak_consensus_type
+            meta_clone.peak_consensus_pair_type = meta_peak.peak_consensus_pair_type
             [ meta_clone, tagalign, ccscores, peak ]
         }
         .set { ch_ta_ccscores_peaks }
