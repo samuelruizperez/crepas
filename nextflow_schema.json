@@ -1095,7 +1095,36 @@
                 "idr_soft_threshold": {
                     "type": "number",
                     "default": 0.05,
-                    "description": "Report statistics for peaks with a global idr below this value but return all peaks",
+                    "description": "Report statistics for peaks with a global IDR below this value but return all peaks",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "idr_filtering_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Filter peaks with an IDR above this value.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "spp_npeak": {
+                    "type": "integer",
+                    "default": 300000,
+                    "description": "Threshold on the number of peaks to call with SPP for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "encode_peak_max_score": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Set peaks with a score above this value to this value.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_min": {
+                    "type": "integer",
+                    "default": -500,
+                    "description": "Minimum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_max": {
+                    "type": "integer",
+                    "description": "Maximum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing. If not provided `max(params.read_length + 10, 100)` will be used.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_epic2": {

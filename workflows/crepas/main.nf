@@ -1035,8 +1035,12 @@ workflow CREPAS {
         BAM_ENCODE_PIPELINE (
             ch_filtered_bam,
             ch_fasta,
+            ch_chrom_sizes_endo,
             params.ctl_depth_ratio_threshold,
-            params.narrow_peak ? 'narrowPeak' : 'broadPeak'
+            params.narrow_peak ? 'narrowPeak' : 'broadPeak',
+            ch_blacklist,
+            params.idr_filtering_threshold,
+            params.encode_peak_max_score
         )
         ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 

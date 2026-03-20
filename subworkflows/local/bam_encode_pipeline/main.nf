@@ -1,17 +1,26 @@
-include { SAMTOOLS_SORT                                     } from '../../../modules/nf-core/samtools/sort/main'
-include { BEDTOOLS_BAMTOBED                                 } from '../../../modules/nf-core/bedtools/bamtobed/main'
-include { BED_TO_TAGALIGN                                   } from '../../../modules/local/bed_to_tagalign/main'
-include { TAGALIGN_SELF_PSEUDOREPLICATES                    } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
-include { CAT_CAT as TAGALIGN_POOL                          } from '../../../modules/nf-core/cat/cat/main'
-include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP  } from '../../../modules/nf-core/phantompeakqualtools/main'
-include { IDR                                               } from '../../../modules/nf-core/idr/main'
+include { SAMTOOLS_SORT                                         } from '../../../modules/nf-core/samtools/sort/main'
+include { BEDTOOLS_BAMTOBED                                     } from '../../../modules/nf-core/bedtools/bamtobed/main'
+include { BED_TO_TAGALIGN                                       } from '../../../modules/local/bed_to_tagalign/main'
+include { TAGALIGN_SELF_PSEUDOREPLICATES                        } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
+include { CAT_CAT as TAGALIGN_POOL                              } from '../../../modules/nf-core/cat/cat/main'
+include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP      } from '../../../modules/nf-core/phantompeakqualtools/main'
+include { BED_FILTER_BLACKLIST as PEAKS_FILTER_BLACKLIST        } from '../../../modules/local/bed_filter_blacklist/main'
+include { IDR                                                   } from '../../../modules/nf-core/idr/main'
+include { IDR_FILTER_THRESHOLD                                  } from '../../../modules/local/idr_filter_threshold/main'
+include { BED_FILTER_BLACKLIST as CONSENSUS_FILTER_BLACKLIST    } from '../../../modules/local/bed_filter_blacklist/main'
+include { PEAKS_NAIVE_OVERLAP                                   } from '../../../modules/local/peaks_naive_overlap/main'
+include { TAGALIGN_FRIP_SCORE                                   } from '../../../modules/local/tagalign_frip_score/main'
 
 workflow BAM_ENCODE_PIPELINE {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
-    ch_fasta                          // channel: [ fasta ]
+    ch_fasta                          // channel: [ val(meta), path(fasta) ]
+    ch_chromsizes                     // channel: [ val(meta), path(chromsizes) ]
     ctl_depth_ratio_threshold
     peak_type
+    ch_blacklist
+    idr_filtering_threshold
+    encode_peak_max_score
 
     main:
 
@@ -25,8 +34,6 @@ workflow BAM_ENCODE_PIPELINE {
         ch_fasta,
         ''
     )
-
-    // 2a section of the ENCODE 3 ChIP-seq pipeline:
 
     //
     // MODULE: Convert BAM to BED
@@ -223,20 +230,31 @@ workflow BAM_ENCODE_PIPELINE {
     PHANTOMPEAKQUALTOOLS_SPP (
         ch_tagalign_for_spp
     )
-    ch_spp_peaks = PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak
     ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
 
+    //
+    // MODULE: Filter peaks by blacklist, chromosomes, and max score
+    //
+    PEAKS_FILTER_BLACKLIST (
+        PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak,
+        ch_blacklist,
+        true, // filter_chr
+        peak_type,
+        encode_peak_max_score
+    )
 
     // Create channel: [ meta, [peaks1, peaks2], pooled_peaks ]
-    ch_spp_peaks
+    PEAKS_FILTER_BLACKLIST
+        .out
+        .peaks
         .branch { meta, peak ->
-            true_replicates: !meta.pseudoreplicate && !meta.is_pooled
+            true_replicates: !meta.is_pseudoreplicate && !meta.is_pooled
                 return [ meta.id, meta, peak ]
-            pooled_replicates: meta.is_pooled && !meta.pseudoreplicate
+            pooled_replicates: meta.is_pooled && !meta.is_pseudoreplicate
                 return [ meta.id, peak ]
-            pseudoreplicates: meta.pseudoreplicate && !meta.is_pooled
+            pseudoreplicates: meta.is_pseudoreplicate && !meta.is_pooled
                 return [ meta.id, meta, peak ]
-            pooled_pseudoreplicates: meta.pseudoreplicate && meta.is_pooled
+            pooled_pseudoreplicates: meta.is_pseudoreplicate && meta.is_pooled
                 return [ meta.id, meta, peak ]
         }
         .set { ch_spp_peaks_by_type }
@@ -258,7 +276,8 @@ workflow BAM_ENCODE_PIPELINE {
         .map{ id, meta1, peak1, meta2, peak2 ->
             def meta_clone = meta1.clone()
             meta_clone.id = id
-            meta_clone.idr_pair_type = 'true_replicate'
+            meta_clone.peak_consensus_pair_type = 'true_replicate'
+            meta_clone.idr_pair_breps = [meta1.brep, meta2.brep]
             [ meta_clone.id, meta_clone, [ peak1, peak2 ] ]
         }
         .combine(ch_spp_peaks_by_type.pooled_replicates, by: 0)
@@ -284,8 +303,7 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_peaks = peaks.sort { peak -> peak.name }
             def sorted_metas = metas.sort { meta -> meta.brep }
             def meta_clone = sorted_metas[0].clone()
-            meta_clone.id = id
-            meta_clone.idr_pair_type = 'pooled_pseudoreplicate'
+            meta_clone.peak_consensus_pair_type = 'pooled_pseudoreplicate'
             [ meta_clone, sorted_peaks, pooled_peak ]
         }
         .set { ch_spp_peaks_pooled_pseudoreps_for_idr }
@@ -308,8 +326,9 @@ workflow BAM_ENCODE_PIPELINE {
             def sorted_peaks = peaks.sort { peak -> peak.name }
             def sorted_metas = metas.sort { meta -> meta.pseudoreplicate }
             def meta_clone = sorted_metas[0].clone()
+            meta_clone.remove('pseudoreplicate')
             meta_clone.id = id
-            meta_clone.idr_pair_type = 'self_pseudoreplicate'
+            meta_clone.peak_consensus_pair_type = 'self_pseudoreplicate'
             [ meta_clone, sorted_peaks, true_rep_peak ]
         }
         .set { ch_spp_peaks_self_pseudoreps_for_idr }
@@ -330,6 +349,9 @@ workflow BAM_ENCODE_PIPELINE {
     ch_spp_peaks_true_reps_for_idr
         .mix(ch_spp_peaks_pooled_pseudoreps_for_idr)
         .mix(ch_spp_peaks_self_pseudoreps_for_idr)
+        .map { meta, peaks, pooled_peak ->
+            [ meta + [ peak_consensus_type: 'idr' ], peaks, pooled_peak ]
+        }
         .set { ch_for_idr }
 
         
@@ -348,6 +370,147 @@ workflow BAM_ENCODE_PIPELINE {
         peak_type
     )
     ch_versions = ch_versions.mix(IDR.out.versions.first())
+
+    //
+    // MODULE: Filter peaks by IDR threshold
+    //
+    IDR_FILTER_THRESHOLD (
+        IDR.out.idr,
+        peak_type,
+        idr_filtering_threshold
+    )
+
+
+    ch_for_idr
+        .map { meta, peaks, pooled_peak ->
+            [ meta + [ peak_consensus_type: 'naive_overlap' ], peaks, pooled_peak ]
+        }
+        .set { ch_for_naive_overlap }
+
+    //
+    // MODULE: Naive overlap thresholding as an alternative to IDR for histone marks
+    // See Section 6) in https://docs.google.com/document/d/1lG_Rd7fnYgRpSIqrIfuVlAz2dW1VaSQThzk836Db99c/edit?tab=t.0#heading=h.9ecc41kilcvq
+    //
+    PEAKS_NAIVE_OVERLAP (
+        ch_for_naive_overlap,
+        peak_type
+    )
+
+    IDR_FILTER_THRESHOLD
+        .out
+        .peaks
+        .mix(PEAKS_NAIVE_OVERLAP.out.peak_overlap)
+        .set { ch_peaks_for_fltbl }
+
+    //
+    // MODULE: Filter peaks by blacklist
+    //
+    CONSENSUS_FILTER_BLACKLIST (
+            ch_peaks_for_fltbl,
+            ch_blacklist,
+            true, // filter_chr
+            peak_type,
+            encode_peak_max_score
+    )
+    ch_peaks_fltbl = CONSENSUS_FILTER_BLACKLIST.out.peaks
+
+    // Create channel: [ meta, idr_true_reps, idr_pseudo_reps, idr_pooled_pseudoreps ]
+    //ch_peaks_fltbl
+    //     .map { meta, peak ->
+    //         // Remove the bRep from pseudoreplicates' ids
+    //         def pooled_id = meta.id - ~/_bRep_.*$/
+    //         [ pooled_id, meta, peak ]
+    //     }
+    //     .branch { pooled_id, meta, peak ->
+    //         true_replicates: meta.peak_consensus_pair_type == 'true_replicate'
+    //             return [ pooled_id, meta.antibody, meta, peak ]
+    //         self_pseudoreplicates: meta.peak_consensus_pair_type == 'self_pseudoreplicate'
+    //             return [ pooled_id, meta.antibody, meta, peak ]
+    //         pooled_pseudoreplicates: meta.peak_consensus_pair_type == 'pooled_pseudoreplicate'
+    //             return [ pooled_id, meta.antibody, peak ]
+    //     }
+    //     .set { ch_idr_peaks }
+
+    // ch_idr_peaks
+    //     .self_pseudoreplicates
+    //     .groupTuple(by: [0, 1])
+    //     .map { pooled_id, antibody, metas, peaks ->
+    //         def sorted_peaks = peaks.sort { peak -> peak.name }
+    //         [ pooled_id, antibody, peaks ]
+    //     }
+    //     .set { ch_idr_peaks_self_pseudoreps }
+
+    // ch_idr_peaks
+    //     .true_replicates
+    //     .combine(ch_idr_peaks_self_pseudoreps, by: [0,1])
+    //     .combine(ch_idr_peaks.pooled_pseudoreplicates, by: [0,1])
+    //     .map { pooled_id, antibody, true_rep_meta, true_rep_peak, self_pseudo_rep_peaks, pooled_pseudo_rep_peaks ->
+    //         [ true_rep_meta, true_rep_peak, self_pseudo_rep_peaks, pooled_pseudo_rep_peaks ]
+    //     }
+    //     .set { ch_idr_peaks_for_qc }
+
+    // // TODO: save for debugging
+    // ch_idr_peaks_for_qc
+    //     .map { meta, true_rep_peaks, self_pseudo_rep_peaks, pooled_pseudo_rep_peaks ->
+    //         "${meta}\t${true_rep_peaks}\t${self_pseudo_rep_peaks}\t${pooled_pseudo_rep_peaks}"
+    //     }
+    //     .collectFile(name: 'ch_idr_peaks_for_qc.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+    //
+    // MODULE: Compute IDR QC scores
+    //
+    // PEAKS_IDR_QC (
+    //     ch_idr_peaks_for_qc
+    // )
+
+
+
+
+    // Create channel: [ meta, tagalign, ccscores, idr_peaks ]
+
+    // Join tagalign and ccscores
+    PHANTOMPEAKQUALTOOLS_SPP
+        .out
+        .ccscores
+        .filter { meta, ccscores -> !meta.is_pseudoreplicate }
+        .map { meta, ccscores -> [ meta.id, meta.antibody, ccscores ] }
+        .set { ch_ccscores}
+
+    ch_tagalign
+        .filter {meta, tagalign -> !meta.is_pseudoreplicate }
+        .map { meta, tagalign -> [ meta.id, meta.antibody, meta, tagalign ] }
+        .combine(ch_ccscores, by: [0, 1])
+        // [ id, antibody, meta, tagalign, ccscores ]
+        .set { ch_ta_ccscores }
+
+    // We want to compute FRiP scores for the following comparisons:
+    // Rep1 tagAlign vs. IDR/overlap peak from pseudo replicates of Rep1 with estimated fragment length of Rep1
+    // Rep2 tagAlign vs. IDR/overlap peak from pseudo replicates of Rep2 with estimated fragment length of Rep2
+    // Pooled tagAlign vs. IDR/overlap peak from true replicates (Nt) with mean estimated fragment length of Rep1 and Rep2
+    // Pooled tagAlign vs. IDR/overlap peak from pooled pseudo replicates (Np) with mean estimated fragment length of Rep1 and Rep2
+    ch_peaks_fltbl
+        .map { meta, peak ->
+            [ meta.id, meta.antibody, meta, peak ]
+        }
+        .set { ch_peaks_fltbl }
+
+    ch_ta_ccscores
+        .combine(ch_peaks_fltbl, by: [0, 1])
+        .map { id, antibody, meta_tagalign, tagalign, ccscores, meta_peak, peak ->
+            def meta_clone = meta_tagalign.clone()
+            meta_clone.peak_consensus_type = meta_peak.peak_consensus_type
+            meta_clone.peak_consensus_pair_type = meta_peak.peak_consensus_pair_type
+            [ meta_clone, tagalign, ccscores, peak ]
+        }
+        .set { ch_ta_ccscores_peaks }
+
+    //
+    // MODULE: Compute FRiP scores for IDR and naive overlap peaks
+    //
+    TAGALIGN_FRIP_SCORE (
+        ch_ta_ccscores_peaks,
+        ch_chromsizes
+    )
 
 
     emit:

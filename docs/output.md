@@ -30,23 +30,15 @@
     - [deepTools plots](#deeptools-plots)
     - [Peak calling](#peak-calling)
     - [Create and quantify consensus set of peaks](#create-and-quantify-consensus-set-of-peaks)
+    - [ENCODE-ChIP-seq-pipeline-like analysis](#encode-chip-seq-pipeline-like-analysis)
+    - [SCAR-seq analysis](#scar-seq-analysis)
+
   ---
 
 ## Introduction
 
-This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report generated from the [full-sized test dataset](https://github.com/nf-core/test-datasets/tree/chipseq#full-test-dataset-origin) for the pipeline using a command similar to the one below:
+This document describes the output produced by the pipeline. The directories listed below will be created in the output directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-```console
-nextflow run nf-core/chipseq -profile test_full,<docker/singularity/institute>
-```
-
-The directories listed below will be created in the output directory after the pipeline has finished. All paths are relative to the top-level results directory.
-
-## Pipeline overview
-
-The pipeline is built using [Nextflow](https://www.nextflow.io/). See [`main README.md`](../README.md) for a condensed overview of the steps in the pipeline, and the bioinformatics tools used at each step.
-
-See [Illumina website](https://emea.illumina.com/techniques/sequencing/dna-sequencing/chip-seq.html) for more information regarding the ChIP-seq protocol, and for an extensive list of publications.
 
 ## Library-level analysis
 
@@ -378,6 +370,20 @@ The $\text{total mapped reads}$ values in the normalization formulae above are c
     - `*.<bin_size>.raw.map.bedgraph`: Raw bedgraphs (all bins of equal size).
     - `*.<bin_size>.raw.map.bigWig`: Raw bigWigs (all bins of equal size).
 
+    - `/bRep_avg/`
+
+      - `*.<bin_size>.raw.map.bRep_avg.bigWig`: Raw bigWigs where the coverage value per bin is the average across the biological replicates of the same condition.
+
+    - `/signal_vs_input/`
+      
+      - `/<signal_over_input_operation>/`
+
+        - `*.<bin_size>.raw.map.<signal_over_input_operation>.bigWig`: Raw bigWigs where the coverage value per bin is a comparison between signal and input control per bin. The signal vs input can be calculated using one of the following operations, as specified by the `--signal_vs_input_operation` parameter (by default set to `soi`): `soi`, `log2`, `ratio`, `subtract`, `add`, `mean`, `reciprocal_ratio`, `first`, `second`. Note: `soi` is similar to `ratio`, but the `soi` is only calculated for bins where both the ChIP is above the `--min_signal_for_soi` threshold and the input is above the `--min_input_for_soi` threshold, otherwise the value is set to `NaN`.
+
+        - `/bRep_avg/`
+
+          - `*.<bin_size>.raw.map.<signal_over_input_operation>.bRep_avg.bigWig`: Raw bigWigs where the coverage value per bin is the average of the signal vs input value for that bin across the biological replicates of the same condition.
+
   - `/rpm/`
 
     - `*.<bin_size>.rpm.bigWig`: RPM bigWigs for ChIP samples.
@@ -523,6 +529,127 @@ For larger experiments, it is recommended to use the `vst` transformation instea
 ![MultiQC - DESeq2 PCA plot](images/mqc_deseq2_pca_plot.png)
 
 ![MultiQC - DESeq2 sample similarity plot](images/mqc_deseq2_sample_similarity_plot.png)
+
+## ENCODE-ChIP-seq-pipeline-like analysis
+
+### Name-sorting BAM files
+
+BAM files are name-sorted with SAMtools.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/1_nsort/`
+  - `*.nsorted.bam`: Name-sorted BAM files.
+  - `*.nsorted.bam.bai`: Index for name-sorted BAM files.
+</details>
+
+### Converting BAM files to BEDPE format
+
+Name-sorted BAM files are converted to BED format with [BEDTools bamtobed](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html).
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/2_bamtobed/`
+  - `*.bed`: BED files generated from the name-sorted BAM files.
+</details>
+
+### Converting BED files to tagAlign format
+
+BED/BEDPE files are converted to tagAlign format using awk-based transformations following the ENCODE-style approach.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/3_bed_to_tagalign/`
+  - `*.tagAlign`: tagAlign files generated from BED/BEDPE files.
+</details>
+
+### Generating self-pseudoreplicates
+
+For IP samples, tagAlign files are shuffled and split into two self-pseudoreplicates.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/4_self_pseudoreps/`
+  - `*spr1.tagAlign`: First self-pseudoreplicate.
+  - `*spr2.tagAlign`: Second self-pseudoreplicate.
+</details>
+
+### Pooling tagAlign files
+
+Replicates and pseudoreplicates are pooled as required for downstream SPP and IDR analyses.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/5_pooled/`
+  - `*.pooled.tagAlign`: Pooled tagAlign files.
+</details>
+
+### Calling peaks with SPP
+
+Peaks are called with phantompeakqualtools (SPP). This step also generates cross-correlation QC metrics.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/6_spp/`
+  - `*.ccscores`: Strand cross-correlation scores.
+  - `*.pdf`: SPP QC plots.
+  - `*.Rdata`: SPP R workspace output.
+  - `*.narrowPeak.gz`: Compressed narrow peaks (when generated by SPP).
+  - `*.regionPeak.gz`: Compressed region peaks (when generated by SPP).
+</details>
+
+### Filtering SPP peaks
+
+SPP peaks are filtered by blacklist regions and canonical chromosomes, and peak scores are capped at the configured maximum score.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/6_spp/`
+  - `*.narrowPeak`, `*.broadPeak`, `*.bed`: Filtered peak files for the selected peak type.
+</details>
+
+### IDR analysis
+
+IDR is run on replicate/pseudoreplicate comparisons following ENCODE-style pairing logic.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/7_idr/<idr_pair_type>/`
+  - `*.idrValues.txt`: IDR values and ranked peaks.
+  - `*.log.txt`: IDR log output.
+  - `*.png`: IDR diagnostic plot.
+</details>
+
+### Filtering IDR peaks
+
+IDR outputs are thresholded and then filtered with the same blacklist/chromosome logic used for SPP peaks.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/7_idr/<idr_pair_type>/`
+  - `*.narrowPeak`, `*.broadPeak`, `*.bed`: IDR-filtered peak files.
+</details>
+
+### Naive overlap (alternative to IDR)
+
+As an alternative to IDR (particularly useful for broad marks), peaks can be filtered by reciprocal overlap thresholding.
+
+<details markdown="1" open>
+    <summary>Output files</summary>
+
+- `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/7_naive_overlap/<idr_pair_type>/`
+  - `*.narrowPeak`, `*.broadPeak`, `*.bed`: Overlap-thresholded peak files.
+</details>
+
 
 ## SCAR-seq analysis
 

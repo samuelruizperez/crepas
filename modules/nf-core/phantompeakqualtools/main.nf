@@ -38,6 +38,7 @@ process PHANTOMPEAKQUALTOOLS {
         -savd="${prefix}.Rdata" \\
         -out="${prefix}.ccscores" \\
         ${args2} \\
+        -p=${task.cpus} \\
         ${peaks_arg}
 
     cat <<-END_VERSIONS > versions.yml
