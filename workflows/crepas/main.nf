@@ -511,7 +511,7 @@ workflow CREPAS {
             ch_filtered_bam.join(ch_filtered_index, by: 0),
             channel.value([[:], []]),
             ch_fasta,
-            params.skip_flTbl, // do orphan removal if flTbl is skipped downstream
+            !params.skip_flTbl, // do orphan removal if flTbl is skipped downstream
             'flT3_total_mapped_reads'
 
         )
