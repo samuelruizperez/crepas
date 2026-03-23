@@ -25,22 +25,23 @@ process BAM_SPLIT_BY_GENOME {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}_${reads_to_keep}"
-    // Split the number of extra threads between the two samtools commands
-    def nthreads1 = Math.max(1, (task.cpus / 2) as int)
-    def nthreads2 = Math.max(0, (task.cpus - nthreads1) as int)
     if (reads_to_keep == 'endo') {
         """
         samtools view \\
-            --threads ${nthreads1} \\
+            --threads ${task.cpus} \\
             --with-header \\
             --no-PG \\
             ${bam} \\
             | grep -v -e "_${exo_genome}" -e '^@CO' -e '^@PG' \\
-            | samtools view \\
-                --threads ${nthreads2} \\
-                --bam \\
-                - \\
-                > ${prefix}.${endo_genome}.bam
+            > ${prefix}.${endo_genome}.sam
+
+        samtools view \\
+            --threads ${task.cpus} \\
+            --bam \\
+            ${prefix}.${endo_genome}.sam \\
+            > ${prefix}.${endo_genome}.bam
+        
+        rm ${prefix}.${endo_genome}.sam
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -50,18 +51,22 @@ process BAM_SPLIT_BY_GENOME {
     } else if (reads_to_keep == 'exo') {
         """
         samtools view \\
-            --threads ${nthreads1} \\
+            --threads ${task.cpus} \\
             --with-header \\
             --no-PG \\
             ${bam} \\
             | grep -E "^@RG|_${exo_genome}" | grep -v -e '^@CO' -e '^@PG' \\
             | sed "s/_${exo_genome}//g" \\
-            | samtools view \\
-                --threads ${nthreads2} \\
-                --no-PG \\
-                --bam \\
-                - \\
-                > ${prefix}.${exo_genome}.bam
+            > ${prefix}.${exo_genome}.sam
+
+        samtools view \\
+            --threads ${task.cpus} \\
+            --no-PG \\
+            --bam \\
+            ${prefix}.${exo_genome}.sam \\
+            > ${prefix}.${exo_genome}.bam
+        
+        rm ${prefix}.${exo_genome}.sam
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
