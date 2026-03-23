@@ -31,8 +31,12 @@ process BAM_REMOVE_ORPHANS {
 
         if (!skip_name_sort) {
             """
-            samtools sort -n -@ ${task.cpus} -o ${prefix}.nsort.bam -T ${prefix}.nsort ${bam}
-            bampe_rm_orphan.py ${prefix}.nsort.bam ${prefix}.bam ${args}
+            if [ "\$(samtools view -c ${bam})" -eq 0 ]; then
+                ln -s ${bam} ${prefix}.bam
+            else
+                samtools sort -n -@ ${task.cpus} -o ${prefix}.nsorted.bam -T ${prefix}.nsorted ${bam}
+                bampe_rm_orphan.py ${prefix}.nsorted.bam ${prefix}.bam ${args}
+            fi
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
@@ -41,7 +45,11 @@ process BAM_REMOVE_ORPHANS {
             """
         } else {
             """
-            bampe_rm_orphan.py ${bam} ${prefix}.bam ${args}
+            if [ "\$(samtools view -c ${bam})" -eq 0 ]; then
+                ln -s ${bam} ${prefix}.bam
+            else
+                bampe_rm_orphan.py ${bam} ${prefix}.bam ${args}
+            fi
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
