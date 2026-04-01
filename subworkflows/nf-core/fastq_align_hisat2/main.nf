@@ -4,28 +4,30 @@ include { BAM_SORT_STATS_SAMTOOLS } from '../bam_sort_stats_samtools/main'
 workflow FASTQ_ALIGN_HISAT2 {
 
     take:
-    reads       // channel: [ val(meta), [ reads ] ]
-    index       // channel: /path/to/hisat2/index
-    splicesites // channel: /path/to/genome.splicesites.txt
-    ch_fasta    // channel: [ fasta ]
+    ch_reads          // channel: [ val(meta), [ reads ] ]
+    ch_index          // channel: [ val(meta2, [ index ] ]
+    ch_splicesites    // channel: [ val(meta3, [ splicesites ] ]
+    ch_fasta          // channel: [ val(meta4, [ fasta ] ]
+    save_unaligned    // val
+    sort_bam          // val
 
     main:
-
-    ch_versions = Channel.empty()
-
-
     //
     // Map reads with HISAT2
     //
-    HISAT2_ALIGN ( reads, index, splicesites )
-    ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions.first())
+    HISAT2_ALIGN (
+        ch_reads,
+        ch_index,
+        ch_splicesites,
+        ch_fasta,
+        save_unaligned,
+        sort_bam
+    )
 
     //
     // Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
     BAM_SORT_STATS_SAMTOOLS ( HISAT2_ALIGN.out.bam, ch_fasta )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
-
 
     emit:
     orig_bam = HISAT2_ALIGN.out.bam                 // channel: [ val(meta), bam   ]
@@ -38,6 +40,4 @@ workflow FASTQ_ALIGN_HISAT2 {
     stats    = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-
-    versions = ch_versions                          // channel: [ versions.yml ]
 }

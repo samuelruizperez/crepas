@@ -111,6 +111,17 @@
                     "description": "Path to directory or tar.gz archive for pre-built BWA index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
+                "bwa_mem2_index": {
+                    "type": "string",
+                    "description": "Path to directory or tar.gz archive for pre-built BWAMEM2 index.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "bowtie_index": {
+                    "type": "string",
+                    "format": "path",
+                    "fa_icon": "fas fa-bezier-curve",
+                    "description": "Path to directory or tar.gz archive for pre-built Bowtie index."
+                },
                 "bowtie2_index": {
                     "type": "string",
                     "format": "path",
@@ -135,6 +146,19 @@
                     "fa_icon": "fas fa-bezier-curve",
                     "description": "Path to directory or tar.gz archive for pre-built HISAT2 index."
                 },
+                "minimap2_index": {
+                    "type": "string",
+                    "format": "path",
+                    "fa_icon": "fas fa-bezier-curve",
+                    "description": "Path to directory or tar.gz archive for pre-built Minimap2 index."
+                },
+                "strobealign_index": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.sti(\\.gz)?$",
+                    "fa_icon": "fas fa-procedures",
+                    "description": "Path to Strobealign index file with extension '.sti'. This will be created from the FASTA file if not specified and the aligner is set to strobealign."
+                },
                 "gene_bed": {
                     "type": "string",
                     "format": "file-path",
@@ -157,7 +181,7 @@
                     "format": "file-path",
                     "mimetype": "text/plain",
                     "exists": true,
-                    "pattern": "^\\S+\\.(txt|tsv|bed)\\.gz$",
+                    "pattern": "^\\S+\\.(txt|tsv|bed)(\\.gz)?$",
                     "fa_icon": "fas fa-procedures",
                     "description": "Path to GZIP-compressed OK-seq RFD text file. The path cannot contain spaces and must have extension '.txt.gz', '.tsv.gz' or '.bed.gz'"
                 },
@@ -390,7 +414,11 @@
                 "trim_minimum_length": {
                     "type": "integer",
                     "default": 5,
-                    "description": "Instructs Trim Galore to remove reads shorter than this length after adapter/quality trimming."
+                    "description": "Instructs Trim Galore to discard reads that became shorter than this length after adapter or quality trimming. A value of 0 effectively disables this behaviour."
+                },
+                "trim_maximum_length": {
+                    "type": "integer",
+                    "description": "Instructs Trim Galore to discard reads that are longer than this length after adapter or quality trimming."
                 },
                 "skip_trimming": {
                     "type": "boolean",
@@ -446,11 +474,16 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bowtie2", "chromap", "star", "hisat2"]
+                    "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
                 },
                 "bwa_min_score": {
                     "type": "integer",
                     "description": "Don't output BWA MEM alignments with score lower than this parameter.",
+                    "fa_icon": "fas fa-hand-paper"
+                },
+                "bwamem2_min_score": {
+                    "type": "integer",
+                    "description": "Don't output BWAMEM2 alignments with score lower than this parameter.",
                     "fa_icon": "fas fa-hand-paper"
                 },
                 "sort_bam": {
@@ -475,6 +508,31 @@
                     "type": "integer",
                     "fa_icon": "fas fa-dice-d20",
                     "description": "Number of multimappers to map."
+                },
+                "align_end_to_end": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Wheter to perform end-to-end alignment (only relevant for Bowtie2 and STAR). If set to false, local alignment will be performed.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minimap2_preset": {
+                    "type": "string",
+                    "default": "sr",
+                    "description": "Preset to use for minimap2 alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs",
+                    "enum": ["sr"]
+                },
+                "minimap2_kmer_length": {
+                    "type": "integer",
+                    "default": 21,
+                    "description": "K-mer length to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minimap2_min_win_size": {
+                    "type": "integer",
+                    "default": 11,
+                    "description": "Minimizer window size to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs"
                 }
             }
         },
@@ -581,18 +639,6 @@
                     "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "skip_cisrpmsoi": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Whether to skip the CISRPM SOI step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
-                    "fa_icon": "fas fa-chart-area"
-                },
-                "soi_min_count": {
-                    "type": "integer",
-                    "default": 0,
-                    "description": "Minimum CISRPM value required in a bin to be included in the signal over input (SOI) calculation.",
-                    "fa_icon": "fas fa-chart-area"
-                },
                 "coverage_extend_reads": {
                     "type": "integer",
                     "default": 250,
@@ -606,22 +652,53 @@
                     "description": "Size of the bins, in bases, for the output of the coverage calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "rpm_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which RPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
+                "coverage_skip_nas": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "This parameter determines if non-covered regions (regions without overlapping reads) should be skipped. The default is to treat those regions as having a value of zero. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-coverage-normalization-options) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "srpm_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which SRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
+                "skip_signal_vs_input": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the signal vs input comparison step.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "cisrpm_use_flT2_total": {
+                "signal_vs_input_operation": {
+                    "type": "string",
+                    "default": "soi",
+                    "description": "Operation to perform when comparing IP and input coverage. `soi` is basically the same as `ratio`, although it is computed with a special script. For the rest of the operations, see the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["soi", "log2", "ratio", "subtract", "add", "mean", "reciprocal_ratio", "first", "second"]
+                },
+                "min_signal_for_soi": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Minimum signal in the IP bin to be included in the signal over input (SOI) calculation. Otherwise, the the score of that bin is set to `NaN`.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "min_input_for_soi": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "Minimum input signal in the input bin to be included in the signal over input (SOI) calculation. Otherwise, the the score of that bin is set to `NaN`.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "bw_compare_pseudocount": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "A small number to avoid x/0. Only useful together with `--operation log2` or `--operation ratio`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "bw_compare_skip_zero_over_zero": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "This parameter determines if regions with zero coverage in both the IP and input should be skipped when comparing IP and input coverage. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "use_flT2_as_total_ref": {
                     "type": "string",
                     "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which CISRPM normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
+                    "description": "Comma-separated list of histone marks for which downsampling or normalization factors should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list the total mapped reads after flT3 will be used for normalization factor calculation.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "save_coverage_intermeds": {
@@ -629,6 +706,24 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format.",
                     "fa_icon": "fas fa-save"
+                },
+                "min_reads_for_norm": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Minimum number of total mapped reads required to include a BAM in any normalization. For example, this prevents having an empty exogenous input control BAM when no reads map to the spike-in genome.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_bw_average": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the generation of average bigWig files across replicates for each sample group.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_exo_bw": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip the generation of exogenous bigWig files for each sample.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },
@@ -656,12 +751,6 @@
                     "default": 300000,
                     "description": "Threshold of exogenous mapped reads for downsampling. For downsampling methods that search for the minimum exogenous mapped reads across a set of samples, this parameter will determine the lower limit of that minimum. In other words, the minimum mapped exogenous reads should be the minimum number above the `downsampling_exogenous_threshold`. If there are no totals above this threshold, then the (true) minimum is used.",
                     "fa_icon": "fas fa-compress-arrows-alt"
-                },
-                "dSp_use_flT2_total": {
-                    "type": "string",
-                    "default": "H3K9me3,H3K27me3",
-                    "description": "Comma-separated list of histone marks for which downsampling probabilities should be calculated using the total number of reads before the quality filtering in flT3. The total mapped reads after flT1 will be used if flT2 was not performed (i.e., when there is no spike-in splitting). For marks/antibodies not in this list, the total mapped reads after flT3 will be used for downsampling probability calculation.",
-                    "fa_icon": "fas fa-chart-area"
                 },
                 "bam_downsampling_strategy": {
                     "type": "string",
@@ -720,6 +809,12 @@
                     "description": "Method to use for TE counting. See [TEcount's documentation](https://github.com/mhammell-laboratory/TEtranscripts?tab=readme-ov-file#usage-1) for more details.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["multi", "uniq"]
+                },
+                "te_counting_gene_gtf": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to a different gene GTF file for counting with TEcount and TElocal. If not provided, the main `--gtf` file will be used to generate a gene index suitable for TEcount or TElocal, unless the respective prebuilt gene index files are provided.",
+                    "fa_icon": "fas fa-dna"
                 },
                 "tecount_gene_index": {
                     "type": "string",
@@ -831,6 +926,61 @@
                     "description": "Skip consensus peak generation, annotation and counting.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+                "skip_consensus_plotprofile": {
+                    "type": "boolean",
+                    "description": "Skip generation of the consensus peak profile plot.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "consensus_plotprofile_mode": {
+                    "type": "string",
+                    "default": "reference_point",
+                    "description": "Mode to use for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#mode) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["reference_point", "scale_regions"]
+                },
+                "consensus_plotprofile_ref_point": {
+                    "type": "string",
+                    "default": "center",
+                    "description": "Reference point to use for the consensus peak profile plot when `--consensus_plotprofile_mode` is set to `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#reference-point) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["TSS", "TES", "center"]
+                },
+                "consensus_plotprofile_region_body_length": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Length of the region body to plot for the consensus peak profile plot when `--consensus_plotprofile_mode` is set to `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#scale-regions) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_upstream": {
+                    "type": "integer",
+                    "default": 6000,
+                    "description": "Length of the upstream region to plot for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#upstream-and-downstream) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_downstream": {
+                    "type": "integer",
+                    "default": 6000,
+                    "description": "Length of the downstream region to plot for the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#upstream-and-downstream) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_skip_zeros": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip regions with zero coverage in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#skip-zeros) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "consensus_plotprofile_per_group": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to plot all samples in a group together in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#per-group) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "input_cisrpm_in_plotprofile" : {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to include the input CISRPM signal in the gene or consensus peak profile plots.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_bdgcmp": {
                     "type": "boolean",
                     "default": true,
@@ -930,6 +1080,53 @@
                     "fa_icon": "fas fa-fast-forward",
                     "default": true
                 },
+                "ctl_depth_ratio_threshold": {
+                    "type": "number",
+                    "default": 1.2,
+                    "description": "For each sample, if the ratio of depth between input controls is higher than this, then a pooled input control will be used for all sample replicates.",
+                    "fa_icon": "fas fa-balance-scale"
+                },
+                "use_best_multisummit_idr": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Set the IDR value for a group of multi summit peaks (a group of peaks with the same chr/start/stop but different summits) to the best value across all of these peaks. This is a work around for peak callers that don't do a good job splitting scores across multi summit peaks (e.g. MACS). If set in conjunction with --plot two plots will be created - one with alternate summits and one without. Use this option with care. See the [IDR documentation](https://github.com/nboley/idr) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "idr_soft_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Report statistics for peaks with a global IDR below this value but return all peaks",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "idr_filtering_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Filter peaks with an IDR above this value.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "spp_npeak": {
+                    "type": "integer",
+                    "default": 300000,
+                    "description": "Threshold on the number of peaks to call with SPP for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "encode_peak_max_score": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Set peaks with a score above this value to this value.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_min": {
+                    "type": "integer",
+                    "default": -500,
+                    "description": "Minimum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "xcor_exclusion_range_max": {
+                    "type": "integer",
+                    "description": "Maximum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing. If not provided `max(params.read_length + 10, 100)` will be used.",
+                    "fa_icon": "fas fa-chart-area"
+                },
                 "skip_epic2": {
                     "type": "boolean",
                     "default": true,
@@ -953,6 +1150,26 @@
                     "default": false,
                     "description": "Skip MACS3 peak calling.",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "seacr_peak_threshold": {
+                    "type": "number",
+                    "default": 0.05,
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR specifies returns the top n fraction (between 0 and 1) of peaks based on total signal within peaks. This is only used if there are no controls included with the samples and if `--use_control` is `false`"
+                },
+                "seacr_norm": {
+                    "type": "string",
+                    "default": "non",
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR normalization.",
+                    "enum": ["non", "norm"]
+                },
+                "seacr_stringency": {
+                    "type": "string",
+                    "default": "stringent",
+                    "fa_icon": "fas fa-align-justify",
+                    "description": "SEACR stringency.",
+                    "enum": ["stringent", "relaxed"]
                 },
                 "mace_kmer_size": {
                     "type": "integer",
@@ -1010,6 +1227,12 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
                     "fa_icon": "fas fa-save"
+                },
+                "skip_denopa": {
+                    "type": "boolean",
+                    "description": "Skip deNOPA peak calling for ATAC-seq.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
                 }
             }
         },
@@ -1022,6 +1245,18 @@
                 "skip_fastqc": {
                     "type": "boolean",
                     "description": "Skip FastQC.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "spikein_barcode_table": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.tsv(\\.gz)?$",
+                    "description": "Path to a tab-delimited file containing the spike-in barcode targets, ids, and sequences. See the [sc_spikein_barcodes.tsv](https://github.com/grothlab/crepas/assets/barcodes/sc_spikein_barcodes.tsv) for an example. This is only useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA™ Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
+                    "fa_icon": "fas fa-file-alt"
+                },
+                "skip_spikein_barcode_extract": {
+                    "type": "boolean",
+                    "description": "Whether to skip the extraction of spike-in barcodes from FASTQ files. This is useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA™ Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_picard_metrics": {
@@ -1042,19 +1277,58 @@
                     "fa_icon": "fas fa-dolly",
                     "default": true
                 },
-                "skip_plot_profile": {
+                "skip_genes_plotprofile": {
                     "type": "boolean",
                     "description": "Skip deepTools plotProfile.",
-                    "fa_icon": "fas fa-fast-forward"
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": false
+                },
+                "genes_plotprofile_mode": {
+                    "type": "string",
+                    "default": "scale_regions",
+                    "description": "Mode to compute the matrix for deepTools plotProfile. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["scale_regions", "reference_point"]
+                },
+                "genes_plotprofile_ref_point": {
+                    "type": "string",
+                    "default": "TSS",
+                    "description": "Reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["TSS", "TES", "center"]
+                },
+                "genes_plotprofile_region_body_length": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Region body length (in bp) for deepTools plotProfile when `--genes_plotprofile_mode` is `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "genes_plotprofile_upstream": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Upstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "genes_plotprofile_downstream": {
+                    "type": "integer",
+                    "default": 3000,
+                    "description": "Downstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "genes_plotprofile_skip_zeros": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip regions with zero coverage in all samples when computing the matrix for deepTools plotProfile. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
+                    "fa_icon": "fas fa-chart-area"
                 },
                 "skip_plot_fingerprint": {
                     "type": "boolean",
                     "description": "Skip deepTools plotFingerprint.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_spp": {
+                "skip_spp_qc": {
                     "type": "boolean",
-                    "description": "Skip Phantompeakqualtools.",
+                    "description": "Skip Phantompeakqualtools QC metrics and plots.",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_deseq2_qc": {
@@ -1085,6 +1359,11 @@
             "fa_icon": "fas fa-dna",
             "description": "Options to adjust SCAR-seq and OK-seq analysis criteria.",
             "properties": {
+                "partition_fragment_size": {
+                    "type": "integer",
+                    "description": "For single-end SCAR-seq or OK-seq data, the fragment size (in bp) to extend reads when calculating coverage for partition/RFD analysis. For paired-end data, coverage of intervals is calculated from the left point of a read pair to the right point.",
+                    "default": 250
+                },
                 "partition_window_size": {
                     "type": "integer",
                     "description": "Window/bin size (in bp) for dividing chromosomes when calculating coverage for partition/RFD analysis in SCAR-seq or OK-seq experiments. See [this reference](https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials) for more details.",

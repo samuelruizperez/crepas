@@ -72,9 +72,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
         BEDTOOLS_SLOP (
             MACS3_BDGCMP.out.bdg,
-            ch_chrom_sizes.map{ it[1] }
+            ch_chrom_sizes.map{ it -> it[1] }
         )
-        ch_versions = ch_versions.mix(BEDTOOLS_SLOP.out.versions.first())
 
         AWK_FIX_MACS3_BDGCMP (
             BEDTOOLS_SLOP.out.bed,
@@ -83,9 +82,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
 
         UCSC_BEDCLIP (
             AWK_FIX_MACS3_BDGCMP.out.bed,
-            ch_chrom_sizes.map{ it[1] }
+            ch_chrom_sizes.map{ it -> it[1] }
         )
-        ch_versions = ch_versions.mix(UCSC_BEDCLIP.out.versions.first())
 
         // TODO: maybe a whole module for this is overkill
         FILE_SORT (
@@ -151,8 +149,8 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         //
         HOMER_ANNOTATEPEAKS (
             ch_macs3_peaks,
-            ch_fasta.map { it[1] },
-            ch_gtf.map { it[1] }
+            ch_fasta.map { it -> it[1] },
+            ch_gtf.map { it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
         ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
@@ -164,15 +162,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             ch_macs3_peaks
                 .map {
                     meta, peaks ->
-                        [ meta.exp_type, meta.genome, peaks ]
+                        [ meta.exp_type, meta, peaks ]
                 }
-                .groupTuple(by: [0, 1])
+                .groupTuple()
                 .map {
-                    exp_type, genome, peaks ->
-                        def meta_new = [:]
+                    exp_type, metas, peaks ->
+                        def meta_new = metas[0].clone()
                         meta_new.id = exp_type
-                        meta_new.exp_type = exp_type
-                        meta_new.genome = genome
                         [ meta_new, peaks ]
                 }
                 .set { ch_macs3_peaks_grouped }
@@ -193,15 +189,13 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             HOMER_ANNOTATEPEAKS.out.txt
                 .map {
                     meta, anns ->
-                        [ meta.exp_type, meta.genome, anns ]
+                        [ meta.exp_type, meta, anns ]
                 }
-                .groupTuple(by: [0, 1])
+                .groupTuple(by: 0)
                 .map {
-                    exp_type, genome, anns ->
-                        def meta_new = [:]
+                    exp_type, metas, anns ->
+                        def meta_new = metas[0].clone()
                         meta_new.id = exp_type
-                        meta_new.exp_type = exp_type
-                        meta_new.genome = genome
                         [ meta_new, anns ]
                 }
                 .set { ch_homer_annotatepeaks_grouped }

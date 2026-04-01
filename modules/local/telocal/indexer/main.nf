@@ -3,8 +3,8 @@ process TELOCAL_INDEXER {
     label 'process_single'
 
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'docker://mhammelllab/telocal:latest'
-        : 'docker://mhammelllab/telocal:latest'}"
+        ? 'docker://mhammelllab/telocal:1.1.2'
+        : 'docker://mhammelllab/telocal:1.1.2'}"
 
     input:
     tuple val(meta), path(gtf)

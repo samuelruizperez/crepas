@@ -15,8 +15,9 @@ process COLLECT_PARTITIONS {
     tuple val(meta), path(windows), path(bwaob_fwd), path(bwaob_rev), path(norm_or_smi_fwd), path(norm_or_smi_rev), path(rfd)
 
     output:
-    tuple val(meta), path("*.tsv"), emit: tsv
-    tuple val(meta), path("*.bdg"), emit: bdg
+    tuple val(meta), path("${prefix}.tsv"), emit: tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.tsv"), emit: filtered_tsv
+    tuple val(meta), path("${prefix}.flT_by_counts.bdg"), emit: filtered_bdg
     path "versions.yml", emit: versions
 
     when:
@@ -25,7 +26,7 @@ process COLLECT_PARTITIONS {
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}.collect"
     def buffer = task.memory ? "--buffer-size=${task.memory.toGiga().intdiv(2)}G" : ''
     def sort_cmd = "| LC_ALL=C sort --parallel=${task.cpus} ${buffer} -k1,1 -k2,2n"
 
@@ -42,17 +43,39 @@ process COLLECT_PARTITIONS {
         exit 1
     fi
 
-    # Paste columns and filter for bwaob_fwd > 0 and bwaob_rev > 0
+    # This file will contain the following 12 columns:
+    #   1. chromosome
+    #   2. start
+    #   3. end
+    #   4. bwaob_fwd_counts: Forward raw counts in bin
+    #   5. bwaob_rev_counts: Reverse raw counts in bin
+    #   6. bwaob_fwd_RPM: Forward RPMs in bin
+    #   7. bwaob_rev_RPM: Reverse RPMs in bin
+    #   8. RFD_raw: Raw partition or RFD score
+    #   9. RFD_smooth: Smoothed partition or RFD score
+    #  10. RFD_deriv: Value of the derivative of the partition/RFD at this bin
+    #  11. score: not used
+    #  12. zero_deriv: second derivative at this bin
+
+    # Paste columns and filter
     paste ${args} ${windows} ${bwaob_fwd} ${bwaob_rev} ${norm_or_smi_fwd} ${norm_or_smi_rev} ${rfd} \\
-    | awk '\$8 > 0 && \$14 > 0' \\
     | cut -f -3,8,14,20,26,30- \\
     ${sort_cmd} \\
     > ${prefix}.tsv
 
-    # Making bedGraph
+    # Create filtered version with rows where either bwaob_fwd_counts or bwaob_rev_counts > 0
+    awk '\$4 > 0 || \$5 > 0' ${prefix}.tsv \\
+    > ${prefix}.flT_by_counts.tsv
+
+    # The following creates a bedGraph file with the following 4 columns:
+    #   1. chromosome
+    #   2. start
+    #   3. end
+    #   4. RFD_smooth: Smoothed partition or RFD score
+    
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
-    ${prefix}.tsv \\
-    > ${prefix}.bdg
+    ${prefix}.flT_by_counts.tsv \\
+    > ${prefix}.flT_by_counts.bdg
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -61,10 +84,11 @@ process COLLECT_PARTITIONS {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}.collect"
     """
     touch  ${prefix}.tsv
-    touch  ${prefix}.bdg
+    touch  ${prefix}.flT_by_counts.tsv
+    touch  ${prefix}.flT_by_counts.bdg
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

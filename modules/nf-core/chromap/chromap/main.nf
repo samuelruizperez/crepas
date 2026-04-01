@@ -4,8 +4,8 @@ process CHROMAP_CHROMAP {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' :
-        'biocontainers/mulled-v2-1f09f39f20b1c4ee36581dc81cc323c70e661633:6500f0fa0c9536821177168555632d9811670937-0' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ed/ed15f835e0883dfa27385f663655ad76280cba832c5a2db280ecd69f46877e91/data' :
+        'community.wave.seqera.io/library/chromap_samtools:f82d647d01e30c96' }"
 
     input:
     tuple val(meta), path(reads)

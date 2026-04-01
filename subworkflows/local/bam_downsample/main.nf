@@ -13,7 +13,6 @@ workflow BAM_DOWNSAMPLE {
     downsampling_method         // string: e.g. 'min_by_type'
     downsampling_endo_threshold // int: e.g. 10000000
     downsampling_exo_threshold  // int: e.g. 300000
-    dSp_use_flT2_total          // string: comma-separated list of antibodies for which to use flT2_total_mapped_reads instead of flT3_total_mapped_reads for downsampling
 
     main:
 
@@ -32,92 +31,64 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai
             .branch { meta, bam, bai ->
                 endo_ip: meta.genome == genome && !meta.is_input_control
-                return [meta.input_control, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, bai]
                 endo_ipcontrol: meta.genome == genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
                 exo_ip: meta.genome == spikein_genome && !meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.antibody, meta, bam, bai]
                 exo_ipcontrol: meta.genome == spikein_genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of endogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_endo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.endo_ipcontrol
-            .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
-            .map { ipcontrol_id, endo_ipcontrol_meta, endo_ipcontrol_bam, endo_ipcontrol_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
-                def meta_clone = endo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = endo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, endo_ipcontrol_bam, endo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_endo_ipcontrol }
-
         ch_bam_bai_genome_type.endo_ip
-            .mix(ch_bam_bai_endo_ipcontrol)
-            .map { ipcontrol_id, meta, bam, bai ->
-                def total
-                // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flT3 or flTbl, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, total, meta, bam, bai]
+            .mix(ch_bam_bai_genome_type.endo_ipcontrol)
+            .map { ipcontrol_id, antibody, meta, bam, bai ->
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
+                [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
                 // min_endo should be the minimum number in totals above the downsampling_endo_threshold
-                def filtered_totals = totals.findAll { it -> it >= downsampling_endo_threshold }
-                // If there are no totals above the threshold, we use the minimum of all totals
-                def min_endo = filtered_totals ? filtered_totals.min() : totals.min()
-                // These two lines are just to keep track of the dSp reference sample
-                def min_endo_id = metas[totals.indexOf(min_endo)].id
-                def min_endo_genome = metas[totals.indexOf(min_endo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it -> it.value == min_endo }.key
-                [exp_type, antibody, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais]
+                def filtered_totals = totals.withIndex().findAll { total, idx -> total >= downsampling_endo_threshold }
+                // If filtered_totals is empty, fall back to all totals
+                def min_endo_tuple = filtered_totals ? filtered_totals.min { total_idx -> total_idx[0] } : totals.withIndex().min { total_idx -> total_idx[0] }
+                def min_endo = min_endo_tuple[0]
+                def min_endo_idx = min_endo_tuple[1]
+                def min_endo_id = metas[min_endo_idx].id
+                def min_endo_genome = metas[min_endo_idx].genome
+                [exp_type, antibody, min_endo, min_endo_id, min_endo_genome, metas, bams, bais]
             }
             .transpose()
-            .map { exp_type, antibody, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, meta, bam, bai ->
+            .map { exp_type, antibody, min_endo, min_endo_id, min_endo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_endo / meta_clone[downsampling_ref_total_key]
+                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_endo is higher due to downsampling_endo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_endo
                 meta_clone.downsampling_ref_sample = min_endo_id
                 meta_clone.downsampling_ref_sample_genome = min_endo_genome
-                meta_clone.downsampling_ref_total_key = downsampling_ref_total_key
-                [meta_clone.id, meta_clone, bam, bai]
+                [meta_clone.id, antibody, meta_clone, bam, bai]
             }
             .set { ch_bam_bai_endo }
 
         // Now we copy the downsampling probability (by meta.id) to the exogenous bams and bais,
         // since we want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_endo
-            .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_ipcontrol), by: 0)
-            .map { id, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
+            .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_ipcontrol), by: [0,1])
+            .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
                 def meta_clone = exo_meta.clone()
                 meta_clone.downsampling_prob = endo_meta.downsampling_prob
                 meta_clone.downsampling_ref_total = endo_meta.downsampling_ref_total
                 meta_clone.downsampling_ref_sample = endo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = endo_meta.downsampling_ref_sample_genome
-                meta_clone.downsampling_ref_total_key = endo_meta.downsampling_ref_total_key
-                // propagate input_control_of_antibody if present (i.e., in controls)
-                if (endo_meta.containsKey('input_control_of_antibody')) {
-                    meta_clone.input_control_of_antibody = endo_meta.input_control_of_antibody
-                }
-                [meta_clone.id, meta_clone, exo_bam, exo_bai]
+                [meta_clone.id, antibody, meta_clone, exo_bam, exo_bai]
             }
             .set { ch_bam_bai_exo }
 
         ch_bam_bai_endo
             .mix(ch_bam_bai_exo)
-            .map { id, meta, bam, bai ->
+            .map { id, antibody, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 [meta_clone + [downsampling_method: 'min_endo_across'], bam, bai]
             }
@@ -128,91 +99,64 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai
             .branch { meta, bam, bai ->
                 endo_ip: meta.genome == genome && !meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.antibody, meta, bam, bai]
                 endo_ipcontrol: meta.genome == genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
                 exo_ip: meta.genome == spikein_genome && !meta.is_input_control
-                return [meta.input_control, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, bai]
                 exo_ipcontrol: meta.genome == spikein_genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of exogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_exo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.exo_ipcontrol
-            .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
-            .map { ipcontrol_id, exo_ipcontrol_meta, exo_ipcontrol_bam, exo_ipcontrol_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
-                def meta_clone = exo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = exo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, exo_ipcontrol_bam, exo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_exo_ipcontrol }
-
         ch_bam_bai_genome_type.exo_ip
-            .mix(ch_bam_bai_exo_ipcontrol)
-            .map { ipcontrol_id, meta, bam, bai ->
-                def total
-                // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, total, meta, bam, bai]
+            .mix(ch_bam_bai_genome_type.exo_ipcontrol)
+            .map { ipcontrol_id, antibody, meta, bam, bai ->
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
+                [meta.exp_type, antibody, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1])
             .map { exp_type, antibody, totals, metas, bams, bais ->
-                // min_exo should be the minimum number in totals above the downsampling_exo_threshold
-                def filtered_totals = totals.findAll { it -> it >= downsampling_exo_threshold }
-                def min_exo = filtered_totals ? filtered_totals.min() : totals.min()
-                // These two lines are just to keep track of the dSp reference sample
-                def min_exo_id = metas[totals.indexOf(min_exo)].id
-                def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it -> it.value == min_exo }.key
-                [exp_type, antibody, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais]
+                def filtered_totals = totals.withIndex().findAll { total, idx -> total >= downsampling_exo_threshold }
+                // If filtered_totals is empty, fall back to all totals
+                def min_exo_tuple = filtered_totals ? filtered_totals.min { total_idx -> total_idx[0] } : totals.withIndex().min { total_idx -> total_idx[0] }
+                def min_exo = min_exo_tuple[0]
+                def min_exo_idx = min_exo_tuple[1]
+                def min_exo_id = metas[min_exo_idx].id
+                def min_exo_genome = metas[min_exo_idx].genome
+                [exp_type, antibody, min_exo, min_exo_id, min_exo_genome, metas, bams, bais]
             }
             .transpose()
-            .map { exp_type, antibody, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, meta, bam, bai ->
+            .map { exp_type, antibody, min_exo, min_exo_id, min_exo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_exo / meta_clone[downsampling_ref_total_key]
+                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_exo is higher due to downsampling_exo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_exo
                 meta_clone.downsampling_ref_sample = min_exo_id
                 meta_clone.downsampling_ref_sample_genome = min_exo_genome
-                meta_clone.downsampling_ref_total_key = downsampling_ref_total_key
-                [meta_clone.id, meta_clone, bam, bai]
+                [meta_clone.id, antibody, meta_clone, bam, bai]
             }
             .set { ch_bam_bai_exo }
 
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_exo
-            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_ipcontrol), by: 0)
-            .map { id, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
+            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_ipcontrol), by: [0,1])
+            .map { id, antibody, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.downsampling_prob = exo_meta.downsampling_prob
                 meta_clone.downsampling_ref_total = exo_meta.downsampling_ref_total
                 meta_clone.downsampling_ref_sample = exo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = exo_meta.downsampling_ref_sample_genome
                 meta_clone.downsampling_ref_total_key = exo_meta.downsampling_ref_total_key
-                // propagate input_control_of_antibody if present (i.e., in controls)
-                if (exo_meta.containsKey('input_control_of_antibody')) {
-                    meta_clone.input_control_of_antibody = exo_meta.input_control_of_antibody
-                }
-                [meta_clone.id, meta_clone, endo_bam, endo_bai]
+                [meta_clone.id, antibody, meta_clone, endo_bam, endo_bai]
             }
         set { ch_bam_bai_endo }
 
         ch_bam_bai_exo
             .mix(ch_bam_bai_endo)
-            .map { id, meta, bam, bai ->
+            .map { id, antibody, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 [meta_clone + [downsampling_method: 'min_exo_across'], bam, bai]
             }
@@ -223,93 +167,65 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai
             .branch { meta, bam, bai ->
                 endo_ip: meta.genome == genome && !meta.is_input_control
-                return [meta.input_control, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, bai]
                 endo_ipcontrol: meta.genome == genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
                 exo_ip: meta.genome == spikein_genome && !meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.antibody, meta, bam, bai]
                 exo_ipcontrol: meta.genome == spikein_genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of endogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_endo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.endo_ipcontrol
-            .combine(ch_bam_bai_genome_type.endo_ip, by: 0)
-            .map { ipcontrol_id, endo_ipcontrol_meta, endo_ipcontrol_bam, endo_ipcontrol_bai, endo_ip_meta, endo_ip_bam, endo_ip_bai ->
-                def meta_clone = endo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = endo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, endo_ipcontrol_bam, endo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_endo_ipcontrol }
-
         ch_bam_bai_genome_type.endo_ip
-            .mix(ch_bam_bai_endo_ipcontrol)
-            .map { ipcontrol_id, meta, bam, bai ->
-                def total
-                // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, meta.is_input_control, total, meta, bam, bai]
+            .mix(ch_bam_bai_genome_type.endo_ipcontrol)
+            .map { ipcontrol_id, antibody, meta, bam, bai ->
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
+                [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->
-                // min_endo should be the minimum number in totals above the downsampling_endo_threshold
-                def filtered_totals = totals.findAll { it -> it >= downsampling_endo_threshold }
-                // If there are no totals above the threshold, we use the minimum of all totals
-                def min_endo = filtered_totals ? filtered_totals.min() : totals.min()
-                def min_endo_id = metas[totals.indexOf(min_endo)].id
-                def min_endo_genome = metas[totals.indexOf(min_endo)].genome
-                // get the key name of the meta item from which we got the min_endo (e.g. "flT3_total_mapped_reads")
-                def downsampling_ref_total_key = metas[totals.indexOf(min_endo)].find { it -> it.value == min_endo }.key
-                [exp_type, antibody, is_input_control, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, metas, bams, bais]
+                def filtered_totals = totals.withIndex().findAll { total, idx -> total >= downsampling_endo_threshold }
+                // If filtered_totals is empty, fall back to all totals
+                def min_endo_tuple = filtered_totals ? filtered_totals.min { total_idx -> total_idx[0] } : totals.withIndex().min { total_idx -> total_idx[0] }
+                def min_endo = min_endo_tuple[0]
+                def min_endo_idx = min_endo_tuple[1]
+                def min_endo_id = metas[min_endo_idx].id
+                def min_endo_genome = metas[min_endo_idx].genome
+                [exp_type, antibody, min_endo, min_endo_id, min_endo_genome, metas, bams, bais]
             }
             .transpose()
-            .map { exp_type, antibody, is_input_control, min_endo, min_endo_id, min_endo_genome, downsampling_ref_total_key, meta, bam, bai ->
+            .map { exp_type, antibody, min_endo, min_endo_id, min_endo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
-                def downsampling_prob = min_endo / meta_clone[downsampling_ref_total_key]
+                def downsampling_prob = min_endo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 // If downsampling_prob is higher than 1 (when min_endo is higher due to downsampling_endo_threshold), we set it to 1
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_endo
                 // These two lines are just to keep track of the dSp reference sample
                 meta_clone.downsampling_ref_sample = min_endo_id
                 meta_clone.downsampling_ref_sample_genome = min_endo_genome
-                meta_clone.downsampling_ref_total_key = downsampling_ref_total_key
-                [meta_clone.id, meta_clone, bam, bai]
+                [meta_clone.id, antibody, meta_clone, bam, bai]
             }
             .set { ch_bam_bai_endo }
 
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_endo
-            .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_ipcontrol), by: 0)
-            .map { id, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
+            .combine(ch_bam_bai_genome_type.exo_ip.mix(ch_bam_bai_genome_type.exo_ipcontrol), by: [0,1])
+            .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
                 def meta_clone = exo_meta.clone()
                 meta_clone.downsampling_prob = endo_meta.downsampling_prob
                 meta_clone.downsampling_ref_total = endo_meta.downsampling_ref_total
                 meta_clone.downsampling_ref_sample = endo_meta.downsampling_ref_sample
                 meta_clone.downsampling_ref_sample_genome = endo_meta.downsampling_ref_sample_genome
                 meta_clone.downsampling_ref_total_key = endo_meta.downsampling_ref_total_key
-                // propagate input_control_of_antibody if present (i.e., in controls)
-                if (endo_meta.containsKey('input_control_of_antibody')) {
-                    meta_clone.input_control_of_antibody = endo_meta.input_control_of_antibody
-                }
-                [meta_clone.id, meta_clone, exo_bam, exo_bai]
+                [meta_clone.id, antibody, meta_clone, exo_bam, exo_bai]
             }
             .set { ch_bam_bai_exo }
 
         ch_bam_bai_endo
             .mix(ch_bam_bai_exo)
-            .map { id, meta, bam, bai ->
+            .map { id, antibody, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 [meta_clone + [downsampling_method: 'min_endo_by_type'], bam, bai]
             }
@@ -319,76 +235,52 @@ workflow BAM_DOWNSAMPLE {
         ch_bam_bai
             .branch { meta, bam, bai ->
                 endo_ip: meta.genome == genome && !meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.antibody, meta, bam, bai]
                 endo_ipcontrol: meta.genome == genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
                 exo_ip: meta.genome == spikein_genome && !meta.is_input_control
-                return [meta.input_control, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, bai]
                 exo_ipcontrol: meta.genome == spikein_genome && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
             }
             .set { ch_bam_bai_genome_type }
 
-        // Get the minimum number of exogenous reads among the ChIPs and inputs per experiment and antibody: [ exp_type, antibody, min_exo ]
-        // First, modify the controls' metas to add their corresponding ChIP's antibody
-        ch_bam_bai_genome_type.exo_ipcontrol
-            .combine(ch_bam_bai_genome_type.exo_ip, by: 0)
-            .map { ipcontrol_id, exo_ipcontrol_meta, exo_ipcontrol_bam, exo_ipcontrol_bai, exo_ip_meta, exo_ip_bam, exo_ip_bai ->
-                def meta_clone = exo_ipcontrol_meta.clone()
-                meta_clone.input_control_of_antibody = exo_ip_meta.antibody
-                [ipcontrol_id, meta_clone, exo_ipcontrol_bam, exo_ipcontrol_bai]
-            }
-            .unique()
-            .set { ch_bam_bai_exo_ipcontrol }
-
         ch_bam_bai_genome_type.exo_ip
-            .mix(ch_bam_bai_exo_ipcontrol)
-            .map { ipcontrol_id, meta, bam, bai ->
-                def total
-                // samples have meta.antibody, while input controls have meta.input_control_of_antibody
-                def antibody_to_use = meta.antibody ?: meta.input_control_of_antibody
-                // if antibody_to_use is in the list of antibodies or there is no flTbl or flT3, use flT2 or flT1, otherwise use flTbl or flT3
-                def use_flT2_or_flT1 = dSp_use_flT2_total && antibody_to_use in dSp_use_flT2_total.split(',').collect { it -> it.trim() } || (!meta.flT3_total_mapped_reads && !meta.flTbl_total_mapped_reads)
-                if (use_flT2_or_flT1) {
-                    total = meta.flT2_total_mapped_reads ?: meta.flT1_total_mapped_reads
-                }
-                else {
-                    total = meta.flTbl_total_mapped_reads ?: meta.flT3_total_mapped_reads
-                }
-                [meta.exp_type, antibody_to_use, meta.is_input_control, total, meta, bam, bai]
+            .mix(ch_bam_bai_genome_type.exo_ipcontrol)
+            .map { ipcontrol_id, antibody, meta, bam, bai ->
+                def total = meta[meta.ref_total_mapped_reads_for_dSp_key]
+                [meta.exp_type, antibody, meta.is_input_control, total, meta, bam, bai]
             }
             .groupTuple(by: [0, 1, 2])
             .map { exp_type, antibody, is_input_control, totals, metas, bams, bais ->
-                // min_exo should be the minimum number in totals above the downsampling_exo_threshold
-                def filtered_totals = totals.findAll { it -> it >= downsampling_exo_threshold }
-                // If there are no totals above the threshold, we use the minimum of all totals
-                def min_exo = filtered_totals ? filtered_totals.min() : totals.min()
-                // These two lines are just to keep track of the dSp reference sample
-                def min_exo_id = metas[totals.indexOf(min_exo)].id
-                def min_exo_genome = metas[totals.indexOf(min_exo)].genome
-                def downsampling_ref_total_key = metas[totals.indexOf(min_exo)].find { it -> it.value == min_exo }.key
-                [exp_type, antibody, is_input_control, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, metas, bams, bais]
+                def filtered_totals = totals.withIndex().findAll { total, idx -> total >= downsampling_exo_threshold }
+                // If filtered_totals is empty, fall back to all totals
+                def min_exo_tuple = filtered_totals ? filtered_totals.min { total_idx -> total_idx[0] } : totals.withIndex().min { total_idx -> total_idx[0] }
+                def min_exo = min_exo_tuple[0]
+                def min_exo_idx = min_exo_tuple[1]
+                def min_exo_id = metas[min_exo_idx].id
+                def min_exo_genome = metas[min_exo_idx].genome
+                [exp_type, antibody, min_exo, min_exo_id, min_exo_genome, metas, bams, bais]
             }
             .transpose()
-            .map { exp_type, antibody, is_input_control, min_exo, min_exo_id, min_exo_genome, downsampling_ref_total_key, meta, bam, bai ->
+            .map { exp_type, antibody, min_exo, min_exo_id, min_exo_genome, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 // If downsampling_prob is higher than 1 (when min_exo is higher due to downsampling_exo_threshold), we set it to 1
-                def downsampling_prob = min_exo / meta_clone[downsampling_ref_total_key]
+                def downsampling_prob = min_exo / meta_clone[meta.ref_total_mapped_reads_for_dSp_key]
                 meta_clone.downsampling_prob = downsampling_prob > 1 ? 1 : downsampling_prob
                 meta_clone.downsampling_ref_total = min_exo
                 // These two lines are just to keep track of the dSp reference sample
                 meta_clone.downsampling_ref_sample = min_exo_id
                 meta_clone.downsampling_ref_sample_genome = min_exo_genome
-                meta_clone.downsampling_ref_total_key = downsampling_ref_total_key
-                [meta_clone.id, meta_clone, bam, bai]
+                [meta_clone.id, antibody, meta_clone, bam, bai]
             }
             .set { ch_bam_bai_exo }
 
         // Now we copy the downsampling probability by meta.id to the exogenous bams and bais:
         // We want the ratio of endo and exo reads in each sample to stay the same after downsampling
         ch_bam_bai_exo
-            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_ipcontrol), by: 0)
-            .map { id, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
+            .combine(ch_bam_bai_genome_type.endo_ip.mix(ch_bam_bai_genome_type.endo_ipcontrol), by: [0,1])
+            .map { id, antibody, exo_meta, exo_bam, exo_bai, endo_meta, endo_bam, endo_bai ->
                 def meta_clone = endo_meta.clone()
                 meta_clone.downsampling_prob = exo_meta.downsampling_prob
                 meta_clone.downsampling_ref_total = exo_meta.downsampling_ref_total
@@ -399,13 +291,13 @@ workflow BAM_DOWNSAMPLE {
                 if (exo_meta.containsKey('input_control_of_antibody')) {
                     meta_clone.input_control_of_antibody = exo_meta.input_control_of_antibody
                 }
-                [meta_clone.id, meta_clone, endo_bam, endo_bai]
+                [meta_clone.id, antibody, meta_clone, endo_bam, endo_bai]
             }
             .set { ch_bam_bai_endo }
 
         ch_bam_bai_exo
             .mix(ch_bam_bai_endo)
-            .map { id, meta, bam, bai ->
+            .map { id, antibody, meta, bam, bai ->
                 def meta_clone = meta.clone()
                 [meta_clone + [downsampling_method: 'min_exo_by_type'], bam, bai]
             }
@@ -437,7 +329,6 @@ workflow BAM_DOWNSAMPLE {
         ch_ds_bam
     )
     ch_ds_index = SAMTOOLS_INDEX.out.bai
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
     // SUBWORKFLOW: Run SAMtools stats, flagstat and idxstats
@@ -447,7 +338,6 @@ workflow BAM_DOWNSAMPLE {
         ch_fasta
     )
     ch_ds_flagstat = BAM_STATS_SAMTOOLS.out.flagstat
-    ch_versions = ch_versions.mix(BAM_STATS_SAMTOOLS.out.versions)
 
     //
     // MODULE: Extract total mapped reads from flagstats

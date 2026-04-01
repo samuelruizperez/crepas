@@ -35,38 +35,17 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
                 return [meta.id, meta.antibody, meta, bam]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta, bam]
+                return [meta.id, meta.input_control_of_antibody, meta, bam]
         }
         .set { ch_bam_by_type }
 
-    // For non-downsampled files, duplicate input ipcontrols for each antibody 
-    ch_bam_by_type
-        .ipcontrols
-        .branch { id, meta, bam ->
-            dsp: meta.input_control_of_antibody && meta.dSp_total_mapped_reads
-                return [id, meta.input_control_of_antibody, meta, bam]
-            not_dsp: !meta.input_control_of_antibody && !meta.dSp_total_mapped_reads
-                return [id, meta, bam]
-        }
-        .set { ch_bam_ipcontrols }
-    
-    ch_bam_ipcontrols
-        .not_dsp
-        .combine(ch_bam_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
-        .map { control_id, control_meta, control_bam, ip_antibody, ip_meta, ip_bam ->
-            def meta_clone = control_meta.clone()
-            meta_clone.input_control_of_antibody = ip_antibody
-            [ control_id, meta_clone.input_control_of_antibody, meta_clone, control_bam ]
-        }
-        .unique()
-        .set { ch_bam_ipcontrols_not_dsp }
 
     // Create channel: [ meta, [ip_bams_merged_reps], [ipcontrol_bams_merged_reps] ]
     ch_bam_by_type
         .ips_with_ipcontrol
-        .combine(ch_bam_ipcontrols.dsp.mix(ch_bam_ipcontrols_not_dsp), by: [0, 1])
-        .map { control_id, antibody, ip_meta, ip_bam, control_meta, control_bam ->
-            [ control_id, antibody, ip_meta, ip_bam, control_bam ]
+        .combine(ch_bam_by_type.ipcontrols, by: [0, 1])
+        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ipcontrol_meta, ipcontrol_bam ->
+            [ ipcontrol_id, antibody, ip_meta, ip_bam, ipcontrol_bam ]
         }
         .mix(ch_bam_by_type.ips_wo_ipcontrol)
         // ips_wo_ipcontrol do not have control_bam (it[4])
@@ -79,25 +58,18 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         .groupTuple(by: [0, 1])
         .map {
             id, antibody, metas, ip_bams, ipcontrol_bams ->
-                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten() ]
+                // , [], [], [], [] ] is because DANPOS2 modules expect 7 inputs
+                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten(), [], [], [], [] ]
         }
         .set { ch_ip_control_bam_merged_reps }
 
     // TODO: Print to file for debuggin
     ch_ip_control_bam_merged_reps
         .map {
-            meta, ip_bams, ipcontrol_bams ->
-                "${meta}\t${ip_bams}\t${ipcontrol_bams}"
+            meta, ip_bams, ipcontrol_bams, treatment_count, control, control_input, control_count ->
+                "${meta}\t${ip_bams}\t${ipcontrol_bams}\t${treatment_count}\t${control}\t${control_input}\t${control_count}"
         }
         .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER" )
-
-    ch_ip_control_bam_merged_reps
-        .map {
-            meta, ip_bams, ipcontrol_bams ->
-                [ meta, ip_bams, ipcontrol_bams, [], [], [], [] ]
-
-        }
-        .set { ch_ip_control_bam_merged_reps }
 
     ch_dpeak_pooled_xls = channel.empty()
     if (!skip_dpeak) {

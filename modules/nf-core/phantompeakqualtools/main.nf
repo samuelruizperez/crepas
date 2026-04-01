@@ -15,8 +15,8 @@ process PHANTOMPEAKQUALTOOLS {
     tuple val(meta), path("*.ccscores")  , emit: ccscores
     tuple val(meta), path("*.pdf")  , emit: pdf
     tuple val(meta), path("*.Rdata"), emit: rdata
-    tuple val(meta), path("*.narrowPeak"), emit: narrowpeak, optional: true
-    tuple val(meta), path("*.regionPeak"), emit: regionpeak, optional: true
+    tuple val(meta), path("*.narrowPeak.gz"), emit: narrowpeak, optional: true
+    tuple val(meta), path("*.regionPeak.gz"), emit: regionpeak, optional: true
     path  "versions.yml"            , emit: versions
 
     when:
@@ -26,16 +26,19 @@ process PHANTOMPEAKQUALTOOLS {
     def args   = task.ext.args ?: ''
     def args2  = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.spp"
+    def input_control_arg = input_control ? "-i='${input_control}'" : ''
     def peaks_arg = input_control ? "-savn='${prefix}.narrowPeak' -savr='${prefix}.regionPeak'" : ""
     def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     RUN_SPP=`which run_spp.R`
     Rscript ${args} -e "library(caTools); source(\\"\$RUN_SPP\\")" \\
         -c="${chip}" \\
+        ${input_control_arg} \\
         -savp="${prefix}.pdf" \\
         -savd="${prefix}.Rdata" \\
         -out="${prefix}.ccscores" \\
         ${args2} \\
+        -p=${task.cpus} \\
         ${peaks_arg}
 
     cat <<-END_VERSIONS > versions.yml

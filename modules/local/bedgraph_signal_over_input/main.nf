@@ -21,15 +21,16 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
     def args  = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def min_count = args2.contains('--min_count ') ? args2.split('--min_count ')[1].split(' ')[0] : 1
-    min_count = min_count.toInteger() 
+    def min_signal = args2.contains('--min_signal ') ? args2.split('--min_signal ')[1].split(' ')[0].toBigDecimal() : 0
+    def min_input = args2.contains('--min_input ') ? args2.split('--min_input ')[1].split(' ')[0].toBigDecimal() : 0.001
+    min_input = min_input ?: 0.001 // to prevent division by zero
     """
     awk \\
         $args \\
         'NR==FNR {key=\$1 FS \$2 FS \$3; value[key]=\$4; next} 
-            {key=\$1 FS \$2 FS \$3; chip=\$4; input=(key in value ? value[key] : 0); 
-            if (chip >= $min_count && input >= $min_count) { 
-                ratio = chip / input; 
+            {key=\$1 FS \$2 FS \$3; signal=\$4; input=(key in value ? value[key] : 0); 
+            if (signal >= $min_signal && input >= $min_input) { 
+                ratio = signal / input; 
             } else { 
                 ratio = "NaN"; 
             }

@@ -283,31 +283,40 @@ workflow INPUT_CHECK {
         .filter { meta, fastqs, ipcontrol_list ->
             ipcontrol_list.contains(meta.input_control) || !meta.input_control
         }
-        // use map to check that meta.strandedness is set for SCAR-seq and OK-seq samples
         .map { meta, fastqs, ipcontrol_list ->
             // Input controls checks
             if (meta.is_input_control && meta.input_control) {
                 error("ERROR: Input control samples must not have an `input_control` value set. Check sample: ${meta.id}")
             }
-            // Strandedness checks
+            // SCAR-seq and OK-seq checks
             if (['SCAR-seq', 'OK-seq'].contains(meta.exp_type)) {
                 if (!meta.strandedness) {
                     error("ERROR: `strandedness` must be specified for SCAR-seq and OK-seq samples. Check sample: ${meta.id}")
+                }
+                if (meta.exp_type == 'SCAR-seq') {
+                    if (!(params.containsKey('initiation_zones') || params.containsKey('okseq_rfd_file'))) {
+                        if (params.refgenie_ignore && params.igenomes_ignore) {
+                            error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should provide either an initiation zones file or an OK-seq RFD file.")
+                        } else if (!getGenomeAttribute('initiation_zones') && !getGenomeAttribute('okseq_rfd_file')) {
+                            error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been found among reference genomes (iGenomes or Refgenie). You should provide either an initiation zones file or an OK-seq RFD file.")
+                        }
+                    error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been provided. You should provide either an initiation zones file or an OK-seq RFD file.")
+                    }
                 }
             } else if (meta.strandedness) {
                 error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
             }
             // Antibody checks
-            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq'].contains(meta.exp_type)) {
+            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {
-                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
+                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUTandTag, CUTandRUN, and TIP-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
                 }
                 if (meta.antibody && meta.is_input_control) {
                     error("ERROR: `antibody` must not be specified for input control samples. Check sample: ${meta.id}")
                 }
             } else {
                 if (meta.antibody) {
-                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, and SCAR-seq. Check sample: ${meta.id}")
+                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUT&Tag, CUT&RUN, and TIP-seq. Check sample: ${meta.id}")
                 }
             }
             return [ meta, fastqs ]
@@ -491,8 +500,8 @@ def validateInputParameters() {
     }
 
     if (params.map_n_multimappers) {
-        if (!['chromap', 'bowtie2', 'hisat2'].contains(params.aligner)) {
-            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', or 'hisat2'.")
+        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2'].contains(params.aligner)) {
+            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', or 'minimap2'.")
         }
     }
 

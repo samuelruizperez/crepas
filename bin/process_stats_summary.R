@@ -39,7 +39,6 @@ parser$add_argument("-g","--endogenous_genome_name", action = "store",
 
 parser$add_argument("-e","--exogenous_genome_name", action = "store",
                     type = "character",
-                    default = "dm6",
                     help = "Name of the exogenous (spike-in) genome if applicable [optional]")
 
 parser$add_argument("-n", "--prefix", action = "store",
@@ -73,6 +72,9 @@ if (is.null(opt$exogenous_genome_name)) {
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
+                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb" 
+                  mutate(ID = sub("\\.", "_", ID),
+                         ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
                   mutate(
                     ID = gsub("\\.sorted\\.bam$", "", ID),
@@ -122,6 +124,9 @@ if (is.null(opt$exogenous_genome_name)) {
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
+                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb" 
+                  mutate(ID = sub("\\.", "_", ID),
+                         ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
                   mutate(
                     ID = gsub("\\.sorted\\.bam$", "", ID),
