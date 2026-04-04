@@ -504,6 +504,14 @@ workflow BAM_ENCODE_PIPELINE {
         }
         .set { ch_ta_ccscores_peaks }
 
+    // TODO: save for debugging
+    ch_ta_ccscores_peaks
+        .map { meta, tagalign, ccscores, peak ->
+            "${meta}\t${tagalign}\t${ccscores}\t${peak}"
+        }
+        .collectFile(name: 'ch_ta_ccscores_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
+
     //
     // MODULE: Compute FRiP scores for IDR and naive overlap peaks
     //
