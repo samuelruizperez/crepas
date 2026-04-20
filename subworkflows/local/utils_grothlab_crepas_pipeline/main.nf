@@ -124,6 +124,7 @@ workflow INPUT_CHECK {
                 new_metas = metas.collect { meta ->
                     def meta_clone = meta.clone()
                     meta_clone.trep = trep_counter
+                    // TODO: is_input_control has not been defined here yet
                     meta_clone.input_trep = !meta.is_input_control ? meta_clone.trep : []
                     trep_counter += 1
                     return meta_clone
@@ -317,6 +318,25 @@ workflow INPUT_CHECK {
             } else {
                 if (meta.antibody) {
                     error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUT&Tag, CUT&RUN, and TIP-seq. Check sample: ${meta.id}")
+                }
+            }
+            return [ meta, fastqs ]
+        }
+        .set { ch_fastq }
+
+
+    // Parse UMI meta fields
+    ch_fastq
+        .map { meta, fastqs ->
+            if (!meta.with_umi) {
+                if (meta.extract_umi) {
+                    error("ERROR: `extract_umi` is set to true, but `with_umi` is set to false. Check sample: ${meta.id}")
+                }
+                if (meta.sep_umi_fq) {
+                    if (!meta.extract_umi) {
+                        log.warn("WARNING: `fastq_umi` has been provided in the samplesheet, but `extract_umi` is set to false. UMIs will not be transfered for sample: ${meta.id}")
+                    }
+                    log.warn("WARNING: `fastq_umi` has been provided in the samplesheet, but `with_umi` is set to false. UMIs will not be used for deduplication. Check sample: ${meta.id}")
                 }
             }
             return [ meta, fastqs ]

@@ -500,9 +500,20 @@ workflow BAM_ENCODE_PIPELINE {
             def meta_clone = meta_tagalign.clone()
             meta_clone.peak_consensus_type = meta_peak.peak_consensus_type
             meta_clone.peak_consensus_pair_type = meta_peak.peak_consensus_pair_type
+            if (meta_clone.peak_consensus_pair_type == 'true_replicate') {
+                meta_clone.idr_pair_breps = meta_peak.idr_pair_breps
+            }
             [ meta_clone, tagalign, ccscores, peak ]
         }
         .set { ch_ta_ccscores_peaks }
+
+    // TODO: save for debugging
+    ch_ta_ccscores_peaks
+        .map { meta, tagalign, ccscores, peak ->
+            "${meta}\t${tagalign}\t${ccscores}\t${peak}"
+        }
+        .collectFile(name: 'ch_ta_ccscores_peaks.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
+
 
     //
     // MODULE: Compute FRiP scores for IDR and naive overlap peaks
