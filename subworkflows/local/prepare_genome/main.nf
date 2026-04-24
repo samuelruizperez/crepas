@@ -239,7 +239,8 @@ workflow PREPARE_GENOME {
     // MODULE: Create chromosome sizes file
     //
     SAMTOOLS_FAIDX ( ch_fasta_fai, true )
-    ch_chrom_sizes_endo = SAMTOOLS_FAIDX.out.sizes
+    ch_chrom_sizes      = SAMTOOLS_FAIDX.out.sizes
+    ch_chrom_sizes_endo = ch_chrom_sizes
     ch_fai              = SAMTOOLS_FAIDX.out.fai
 
     //
@@ -558,6 +559,7 @@ workflow PREPARE_GENOME {
     fai                    = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
     gtf                    = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
+    chrom_sizes         = ch_chrom_sizes           //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
     chrom_sizes_exo        = ch_chrom_sizes_exo        //    channel: [ val(meta), [ genome_exo.sizes ]]
     effective_gsize        = ch_effective_gsize        //    channel: [ val(meta), [ effective_genome_size.txt ]]

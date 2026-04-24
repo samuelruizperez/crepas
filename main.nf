@@ -123,6 +123,7 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.fai,
         PREPARE_GENOME.out.gtf,
         PREPARE_GENOME.out.gene_bed,
+        PREPARE_GENOME.out.chrom_sizes,
         PREPARE_GENOME.out.chrom_sizes_endo,
         PREPARE_GENOME.out.chrom_sizes_exo,
         PREPARE_GENOME.out.effective_gsize,
