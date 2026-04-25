@@ -31,7 +31,7 @@ workflow BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS {
             // get only the chromosomes that do not contain "_" or "."
             ch_endo_chroms = ch_chroms
                 .filter { chrom -> !chrom.contains('_') && !chrom.contains('.') }
-                .map { chrom -> [ chrom, chrom ] }
+                .map { chrom -> [ chrom, [ chrom ] ] }
 
             ch_exo_and_scaff = ch_chroms
                 .filter { chrom -> chrom.contains('_') || chrom.contains('.') }
