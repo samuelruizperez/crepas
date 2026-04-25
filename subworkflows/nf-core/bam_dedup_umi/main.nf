@@ -14,12 +14,14 @@ include { SAMTOOLS_SORT            } from '../../../modules/nf-core/samtools/sor
 workflow BAM_DEDUP_UMI {
     take:
     ch_genome_bam         // channel: [ val(meta), path(bam), path(bai) ]
+    ch_chrom_sizes          // channel: [ val(meta), path(chrom_sizes) ]
     ch_fasta              // channel: [ val(meta), path(fasta) ]
     umi_dedup_tool        // string: 'umicollapse' or 'umitools'
     umitools_dedup_stats  // boolean: whether to generate UMI-tools dedup stats
     bam_csi_index         // boolean: whether to generate CSI index
     ch_transcriptome_bam  // channel: [ val(meta), path(bam) ]
     ch_transcript_fasta   // channel: [ val(meta), path(fasta) ]
+    skip_split_by_chrom   // boolean: true/false
 
     main:
     ch_tsv_edit_distance    = channel.empty()
@@ -28,6 +30,7 @@ workflow BAM_DEDUP_UMI {
     ch_genomic_dedup_log       = channel.empty()
     ch_transcriptomic_dedup_log = channel.empty()
 
+
     if (umi_dedup_tool != "umicollapse" && umi_dedup_tool != "umitools"){
         error("Unknown umi_dedup_tool '${umi_dedup_tool}'")
     }
@@ -35,7 +38,9 @@ workflow BAM_DEDUP_UMI {
     // Genome BAM deduplication
     if (umi_dedup_tool == "umicollapse") {
         BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE_GENOME (
-            ch_genome_bam
+            ch_genome_bam,
+            ch_chrom_sizes,
+            skip_split_by_chrom
         )
         UMI_DEDUP_GENOME = BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE_GENOME
         ch_genomic_dedup_log = UMI_DEDUP_GENOME.out.dedup_stats
@@ -43,7 +48,9 @@ workflow BAM_DEDUP_UMI {
     } else if (umi_dedup_tool == "umitools") {
         BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS_GENOME (
             ch_genome_bam,
-            umitools_dedup_stats
+            ch_chrom_sizes,
+            umitools_dedup_stats,
+            skip_split_by_chrom
         )
         UMI_DEDUP_GENOME = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS_GENOME
         ch_genomic_dedup_log = UMI_DEDUP_GENOME.out.deduplog
@@ -69,7 +76,9 @@ workflow BAM_DEDUP_UMI {
     // 2. Transcriptome BAM deduplication
     if (umi_dedup_tool == "umicollapse") {
         BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE_TRANSCRIPTOME (
-            ch_sorted_transcriptome_bam
+            ch_sorted_transcriptome_bam,
+            ch_chrom_sizes,
+            skip_split_by_chrom
         )
         UMI_DEDUP_TRANSCRIPTOME = BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE_TRANSCRIPTOME
         ch_transcriptomic_dedup_log = UMI_DEDUP_TRANSCRIPTOME.out.dedup_stats
@@ -77,7 +86,9 @@ workflow BAM_DEDUP_UMI {
     } else if (umi_dedup_tool == "umitools") {
         BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS_TRANSCRIPTOME (
             ch_sorted_transcriptome_bam,
-            umitools_dedup_stats
+            ch_chrom_sizes,
+            umitools_dedup_stats,
+            skip_split_by_chrom
         )
         UMI_DEDUP_TRANSCRIPTOME = BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS_TRANSCRIPTOME
         ch_transcriptomic_dedup_log = UMI_DEDUP_TRANSCRIPTOME.out.deduplog

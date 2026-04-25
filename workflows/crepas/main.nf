@@ -92,6 +92,7 @@ workflow CREPAS {
     ch_fai                    // channel: path(genome.fai)
     ch_gtf                    // channel: path(genome.gtf)
     ch_gene_bed               // channel: path(gene.beds)
+    ch_chrom_sizes
     ch_chrom_sizes_endo       // path(chrom.sizes.endo)
     ch_chrom_sizes_exo
     ch_effective_gsize        
@@ -310,15 +311,18 @@ workflow CREPAS {
     ch_umidedup_index = channel.empty()
     BAM_DEDUP_UMI (
         ch_merged_bam_bai_with_umi,
+        ch_chrom_sizes,
         [],
         params.umi_dedup_tool,
         params.get_dedup_stats,
         false,
         ch_transcriptome_bam,
-        ch_transcriptome_fasta
+        ch_transcriptome_fasta,
+        params.skip_split_by_chrom
     )
     ch_umidedup_bam = BAM_DEDUP_UMI.out.bam
     ch_umidedup_index = BAM_DEDUP_UMI.out.bai
+    ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DEDUP_UMI.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.multiqc_files)
 
 
