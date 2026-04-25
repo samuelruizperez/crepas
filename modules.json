@@ -359,8 +359,6 @@
                         "branch": "master",
                         "git_sha": "1d2fbdcbca677bbe8da0f9d0d2bb7c02f2cab1c9",
                         "installed_by": [
-                            "bam_dedup_stats_samtools_umicollapse",
-                            "bam_dedup_stats_samtools_umitools",
                             "bam_markduplicates_picard",
                             "bam_sort_stats_samtools",
                             "modules"
@@ -370,7 +368,6 @@
                         "branch": "master",
                         "git_sha": "5cb9a8694da0a0e550921636bb60bc8c56445fd7",
                         "installed_by": [
-                            "bam_dedup_umi",
                             "bam_sort_stats_samtools",
                             "modules"
                         ]
@@ -470,16 +467,12 @@
                     },
                     "umicollapse": {
                         "branch": "master",
-                        "git_sha": "36b67c3f4b1cb390365f826bcf312424be25810a",
-                        "installed_by": [
-                            "bam_dedup_stats_samtools_umicollapse"
-                        ]
+                        "git_sha": "36b67c3f4b1cb390365f826bcf312424be25810a"
                     },
                     "umitools/dedup": {
                         "branch": "master",
                         "git_sha": "a3c1fdaa26ab74f7c77fead65f0f6d34b0dc9d1d",
                         "installed_by": [
-                            "bam_dedup_stats_samtools_umitools",
                             "modules"
                         ]
                     },
@@ -492,10 +485,7 @@
                     },
                     "umitools/prepareforrsem": {
                         "branch": "master",
-                        "git_sha": "2da063610de8a4018179b6b2853b448596daea69",
-                        "installed_by": [
-                            "bam_dedup_umi"
-                        ]
+                        "git_sha": "2da063610de8a4018179b6b2853b448596daea69"
                     },
                     "untar": {
                         "branch": "master",
@@ -515,28 +505,6 @@
             },
             "subworkflows": {
                 "nf-core": {
-                    "bam_dedup_stats_samtools_umicollapse": {
-                        "branch": "master",
-                        "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
-                        "installed_by": [
-                            "bam_dedup_umi"
-                        ]
-                    },
-                    "bam_dedup_stats_samtools_umitools": {
-                        "branch": "master",
-                        "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
-                        "installed_by": [
-                            "bam_dedup_umi",
-                            "subworkflows"
-                        ]
-                    },
-                    "bam_dedup_umi": {
-                        "branch": "master",
-                        "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
-                        "installed_by": [
-                            "subworkflows"
-                        ]
-                    },
                     "bam_markduplicates_picard": {
                         "branch": "master",
                         "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
@@ -548,7 +516,6 @@
                         "branch": "master",
                         "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
                         "installed_by": [
-                            "bam_dedup_umi",
                             "fastq_align_bowtie2",
                             "fastq_align_bwa",
                             "fastq_align_chromap",
@@ -560,8 +527,6 @@
                         "branch": "master",
                         "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
                         "installed_by": [
-                            "bam_dedup_stats_samtools_umicollapse",
-                            "bam_dedup_stats_samtools_umitools",
                             "bam_markduplicates_picard",
                             "bam_sort_stats_samtools"
                         ]
