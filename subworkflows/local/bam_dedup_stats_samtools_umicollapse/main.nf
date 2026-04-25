@@ -6,7 +6,7 @@ include { BAM_SPLIT_BY_CHROMOSOME } from '../../../modules/local/bam_split_by_ch
 include { UMICOLLAPSE    } from '../../../modules/nf-core/umicollapse/main'
 include { SAMTOOLS_MERGE      } from '../../../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_INDEX     } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_STATS_SAMTOOLS } from '../bam_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE {
     take:
@@ -47,12 +47,12 @@ workflow BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE {
                 split_id, chrom ->
                     "${split_id}\t${chrom}"
             }
-            .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )        // print ch_split_count to file for debugging
+            .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
         
         // print ch_split_count to file for debugging
         ch_split_count
             .map { split_count -> "split_count\t${split_count}" }
-            .collectFile( name: 'ch_split_count.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS" )
+            .collectFile( name: 'ch_split_count.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
 
 
         ch_bam_bai

@@ -5,7 +5,7 @@ include { BAM_SPLIT_BY_CHROMOSOME } from '../../../modules/local/bam_split_by_ch
 include { UMITOOLS_DEDUP     } from '../../../modules/nf-core/umitools/dedup/main'
 include { SAMTOOLS_MERGE      } from '../../../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_INDEX     } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_STATS_SAMTOOLS } from '../bam_stats_samtools/main'
+include { BAM_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS {
     take:
