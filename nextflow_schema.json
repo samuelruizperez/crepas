@@ -346,7 +346,7 @@
                 },
                 "skip_split_by_chrom": {
                     "type": "boolean",
-                    "description": "Skip splitting the BAM file by chromosome before UMI deduplication.",
+                    "description": "Skip splitting the BAM file by chromosome for UMI deduplication.",
                     "fa_icon": "fas fa-fast-forward",
                     "default": false,
                     "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."}
