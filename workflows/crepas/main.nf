@@ -75,7 +75,7 @@ include { MULTIQC                                                           } fr
 // SUBWORKFLOWS: Installed directly from nf-core/modules
 //
 include { BAM_MARKDUPLICATES_PICARD                                         } from '../../subworkflows/nf-core/bam_markduplicates_picard'
-include { BAM_DEDUP_UMI                                                     } from '../../subworkflows/nf-core/bam_dedup_umi'
+include { BAM_DEDUP_UMI                                                     } from '../../subworkflows/local/bam_dedup_umi'
 include { BAM_STATS_SAMTOOLS                                                } from '../../subworkflows/nf-core/bam_stats_samtools'
 
 /*
