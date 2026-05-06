@@ -3,16 +3,17 @@
 // Call peaks with epic2, annotate with HOMER and perform downstream QC
 //
 
-include { BAM_REMOVE_SCAFFOLDS     } from '../../../modules/local/bam_remove_scaffolds/main'
-include { DANPOS2_DPEAK           } from '../../../modules/local/danpos2/dpeak/main'
-include { DANPOS2_DPOS            } from '../../../modules/local/danpos2/dpos/main'
-
+include { BAM_REMOVE_SCAFFOLDS      } from '../../../modules/local/bam_remove_scaffolds/main'
+include { DANPOS2_DPEAK             } from '../../../modules/local/danpos2/dpeak/main'
+include { DANPOS2_DPOS              } from '../../../modules/local/danpos2/dpos/main'
+include { DANPOS2_DREGION           } from '../../../modules/local/danpos2/dregion/main'
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
     skip_dpeak
     skip_dpos
+    skip_dregion
 
     main:
 
@@ -92,6 +93,16 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
             ch_ip_control_bam_merged_reps
         )
         ch_versions = ch_versions.mix(DANPOS2_DPOS.out.versions.first())
+    }
+    
+    if (!skip_dregion) {
+        //
+        // MODULE: call peaks with DANPOS2 dpos
+        //
+        DANPOS2_DREGION (
+            ch_ip_control_bam_merged_reps
+        )
+        ch_versions = ch_versions.mix(DANPOS2_DREGION.out.versions.first())
     }
     
 
