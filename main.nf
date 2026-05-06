@@ -115,9 +115,7 @@ workflow GROTHLAB_CREPAS {
     //
     // WORKFLOW: Run grothlab/crepas workflow
     //
-    ch_samplesheet = channel.value(file(params.input, checkIfExists: true))
     CREPAS (
-        ch_samplesheet,
         ch_versions,
         PREPARE_GENOME.out.fasta,
         PREPARE_GENOME.out.fai,
