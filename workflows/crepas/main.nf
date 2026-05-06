@@ -1023,7 +1023,8 @@ workflow CREPAS {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
             ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             params.skip_dpeak,
-            params.skip_dpos
+            params.skip_dpos,
+            params.skip_dregion
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }

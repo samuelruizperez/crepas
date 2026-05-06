@@ -1074,6 +1074,12 @@
                     "fa_icon": "fas fa-fast-forward",
                     "default": true
                 },
+                "skip_dregion": {
+                    "type": "boolean",
+                    "description": "Skip DANPOS2's dregion peak calling.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": true
+                },
                 "skip_encode_pipeline": {
                     "type": "boolean",
                     "description": "Skip peak calling with the ENCODE ChIP-seq pipeline.",
