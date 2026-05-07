@@ -1024,7 +1024,7 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Call peaks with DANPOS2
     //
-    if (!params.skip_dpeak || !params.skip_dpos) {
+    if (!params.skip_dpeak || !params.skip_dpos || !params.skip_dregion) {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
             ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
             params.skip_dpeak,
