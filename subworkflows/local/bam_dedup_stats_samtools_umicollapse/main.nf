@@ -42,17 +42,17 @@ workflow BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE {
             ch_split_count = ch_chroms.collect { it -> it[0]}.size()
 
         // print ch_chroms to file for debugging
-        ch_chroms
-            .map {
-                split_id, chrom ->
-                    "${split_id}\t${chrom}"
-            }
-            .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
+        // ch_chroms
+        //     .map {
+        //         split_id, chrom ->
+        //             "${split_id}\t${chrom}"
+        //     }
+        //     .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
         
-        // print ch_split_count to file for debugging
-        ch_split_count
-            .map { split_count -> "split_count\t${split_count}" }
-            .collectFile( name: 'ch_split_count.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
+        // // print ch_split_count to file for debugging
+        // ch_split_count
+        //     .map { split_count -> "split_count\t${split_count}" }
+        //     .collectFile( name: 'ch_split_count.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMICOLLAPSE" )
 
 
         ch_bam_bai
