@@ -1,17 +1,18 @@
-include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER            } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER            } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER          } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER             } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER          } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
-include { EDD                                               } from '../../../modules/local/edd/main'
-include { DENOPA                                            } from '../../../modules/local/denopa/main'
-include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2           } from '../../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                        } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                        } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                      } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                         } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                      } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER             } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
+include { EDD                                                           } from '../../../modules/local/edd/main'
+include { DENOPA                                                        } from '../../../modules/local/denopa/main'
+include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2       } from '../../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 
-workflow PEAK_CALLING {
+workflow CALL_PEAKS {
 
     take:
     ch_bam_bai              // channel: [ val(meta), [ bam ], [ bai ] ]
+    ch_bigwig_norm
     peak_caller             // String
     ch_fasta
     ch_gtf
@@ -40,8 +41,6 @@ workflow PEAK_CALLING {
     skip_peak_annotation
     skip_peak_qc
     skip_bdgcmp
-    skip_dpeak
-    skip_dpos
     skip_consensus_peaks
     skip_deseq2_qc
     skip_consensus_plotprofile
@@ -159,9 +158,7 @@ workflow PEAK_CALLING {
     //
     if (peak_caller == 'dpeak' || peak_caller == 'dpos') {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_bam,//.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
-            skip_dpeak,
-            skip_dpos
+            ch_bam//.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
         )
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
@@ -274,7 +271,7 @@ workflow PEAK_CALLING {
         BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2(
             ch_macs3_peaks,
             ch_antibody_bams,
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
+            ch_bigwig_norm,
             ch_fasta.map { it -> it[1] },
             ch_gtf.map { it -> it[1] },
             ch_deseq2_pca_header,
@@ -293,7 +290,12 @@ workflow PEAK_CALLING {
 
     emit:
 
-    //bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
-
-    versions      = ch_versions                                     // channel: [ versions.yml ]
+    edd_peaks           = ch_edd_peaks              // channel: [ meta, peaks ]
+    macs3_peaks         = ch_macs3_peaks
+    consensus_bed       = ch_consensus_bed          // channel: [ antibody, consensus_bed ]
+    consensus_txt       = ch_consensus_txt          // channel: [ antibody, consensus_txt ]
+    mace_peaks          = ch_mace_peaks             // channel: [ meta, peaks ]
+    consenrich_tracks   = ch_consenrich_tracks      // channel: [ meta, consenrich_signal ], [ meta, consenrich_residuals ], [ meta, consenrich_eratio ]
+    rocco_peaks         = ch_rocco_peaks            // channel: [ meta,
+    versions            = ch_versions               // channel: [ versions.yml ]
 }
