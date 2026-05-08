@@ -3,6 +3,7 @@ include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                        } from '
 include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                      } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                         } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                      } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
+include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                        } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
 include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER             } from '../../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
 include { EDD                                                           } from '../../../modules/local/edd/main'
 include { DENOPA                                                        } from '../../../modules/local/denopa/main'
@@ -13,6 +14,7 @@ workflow CALL_PEAKS {
     take:
     ch_bam_bai              // channel: [ val(meta), [ bam ], [ bai ] ]
     ch_bigwig_norm
+    ch_bedgraph_for_seacr
     peak_caller             // String
     ch_fasta
     ch_gtf
@@ -45,6 +47,7 @@ workflow CALL_PEAKS {
     skip_deseq2_qc
     skip_consensus_plotprofile
     input_cisrpm_in_plotprofile
+    seacr_peak_threshold
 
     main:
 
@@ -52,6 +55,7 @@ workflow CALL_PEAKS {
     ch_multiqc_files = channel.empty()
 
     ch_bam = ch_bam_bai.map { meta, bam, bai -> [meta, bam] }
+
 
     //
     // SUBWORKFLOW: Call consensus regions with Consenrich and ROCCO
@@ -156,7 +160,7 @@ workflow CALL_PEAKS {
     //
     // SUBWORKFLOW: Call peaks with DANPOS2
     //
-    if (peak_caller == 'dpeak' || peak_caller == 'dpos') {
+    if (peak_caller == 'dpeak' || peak_caller == 'dpos' || peak_caller == 'dregion') {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
             ch_bam//.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
         )
@@ -251,6 +255,49 @@ workflow CALL_PEAKS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
         ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
+    }
+
+
+    //
+    // SUBWORKFLOW: Call peaks with SEACR
+    //
+    ch_seacr_peaks = channel.empty()
+    if (peak_caller == 'seacr') {
+
+        // Create channels: [ meta, ip_bam, ipcontrol_bam ]
+        // Including ips_wo_ipcontrol as they will be used for peak calling without control
+        ch_bedgraph_for_seacr
+            .branch { meta, bdg ->
+                ips_with_ipcontrol: meta.input_control
+                    return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
+                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
+                    return [meta, bdg, []]
+                ipcontrols: !meta.input_control && meta.is_input_control
+                    return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
+            }
+            .set { ch_bedgraph_by_type }  
+
+        ch_bedgraph_by_type
+            .ips_with_ipcontrol
+            .combine(ch_bedgraph_by_type.ipcontrols, by: [0,1,2])
+            .map { ipcontrol_id, antibody, norm_factor_type, ip_meta, ip_bdg, ipcontrol_meta, ipcontrol_bdg ->
+                [ ip_meta, ip_bdg, ipcontrol_bdg ]
+            }
+            .set { ch_ip_and_ipcontrols_bdg }
+
+        ch_bedgraph_by_type
+            .ips_wo_ipcontrol
+            .mix(ch_ip_and_ipcontrols_bdg)
+            .set { ch_all_bdg_ip_and_controls }
+
+
+        BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
+            ch_all_bdg_ip_and_controls,
+            seacr_peak_threshold
+            
+        )
+        ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
+        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.versions.first())
     }
 
 

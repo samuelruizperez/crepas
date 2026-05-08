@@ -36,7 +36,6 @@ include { BAM_DOWNSAMPLE                                                    } fr
 include { TE_COUNTING                                                       } from '../../subworkflows/local/te_counting/main'
 include { FASTQ_ALIGN                                                       } from '../../subworkflows/local/fastq_align/main'
 include { SPIKEIN_BARCODES                                                  } from '../../subworkflows/local/spikein_barcodes/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
 include { CALL_PEAKS                                                        } from '../../subworkflows/local/call_peaks/main'
 
 /*
@@ -816,50 +815,12 @@ workflow CREPAS {
         )
     }
 
-
-    //
-    // SUBWORKFLOW: Call peaks with SEACR
-    //
-    ch_seacr_peaks = channel.empty()
-    if (params.peak_caller == 'seacr') {
-
-        // Create channels: [ meta, ip_bam, ipcontrol_bam ]
-        // Including ips_wo_ipcontrol as they will be used for peak calling without control
-        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bedgraph_endo
-            .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
-            .filter { it -> !(it[0].signal_vs_input)}
-            .branch { meta, bdg ->
-                ips_with_ipcontrol: meta.input_control
-                    return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
-                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                    return [meta, bdg, []]
-                ipcontrols: !meta.input_control && meta.is_input_control
-                    return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
-            }
-            .set { ch_bedgraph_by_type }  
-
-        ch_bedgraph_by_type
-            .ips_with_ipcontrol
-            .combine(ch_bedgraph_by_type.ipcontrols, by: [0,1,2])
-            .map { ipcontrol_id, antibody, norm_factor_type, ip_meta, ip_bdg, ipcontrol_meta, ipcontrol_bdg ->
-                [ ip_meta, ip_bdg, ipcontrol_bdg ]
-            }
-            .set { ch_ip_and_ipcontrols_bdg }
-
-        ch_bedgraph_by_type
-            .ips_wo_ipcontrol
-            .mix(ch_ip_and_ipcontrols_bdg)
-            .set { ch_all_bdg_ip_and_controls }
-
-
-        BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
-            ch_all_bdg_ip_and_controls,
-            params.seacr_peak_threshold
-            
-        )
-        ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.versions.first())
-    }
+    BAM_NORMALIZE_BIGWIG_DEEPTOOLS
+        .out
+        .bedgraph_endo
+        .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
+        .filter { it -> !(it[0].signal_vs_input)}
+        .set { ch_bedgraph_endo_for_seacr }
 
     //
     // SUBWORKFLOW: Call peaks
@@ -867,6 +828,7 @@ workflow CREPAS {
     CALL_PEAKS (
         ch_filtered_bam_bai,
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
+        ch_bedgraph_endo_for_seacr,
         params.peak_caller,
         ch_fasta,
         ch_gtf,
@@ -898,7 +860,8 @@ workflow CREPAS {
         params.skip_consensus_peaks,
         params.skip_deseq2,
         params.skip_consensus_plotprofile,
-        params.input_cisrpm_in_plotprofile
+        params.input_cisrpm_in_plotprofile,
+        params.seacr_peak_threshold
     )
 
     //
