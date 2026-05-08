@@ -58,7 +58,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         .map {
             id, antibody, metas, ip_bams, ipcontrol_bams ->
                 // , [], [], [], [] ] is because DANPOS2 modules expect 7 inputs
-                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten(), [], [], [], [] ]
+                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten().unique(), [], [], [], [] ]
         }
         .set { ch_ip_control_bam_merged_reps }
 
