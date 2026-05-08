@@ -577,12 +577,6 @@
                     "default": true,
                     "description": "Save the intermediate BAM files from the multimapper allocation step.",
                     "fa_icon": "fas fa-save"
-                },
-                "allocate_exogenous": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to also allocate multimappers in the spike-in (exogenous) BAM files.",
-                    "fa_icon": "fas fa-dice-d20"
                 }
             }
         },
