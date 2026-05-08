@@ -339,6 +339,10 @@ workflow CALL_PEAKS {
 
     edd_peaks           = ch_edd_peaks              // channel: [ meta, peaks ]
     macs3_peaks         = ch_macs3_peaks
+    genrich_peaks       = ch_genrich_peaks           // channel: [ meta, peaks ]
+    epic2_peaks         = ch_epic2_peaks            // channel: [ meta
+    seacr_peaks         = ch_seacr_peaks            // channel: [ meta, peaks ]
+    denopa_peaks        = ch_denopa_peaks           // channel: [ meta,
     consensus_bed       = ch_consensus_bed          // channel: [ antibody, consensus_bed ]
     consensus_txt       = ch_consensus_txt          // channel: [ antibody, consensus_txt ]
     mace_peaks          = ch_mace_peaks             // channel: [ meta, peaks ]
