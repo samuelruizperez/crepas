@@ -577,12 +577,6 @@
                     "default": true,
                     "description": "Save the intermediate BAM files from the multimapper allocation step.",
                     "fa_icon": "fas fa-save"
-                },
-                "allocate_exogenous": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to also allocate multimappers in the spike-in (exogenous) BAM files.",
-                    "fa_icon": "fas fa-dice-d20"
                 }
             }
         },
@@ -853,6 +847,13 @@
             "fa_icon": "fas fa-chart-area",
             "description": "Options to adjust peak calling criteria.",
             "properties": {
+                "peak_caller": {
+                    "type": "string",
+                    "default": "macs3",
+                    "description": "Specifies the peak calling algorithm to use.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "edd", "denopa", "seacr"]
+                },
                 "narrow_peak": {
                     "type": "boolean",
                     "default": false,
@@ -989,12 +990,6 @@
                 "save_macs_bdgcmp_intermeds": {
                     "type": "boolean"
                 },
-                "skip_edd": {
-                    "type": "boolean",
-                    "description": "Whether to skip EDD peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
                 "edd_bin_size": {
                     "type": "string",
                     "description": "Bin size (Kb) for EDD peak calling. Autoestimated if left blank. See [EDD documentation](https://github.com/CollasLab/edd) for more details."
@@ -1043,12 +1038,6 @@
                     "fa_icon": "fas fa-save",
                     "default": true
                 },
-                "skip_genrich": {
-                    "type": "boolean",
-                    "description": "Skip Genrich peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
                 "epic2_binsize": {
                     "type": "integer",
                     "default": 250,
@@ -1060,24 +1049,6 @@
                     "default": 0.01,
                     "description": "In epic2 peak calling, remove all islands with an FDR above this cutoff.",
                     "fa_icon": "fas fa-chart-area"
-                },
-                "skip_dpeak": {
-                    "type": "boolean",
-                    "description": "Skip DANPOS2's dpeak peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
-                "skip_dpos": {
-                    "type": "boolean",
-                    "description": "Skip DANPOS2's dpos peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
-                "skip_dregion": {
-                    "type": "boolean",
-                    "description": "Skip DANPOS2's dregion peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
                 },
                 "skip_encode_pipeline": {
                     "type": "boolean",
@@ -1131,30 +1102,6 @@
                     "type": "integer",
                     "description": "Maximum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing. If not provided `max(params.read_length + 10, 100)` will be used.",
                     "fa_icon": "fas fa-chart-area"
-                },
-                "skip_epic2": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Skip epic2 peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
-                "skip_consenrich": {
-                    "type": "boolean",
-                    "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
-                "skip_mace": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Skip MACE peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
-                "skip_macs3": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip MACS3 peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
                 },
                 "seacr_peak_threshold": {
                     "type": "number",
@@ -1232,12 +1179,6 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
                     "fa_icon": "fas fa-save"
-                },
-                "skip_denopa": {
-                    "type": "boolean",
-                    "description": "Skip deNOPA peak calling for ATAC-seq.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
                 }
             }
         },

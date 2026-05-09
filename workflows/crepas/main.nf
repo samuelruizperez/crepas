@@ -6,12 +6,6 @@
 
 include { IGV                                                         } from '../../modules/local/igv/main'
 include { MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS                         } from '../../modules/local/multiqc_custom_phantompeakqualtools/main'
-include {
-    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT2 ;
-    BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_FLT3
-} from '../../modules/local/bam_flagstat_mapped/main'
-include { EDD } from '../../modules/local/edd/main'
-include { DENOPA                                                            } from '../../modules/local/denopa/main'
 
 //
 // SUBWORKFLOWS: Consisting of a mix of local and nf-core/modules
@@ -31,18 +25,10 @@ include {
 
 include { BAM_SPIKEIN_SPLIT                                                 } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                      } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER                          } from '../../subworkflows/local/bam_peaks_call_qc_annotate_danpos2_homer/main'
 include { BAM_ENCODE_PIPELINE                                               } from '../../subworkflows/local/bam_encode_pipeline/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_epic2_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_macs3_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER                          } from '../../subworkflows/local/bam_peaks_call_qc_annotate_genrich_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER                             } from '../../subworkflows/local/bam_peaks_call_qc_annotate_mace_homer/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER                            } from '../../subworkflows/local/bam_peaks_call_qc_annotate_seacr_homer/main'
 include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2           } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_PARTITIONS                                             } from '../../subworkflows/local/bam_create_partitions/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_ENDO       } from '../../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_ALLOCATE_MULTIMAPPERS as BAM_ALLOCATE_MULTIMAPPERS_EXO        } from '../../subworkflows/local/bam_allocate_multimappers/main'
-include { BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER                 } from '../../subworkflows/local/bam_peaks_call_qc_annotate_consenrich_rocco_homer/main'
+include { BAM_ALLOCATE_MULTIMAPPERS                                         } from '../../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS                                                   } from '../../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                                            } from '../../subworkflows/local/samtools_stats_summary/main'
 include { BAM_NORMALIZE_BIGWIG_DEEPTOOLS                                    } from '../../subworkflows/local/bam_normalize_bigwig_deeptools/main'
@@ -50,6 +36,7 @@ include { BAM_DOWNSAMPLE                                                    } fr
 include { TE_COUNTING                                                       } from '../../subworkflows/local/te_counting/main'
 include { FASTQ_ALIGN                                                       } from '../../subworkflows/local/fastq_align/main'
 include { SPIKEIN_BARCODES                                                  } from '../../subworkflows/local/spikein_barcodes/main'
+include { CALL_PEAKS                                                        } from '../../subworkflows/local/call_peaks/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,7 +73,6 @@ include { BAM_STATS_SAMTOOLS                                                } fr
 
 workflow CREPAS {
     take:
-    ch_samplesheet                  // channel: path(sample_sheet.csv)
     ch_versions               // channel: [ path(versions.yml) ]
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
@@ -129,15 +115,15 @@ workflow CREPAS {
     ch_spp_nsc_header = file("${projectDir}/assets/multiqc/spp_nsc_header.txt", checkIfExists: true)
     ch_spp_rsc_header = file("${projectDir}/assets/multiqc/spp_rsc_header.txt", checkIfExists: true)
     ch_spp_correlation_header = file("${projectDir}/assets/multiqc/spp_correlation_header.txt", checkIfExists: true)
-    ch_peak_count_header = file("${projectDir}/assets/multiqc/peak_count_header.txt", checkIfExists: true)
+    ch_macs3_peak_count_header = file("${projectDir}/assets/multiqc/peak_count_header.txt", checkIfExists: true)
     ch_gr_peak_count_header = file("${projectDir}/assets/multiqc/gr_peak_count_header.txt", checkIfExists: true)
     ch_mace_peak_count_header = file("${projectDir}/assets/multiqc/mace_peak_count_header.txt", checkIfExists: true)
     ch_epic2_peak_count_header = file("${projectDir}/assets/multiqc/epic2_peak_count_header.txt", checkIfExists: true)
-    ch_frip_score_header = file("${projectDir}/assets/multiqc/frip_score_header.txt", checkIfExists: true)
+    ch_macs3_frip_score_header = file("${projectDir}/assets/multiqc/frip_score_header.txt", checkIfExists: true)
     ch_gr_frip_score_header = file("${projectDir}/assets/multiqc/gr_frip_score_header.txt", checkIfExists: true)
     ch_mace_frip_score_header = file("${projectDir}/assets/multiqc/mace_frip_score_header.txt", checkIfExists: true)
     ch_epic2_frip_score_header = file("${projectDir}/assets/multiqc/epic2_frip_score_header.txt", checkIfExists: true)
-    ch_peak_annotation_header = file("${projectDir}/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
+    ch_macs3_peak_annotation_header = file("${projectDir}/assets/multiqc/peak_annotation_header.txt", checkIfExists: true)
     ch_gr_peak_annotation_header = file("${projectDir}/assets/multiqc/gr_peak_annotation_header.txt", checkIfExists: true)
     ch_mace_peak_annotation_header = file("${projectDir}/assets/multiqc/mace_peak_annotation_header.txt", checkIfExists: true)
     ch_epic2_peak_annotation_header = file("${projectDir}/assets/multiqc/epic2_peak_annotation_header.txt", checkIfExists: true)
@@ -287,6 +273,26 @@ workflow CREPAS {
 
 
     //
+    // SUBWORKFLOW: Allocation of multimappers
+    //
+    if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
+        BAM_ALLOCATE_MULTIMAPPERS (
+            ch_merged_bam,
+            ch_fasta,
+            params.multimap_allocation_method
+        )
+        ch_merged_bam = BAM_ALLOCATE_MULTIMAPPERS.out.bam
+        ch_merged_bai = BAM_ALLOCATE_MULTIMAPPERS.out.bai
+        ch_merged_bam_bai = ch_merged_bam.join(ch_merged_bai, by: 0)
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.idxstats.collect { it -> it[1] })
+        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
+
+    }
+
+    //
     // MODULE: Preseq coverage analysis
     //
     // TODO: this is done on the bams with spike-in included
@@ -387,7 +393,6 @@ workflow CREPAS {
 
     }
 
-
     //
     // SUBWORKFLOW: Spike-in splitting
     //
@@ -426,39 +431,6 @@ workflow CREPAS {
         ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
     }
 
-
-    //
-    // SUBWORKFLOW: Allocation of multimappers
-    //
-    if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
-        BAM_ALLOCATE_MULTIMAPPERS_ENDO (
-            ch_filtered_bam,
-            ch_fasta,
-            params.multimap_allocation_method
-        )
-        ch_filtered_bam = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bam
-        ch_filtered_index = BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.bai
-        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats)
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.stats.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.flagstat.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_ENDO.out.versions)
-
-        if (params.allocate_exogenous) {
-            BAM_ALLOCATE_MULTIMAPPERS_EXO (
-                ch_filtered_exo_bam,
-                ch_fasta,
-                params.multimap_allocation_method
-            )
-            ch_filtered_exo_bam = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bam
-            ch_filtered_exo_index = BAM_ALLOCATE_MULTIMAPPERS_EXO.out.bai
-            ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats)
-            ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.stats.collect { it -> it[1] })
-            ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.flagstat.collect { it -> it[1] })
-            ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.idxstats.collect { it -> it[1] })
-            ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS_EXO.out.versions)
-        }
-    }
 
     //
     // MODULE: Picard post alignment QC
@@ -843,72 +815,54 @@ workflow CREPAS {
         )
     }
 
+    BAM_NORMALIZE_BIGWIG_DEEPTOOLS
+        .out
+        .bedgraph_endo
+        .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
+        .filter { it -> !(it[0].signal_vs_input)}
+        .set { ch_bedgraph_endo_for_seacr }
 
     //
-    // SUBWORKFLOW: Call peaks with SEACR
+    // SUBWORKFLOW: Call peaks
     //
-    ch_seacr_peaks = channel.empty()
-    if (!params.skip_seacr) {
-
-        // Create channels: [ meta, ip_bam, ipcontrol_bam ]
-        // Including ips_wo_ipcontrol as they will be used for peak calling without control
-        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bedgraph_endo
-            .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
-            .filter { it -> !(it[0].signal_vs_input)}
-            .branch { meta, bdg ->
-                ips_with_ipcontrol: meta.input_control
-                    return [meta.input_control, meta.antibody, meta.norm_factor_type, meta, bdg]
-                ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                    return [meta, bdg, []]
-                ipcontrols: !meta.input_control && meta.is_input_control
-                    return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
-            }
-            .set { ch_bedgraph_by_type }  
-
-        ch_bedgraph_by_type
-            .ips_with_ipcontrol
-            .combine(ch_bedgraph_by_type.ipcontrols, by: [0,1,2])
-            .map { ipcontrol_id, antibody, norm_factor_type, ip_meta, ip_bdg, ipcontrol_meta, ipcontrol_bdg ->
-                [ ip_meta, ip_bdg, ipcontrol_bdg ]
-            }
-            .set { ch_ip_and_ipcontrols_bdg }
-
-        ch_bedgraph_by_type
-            .ips_wo_ipcontrol
-            .mix(ch_ip_and_ipcontrols_bdg)
-            .set { ch_all_bdg_ip_and_controls }
-
-
-        BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
-            ch_all_bdg_ip_and_controls,
-            params.seacr_peak_threshold
-            
-        )
-        ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.versions.first())
-    }
-
-    //
-    // SUBWORKFLOW: Call consensus regions with Consenrich and ROCCO
-    //
-    ch_consenrich_tracks = channel.empty()
-    ch_rocco_peaks = channel.empty()
-    if (!params.skip_consenrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER (
-            ch_filtered_bam_bai,
-            ch_chrom_sizes_endo,
-            ch_blacklist,
-            ch_sparsebed.ifEmpty([[:], []]),
-            ch_active_regions.ifEmpty([[:], []]),
-            ch_rocco_params,
-            ch_effective_gsize
-        )
-        ch_consenrich_tracks = BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_signal
-        ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_residuals)
-        ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_eratio)
-        ch_rocco_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.rocco_peaks
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.versions.first())
-    }
+    CALL_PEAKS (
+        ch_filtered_bam_bai,
+        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
+        ch_bedgraph_endo_for_seacr,
+        params.peak_caller,
+        ch_fasta,
+        ch_gtf,
+        ch_effective_gfraction,
+        ch_chrom_sizes_endo,
+        ch_blacklist,
+        ch_sparsebed.ifEmpty([[:], []]),
+        ch_active_regions.ifEmpty([[:], []]),
+        ch_rocco_params,
+        ch_effective_gsize,
+        ch_epic2_peak_count_header,
+        ch_epic2_frip_score_header,
+        ch_epic2_peak_annotation_header,
+        ch_gr_peak_count_header,
+        ch_gr_frip_score_header,
+        ch_gr_peak_annotation_header,
+        ch_mace_peak_count_header,
+        ch_mace_frip_score_header,
+        ch_mace_peak_annotation_header,
+        ch_macs3_peak_count_header,
+        ch_macs3_frip_score_header,
+        ch_macs3_peak_annotation_header,
+        ch_deseq2_pca_header,
+        ch_deseq2_clustering_header,
+        params.narrow_peak,
+        params.skip_peak_annotation,
+        params.skip_peak_qc,
+        params.skip_bdgcmp,
+        params.skip_consensus_peaks,
+        params.skip_deseq2,
+        params.skip_consensus_plotprofile,
+        params.input_cisrpm_in_plotprofile,
+        params.seacr_peak_threshold
+    )
 
     //
     // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
@@ -945,97 +899,6 @@ workflow CREPAS {
     }
 
     //
-    // SUBWORKFLOW: Call peaks with epic2, annotate with HOMER and perform downstream QC
-    //
-    ch_epic2_peaks = channel.empty()
-    ch_epic2_frip_multiqc = channel.empty()
-    ch_epic2_peak_count_multiqc = channel.empty()
-    ch_epic2_plot_homer_annotatepeaks_tsv = channel.empty()
-    if (!params.skip_epic2) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_filtered_bam.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
-            ch_fasta,
-            ch_gtf,
-            ch_chrom_sizes_endo,
-            ch_effective_gfraction,
-            ".annotatePeaks.txt",
-            ch_epic2_peak_count_header,
-            ch_epic2_frip_score_header,
-            ch_epic2_peak_annotation_header,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_epic2_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peaks
-        ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
-        ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
-        ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Call peaks with Genrich, annotate with HOMER and perform downstream QC
-    //
-    ch_genrich_peaks = channel.empty()
-    if (!params.skip_genrich) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
-            ch_filtered_bam.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
-            ch_fasta,
-            ch_gtf,
-            ch_blacklist,
-            ".annotatePeaks.txt",
-            ch_gr_peak_count_header,
-            ch_gr_frip_score_header,
-            ch_gr_peak_annotation_header,
-            params.narrow_peak,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_genrich_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peaks
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Call peaks with MACE (for ChIP-exo samples)
-    //
-    ch_mace_peaks = channel.empty()
-    if (!params.skip_mace) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
-            ch_filtered_bam_bai.filter { it -> it[0].exp_type == 'ChIP-exo' },
-            ch_fasta,
-            ch_gtf,
-            ch_chrom_sizes_endo,
-            ".annotatePeaks.txt",
-            ch_mace_peak_count_header,
-            ch_mace_frip_score_header,
-            ch_mace_peak_annotation_header,
-            params.skip_peak_annotation,
-            params.skip_peak_qc
-        )
-        ch_mace_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peaks
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
-    }
-
-    //
-    // SUBWORKFLOW: Call peaks with DANPOS2
-    //
-    if (!params.skip_dpeak || !params.skip_dpos || !params.skip_dregion) {
-        BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_filtered_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
-            params.skip_dpeak,
-            params.skip_dpos,
-            params.skip_dregion
-        )
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
-    }
-
-
-    //
     // SUBWORKFLOW: Run ENCODE3 ChIP-seq pipeline
     //
     if (!params.skip_encode_pipeline) {
@@ -1052,110 +915,6 @@ workflow CREPAS {
         ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 
     }
-
-    // Create channels: [ meta, ip_bam, ipcontrol_bam ]
-    // Including ips_wo_ipcontrol as they will be used for peak calling without control
-    ch_bam_bai_by_type
-        .ips_wo_ipcontrol
-        .map { meta, bam, bai -> [meta, [bam], [bai]] }
-        .mix(ch_ip_and_ipcontrols_bam_bai)
-        // ips_wo_ipcontrol do not have ipcontrol_bam
-        .map { meta, bams, bais ->
-            [meta, bams[0], (bams[1] ?: [])]
-        }
-        .set { ch_all_ip_and_controls }
-
-    // separate samples based on meta.exp_type
-    ch_ip_control_bam_cs = channel.empty()
-    ch_ip_control_bam_cs = ch_all_ip_and_controls.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) }
-
-    ch_edd_peaks = channel.empty()
-    if (!params.skip_edd) {
-        //
-        // MODULE: Call peaks with EDD
-        //
-        EDD (
-            ch_ip_control_bam_cs,
-            ch_chrom_sizes_endo,
-            ch_blacklist
-        )
-        ch_edd_peaks = EDD.out.peaks
-        ch_versions = ch_versions.mix(EDD.out.versions.first())
-    }
-
-    ch_denopa_peaks = channel.empty()
-    if (!params.skip_denopa) {
-        //
-        // MODULE: Call peaks with denopa
-        //
-        DENOPA (
-            ch_all_ip_and_controls.filter { it -> it[0].exp_type in ['ATAC-seq'] }
-        )
-        ch_denopa_peaks = DENOPA.out.arers
-        ch_versions = ch_versions.mix(DENOPA.out.versions.first())
-    }
-
-    ch_macs3_peaks = channel.empty()
-    if (!params.skip_macs3) {
-        //
-        // SUBWORKFLOW: Call peaks with MACS3, annotate with HOMER and perform downstream QC
-        //
-        BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER (
-            ch_ip_control_bam_cs,
-            ch_fasta,
-            ch_gtf,
-            ch_chrom_sizes_endo,
-            ch_effective_gsize,
-            "_peaks.annotatePeaks.txt",
-            ch_peak_count_header,
-            ch_frip_score_header,
-            ch_peak_annotation_header,
-            params.narrow_peak,
-            params.skip_peak_annotation,
-            params.skip_peak_qc,
-            params.skip_bdgcmp
-        )
-        ch_macs3_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peaks
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
-    }
-
-    //
-    //  Consensus peaks analysis
-    //
-    ch_consensus_bed = channel.empty()
-    ch_consensus_txt = channel.empty()
-    if (!params.skip_consensus_peaks) {
-        // Create channels: [ antibody, [ ip_bams ] ]
-        ch_ip_control_bam_cs
-            .map { meta, ip_bam, ipcontrol_bam ->
-                [meta.antibody, ip_bam]
-            }
-            .groupTuple()
-            .set { ch_antibody_bams }
-
-        BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2(
-            ch_macs3_peaks,
-            ch_antibody_bams,
-            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
-            ch_fasta.map { it -> it[1] },
-            ch_gtf.map { it -> it[1] },
-            ch_deseq2_pca_header,
-            ch_deseq2_clustering_header,
-            params.narrow_peak,
-            params.skip_peak_annotation,
-            params.skip_deseq2_qc,
-            params.skip_consensus_plotprofile,
-            params.input_cisrpm_in_plotprofile
-        )
-        ch_consensus_bed = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
-        ch_consensus_txt = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
-        ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.multiqc_files)
-        ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
-    }
-
 
     ch_filtered_bam_ss = channel.empty()
     ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
@@ -1223,7 +982,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_edd_peaks
+        CALL_PEAKS
+            .out
+            .edd_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1236,7 +997,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_macs3_peaks
+        CALL_PEAKS
+            .out
+            .macs3_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1250,8 +1013,10 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_consensus_bed
-            .mix(ch_consensus_txt)
+        CALL_PEAKS
+            .out
+            .consensus_bed
+            .mix(CALL_PEAKS.out.consensus_txt)
             .map { meta, bed ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1266,7 +1031,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_genrich_peaks
+        CALL_PEAKS
+            .out
+            .genrich_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1280,7 +1047,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_mace_peaks
+        CALL_PEAKS
+            .out
+            .mace_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1293,7 +1062,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_epic2_peaks
+        CALL_PEAKS
+            .out
+            .epic2_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1306,7 +1077,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_consenrich_tracks
+        CALL_PEAKS
+            .out
+            .consenrich_tracks
             .map { meta, signal -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1319,7 +1092,9 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        ch_rocco_peaks
+        CALL_PEAKS
+            .out
+            .rocco_peaks
             .map { meta, peak -> 
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +

@@ -11,9 +11,7 @@ include { DANPOS2_DREGION           } from '../../../modules/local/danpos2/dregi
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
-    skip_dpeak
-    skip_dpos
-    skip_dregion
+    peak_caller
 
     main:
 
@@ -60,7 +58,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         .map {
             id, antibody, metas, ip_bams, ipcontrol_bams ->
                 // , [], [], [], [] ] is because DANPOS2 modules expect 7 inputs
-                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten(), [], [], [], [] ]
+                [ metas[0], ip_bams.flatten(), ipcontrol_bams.flatten().unique(), [], [], [], [] ]
         }
         .set { ch_ip_control_bam_merged_reps }
 
@@ -73,7 +71,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER" )
 
     ch_dpeak_pooled_xls = channel.empty()
-    if (!skip_dpeak) {
+    if (peak_caller == 'dpeak') {
         //
         // MODULE: Call peaks with DANPOS2 dpeak
         //
@@ -85,7 +83,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     }
 
     
-    if (!skip_dpos) {
+    if (peak_caller == 'dpos') {
         //
         // MODULE: call peaks with DANPOS2 dpos
         //
@@ -95,7 +93,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         ch_versions = ch_versions.mix(DANPOS2_DPOS.out.versions.first())
     }
     
-    if (!skip_dregion) {
+    if (peak_caller == 'dregion') {
         //
         // MODULE: call peaks with DANPOS2 dpos
         //

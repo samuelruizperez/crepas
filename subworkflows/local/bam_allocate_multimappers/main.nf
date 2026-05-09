@@ -23,7 +23,6 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
         ch_fasta,
         ''
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions.first())
 
     if (allocation_method == 'allo') {
         ALLO (
