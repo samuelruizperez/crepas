@@ -858,7 +858,7 @@ workflow CREPAS {
         params.skip_peak_qc,
         params.skip_bdgcmp,
         params.skip_consensus_peaks,
-        params.skip_deseq2,
+        params.skip_deseq2_qc,
         params.skip_consensus_plotprofile,
         params.input_cisrpm_in_plotprofile,
         params.seacr_peak_threshold
