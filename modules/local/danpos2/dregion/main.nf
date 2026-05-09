@@ -21,7 +21,7 @@ process DANPOS2_DREGION {
     tuple val(meta), path("result/diff/*local_gain.refregions.xls"), emit: local_gain, optional: true
     tuple val(meta), path("result/diff/*local_loss.refregions.xls"), emit: local_loss, optional: true
     tuple val(meta), path("result/diff/*.wig"), emit: diff_wig, optional: true
-    tuple val(meta), path("result/pooled/*.refregions.xls"), emit: pooled_refregions
+    tuple val(meta), path("result/pooled/*.refregions.xls"), emit: pooled_refregions, optional: true
     tuple val(meta), path("result/pooled/*.regions.xls"), emit: pooled_regions, optional: true
     tuple val(meta), path("result/pooled/*.wig"), emit: pooled_wig, optional: true
     path "versions.yml", emit: versions
