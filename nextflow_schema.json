@@ -717,6 +717,12 @@
                     "default": true,
                     "description": "Whether to skip the generation of exogenous bigWig files for each sample.",
                     "fa_icon": "fas fa-chart-area"
+                },
+                "skip_multibigwigsummary": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the generation of a table with the bin value for all the samples.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },
