@@ -572,6 +572,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                     meta_new.ids = ids
                     [ meta_new, bws.flatten(), ids.flatten() ]
             }
+            // remove cases with only one sample
+            .filter { meta, bws, ids -> bws.size() > 1 }
             .set { ch_bw_for_summary }
 
         //
