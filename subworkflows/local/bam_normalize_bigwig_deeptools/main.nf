@@ -11,6 +11,9 @@ include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO            } from '
 include { DEEPTOOLS_BIGWIGCOMPARE                                       } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
 include { DEEPTOOLS_BIGWIGAVERAGE                                       } from '../../../modules/local/deeptools/bigwigaverage/main'
 include { DEEPTOOLS_MULTIBIGWIGSUMMARY                                  } from '../../../modules/nf-core/deeptools/multibigwigsummary/main'
+include { DEEPTOOLS_PLOTCORRELATION                                     } from '../../../modules/nf-core/deeptools/plotcorrelation/main'
+include { DEEPTOOLS_PLOTPCA                                             } from '../../../modules/nf-core/deeptools/plotpca/main'
+
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
@@ -577,6 +580,22 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         DEEPTOOLS_MULTIBIGWIGSUMMARY (
             ch_bw_for_summary,
             channel.value([[:], []])
+        )
+
+        //
+        // MODULE: plotCorrelation
+        //
+        DEEPTOOLS_PLOTCORRELATION (
+            DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix,
+            "spearman",
+            "heatmap"
+        )
+
+        //
+        // MODULE: plotPCA
+        //
+        DEEPTOOLS_PLOTPCA (
+            DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix
         )
 
     }
