@@ -13,7 +13,7 @@ process DEEPTOOLS_MULTIBIGWIGSUMMARY {
 
     output:
     tuple val(meta), path("*.npz"), emit: matrix
-    tuple val(meta), path("*.tsv"), emit: raw_counts
+    tuple val(meta), path("*.tsv"), emit: raw_counts, optional: true
     tuple val("${task.process}"), val('deeptools'), eval('multiBigwigSummary --version | sed "s/multiBigwigSummary //g"') , emit: versions_deeptools, topic: versions
 
     when:
@@ -23,7 +23,7 @@ process DEEPTOOLS_MULTIBIGWIGSUMMARY {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "all_bigwig"
     def blacklist_cmd = blacklist ? "--blackListFileName ${blacklist}" : ""
-    def outrawcounts_cmd = args.contains('--outRawCounts') ? "--outRawCounts ${prefix}.tsv" : ''
+    def outrawcounts_cmd = args.contains('--outRawCounts') ? '' : "--outRawCounts ${prefix}.tsv"
     def label  = labels ? "--labels ${labels.join(' ')}" : ''
     """
     multiBigwigSummary bins \\
