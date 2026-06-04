@@ -27,7 +27,8 @@ process MACS3_CONSENSUS {
     task.ext.when == null || task.ext.when
 
     script: // This script is bundled with the pipeline
-    def args         = task.ext.args   ?: ''
+    def args1        = task.ext.args   ?: ''
+    def args2        = task.ext.args2   ?: ''
     def prefix       = task.ext.prefix ?: "${meta.id}"
     def peak_type    = is_narrow_peak  ? 'narrowPeak' : 'broadPeak'
     def mergecols    = is_narrow_peak  ? (2..10).join(',') : (2..9).join(',')
@@ -35,13 +36,13 @@ process MACS3_CONSENSUS {
     def expandparam  = is_narrow_peak  ? '--is_narrow_peak' : ''
     """
     sort -T '.' -k1,1 -k2,2n ${peaks.collect{peak -> peak.toString()}.sort().join(' ')} \\
-        | mergeBed -c $mergecols -o $collapsecols > ${prefix}.txt
+        | mergeBed ${args1} -c $mergecols -o $collapsecols > ${prefix}.txt
 
     macs3_merged_expand.py \\
         ${prefix}.txt \\
         ${peaks.collect{peak -> peak.toString()}.sort().join(',').replaceAll("_peaks.${peak_type}","")} \\
         ${prefix}.boolean.txt \\
-        ${args} \\
+        ${args2} \\
         ${expandparam}
 
     awk -v FS='\t' -v OFS='\t' 'FNR > 1 { print \$1, \$2, \$3, \$4, "0", "+" }' ${prefix}.boolean.txt > ${prefix}.bed
