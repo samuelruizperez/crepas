@@ -35,21 +35,16 @@ import argparse
 ############################################
 
 
+
 def parse_min_replicates(value):
-    """
-    Allow either:
-      - an integer >= 1
-      - the string 'max'
-    """
-    if isinstance(value, str) and value.lower() == "max":
-        return "max"
     try:
         ivalue = int(value)
     except ValueError:
-        raise argparse.ArgumentTypeError("min_replicates must be an integer or 'max'")
-    if ivalue < 1:
-        raise argparse.ArgumentTypeError("min_replicates must be >= 1 or 'max'")
+        raise argparse.ArgumentTypeError("min_replicates must be an integer (use -1 for all replicates)")
+    if ivalue == 0 or ivalue < -1:
+        raise argparse.ArgumentTypeError("min_replicates must be >= 1, or -1 for all replicates")
     return ivalue
+
 
 
 def makedir(path):
@@ -127,10 +122,7 @@ argParser.add_argument(
     type=parse_min_replicates,
     dest="MIN_REPLICATES",
     default=1,
-    help=(
-        "Minimum number of replicates per sample group required to contribute to merged peak. "
-        "Use 'max' to require all replicates available for that group (default: 1)."
-    ),
+    help="Minimum number of replicates per sample required to contribute to merged peak. Use -1 to require all replicates for each sample group (default: 1).",
 )
 
 args = argParser.parse_args()
@@ -227,7 +219,7 @@ def macs3_merged_expand(MergedIntervalTxtFile, SampleNameList, OutFile, isNarrow
         ## GET SAMPLES THAT PASS REPLICATE THRESHOLD
         passRepThreshList = []
         for gID, sIDs in groupDict.items():
-            if minReplicates == "max":
+            if minReplicates == -1:
                 required_reps = sampleReplicateCount.get(gID, len(sIDs))
             else:
                 required_reps = minReplicates
