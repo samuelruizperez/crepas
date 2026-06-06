@@ -732,7 +732,7 @@
                 },
                 "skip_plotpca": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Whether to skip PCA of multibigwigsummary output.",
                     "fa_icon": "fas fa-chart-area"
                 }
