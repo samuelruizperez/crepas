@@ -723,6 +723,18 @@
                     "default": false,
                     "description": "Whether to skip the generation of a table with the bin value for all the samples.",
                     "fa_icon": "fas fa-chart-area"
+                },
+                "skip_plotcorrelation": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip correlation of multibigwigsummary output.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_plotpca": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip PCA of multibigwigsummary output.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },

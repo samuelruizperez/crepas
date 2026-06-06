@@ -720,7 +720,9 @@ workflow CREPAS {
         params.signal_vs_input_operation,
         params.skip_bw_average,
         params.skip_exo_bw,
-        params.skip_multibigwigsummary
+        params.skip_multibigwigsummary,
+        params.skip_plotcorrelation,
+        params.skip_plotpca
     )
     ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 

@@ -31,6 +31,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     skip_bw_average
     skip_exo_bw             // boolean: skip generating bigwigs for the exogenous genome
     skip_multibigwigsummary
+    skip_plotcorrelation
+    skip_plotpca
 
     main:
 
@@ -584,21 +586,25 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             channel.value([[:], []])
         )
 
-        //
-        // MODULE: plotCorrelation
-        //
-        DEEPTOOLS_PLOTCORRELATION (
-            DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix,
-            "spearman",
-            "heatmap"
-        )
+        if (!skip_plotcorrelation) {
+            //
+            // MODULE: plotCorrelation
+            //
+            DEEPTOOLS_PLOTCORRELATION (
+                DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix,
+                "spearman",
+                "heatmap"
+            )
+        }
 
-        //
-        // MODULE: plotPCA
-        //
-        DEEPTOOLS_PLOTPCA (
-            DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix
-        )
+        if (!skip_plotpca) {
+            //
+            // MODULE: plotPCA
+            //
+            DEEPTOOLS_PLOTPCA (
+                DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix
+            )
+        }
 
     }
 
