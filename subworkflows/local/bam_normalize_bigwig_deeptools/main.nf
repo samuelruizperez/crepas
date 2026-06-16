@@ -1,15 +1,19 @@
-include { DEEPTOOLS_BAMCOVERAGE           } from '../../../modules/nf-core/deeptools/bamcoverage/main'
+include { DEEPTOOLS_BAMCOVERAGE                                         } from '../../../modules/nf-core/deeptools/bamcoverage/main'
 include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_ENDO             } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BEDTOOLS_MAKEWINDOWS as BEDTOOLS_MAKEWINDOWS_EXO              } from '../../../modules/nf-core/bedtools/makewindows/main'
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_ENDO                             } from '../../../modules/nf-core/bedtools/map/main'
 include { BEDTOOLS_MAP as BEDTOOLS_MAP_EXO                              } from '../../../modules/nf-core/bedtools/map/main'
 include { BEDGRAPH_NORMALIZE                                            } from '../../../modules/local/bedgraph_normalize/main'
 include { FILE_SORT as BEDGRAPH_SORT                                    } from '../../../modules/local/file_sort/main'
-include { BEDGRAPH_SIGNAL_OVER_INPUT                                            } from '../../../modules/local/bedgraph_signal_over_input/main'
+include { BEDGRAPH_SIGNAL_OVER_INPUT                                    } from '../../../modules/local/bedgraph_signal_over_input/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_ENDO           } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_EXO            } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { DEEPTOOLS_BIGWIGCOMPARE                                       } from '../../../modules/nf-core/deeptools/bigwigcompare/main'
-include { DEEPTOOLS_BIGWIGAVERAGE       } from '../../../modules/local/deeptools/bigwigaverage/main'
+include { DEEPTOOLS_BIGWIGAVERAGE                                       } from '../../../modules/local/deeptools/bigwigaverage/main'
+include { DEEPTOOLS_MULTIBIGWIGSUMMARY                                  } from '../../../modules/nf-core/deeptools/multibigwigsummary/main'
+include { DEEPTOOLS_PLOTCORRELATION                                     } from '../../../modules/nf-core/deeptools/plotcorrelation/main'
+include { DEEPTOOLS_PLOTPCA                                             } from '../../../modules/nf-core/deeptools/plotpca/main'
+
 
 workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
@@ -26,6 +30,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     signal_vs_input_operation
     skip_bw_average
     skip_exo_bw             // boolean: skip generating bigwigs for the exogenous genome
+    skip_multibigwigsummary
+    skip_plotcorrelation
+    skip_plotpca
 
     main:
 
@@ -536,6 +543,71 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         .mix(ch_bw_avg)
         .set { ch_bw_all }
 
+    ch_bigwig_all_endo  = ch_bw_all.filter { it -> it[0].genome == genome }
+
+
+
+    if (!skip_multibigwigsummary) {
+
+       ch_bigwig_all_endo
+            .map { meta, bw ->
+                def antibody = meta.antibody ?: meta.input_control_of_antibody
+                [ antibody, meta.exp_type, meta.norm_factor_type, meta.signal_vs_input_operation, meta.averaged_brep, meta.id, meta, bw ]
+            }
+            .groupTuple(by: [0, 1, 2, 3, 4])
+            .map { antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws ->
+                // Sort ids, metas and bws by id to ensure consistent order in plots
+                def sorted_ids = ids.sort()
+                def sorted_metas = metas.sort { meta -> meta.id }
+                def sorted_bws = bws.sort { it -> it.name }
+                [ antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, sorted_ids, sorted_metas, sorted_bws ]
+            }
+            .map {
+                antibody, exp_type, norm_factor_type, signal_vs_input_op, averaged_brep, ids, metas, bws ->
+                    def meta_new = metas[0].clone()
+                    meta_new.id = exp_type + '_' +
+                        (antibody ? antibody : 'no_antibody') +
+                        '_' + norm_factor_type +
+                        (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
+                        (averaged_brep ? '_' + 'bRep_avg' : '')
+                    meta_new.antibody = antibody
+                    meta_new.ids = ids
+                    [ meta_new, bws.flatten(), ids.flatten() ]
+            }
+            // remove cases with only one sample
+            .filter { meta, bws, ids -> bws.size() > 1 }
+            .set { ch_bw_for_summary }
+
+        //
+        // MODULE: multiBigwigSummary
+        //
+        DEEPTOOLS_MULTIBIGWIGSUMMARY (
+            ch_bw_for_summary,
+            channel.value([[:], []])
+        )
+
+        if (!skip_plotcorrelation) {
+            //
+            // MODULE: plotCorrelation
+            //
+            DEEPTOOLS_PLOTCORRELATION (
+                DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix,
+                "spearman",
+                "heatmap"
+            )
+        }
+
+        if (!skip_plotpca) {
+            //
+            // MODULE: plotPCA
+            //
+            DEEPTOOLS_PLOTPCA (
+                DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix
+            )
+        }
+
+    }
+
     
     emit:
 
@@ -546,7 +618,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     bigwig_cmp_exo   = ch_bw_compare.filter { it -> it[0].genome == spikein_genome }      // channel: [ val(meta), [ bigwig ] ]
     bigwig_avg_endo  = ch_bw_avg.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bigwig ] ]
     bigwig_avg_exo   = ch_bw_avg.filter { it -> it[0].genome == spikein_genome }      // channel: [ val(meta), [ bigwig ] ]
-    bigwig_all_endo  = ch_bw_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bigwig ] ]
+    bigwig_all_endo  = ch_bigwig_all_endo      // channel: [ val(meta), [ bigwig ] ]
     bigwig_all_exo   = ch_bw_all.filter { it -> it[0].genome == spikein_genome }      // channel: [ val(meta), [ bigwig ]
     
     versions      = ch_versions                                     // channel: [ versions.yml ]
