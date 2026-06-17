@@ -7,8 +7,8 @@ process BUILD_HYBRID_FASTA {
         : 'nf-core/ubuntu:22.04'}"
 
     input:
-    tuple val(meta), path(fasta), val(genome)
-    tuple val(meta2), path(spikein_fasta), val(spikein_genome)
+    tuple val(meta), path(fasta, stageAs: "genome/*"), val(genome)
+    tuple val(meta2), path(spikein_fasta, stageAs: "spikein_genome/*"), val(spikein_genome)
 
     output:
     tuple val(meta), path("*.fa"), emit: fasta
