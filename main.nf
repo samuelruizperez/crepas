@@ -43,6 +43,7 @@ workflow GROTHLAB_CREPAS {
     // we cannot overwrite params in the workflow (they stay null as coming from the config file)
     // TODO: simplify, readability
     def fasta                 = params.containsKey('fasta') ? params.fasta : (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
+    def spikein_fasta         = params.containsKey('spikein_fasta') ? params.spikein_fasta : (params.refgenie_ignore ? null : getGenomeAttribute('spikein_fasta'))
     def spikein_barcode_table = params.containsKey('spikein_barcode_table') ? params.spikein_barcode_table : (params.refgenie_ignore ? null : getGenomeAttribute('spikein_barcode_table'))
     def bwa_index             = params.containsKey('bwa_index') ? params.bwa_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
     def bwamem2_index         = params.containsKey('bwamem2_index') ? params.bwamem2_index : (params.refgenie_ignore ? null : getGenomeAttribute('bwamem2'))
@@ -79,6 +80,7 @@ workflow GROTHLAB_CREPAS {
         params.spikein_genome,
         params.aligner,
         fasta,
+        spikein_fasta,
         gtf,
         gff,
         blacklist,
