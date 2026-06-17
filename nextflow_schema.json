@@ -1588,9 +1588,8 @@
             "type": "string",
             "default": "https://raw.githubusercontent.com/nf-core/test-datasets/"
         },
-        "local_testdata_base_path": {
-            "type": "string",
-            "default": "/maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/"
+        "crepas_testdata_base_path": {
+            "type": "string"
         },
         "trace_report_suffix": {
             "type": "string",
