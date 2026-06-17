@@ -1,5 +1,5 @@
 sample,biological_replicate,technical_replicate,input_control,input_control_biological_replicate,input_control_technical_replicate,exp_type,antibody,fastq_1
-ChOR_T0_H3K27me3,1,1,ChOR_T0_H3K27me3_clickedInput,1,1,ChOR-seq,H3K27me3,https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/061/SRR19676761/SRR19676761.fastq.gz
-ChOR_T720_H3K27me3,1,1,ChOR_T720_H3K27me3_clickedInput,1,1,ChOR-seq,H3K27me3,https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/055/SRR19676755/SRR19676755.fastq.gz
-ChOR_T0_H3K27me3_clickedInput,1,1,,,,ChOR-seq,,https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/053/SRR19676753/SRR19676753.fastq.gz
-ChOR_T720_H3K27me3_clickedInput,1,1,,,,ChOR-seq,,https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/031/SRR19676731/SRR19676731.fastq.gz
+ChOR_T0_H3K27me3,1,1,ChOR_T0_H3K27me3_clickedInput,1,1,ChOR-seq,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/061/SRR19676761/SRR19676761.fastq.gz
+ChOR_T720_H3K27me3,1,1,ChOR_T720_H3K27me3_clickedInput,1,1,ChOR-seq,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/055/SRR19676755/SRR19676755.fastq.gz
+ChOR_T0_H3K27me3_clickedInput,1,1,,,,ChOR-seq,,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/053/SRR19676753/SRR19676753.fastq.gz
+ChOR_T720_H3K27me3_clickedInput,1,1,,,,ChOR-seq,,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR196/031/SRR19676731/SRR19676731.fastq.gz
