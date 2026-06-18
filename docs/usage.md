@@ -58,7 +58,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 | condition_1_INPUT | condition_1_bRep2_INPUT_R1.fastq.gz | condition_1_bRep2_INPUT_R3.fastq.gz | condition_1_bRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex1_multiBioRep_samplesheet.csv).
+> You can download this example samplesheet [here](../assets/samplesheet/v1.0.0/ex1_multiBioRep_samplesheet.csv).
 
 ### Example 2: Multiple runs of the same library (technical replicates)
 
@@ -86,7 +86,7 @@ This is an example of a samplesheet for a ChIP-seq experiment with one condition
 | condition_1_INPUT | condition_1_bRep2_tRep2_INPUT_R1.fastq.gz | condition_1_bRep2_tRep2_INPUT_R3.fastq.gz | condition_1_bRep2_tRep2_INPUT_R2.fastq.gz | 2 | ChIP-seq | | | | |
 
 > [!NOTE]
-> You can download this example samplesheet [here](../assets/samplesheets/ex2_multiTechRep_samplesheet.csv).
+> You can download this example samplesheet [here](../assets/samplesheet/v1.0.0/ex2_multiTechRep_samplesheet.csv).
 
 
 ## Reference genome files

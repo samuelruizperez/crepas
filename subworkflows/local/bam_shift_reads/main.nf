@@ -1,5 +1,4 @@
-// TODO: copied from https://github.com/nf-core/atacseq/blob/347d98e820d59074b58719dce5f0deca5af85bb2/subworkflows/local/bam_shift_reads.nf
-// add appropiate credits in meta.yaml
+// adapted from https://github.com/nf-core/atacseq/blob/347d98e820d59074b58719dce5f0deca5af85bb2/subworkflows/local/bam_shift_reads.nf
 
 include { DEEPTOOLS_ALIGNMENTSIEVE } from '../../../modules/nf-core/deeptools/alignmentsieve'
 include { BAM_SORT_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_sort_stats_samtools'

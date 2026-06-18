@@ -1,0 +1,2 @@
+sample,biological_replicate,exp_type,strandedness,fastq_1
+SRR7535256,1,OK-seq,forward,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR753/006/SRR7535256/SRR7535256.fastq.gz

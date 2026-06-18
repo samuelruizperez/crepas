@@ -1,0 +1,4 @@
+sample,biological_replicate,exp_type,antibody,fastq_1
+WL,1,ChIP-exo,ONECUT1,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498074/ERR498074.fastq.gz
+WL,2,ChIP-exo,ONECUT1,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498076/ERR498076.fastq.gz
+WL,3,ChIP-exo,ONECUT1,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR498/ERR498076/ERR498075.fastq.gz
