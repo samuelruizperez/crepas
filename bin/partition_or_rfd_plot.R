@@ -403,7 +403,9 @@ if (HAS_OKSEQ) {
   OK_BIN_SIZE <- width(OK_gr)[1]
 
   message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
-  OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
+  if (HAS_BLACKLIST) {
+    OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
+  }
 
   # Finding out which initiation zones overlap which OK-seq bins
   if (opt_only_plot_within_iz) {
