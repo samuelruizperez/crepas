@@ -942,8 +942,8 @@ workflow CREPAS {
         ch_fasta,
         ch_chrom_sizes_endo_ss,
         ch_blacklist.ifEmpty([[:], []]),
-        ch_okseq_rfd_file.ifEmpty([[:], []]),
-        ch_initiation_zones.ifEmpty([[:], []]),
+        ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
+        ch_initiation_zones.ifEmpty([[:], [[]]]),
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius
