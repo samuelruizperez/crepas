@@ -699,7 +699,7 @@ Some HPC setups also allow you to run nextflow within a cluster job submitted yo
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=CREPAS_JOB        # specify a name for the job
+#SBATCH --job-name=crepas_job        # specify a name for the job
 #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=NONE            # email address to receive the notifications
 #SBATCH -c 1                        # number of requested cores for the Nextflow head job
@@ -837,16 +837,16 @@ You can then monitor the job status using `squeue` or by looking at the `fetchng
 
 When this job is finished, you should have the raw FastQ file `SRX4403092_SRR7535256.fastq.gz` downloaded in the `fetchngs/output/fastq/` subdirectory.
 
-#### Running CREPAS
+#### Running crepas
 
-Now that we have the data, we can run the *CREPAS* pipeline to analyze it. We will create another subdirectory for the *CREPAS* files:
+Now that we have the data, we can run the *crepas* pipeline to analyze it. We will create another subdirectory for the *crepas* files:
 
 ```bash
 mkdir -p ${HOME}/projects/project1/crepas/
 ```
 ##### Input samplesheet CSV
 
-Then, we need to create a samplesheet CSV file for the *CREPAS* pipeline. This file should contain information about the samples we want to analyze. For this example, we will create a file called `project1.crepas.samplesheet.csv` in the `crepas` subdirectory with the following content:
+Then, we need to create a samplesheet CSV file for the *crepas* pipeline. This file should contain information about the samples we want to analyze. For this example, we will create a file called `project1.crepas.samplesheet.csv` in the `crepas` subdirectory with the following content:
 
 ```csv
 sample,fastq_1,biological_replicate,exp_type,strandedness
@@ -858,15 +858,15 @@ SRR7535256,<PATH>/projects/project1/fetchngs/output/fastq/SRX4403092_SRR7535256.
 
 ##### Parameter YAML file
 
-Next, since the CREPAS pipeline has many more parameters, we will compile them into a parameter YAML file for easier management. The file should contain:
+Next, since the crepas pipeline has many more parameters, we will compile them into a parameter YAML file for easier management. The file should contain:
 
 ```yaml
-input: /home/whq695/datadir/projects/OK_seq_SRR7535256/crepas/OK_seq_SRR7535256.crepas.samplesheet.csv
-outdir: /home/whq695/datadir/projects/OK_seq_SRR7535256/crepas/output_mm10_bowtie2
-bowtie2_index: /home/whq695/datadir/reference_files/GRCm38/bowtie2_2.5.4_index
-fasta: /home/whq695/datadir/reference_files/GRCm38/GRCm38.primary_assembly.genome.fa.gz
-gtf: /home/whq695/datadir/reference_files/GRCm38/gencode.vM25.primary_assembly.annotation.gtf.gz
-blacklist: /home/whq695/datadir/reference_files/GRCm38/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz
+input: OK_seq_SRR7535256.crepas.samplesheet.csv
+outdir: output_mm10_bowtie2
+bowtie2_index: /reference_files/GRCm38/bowtie2_2.5.4_index
+fasta: /reference_files/GRCm38/GRCm38.primary_assembly.genome.fa.gz
+gtf: /reference_files/GRCm38/gencode.vM25.primary_assembly.annotation.gtf.gz
+blacklist: /reference_files/GRCm38/GRCm38.ENCODE_ENCFF999QPV.Kundaje.unified_Excludable.bed.gz
 aligner: bowtie2
 genome: GRCm38
 seq_platform: ILLUMINA
@@ -875,8 +875,6 @@ fragment_size: 200
 partition_fragment_size: 200
 skip_macs3: true
 multiqc_title: OK_seq_SRR7535256
-skip_umi_extract: true
-with_umi: false
 trim_full_length: false
 trim_minimum_length: 10
 trim_maximum_length: 70
@@ -899,7 +897,7 @@ Save this file as `project1.crepas.params.yaml` in the `crepas/` subdirectory.
 
 ##### SBATCH script
 
-Now, we will create an **SBATCH script** to submit the *CREPAS* job to the cluster queue. You can use the following template. 
+Now, we will create an **SBATCH script** to submit the *crepas* job to the cluster queue. You can use the following template. 
 
 ```bash
 
