@@ -36,6 +36,7 @@
 
     Then, start a new bash session or simply logout and login back again.
 
+<!--
 4. Generate a Personal Access Token (PAT):
 
     - Go to [GitHub](https://github.com/) and log in to your account.
@@ -80,8 +81,8 @@
     EOF
     ```
 
-    <!-- > [!NOTE]
-    > The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information. -->
+     [!NOTE]
+    > The main environment variables for Nextflow (including `$NXF_HOME`) are specified in the  `/projects/dan1/apps/etc/bashrc` file. See the [DAN System configuration file (ku_sund_danhead)](https://github.com/nf-core/configs/blob/master/docs/ku_sund_danhead.md#environment-variables) for more information.
 
     You can verify that the SCM file was created correctly by running:
 
@@ -99,6 +100,7 @@
         }
     }
     ```
+-->
 
 <!-- ## CPRGPU version
 
@@ -276,7 +278,7 @@ sbatch project_test1_crepas_sbatch.sh
 
 ## Reference genome files
 
-Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions, requests, or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicolas.alcaraz@cpr.ku.dk](nicolas.alcaraz@cpr.ku.dk)).
+Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions, requests, or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicalc@cancer.dk](nicalc@cancer.dk)).
 
 ### Genome index, FASTA, GTF/GFF and gene BED files
 
