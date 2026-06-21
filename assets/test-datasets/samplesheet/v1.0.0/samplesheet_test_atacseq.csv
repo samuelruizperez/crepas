@@ -1,0 +1,5 @@
+sample,biological_replicate,technical_replicate,exp_type,fastq_1,fastq_2
+2h_Mature_DMSO_repliATAC,1,1,ATAC-seq,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/003/SRR8758483/SRR8758483_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/003/SRR8758483/SRR8758483_2.fastq.gz
+Nascent_repliATAC_S2spikein,1,1,ATAC-seq,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/000/SRR8758520/SRR8758520_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/000/SRR8758520/SRR8758520_2.fastq.gz
+2h_mature_repliATAC_S2spikein,1,1,ATAC-seq,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/002/SRR8758522/SRR8758522_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/002/SRR8758522/SRR8758522_2.fastq.gz
+Nascent_DMSO_repliATAC,1,1,ATAC-seq,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/004/SRR8758474/SRR8758474_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR875/004/SRR8758474/SRR8758474_2.fastq.gz

@@ -10,9 +10,9 @@
 
 ## Introduction
 
-**grothlab/crepas** is a bioinformatics pipeline for comprehensive analysis of bulk chromatin sequencing data. It supports multiple experimental techniques, including [ChIP-seq](https://doi.org/10.1038/nmeth1068), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChIP-exo](https://doi.org/10.1016/j.cell.2011.11.013), [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [OK-seq](https://doi.org/10.1038/ncomms10208), [ATAC-seq](https://doi.org/10.1002/0471142727.mb2129s109), [CUT&RUN](https://doi.org/10.7554/eLife.46314), [CUT&Tag](https://doi.org/10.1038/s41467-019-09982-5) and [TIP-seq](https://doi.org/10.1083/jcb.202103078):
+**crepas** is a bioinformatics pipeline for comprehensive analysis of bulk chromatin sequencing data. It supports multiple experimental techniques, including [ChIP-seq](https://doi.org/10.1038/nmeth1068), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChIP-exo](https://doi.org/10.1016/j.cell.2011.11.013), [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [OK-seq](https://doi.org/10.1038/ncomms10208), [ATAC-seq](https://doi.org/10.1002/0471142727.mb2129s109), [CUT&RUN](https://doi.org/10.7554/eLife.46314), [CUT&Tag](https://doi.org/10.1038/s41467-019-09982-5) and [TIP-seq](https://doi.org/10.1083/jcb.202103078):
 
- ![grothlab/crepas metro map](./docs/images/grothlab_crepas_metro_map.png)
+ ![crepas metro map](./docs/images/grothlab_crepas_metro_map.png)
 
 <!-- On release, automated continuous integration tests run the pipeline on a [full-sized dataset](https://github.com/nf-core/test-datasets/tree/chipseq#full-test-dataset-origin) on the AWS cloud infrastructure. The dataset consists of FoxA1 (transcription factor) and EZH2 (histone,mark) IP experiments from _Franco et al. 2015_ ([GEO: GSE59530](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE59530), [PMID: 25752574](https://pubmed.ncbi.nlm.nih.gov/25752574/)) and _Popovic et al. 2014_ ([GEO: GSE57632](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57632), [PMID: 25188243](https://pubmed.ncbi.nlm.nih.gov/25188243/)), respectively. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from running the full-sized tests can be viewed on the [nf-core website](https://nf-co.re/chipseq/results). -->
 
@@ -34,11 +34,11 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 7. UMI-based deduplication ([`UMI-tools`](https://github.com/CGATOxford/UMI-tools) or [`UMICollapse`](https://github.com/Daniel-Liu-c0deb0t/UMICollapse)) or marking of duplicates ([`picard`](https://broadinstitute.github.io/picard/))
 
-8. BAM filtering to remove ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/))
+8. BAM filtering ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/)) to remove: 
     - unmapped or improperly paired reads
     - reads marked as duplicates
 
-9. BAM splitting by genome (into endogenous and exogenous/spike-in alignments) ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/))
+9. Splitting BAM by genome (into endogenous and exogenous/spike-in alignments) ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/))
 
 10. Multimapping read allocation ([`Chromap`](https://github.com/haowenz/chromap), [`MMR`](https://github.com/ratschlab/mmr) or [`Allo`](https://github.com/seqcode/allo))
 
@@ -46,7 +46,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 11. Shifting of aligned reads (only for ATAC-seq) ([`deepTools`](https://deeptools.readthedocs.io/en/latest/content/tools/alignmentSieve.html#alignmentsieve))
 
-12. BAM filtering to remove ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/)):
+12. BAM filtering ([`SAMBAMBA`](https://lomereiter.github.io/sambamba/)) to remove: 
     - unmapped or improperly paired reads
     - reads with low mapping quality (depending on the aligner used)
     - secondary alignments
@@ -151,18 +151,18 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
     > - The pipeline comes with config profiles called `docker`, `singularity`, `podman`, `shifter`, `charliecloud` and `conda` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
     > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
-    > - If you are using `singularity`, please use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs.
-    > - If you are using `conda`, it is highly recommended to use the [`NXF_CONDA_CACHEDIR` or `conda.cacheDir`](https://www.nextflow.io/docs/latest/conda.html) settings to store the environments in a central location for future pipeline runs.
+    <!-- > - If you are using `singularity`, please use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs. -->
+    <!-- > - If you are using `conda`, it is highly recommended to use the [`NXF_CONDA_CACHEDIR` or `conda.cacheDir`](https://www.nextflow.io/docs/latest/conda.html) settings to store the environments in a central location for future pipeline runs. -->
 
 4. Start running your own analysis!
 
     ```bash
     nextflow run grothlab/crepas \
-      --input <path_to_your_input_samplesheet_csv_file> \
+      -profile <your_profile> \
+      --input <path_to_your_input_samplesheet_file> \
       --outdir <path_to_output_directory> \
-      --genome GRCh37 \
-      --fasta <path_to_your_genome_fasta_file> \
-      -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
+      --genome GRCh38 \
+      --fasta <path_to_your_genome_fasta_file>
     ```
 
 ## Usage
@@ -171,7 +171,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 > See the [usage docs](./docs/usage.md) for an overview of how the pipeline works, how to run it and a description of all of the different command-line flags and parameters.
 
 > [!NOTE]
-> See the [usage guide for DAN System users](./docs/ku_sund_danhead_crepas_usage.md) for special instructions on how to run the pipeline on the DAN System.
+> See the [usage guide for DAN System users](./docs/ku_sund_danhead_crepas_usage.md) for instructions on how to run the pipeline on the DAN System.
 
 ## Output
 
@@ -180,9 +180,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 ## Credits
 
-The [crepas](https://github.com/grothlab/crepas) pipeline was written by Samuel Ruiz-Pérez ([@samuelruizperez](https://github.com/samuelruizperez)) at the Groth Lab ([@grothlab](https://github.com/grothlab)).
-
-Several scripts in this pipeline are based on [nf-core/chipseq](https://github.com/nf-core/chipseq) scripts. For more information regarding nf-core/chipseq, see [https://github.com/nf-core/chipseq?tab=readme-ov-file#credits](https://github.com/nf-core/chipseq?tab=readme-ov-file#credits)
+The [crepas](https://github.com/grothlab/crepas) pipeline was written by Samuel Ruiz-Pérez ([@samuelruizperez](https://github.com/samuelruizperez)) at the Groth Lab ([@grothlab](https://github.com/grothlab)), Center for Epigenetic Cell Memory (EpiC), [Danish Cancer Institute](https://www.cancer.dk/danish-cancer-institute/research-groups/epigenome-replication-and-maintenance/).
 
 ## Contributions and Support
 
@@ -193,9 +191,9 @@ For further information or help, don't hesitate to get in touch through the pipe
 
 ## Citations
 
-If you use [grothlab/crepas](https://github.com/grothlab/crepas) for your analysis, please cite it as below:
+If you use [crepas](https://github.com/grothlab/crepas) for your analysis, please cite it as below:
 
-> Ruiz-Pérez, S., Alcaraz, N., & Groth, A. (2025). grothlab/crepas: A bioinformatics pipeline for the analysis of chromatin sequencing data (Version dev) [Computer software]. https://github.com/grothlab/crepas
+>  Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://github.com/grothlab/crepas
 
 This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
@@ -204,5 +202,13 @@ This pipeline uses code developed and maintained by the [nf-core](https://nf-co.
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
+
+It also uses adapted scripts from [nf-core/chipseq](https://github.com/nf-core/chipseq).
+
+> **nf-core/chipseq: nf-core/chipseq v2.1.0 - Platinum Willow Sparrow**
+>
+> Harshil Patel, Jose Espinosa-Carrasco, Chuan Wang, Phil Ewels, nf-core bot, Tiago Chedraoui Silva, Alexander Peltzer, Björn Langer, Sarah Guinchard, Maxime U. Garcia, Drew Behrens, Matthias Hörtenhuber, Adam Talbot, Konrad Rokicki, Robert Syme, Rotholandus, Samuel Ruiz Pérez, Sofia Haglund, Steffen Möller, Warren Winfried “Winni” Kretzschmar, and Kevin Menden. 
+>
+> Zenodo. 2024. doi: [10.5281/zenodo.13899404](https://doi.org/10.5281/zenodo.13899404).
 
 In addition, an extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.

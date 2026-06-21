@@ -88,6 +88,15 @@
                     "help_text": "If you don't have the appropriate alignment index available this will be generated for you automatically based on this file. Combine with `--save_reference` to save alignment index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
+                "spikein_fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "exists": true,
+                    "description": "Path to exogenous (spike-in) FASTA genome file. If you provide this, the a hybrid fasta reference file will be generated and used for alignment index building.",
+                    "fa_icon": "far fa-file-code"
+                },
                 "gtf": {
                     "type": "string",
                     "format": "file-path",
@@ -1588,9 +1597,8 @@
             "type": "string",
             "default": "https://raw.githubusercontent.com/nf-core/test-datasets/"
         },
-        "local_testdata_base_path": {
-            "type": "string",
-            "default": "/maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/"
+        "crepas_testdata_base_path": {
+            "type": "string"
         },
         "trace_report_suffix": {
             "type": "string",
