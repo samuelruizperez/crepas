@@ -1,5 +1,6 @@
 [![GitHub Actions CI Status](https://github.com/grothlab/crepas/actions/workflows/ci.yml/badge.svg)](https://github.com/grothlab/crepas/actions/workflows/ci.yml)
 [![GitHub Actions Linting Status](https://github.com/grothlab/crepas/actions/workflows/linting.yml/badge.svg)](https://github.com/grothlab/crepas/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/856997188.svg)](https://doi.org/10.5281/zenodo.20788108)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.10.0-23aa62.svg)](https://www.nextflow.io/)
@@ -193,7 +194,7 @@ For further information or help, don't hesitate to get in touch through the pipe
 
 If you use [crepas](https://github.com/grothlab/crepas) for your analysis, please cite it as below:
 
->  Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://github.com/grothlab/crepas
+>  Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://doi.org/10.5281/zenodo.20788108
 
 This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
 
