@@ -36,29 +36,29 @@ There are typically two types of tests that run:
 
 ### Lint tests
 
-`nf-core` has a [set of guidelines](https://nf-co.re/developers/guidelines) which all pipelines must adhere to.
-To enforce these and ensure that all pipelines stay in sync, we have developed a helper tool which runs checks on the pipeline code. This is in the [nf-core/tools repository](https://github.com/nf-core/tools) and once installed can be run locally with the `nf-core lint <pipeline-directory>` command.
+`nf-core` has a [set of guidelines](https://nf-co.re/developers/guidelines) which this pipeline tries to adhere to.
+To enforce these and ensure that the pipeline is in sync, we have developed a helper tool which runs checks on the pipeline code. This is in the [nf-core/tools repository](https://github.com/nf-core/tools) and once installed can be run locally with the `nf-core lint <pipeline-directory>` command.
 
 If any failures or warnings are encountered, please follow the listed URL for more documentation.
 
-### Pipeline tests
+<!-- ### Pipeline tests
 
 Each `nf-core` pipeline should be set up with a minimal set of test-data.
 `GitHub Actions` then runs the pipeline on this data to ensure that it exits successfully.
 If there are any failures then the automated tests fail.
-These tests are run both with the latest available version of `Nextflow` and also the minimum required version that is stated in the pipeline code.
+These tests are run both with the latest available version of `Nextflow` and also the minimum required version that is stated in the pipeline code. -->
 
 ## Patch
 
-:warning: Only in the unlikely and regretful event of a release happening with a bug.
+:warning: In the event of a release happening with a bug:
 
 - On your own fork, make a new branch `patch` based on `upstream/master`.
 - Fix the bug, and bump version (X.Y.Z+1).
 - A PR should be made on `master` from patch to directly this particular bug.
 
-## Pipeline contribution conventions
+<!-- ## Pipeline contribution conventions
 
-To make the grothlab/crepas code and processing logic more understandable for new contributors and to ensure quality, we semi-standardise the way the code and other contributions are written.
+To make the grothlab/crepas code and processing logic more understandable for new contributors and to ensure quality, we semi-standardise the way the code and other contributions are written. -->
 
 ### Adding a new step
 
@@ -98,11 +98,11 @@ Please use the following naming schemes, to make it easy to understand what is g
 
 If you are using a new feature from core Nextflow, you may bump the minimum required version of nextflow in the pipeline with: `nf-core bump-version --nextflow . [min-nf-version]`
 
-### Images and figures
+<!-- ### Images and figures
 
-For overview images and other documents we follow the nf-core [style guidelines and examples](https://nf-co.re/developers/design_guidelines).
+For overview images and other documents we follow the nf-core [style guidelines and examples](https://nf-co.re/developers/design_guidelines). -->
 
-## GitHub Codespaces
+<!-- ## GitHub Codespaces
 
 This repo includes a devcontainer configuration which will create a GitHub Codespaces for Nextflow development! This is an online developer environment that runs in your browser, complete with VSCode and a terminal.
 
@@ -115,4 +115,4 @@ To get started:
 
 Devcontainer specs:
 
-- [DevContainer config](.devcontainer/devcontainer.json)
+- [DevContainer config](.devcontainer/devcontainer.json) -->

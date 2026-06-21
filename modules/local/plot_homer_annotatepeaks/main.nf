@@ -4,8 +4,8 @@ process PLOT_HOMER_ANNOTATEPEAKS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:9dfe088cdf18888b':
-        'community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-ggplot2_pruned:d2dbf7b09452d5e3' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/37/37ab8c363a0cdc55501790b81945b691ad907534510a78661f30ff1e6f65b8ec/data':
+        'community.wave.seqera.io/library/bioconductor-biostrings_bioconductor-complexheatmap_r-base_r-optparse_pruned:b699da7f1540e3bb' }"
 
     input:
     tuple val(meta), path(annos)

@@ -4,6 +4,7 @@
 
 include {
     GUNZIP as GUNZIP_FASTA
+    GUNZIP as GUNZIP_SPIKEIN_FASTA
     GUNZIP as GUNZIP_GTF
     GUNZIP as GUNZIP_GFF
     GUNZIP as GUNZIP_GENE_BED
@@ -34,6 +35,7 @@ include {
     UNTAR as UNTAR_MINIMAP2_INDEX
     } from '../../../modules/nf-core/untar/main'
 
+include { BUILD_HYBRID_FASTA } from '../../../modules/local/build_hybrid_fasta/main'
 include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
 include { SAMTOOLS_FAIDX         } from '../../../modules/nf-core/samtools/faidx/main'
 include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
@@ -71,6 +73,7 @@ workflow PREPARE_GENOME {
     spikein_genome     //    string: spikein genome name
     prepare_tool_index //    string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
+    spikein_fasta      //    path: path to spike-in genome fasta file
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
     blacklist          //    file: /path/to/blacklist.bed
@@ -116,7 +119,28 @@ workflow PREPARE_GENOME {
     } else {
         ch_fasta = channel.value([ [ id:'fasta' ], file(fasta, checkIfExists: true) ])
     }
-    
+
+    //
+    // Uncompress spike-in genome fasta file if required
+    //
+    if (spikein_fasta) {
+        if (spikein_fasta.endsWith('.gz')) {
+            ch_spikein_fasta    = GUNZIP_SPIKEIN_FASTA ( [ [id:'spikein_fasta'], file(spikein_fasta, checkIfExists: true) ] ).gunzip
+        } else {
+            ch_spikein_fasta = channel.value([ [ id:'spikein_fasta' ], file(spikein_fasta, checkIfExists: true) ])
+        }
+
+        //
+        // MODULE: Create hybrid fasta file with endogenous and spike-in chromosomes
+        //
+        BUILD_HYBRID_FASTA (
+            ch_fasta.map { meta, fa -> [ meta, fa, genome ] },
+            ch_spikein_fasta.map { meta, fa -> [ meta, fa, spikein_genome ] }
+        )
+        ch_fasta = BUILD_HYBRID_FASTA.out.fasta
+    }
+
+
     //
     // Uncompress GTF annotation file or create from GFF3 if required
     //
@@ -239,7 +263,8 @@ workflow PREPARE_GENOME {
     // MODULE: Create chromosome sizes file
     //
     SAMTOOLS_FAIDX ( ch_fasta_fai, true )
-    ch_chrom_sizes_endo = SAMTOOLS_FAIDX.out.sizes
+    ch_chrom_sizes      = SAMTOOLS_FAIDX.out.sizes
+    ch_chrom_sizes_endo = ch_chrom_sizes
     ch_fai              = SAMTOOLS_FAIDX.out.fai
 
     //
@@ -558,6 +583,7 @@ workflow PREPARE_GENOME {
     fai                    = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
     gtf                    = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
+    chrom_sizes            = ch_chrom_sizes           //    channel: [ val(meta), [ genome.sizes ]]
     chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
     chrom_sizes_exo        = ch_chrom_sizes_exo        //    channel: [ val(meta), [ genome_exo.sizes ]]
     effective_gsize        = ch_effective_gsize        //    channel: [ val(meta), [ effective_genome_size.txt ]]

@@ -27,6 +27,7 @@ library(optparse)
 library(ggplot2)
 library(reshape2)
 library(scales)
+library(stringr)
 
 ################################################
 ################################################
@@ -60,6 +61,12 @@ SampleIDs <- unlist(strsplit(opt$sample_ids,","))
 if (length(HomerFiles) != length(SampleIDs)) {
     print_help(opt_parser)
     stop("Number of sample ids must equal number of homer annotated files.", call.=FALSE)
+}
+
+
+# Funcion to wrap x-axis labels
+wrap_axis_labels <- function(labels, width = 20) {
+    str_wrap(labels, width = width)
 }
 
 ################################################
@@ -135,7 +142,8 @@ plot  <- ggplot(plot.feature.dat, aes(x=variable, y=value, group=feature)) +
             geom_bar(stat="identity", position = "fill", aes(colour=feature,fill=feature), alpha = 0.3) +
             xlab("") +
             ylab("% Feature") +
-            ggtitle("Peak Location Relative to Annotation") +
+            ggtitle("Peak location relative to annotation") +
+            scale_x_discrete(labels = wrap_axis_labels) +
             scale_y_continuous(labels = percent_format()) +
             theme(panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(),
@@ -151,7 +159,8 @@ plot  <- ggplot(plot.dist.dat, aes(x=variable, y=value, group=distance)) +
             geom_bar(stat="identity", position = "fill", aes(colour=distance,fill=distance), alpha = 0.3) +
             xlab("") +
             ylab("% Unique genes to closest peak") +
-            ggtitle("Distance of Closest Peak to Gene") +
+            ggtitle("Distance of closest peak to gene") +
+            scale_x_discrete(labels = wrap_axis_labels) +
             scale_y_continuous(labels = percent_format()) +
             theme(panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(),
@@ -168,7 +177,8 @@ plot  <- ggplot(plot.dat, aes(x=name, y=Distance.to.TSS)) +
             geom_boxplot(width=0.1) +
             xlab("") +
             ylab(expression(log[10]*" distance to TSS")) +
-            ggtitle("Peak Distribution Relative to TSS") +
+            ggtitle("Peak distribution relative to TSS") +
+            scale_x_discrete(labels = wrap_axis_labels) +
             scale_y_continuous(trans='log10',breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) +
             theme(legend.position="none",
                 panel.grid.major = element_blank(),

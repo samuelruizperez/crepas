@@ -222,7 +222,9 @@ message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating OK-seq bin size..
 OK_BIN_SIZE <- width(OK_gr)[1]
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Removing OK-seq bins that overlap a blacklisted region...")
-OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
+if (HAS_BLACKLIST) {
+  OK_gr <- OK_gr[!overlapsAny(OK_gr, blacklist_gr, minoverlap = 1)]
+}
 
 message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping only OK-seq bins with sufficient coverage...")
 OK_gr <- subset(OK_gr, RPM >= opt_rpm_cutoff)

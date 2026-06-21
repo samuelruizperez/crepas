@@ -1,0 +1,5 @@
+sample,biological_replicate,input_control,input_control_biological_replicate,exp_type,strandedness,antibody,fastq_1
+SCAR_410_T0_H3K27me3,1,SCAR_410_T0_H3K27me3_strandedInput,1,SCAR-seq,forward,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR122/003/SRR12214703/SRR12214703.fastq.gz
+SCAR_439_T0_H3K27me3,1,SCAR_439_T0_H3K27me3_strandedInput,1,SCAR-seq,forward,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR122/009/SRR12214709/SRR12214709.fastq.gz
+SCAR_410_T0_H3K27me3_strandedInput,1,,,SCAR-seq,forward,,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR122/039/SRR12214739/SRR12214739.fastq.gz
+SCAR_439_T0_H3K27me3_strandedInput,1,,,SCAR-seq,forward,,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR122/045/SRR12214745/SRR12214745.fastq.gz

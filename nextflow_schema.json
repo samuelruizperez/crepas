@@ -88,6 +88,15 @@
                     "help_text": "If you don't have the appropriate alignment index available this will be generated for you automatically based on this file. Combine with `--save_reference` to save alignment index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
+                "spikein_fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "exists": true,
+                    "description": "Path to exogenous (spike-in) FASTA genome file. If you provide this, the a hybrid fasta reference file will be generated and used for alignment index building.",
+                    "fa_icon": "far fa-file-code"
+                },
                 "gtf": {
                     "type": "string",
                     "format": "file-path",
@@ -343,7 +352,13 @@
                     "description": "Save intermediate files from the UMI deduplication step.",
                     "fa_icon": "fas fa-save",
                     "default": true
-                }
+                },
+                "skip_split_by_chrom": {
+                    "type": "boolean",
+                    "description": "Skip splitting the BAM file by chromosome for UMI deduplication.",
+                    "fa_icon": "fas fa-fast-forward",
+                    "default": false,
+                    "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."}
             }
         },
         "adapter_trimming_options": {
@@ -571,12 +586,6 @@
                     "default": true,
                     "description": "Save the intermediate BAM files from the multimapper allocation step.",
                     "fa_icon": "fas fa-save"
-                },
-                "allocate_exogenous": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to also allocate multimappers in the spike-in (exogenous) BAM files.",
-                    "fa_icon": "fas fa-dice-d20"
                 }
             }
         },
@@ -717,6 +726,24 @@
                     "default": true,
                     "description": "Whether to skip the generation of exogenous bigWig files for each sample.",
                     "fa_icon": "fas fa-chart-area"
+                },
+                "skip_multibigwigsummary": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to skip the generation of a table with the bin value for all the samples.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_plotcorrelation": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip correlation of multibigwigsummary output.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "skip_plotpca": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to skip PCA of multibigwigsummary output.",
+                    "fa_icon": "fas fa-chart-area"
                 }
             }
         },
@@ -847,6 +874,13 @@
             "fa_icon": "fas fa-chart-area",
             "description": "Options to adjust peak calling criteria.",
             "properties": {
+                "peak_caller": {
+                    "type": "string",
+                    "default": "macs3",
+                    "description": "Specifies the peak calling algorithm to use.",
+                    "fa_icon": "fas fa-chart-area",
+                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "edd", "denopa", "seacr"]
+                },
                 "narrow_peak": {
                     "type": "boolean",
                     "default": false,
@@ -873,10 +907,16 @@
                     "fa_icon": "fas fa-hand-scissors"
                 },
                 "min_reps_consensus": {
-                    "type": "integer",
+                    "type": "number",
                     "default": 1,
                     "description": "Number of biological replicates required from a given condition for a peak to contribute to a consensus peak.",
-                    "help_text": "If you are confident you have good reproducibility amongst your replicates then you can increase the value of this parameter to create a 'reproducible' set of consensus peaks. For example, a value of 2 will mean peaks that have been called in at least 2 replicates will contribute to the consensus set of peaks, and as such peaks that are unique to a given replicate will be discarded.",
+                    "help_text": "If you are confident you have good reproducibility amongst your replicates then you can increase the value of this parameter to create a 'reproducible' set of consensus peaks. For example, a value of 2 will mean peaks that have been called in at least 2 replicates will contribute to the consensus set of peaks, and as such peaks that are unique to a given replicate will be discarded. A value of -1 means that a peak must have been called in all replicates to contribute to the consensus set of peaks.",
+                    "fa_icon": "fas fa-sort-numeric-down"
+                },
+                "consensus_peaks_max_dist": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Maximum distance between peaks allowed for peaks to be merged for consensus peak definition. `--consensus_peaks_max_dist 0` means overlapping and/or book-ended features are merged.",
                     "fa_icon": "fas fa-sort-numeric-down"
                 },
                 "macs_extsize": {
@@ -983,12 +1023,6 @@
                 "save_macs_bdgcmp_intermeds": {
                     "type": "boolean"
                 },
-                "skip_edd": {
-                    "type": "boolean",
-                    "description": "Whether to skip EDD peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
                 "edd_bin_size": {
                     "type": "string",
                     "description": "Bin size (Kb) for EDD peak calling. Autoestimated if left blank. See [EDD documentation](https://github.com/CollasLab/edd) for more details."
@@ -1037,12 +1071,6 @@
                     "fa_icon": "fas fa-save",
                     "default": true
                 },
-                "skip_genrich": {
-                    "type": "boolean",
-                    "description": "Skip Genrich peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
                 "epic2_binsize": {
                     "type": "integer",
                     "default": 250,
@@ -1054,18 +1082,6 @@
                     "default": 0.01,
                     "description": "In epic2 peak calling, remove all islands with an FDR above this cutoff.",
                     "fa_icon": "fas fa-chart-area"
-                },
-                "skip_dpeak": {
-                    "type": "boolean",
-                    "description": "Skip DANPOS2's dpeak peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
-                "skip_dpos": {
-                    "type": "boolean",
-                    "description": "Skip DANPOS2's dpos peak calling.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
                 },
                 "skip_encode_pipeline": {
                     "type": "boolean",
@@ -1119,30 +1135,6 @@
                     "type": "integer",
                     "description": "Maximum fragment length to exclude when calculating cross-correlation metrics for the ENCODE-based processing. If not provided `max(params.read_length + 10, 100)` will be used.",
                     "fa_icon": "fas fa-chart-area"
-                },
-                "skip_epic2": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Skip epic2 peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
-                "skip_consenrich": {
-                    "type": "boolean",
-                    "description": "Skip Consenrich (Genome-wide 'consensus' epigenomic state estimates and uncertainty metrics).",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
-                },
-                "skip_mace": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Skip MACE peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
-                "skip_macs3": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip MACS3 peak calling.",
-                    "fa_icon": "fas fa-fast-forward"
                 },
                 "seacr_peak_threshold": {
                     "type": "number",
@@ -1220,12 +1212,6 @@
                     "default": false,
                     "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
                     "fa_icon": "fas fa-save"
-                },
-                "skip_denopa": {
-                    "type": "boolean",
-                    "description": "Skip deNOPA peak calling for ATAC-seq.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": true
                 }
             }
         },
@@ -1611,9 +1597,8 @@
             "type": "string",
             "default": "https://raw.githubusercontent.com/nf-core/test-datasets/"
         },
-        "local_testdata_base_path": {
-            "type": "string",
-            "default": "/maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/"
+        "crepas_testdata_base_path": {
+            "type": "string"
         },
         "trace_report_suffix": {
             "type": "string",

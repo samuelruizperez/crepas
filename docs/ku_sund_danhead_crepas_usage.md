@@ -220,11 +220,11 @@ The recommended way to run the pipeline on the DAN System is through an *SBATCH*
 
 You can test the correct functioning of any pipeline version (`-r <version>`) by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
 
-  - `local_test_chipseq`
-  - `local_test_chipexo`
-  - `local_test_chorseq`
-  - `local_test_scarseq`
-  - `local_test_atacseq`
+  - `test_chipseq`
+  - `test_chipexo`
+  - `test_chorseq`
+  - `test_scarseq`
+  - `test_atacseq`
 
 Now, you should follow similar steps as in the [Running the pipeline through an *SBATCH* job](#running-the-pipeline-through-an-sbatch-job) section, but this time we do not need to copy any FASTQ files or create an input samplesheet or parameter file, as the test data and parameters are already included in the pipeline profiles.
 
@@ -261,7 +261,7 @@ cd <path_to_test_project_directory>/crepas/output/
 # Run the pipeline
 nextflow run grothlab/crepas \
     -r <version> \
-    -profile ku_sund_danhead_mod,local_test_chipseq \
+    -profile ku_sund_danhead_mod,test_chipseq \
     --outdir <path_to_test_project_directory>/crepas/output/ \
     -work-dir <path_to_test_project_directory>/crepas/output/work/
 ```
