@@ -13,20 +13,25 @@ To do so make a shell script with a similar structure to the following code and 
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=<job_name>        # specify a name for the job
+#SBATCH --job-name=<job_name>       # specify a name for the job
 #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=NONE            # email address to receive the notifications
 #SBATCH -c 1                        # number of requested cores for the Nextflow head job (1 should be enough)
-#SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job (4 GB should be enough)
+#SBATCH --mem=5gb                   # total requested RAM for the Nextflow head job (5 GB should be enough)
 #SBATCH --time=0-02:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
-#SBATCH --output=<job_name>.%j.log   # standard output and error log, '%j' gives the job ID
+#SBATCH --output=<job_name>.%j.log  # standard output and error log, '%j' gives the job ID
+#SBATCH --account=<slurm_account>   # slurm account to submit this job
 
 # Set the SBATCH_ACCOUNT to your corresponding account in DCAI GEFION
 export SBATCH_ACCOUNT=$(sacctmgr show association where users=$USER format=account -n -P)
 
+# Set memory limits for the Nextflow head job
+export NXF_OPTS="-Xms2g -Xmx4g"
+export NXF_JVM_ARGS='-Xms2g -Xmx4g'
+
 # Load the required modules
 module purge
-module load Apptainer/1.3.6 nextflow/25.04.4
+module load Apptainer/1.3.6 Nextflow/25.10.2
 
 # Create an output directory for the pipeline run if it does not exist
 mkdir -p <path_to_project_directory>/output/

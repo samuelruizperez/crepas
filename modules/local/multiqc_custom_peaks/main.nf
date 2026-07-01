@@ -3,8 +3,8 @@ process MULTIQC_CUSTOM_PEAKS {
     
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ubuntu:20.04' :
-        'ubuntu:20.04' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/48/48492b71efcc81e0c02b7319ed42b67e4cf12db4350838e869157d0305a7c890/data' :
+        'community.wave.seqera.io/library/coreutils_gawk:c6711ba4a1d2d075' }"
 
     input:
     tuple val(meta), path(peak), path(frip)
