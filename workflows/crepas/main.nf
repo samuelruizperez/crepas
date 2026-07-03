@@ -1234,5 +1234,5 @@ workflow CREPAS {
     emit:
     multiqc_report  = ch_multiqc_report
     multiqc_publish = ch_multiqc_publish
-    versions // channel: [ path(versions.yml) ]
+    versions        = ch_versions // channel: [ path(versions.yml) ]
 }
