@@ -25,6 +25,7 @@ workflow FASTQ_ALIGN {
     ch_star_index
     ch_hisat2_index
     ch_minimap2_index
+    ch_strobealign_index
     ch_gtf
     ch_splicesites
     save_unaligned
@@ -115,7 +116,7 @@ workflow FASTQ_ALIGN {
     if (aligner == 'strobealign') {
         FASTQ_ALIGN_STROBEALIGN (
             ch_reads,
-            channel.value([[:], []]),
+            ch_strobealign_index,
             ch_fasta,
             true
         )

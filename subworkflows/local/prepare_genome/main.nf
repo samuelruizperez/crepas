@@ -22,6 +22,7 @@ include {
     GUNZIP as GUNZIP_TE_GTF
     GUNZIP as GUNZIP_TECOUNT_TE_INDEX
     GUNZIP as GUNZIP_TELOCAL_TE_INDEX
+    GUNZIP as GUNZIP_STROBEALIGN_INDEX
     } from '../../../modules/nf-core/gunzip/main'
 
 include {
@@ -93,6 +94,7 @@ workflow PREPARE_GENOME {
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
     minimap2_index     //    file: /path/to/minimap2/index/
+    strobealign_index  //    file: /path/to/strobealign_index
     splicesites        //    file: /path/to/splicesites.txt
     okseq_rfd_file     //    file: /path/to/okseq_rfd_file.bed
     initiation_zones   //    file: /path/to/initiation_zones.bed
@@ -505,6 +507,25 @@ workflow PREPARE_GENOME {
             ch_versions  = ch_versions.mix(MINIMAP2_INDEX.out.versions_minimap2)
         }
     }
+
+    //
+    // Uncompress Strobealign index or generate from scratch if required
+    //
+    ch_strobealign_index = channel.emtpy().first()
+    if (prepare_tool_index == 'strobealign') {
+        if (strobealign_index) {
+            if (strobealign_index.endsWith('.gz')) {
+                ch_strobealign_index = GUNZIP_STROBEALIGN_INDEX ( [ [id:'strobealign_index'], file(strobealign_index, checkIfExists: true) ] ).gunzip
+            } else {
+                ch_strobealign_index = channel.value( [ [id:'strobealign_index'], file(strobealign_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_strobealign_index = channel.value([[:], []])
+        }
+    }
+
+    
+
     //
     // Uncompress gene GTF for TE counting or use existing gene GTF
     // With this, it is possible to provide a different GTF specifically for TE counting
@@ -603,6 +624,7 @@ workflow PREPARE_GENOME {
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index           = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
     minimap2_index         = ch_minimap2_index         //    channel: [ val(meta), [ minimap2/index/ ]]
+    strobealign_index      = ch_strobealign_index         //    channel: [ val(meta), [ strobealign/index/ ]]
     splicesites            = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
     te_counting_gene_gtf   = ch_te_counting_gene_gtf   //    channel: [ val(meta), [ te_counting_gene_gtf.gtf ]]
     tecount_gene_index     = ch_tecount_gene_index     //    channel: [ val(meta), [ tecount_gene_index.Ind ]]
