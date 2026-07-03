@@ -1206,19 +1206,33 @@ workflow CREPAS {
             .mix(ch_collated_versions)
         // .mix(ch_methods_description)
 
-        MULTIQC (
-            ch_multiqc_files.collect(),
-            ch_multiqc_config.toList(),
-            ch_multiqc_custom_config.toList(),
-            ch_multiqc_logo.toList(),
-            [],
-            []
-        )
-        ch_multiqc_report = MULTIQC.out.report
-        ch_versions = ch_versions.mix(MULTIQC.out.versions)
-    }
 
+        //
+        // MODULE: MultiQC
+        //
+        MULTIQC (
+            ch_multiqc_files.flatten().collect().map { files ->
+                [
+                    [id: 'crepas'],
+                    files,
+                    params.multiqc_config
+                        ? file(params.multiqc_config, checkIfExists: true)
+                        : file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true),
+                    params.multiqc_logo ? file(params.multiqc_logo, checkIfExists: true) : [],
+                    [],
+                    [],
+                ]
+            }
+        )
+
+        ch_multiqc_report  = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
+        ch_multiqc_publish = MULTIQC.out.data.mix(MULTIQC.out.plots, MULTIQC.out.report)
+        ch_versions = ch_versions.mix(MULTIQC.out.versions)
+
+    }
+    
     emit:
-    multiqc_report = ch_multiqc_report // channel: /path/to/multiqc_report.html
-    versions       = ch_versions // channel: [ path(versions.yml) ]
+    multiqc_report  = ch_multiqc_report
+    multiqc_publish = ch_multiqc_publish
+    versions // channel: [ path(versions.yml) ]
 }

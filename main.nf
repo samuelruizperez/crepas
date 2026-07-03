@@ -153,7 +153,6 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.tecount_te_index,
         PREPARE_GENOME.out.telocal_te_index
     )
-
     emit:
     multiqc_report = CREPAS.out.multiqc_report // channel: /path/to/multiqc_report.html
     versions       = ch_versions                // channel: [version1, version2, ...]
@@ -168,15 +167,18 @@ workflow GROTHLAB_CREPAS {
 workflow {
 
     main:
-
     //
     // SUBWORKFLOW: Run initialisation tasks
     //
     PIPELINE_INITIALISATION (
         params.version,
         params.validate_params,
+        params.monochrome_logs,
         args,
-        params.outdir
+        params.outdir,
+        params.help,
+        params.help_full,
+        params.show_hidden
     )
 
     //
