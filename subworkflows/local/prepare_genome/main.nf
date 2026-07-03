@@ -511,7 +511,7 @@ workflow PREPARE_GENOME {
     //
     // Uncompress Strobealign index or generate from scratch if required
     //
-    ch_strobealign_index = channel.emtpy().first()
+    ch_strobealign_index = channel.empty().first()
     if (prepare_tool_index == 'strobealign') {
         if (strobealign_index) {
             if (strobealign_index.endsWith('.gz')) {
