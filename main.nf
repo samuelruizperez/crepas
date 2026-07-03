@@ -1,13 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    grothlab/glseq
+    grothlab/crepas
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/grothlab/glseq
+    Github : https://github.com/grothlab/crepas
 ----------------------------------------------------------------------------------------
 */
-
-nextflow.enable.dsl = 2
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,11 +13,10 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { GLSEQ  } from './workflows/glseq'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_glseq_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_glseq_pipeline'
-
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_glseq_pipeline'
+include { CREPAS  } from './workflows/crepas'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_crepas_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_crepas_pipeline'
+include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_crepas_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,7 +38,7 @@ params.fasta = getGenomeAttribute('fasta')
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow GROTHLAB_GLSEQ {
+workflow GROTHLAB_CREPAS {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -51,13 +48,15 @@ workflow GROTHLAB_GLSEQ {
     //
     // WORKFLOW: Run pipeline
     //
-    GLSEQ (
-        samplesheet
+    CREPAS (
+        samplesheet,
+        params.multiqc_config,
+        params.multiqc_logo,
+        params.multiqc_methods_description,
+        params.outdir,
     )
-
     emit:
-    multiqc_report = GLSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
-
+    multiqc_report = CREPAS.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,27 +67,27 @@ workflow GROTHLAB_GLSEQ {
 workflow {
 
     main:
-
     //
     // SUBWORKFLOW: Run initialisation tasks
     //
     PIPELINE_INITIALISATION (
         params.version,
-        params.help,
         params.validate_params,
         params.monochrome_logs,
         args,
         params.outdir,
-        params.input
+        params.input,
+        params.help,
+        params.help_full,
+        params.show_hidden
     )
 
     //
     // WORKFLOW: Run main workflow
     //
-    GROTHLAB_GLSEQ (
+    GROTHLAB_CREPAS (
         PIPELINE_INITIALISATION.out.samplesheet
     )
-
     //
     // SUBWORKFLOW: Run completion tasks
     //
@@ -98,8 +97,7 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        params.hook_url,
-        GROTHLAB_GLSEQ.out.multiqc_report
+        GROTHLAB_CREPAS.out.multiqc_report
     )
 }
 
