@@ -111,7 +111,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
         ch_rocco_params,
         ch_effective_gsize
     )
-    ch_versions = ch_versions.mix(ROCCO.out.versions.first())
 
     emit:
 
