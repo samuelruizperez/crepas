@@ -71,8 +71,6 @@ workflow BAM_SPIKEIN_SPLIT {
         SAMTOOLS_NSORT.out.bam,
         true
     )
-    ch_versions = ch_versions.mix(BAM_REMOVE_ORPHANS.out.versions.first())
-
 
     // Mixing SE and PE (removed orphans) files
     ch_bam = ch_bam.se.mix(BAM_REMOVE_ORPHANS.out.bam)

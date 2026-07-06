@@ -100,7 +100,6 @@ workflow BAM_FILTER_SAMBAMBA_RMO_STATS {
             SAMTOOLS_NSORT.out.bam,
             true
         )
-        ch_versions = ch_versions.mix(BAM_REMOVE_ORPHANS.out.versions.first())
 
         //
         // MODULE: Sort BAM by coordinate and generate stats
