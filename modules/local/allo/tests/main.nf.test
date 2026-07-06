@@ -1,0 +1,75 @@
+nextflow_process {
+
+    name "Test Process ALLO"
+    script "../main.nf"
+    process "ALLO"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "allo"
+    tag "samtools/collate"
+
+    test("homo_sapiens - bam - paired_end") {
+
+        setup {
+            run("SAMTOOLS_COLLATE") {
+                script "../../../nf-core/samtools/collate/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'test', single_end:false ], // meta map
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.name.sorted.bam', checkIfExists: true)
+                    ]
+                    input[1] = [[ id:'test' ], []]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_COLLATE.out.bam
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out.bam,
+                    process.out.sam,
+                    process.out.versions
+                    ).match() }
+            )
+        }
+
+    }
+
+    test("homo_sapiens - bam - paired_end - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', single_end:false ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.name.sorted.bam', checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+}

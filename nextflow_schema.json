@@ -1571,9 +1571,6 @@
         "multiqc_methods_description": {
             "type": "string"
         },
-        "hook_url": {
-            "type": "string"
-        },
         "version": {
             "type": "boolean"
         },

@@ -49,6 +49,7 @@ process ALLO {
     """
     touch  ${prefix}.sam
     touch  ${prefix}.bam
+    touch  ${prefix}.log
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

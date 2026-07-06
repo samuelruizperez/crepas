@@ -534,7 +534,6 @@ Less common options for the pipeline, typically set in a config file.
 |-----------|-----------|-----------|-----------|-----------|-----------|
 | `multiqc_logo` |  | `string` |  |  |  |
 | `multiqc_methods_description` |  | `string` |  |  |  |
-| `hook_url` |  | `string` |  |  |  |
 | `version` |  | `boolean` |  |  |  |
 | `pipelines_testdata_base_path` |  | `string` | https://raw.githubusercontent.com/nf-core/test-datasets/ |  |  |
 | `local_testdata_base_path` |  | `string` | /maps/projects/dan1/data/Groth_group/SRP/crepas_testdata/ |  |  |

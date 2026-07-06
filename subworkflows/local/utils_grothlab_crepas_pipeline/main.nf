@@ -54,21 +54,19 @@ workflow PIPELINE_INITIALISATION {
     //
     def colors = logColours(monochrome_logs)
     def before_text = """
-        
-                                                                ╔██████╗                       
-                                                                ██╔══██║                       
-                               ██████╗               ╔██████╗   ███████║                       
-                     ██████╗   ██╔══██╗              ██╔══██║   ██╔══██║                       
-                    ██╔════╝   ██████╔╝   ╔██████╗   ██████╔╝   ██║_ ██║                       
-                    ██║        ██╔══██╗_  ██╔════╝   ██╔═══╝    ╚═╝ \\╚═╝                       
-                    ██║ _      ██║  ██║ \\ █████╗  /\\ ██║  /\\   ///\\. \\     ╔███████            
-                    ╚██████╗   ╚═╝ ///:. \\██╔══╝ /. \\╚═╝ // \\/////\\:. \\    ██╔════╝            
-             /\\      ╚//: \\╝ _/\\_ /////:. ║██████╗/: \\_ ///.//////\\\\:. \\  /███████╗\\  /\\       
-            //.\\\\    ///:. \\///: \\//////:.╚══════╝/\\.. \\\\/\\///////\\\\\\:. \\//╚════██║ \\/. \\\\     
-           //:.. \\  ///:.. ////:. \\//////:. \\///////:.  \\\\////////\\\\\\::. \\\\███████║ //::. \\\\   
-          ///:... \\/////: /////\\:. \\////\\\\:. \\///////:.. \\////////\\\\\\\\::: \\╚══════╝////:... \\  
-          ───────────────────────────────────────────────────────────────────────────────────  
-
+                                                    ╔██████╗                       
+                                                    ██╔══██║                       
+                    ██████╗               ╔██████╗   ███████║                       
+            ██████╗   ██╔══██╗              ██╔══██║   ██╔══██║                       
+        ██╔════╝   ██████╔╝   ╔██████╗   ██████╔╝   ██║_ ██║                       
+        ██║        ██╔══██╗_  ██╔════╝   ██╔═══╝    ╚═╝ \\╚═╝                       
+        ██║ _      ██║  ██║ \\ █████╗  /\\ ██║  /\\   ///\\. \\     ╔███████            
+        ╚██████╗   ╚═╝ ///:. \\██╔══╝ /. \\╚═╝ // \\/////\\:. \\    ██╔════╝            
+    /\\      ╚//: \\╝ _/\\_ /////:. ║██████╗/: \\_ ///.//////\\\\:. \\  /███████╗\\  /\\       
+//.\\\\    ///:. \\///: \\//////:.╚══════╝/\\.. \\\\/\\///////\\\\\\:. \\//╚════██║ \\/. \\\\     
+//:.. \\  ///:.. ////:. \\//////:. \\///////:.  \\\\////////\\\\\\::. \\\\███████║ //::. \\\\   
+///:... \\/////: /////\\:. \\////\\\\:. \\///////:.. \\////////\\\\\\\\::: \\╚══════╝////:... \\  
+───────────────────────────────────────────────────────────────────────────────────
 """
     def after_text = """${workflow.manifest.doi ? "\n* The pipeline\n" : ""}${workflow.manifest.doi.tokenize(",").collect { doi -> "    https://doi.org/${doi.trim().replace('https://doi.org/','')}"}.join("\n")}${workflow.manifest.doi ? "\n" : ""}
 * The Epigenome Replication and Maintenance group at the Center for Epigenetic Cell Memory (EpiC), 
@@ -412,7 +410,6 @@ workflow PIPELINE_COMPLETION {
     plaintext_email // boolean: Send plain-text email instead of HTML
     outdir          //    path: Path to output directory where results will be published
     monochrome_logs // boolean: Disable ANSI colour codes in log output
-    hook_url        //  string: hook URL for notifications
     multiqc_report  //  string: Path to MultiQC report
 
     main:
@@ -531,7 +528,7 @@ def validateInputParameters() {
         }
     }
 
-    if (!params.containsKey('macs_gsize')) {
+    if (!params.macs_gsize) {
         macsGsizeWarn(log)
     }
 
