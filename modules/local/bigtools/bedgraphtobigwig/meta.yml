@@ -55,13 +55,28 @@ output:
           pattern: "*.bw"
           ontologies:
             - edam: "http://edamontology.org/format_3006" # bigWig
+  versions_bigtools:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "bigtools":
+          type: string
+          description: The name of the tool
+      - "bigtools bedgraphtobigwig --version | sed 's/^bigtools-bedgraphtobigwig //'":
+          type: eval
+          description: The expression to obtain the version of the tool
+
+topics:
   versions:
-    - versions.yml:
-        type: file
-        description: File containing software versions
-        pattern: "versions.yml"
-        ontologies:
-          - edam: "http://edamontology.org/format_3750" # YAML
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "bigtools":
+          type: string
+          description: The name of the tool
+      - "bigtools bedgraphtobigwig --version | sed 's/^bigtools-bedgraphtobigwig //'":
+          type: eval
+          description: The expression to obtain the version of the tool
 authors:
   - "@samuelruizperez"
 maintainers:

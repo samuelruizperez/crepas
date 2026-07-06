@@ -11,7 +11,11 @@
                     ]
                 ],
                 "1": [
-                    "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
+                    [
+                        "BIGTOOLS_BEDGRAPHTOBIGWIG",
+                        "bigtools",
+                        "0.5.4"
+                    ]
                 ],
                 "bigwig": [
                     [
@@ -21,12 +25,16 @@
                         "test.bw:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "versions": [
-                    "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
+                "versions_bigtools": [
+                    [
+                        "BIGTOOLS_BEDGRAPHTOBIGWIG",
+                        "bigtools",
+                        "0.5.4"
+                    ]
                 ]
             }
         ],
-        "timestamp": "2026-07-06T10:03:43.672576085",
+        "timestamp": "2026-07-06T10:55:29.022492414",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
@@ -35,11 +43,17 @@
     "sarscov2 - bedgraph": {
         "content": [
             "test.bw",
-            [
-                "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
-            ]
+            {
+                "versions_bigtools": [
+                    [
+                        "BIGTOOLS_BEDGRAPHTOBIGWIG",
+                        "bigtools",
+                        "0.5.4"
+                    ]
+                ]
+            }
         ],
-        "timestamp": "2026-07-06T10:03:31.914883904",
+        "timestamp": "2026-07-06T10:55:17.037325512",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "25.10.4"
