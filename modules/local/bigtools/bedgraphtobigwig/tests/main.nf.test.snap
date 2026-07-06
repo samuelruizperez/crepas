@@ -1,0 +1,48 @@
+{
+    "sarscov2 - bedgraph - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.bw:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
+                ],
+                "bigwig": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.bw:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T10:03:43.672576085",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - bedgraph": {
+        "content": [
+            "test.bw",
+            [
+                "versions.yml:md5,d65c96d0582b301ea3551d3bb467d5f4"
+            ]
+        ],
+        "timestamp": "2026-07-06T10:03:31.914883904",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    }
+}
