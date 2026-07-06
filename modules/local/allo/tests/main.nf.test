@@ -41,7 +41,45 @@ nextflow_process {
                 { assert snapshot(
                     process.out.bam,
                     process.out.sam,
-                    process.out.versions
+                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    ).match() }
+            )
+        }
+
+    }
+
+    test("homo_sapiens - bam - single_end") {
+
+        setup {
+            run("SAMTOOLS_COLLATE") {
+                script "../../../nf-core/samtools/collate/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'test_se', single_end:true ], // meta map
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test3.single_end.markduplicates.sorted.bam', checkIfExists: true)
+                    ]
+                    input[1] = [[ id:'test_se' ], []]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_COLLATE.out.bam
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out.bam,
+                    process.out.sam,
+                    process.out.findAll { key, val -> key.startsWith('versions') }
                     ).match() }
             )
         }
