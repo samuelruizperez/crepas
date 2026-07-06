@@ -290,7 +290,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
 
     }
 

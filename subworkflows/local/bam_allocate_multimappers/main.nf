@@ -16,8 +16,6 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
 
     main:
 
-    ch_versions = channel.empty()
-
     SAMTOOLS_SORT (
         ch_bam,
         ch_fasta,
@@ -36,7 +34,6 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
             SAMTOOLS_SORT.out.bam
         )
         ch_allocated_bam = MMR.out.bam
-        ch_versions = ch_versions.mix(MMR.out.versions.first())
     }
 
     BAM_SORT_STATS_SAMTOOLS (
@@ -55,6 +52,5 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
     flagstat    = ch_allocated_flagstat     // channel: [ val(meta), [ flagstat ] ]
     stats       = ch_allocated_stats        // channel: [ val(meta), [ stats ] ]
     idxstats    = ch_allocated_idxstats     // channel: [ val(meta), [ idxstats ] ]
-
-    versions    = ch_versions               // channel: [ versions.yml ]
+    
 }
