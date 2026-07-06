@@ -342,10 +342,9 @@ workflow BAM_DOWNSAMPLE {
     //
     // MODULE: Extract total mapped reads from flagstats
     //
-    BAM_FLAGSTAT_MAPPED_DSP(
+    BAM_FLAGSTAT_MAPPED_DSP (
         ch_ds_flagstat
     )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED_DSP.out.versions)
 
     // Extract the total mapped reads (after downsampling) from the text file
     BAM_FLAGSTAT_MAPPED_DSP.out.txt

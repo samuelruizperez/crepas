@@ -100,7 +100,6 @@ workflow BAM_SPIKEIN_SPLIT {
     BAM_FLAGSTAT_MAPPED (
         ch_flagstat
     )
-    ch_versions = ch_versions.mix(BAM_FLAGSTAT_MAPPED.out.versions)
 
     // Extract the total mapped reads from the text file
     BAM_FLAGSTAT_MAPPED.out.txt
