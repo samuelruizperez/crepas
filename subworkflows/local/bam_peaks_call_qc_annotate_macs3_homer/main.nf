@@ -96,7 +96,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             FILE_SORT.out.sorted,
             ch_chrom_sizes
         )
-        ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG.out.versions.first())
     }
 
 

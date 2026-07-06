@@ -29,7 +29,6 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
             SAMTOOLS_SORT.out.bam
         )
         ch_allocated_bam = ALLO.out.bam
-        ch_versions = ch_versions.mix(ALLO.out.versions.first())
     }
    
     if (allocation_method == 'mmr') {
