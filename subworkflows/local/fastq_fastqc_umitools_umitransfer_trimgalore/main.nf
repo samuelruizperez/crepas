@@ -38,7 +38,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
 
 
     main:
-    ch_versions = channel.empty()
     fastqc_html = channel.empty()
     fastqc_zip  = channel.empty()
     if (!skip_fastqc) {
@@ -59,7 +58,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
             ch_spikein_barcode_table
         )
         ch_barcode_counts = FASTQ_EXTRACT_SPIKEIN_BARCODES.out.counts
-        ch_versions = ch_versions.mix(FASTQ_EXTRACT_SPIKEIN_BARCODES.out.versions.first())
     }
 
 
@@ -173,5 +171,4 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     htrim_zip         // channel: [ val(meta), [ zip ] ]
     htrim_log         // channel: [ val(meta), [ txt ] ]
 
-    versions = ch_versions // channel: [ versions.yml ]
 }
