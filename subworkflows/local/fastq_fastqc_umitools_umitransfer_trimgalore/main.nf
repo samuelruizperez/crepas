@@ -75,7 +75,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     UMITRANSFER (ch_reads.sep_umi_fq)
     ch_sep_umi_fq   = UMITRANSFER.out.reads
     sep_umi_fq_log  = UMITRANSFER.out.log
-    ch_versions     = ch_versions.mix(UMITRANSFER.out.versions.first())
 
     UMITOOLS_EXTRACT (ch_reads.extract_umi)
     ch_extract_umi    = UMITOOLS_EXTRACT.out.reads
