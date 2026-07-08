@@ -24,9 +24,7 @@ process DANPOS2_DPOS {
     tuple val(meta), path("*.reference_positions.xls"), emit: reference_pos, optional: true
     tuple val(meta), path("*.positions.ref_adjust.xls"), emit: pos_ref_adjust, optional: true
     tuple val(meta), path("result/diff/*.wig"), emit: diff_wig, optional: true
-
-
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('danpos'), eval("danpos.py dpos -h 2>&1 | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1"), emit: versions_danpos, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -53,29 +51,18 @@ process DANPOS2_DPOS {
 
     # replace any occurrence of 'treatment' in filenames with the prefix
     find ./ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"' \\;
-
-    # replace any occurrence of 'treatment' in subdirectory names with the prefix
-    #find ./ -mindepth 1 -maxdepth 1 -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"' \\;
-    
-    # TODO: this is just to keep track of the final dir structure:
-    find .
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dpos -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.peaks.xls
-    touch ${prefix}.input.wig
-    touch ${prefix}.smooth.wig
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dpos -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
-    END_VERSIONS
+    mkdir -p result/pooled result/diff
+    touch result/pooled/${prefix}.smooth.wig
+    touch result/pooled/${prefix}.smooth.positions.xls
+    touch result/pooled/${prefix}_input.wig
+    touch ${prefix}.positions.integrative.xls
+    touch ${prefix}.reference_positions.xls
+    touch ${prefix}.positions.ref_adjust.xls
+    touch result/diff/${prefix}.wig
     """
 }

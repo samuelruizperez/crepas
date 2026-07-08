@@ -160,14 +160,12 @@ workflow CALL_PEAKS {
     //
     // SUBWORKFLOW: Call peaks with DANPOS2
     //
-    if (peak_caller == 'dpeak' || peak_caller == 'dpos' || peak_caller == 'dregion') {
+    if (peak_caller == 'dpeak' || peak_caller == 'dpos' || peak_caller == 'dregion' || peak_caller == 'dtriple') {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_bam,//.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_bam,
             peak_caller
         )
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
-
 
     //
     // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]

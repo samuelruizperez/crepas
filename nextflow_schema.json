@@ -861,7 +861,7 @@
                     "default": "macs3",
                     "description": "Specifies the peak calling algorithm to use.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "edd", "denopa", "seacr"]
+                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "dtriple", "edd", "denopa", "seacr"]
                 },
                 "narrow_peak": {
                     "type": "boolean",
