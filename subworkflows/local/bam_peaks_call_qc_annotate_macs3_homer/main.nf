@@ -68,7 +68,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         MACS3_BDGCMP (
             ch_bdgs
         )
-        ch_versions = ch_versions.mix(MACS3_BDGCMP.out.versions.first())
 
         BEDTOOLS_SLOP (
             MACS3_BDGCMP.out.bdg,
@@ -78,7 +77,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         AWK_FIX_MACS3_BDGCMP (
             BEDTOOLS_SLOP.out.bed,
         )
-        ch_versions = ch_versions.mix(AWK_FIX_MACS3_BDGCMP.out.versions.first())
 
         UCSC_BEDCLIP (
             AWK_FIX_MACS3_BDGCMP.out.bed,
