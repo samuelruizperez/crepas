@@ -20,13 +20,23 @@ process SAMBAMBA_INDEX {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def extension = args.contains("--format sam") ? "sam" :
     """
     sambamba index \\
         ${args} \\
         --nthreads ${task.cpus} \\
         ${bam} \\
         ${prefix}.bai
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sambamba: \$(echo \$(sambamba --version 2>&1) | awk '{print \$2}' )
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.bai
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

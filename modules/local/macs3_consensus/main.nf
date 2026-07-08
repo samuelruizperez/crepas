@@ -61,4 +61,21 @@ process MACS3_CONSENSUS {
     END_VERSIONS
     """
 
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.bed
+    touch ${prefix}.saf
+    touch ${prefix}.boolean.intersect.plot.pdf
+    touch ${prefix}.antibody.txt
+    touch ${prefix}.boolean.txt
+    touch ${prefix}.boolean.intersect.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version | sed 's/Python //g')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+    END_VERSIONS
+    """
+
 }

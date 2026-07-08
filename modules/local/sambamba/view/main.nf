@@ -43,4 +43,20 @@ process SAMBAMBA_VIEW {
         sambamba: \$(echo \$(sambamba --version 2>&1) | awk '{print \$2}' )
     END_VERSIONS
     """
+
+    stub:
+    def prefix    = task.ext.prefix ?: "${meta.id}"
+    def args      = task.ext.args ?: ''
+    def extension = args.contains("--format sam") ? "sam" :
+                        args.contains("--format json") ? "json" :
+                            args.contains("--format msgpack") ? "msgpack" :
+                                "bam"
+    """
+    touch ${prefix}.${extension}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sambamba: \$(echo \$(sambamba --version 2>&1) | awk '{print \$2}' )
+    END_VERSIONS
+    """
 }

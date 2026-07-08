@@ -36,4 +36,15 @@ process FINAL_STAT_SUMMARY {
         r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: 'final_samtools_stats_summary'
+    """
+    touch ${prefix}.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+    END_VERSIONS
+    """
 }

@@ -30,4 +30,16 @@ process MULTIQC_CUSTOM_PEAKS {
         sed: \$(echo \$(sed --version 2>&1) | sed 's/^.*GNU sed) //; s/ .*\$//')
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.peak_count_mqc.tsv
+    touch ${prefix}.FRiP_mqc.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sed: \$(echo \$(sed --version 2>&1) | sed 's/^.*GNU sed) //; s/ .*\$//')
+    END_VERSIONS
+    """
 }

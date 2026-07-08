@@ -35,4 +35,16 @@ process PLOT_MACS3_QC {
         r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.txt
+    touch ${prefix}.pdf
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+    END_VERSIONS
+    """
 }
