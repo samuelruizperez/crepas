@@ -36,27 +36,27 @@ include {
     UNTAR as UNTAR_MINIMAP2_INDEX
     } from '../../../modules/nf-core/untar/main'
 
-include { BUILD_HYBRID_FASTA } from '../../../modules/local/build_hybrid_fasta/main'
-include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
-include { SAMTOOLS_FAIDX         } from '../../../modules/nf-core/samtools/faidx/main'
-include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
-include { BWAMEM2_INDEX        } from '../../../modules/nf-core/bwamem2/index/main'
-include { BOWTIE_BUILD        } from '../../../modules/nf-core/bowtie/build/main'
-include { BOWTIE2_BUILD        } from '../../../modules/nf-core/bowtie2/build/main'
-include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/main'
-include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
-include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
-include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
-include { MINIMAP2_INDEX       } from '../../../modules/nf-core/minimap2/index/main'
-include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
-include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
+include { BUILD_HYBRID_FASTA            } from '../../../modules/local/build_hybrid_fasta/main'
+include { GFFREAD                       } from '../../../modules/nf-core/gffread/main'
+include { SAMTOOLS_FAIDX                } from '../../../modules/nf-core/samtools/faidx/main'
+include { BWA_INDEX                     } from '../../../modules/nf-core/bwa/index/main'
+include { BWAMEM2_INDEX                 } from '../../../modules/nf-core/bwamem2/index/main'
+include { BOWTIE_BUILD                  } from '../../../modules/nf-core/bowtie/build/main'
+include { BOWTIE2_BUILD                 } from '../../../modules/nf-core/bowtie2/build/main'
+include { CHROMAP_INDEX                 } from '../../../modules/nf-core/chromap/index/main'
+include { STAR_GENOMEGENERATE           } from '../../../modules/nf-core/star/genomegenerate/main'
+include { HISAT2_BUILD                  } from '../../../modules/nf-core/hisat2/build/main'
+include { HISAT2_EXTRACTSPLICESITES     } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
+include { MINIMAP2_INDEX                } from '../../../modules/nf-core/minimap2/index/main'
+include { KHMER_UNIQUEKMERS             } from '../../../modules/nf-core/khmer/uniquekmers/main'
+include { RFD_TO_IZ                     } from '../../../modules/local/rfd_to_iz/main'
 
-include { GFF3SORT               } from '../../../modules/local/gff3sort/main'
-include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/main'
-include { TABIX_TABIX           } from '../../../modules/nf-core/tabix/tabix/main'
-include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
-include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
-include { CHROMSIZES_SPLIT_BY_GENOME  } from '../../../modules/local/chromsizes_split_by_genome/main'
+include { GFF3SORT                      } from '../../../modules/local/gff3sort/main'
+include { TABIX_BGZIP                   } from '../../../modules/nf-core/tabix/bgzip/main'
+include { TABIX_TABIX                   } from '../../../modules/nf-core/tabix/tabix/main'
+include { EAUTILS_GTF2BED               } from '../../../modules/nf-core/ea-utils/gtf2bed/main'
+include { GENOME_WHITELIST_REGIONS      } from '../../../modules/local/genome_whitelist_regions/main'
+include { CHROMSIZES_SPLIT_BY_GENOME    } from '../../../modules/local/chromsizes_split_by_genome/main'
 
 include {
     TETRANSCRIPTS_INDEXER as TETRANSCRIPTS_INDEXER_GENE
@@ -244,8 +244,8 @@ workflow PREPARE_GENOME {
     // Uncompress gene BED annotation file or create from GTF if required
     //
     if (!gene_bed) {
-        ch_gene_bed = GTF2BED ( ch_gtf ).bed
-        ch_versions = ch_versions.mix(GTF2BED.out.versions)
+        ch_gene_bed = EAUTILS_GTF2BED ( ch_gtf ).bed
+        ch_versions = ch_versions.mix(EAUTILS_GTF2BED.out.versions)
     } else {
         if (gene_bed.endsWith('.gz')) {
             ch_gene_bed = GUNZIP_GENE_BED ( [ [id:'gene_bed'], file(gene_bed, checkIfExists: true) ] ).gunzip
