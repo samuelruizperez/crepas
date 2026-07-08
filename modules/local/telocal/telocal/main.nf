@@ -1,11 +1,11 @@
 process TELOCAL {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_high_memory_long'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://mhammelllab/telocal:1.1.2' :
-        'docker://mhammelllab/telocal:1.1.2' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/a2/a2f1e953e388761ab988e1bbdeb3502aac651ca5ea5ee093e1e2fcc02a1f7773/data' :
+        'community.wave.seqera.io/library/pip_telocal:5ebb38192e05596d' }"
 
     input:
     tuple val(meta), path(bam)
