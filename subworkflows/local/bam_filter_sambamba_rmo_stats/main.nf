@@ -18,7 +18,6 @@ workflow BAM_FILTER_SAMBAMBA_RMO_STATS {
     total_mapped_reads_key  // string
 
     main:
-    ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
 
     //
@@ -28,7 +27,6 @@ workflow BAM_FILTER_SAMBAMBA_RMO_STATS {
         ch_bam_bai,
         ch_bed
     )
-    ch_versions = ch_versions.mix(SAMBAMBA_VIEW.out.versions)
 
     //
     // MODULE: Sort BAM file and generate stats with SAMTOOLS
@@ -161,5 +159,4 @@ workflow BAM_FILTER_SAMBAMBA_RMO_STATS {
     multiqc_files   = ch_multiqc_files  // channel: [ val(meta), [ multiqc_files ] ]
     total_reads     = ch_total_reads    // channel: [ val(meta), total_mapped_reads ]
 
-    versions = ch_versions              // channel: [ versions.yml ]
 }

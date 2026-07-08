@@ -377,8 +377,6 @@ workflow CREPAS {
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT1.out.versions)
-
 
     if (!params.skip_spikein_barcode_extract) {
 
@@ -499,7 +497,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
     }
 
@@ -551,7 +548,6 @@ workflow CREPAS {
         ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.versions)
 
     }
 

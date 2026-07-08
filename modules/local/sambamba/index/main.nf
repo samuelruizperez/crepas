@@ -11,8 +11,8 @@ process SAMBAMBA_INDEX {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bai"),     emit: bai
-    path "versions.yml"             , emit: versions
+    tuple val(meta), path("*.bai"), emit: bai
+    tuple val("${task.process}"), val('sambamba'), eval("sambamba --version 2>&1 | grep -m1 sambamba | awk '{print \\\$2}'"), emit: versions_sambamba, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -26,21 +26,11 @@ process SAMBAMBA_INDEX {
         --nthreads ${task.cpus} \\
         ${bam} \\
         ${prefix}.bai
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sambamba: \$(echo \$(sambamba --version 2>&1) | awk '{print \$2}' )
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.bai
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sambamba: \$(echo \$(sambamba --version 2>&1) | awk '{print \$2}' )
-    END_VERSIONS
     """
 }
