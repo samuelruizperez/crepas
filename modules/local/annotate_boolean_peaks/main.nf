@@ -12,7 +12,8 @@ process ANNOTATE_BOOLEAN_PEAKS {
 
     output:
     path '*.boolean.annotatePeaks.txt', emit: annotate_peaks_txt
-    path "versions.yml"               , emit: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | head -1 | sed 's/^GNU Awk //; s/,.*\$//'"), emit: versions_awk, topic: versions
+    tuple val("${task.process}"), val('coreutils'), eval("env echo --version | head -1 | sed 's/^echo (GNU coreutils) //'"), emit: versions_coreutils, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,10 +23,11 @@ process ANNOTATE_BOOLEAN_PEAKS {
     """
     cut -f2- ${homer_peaks} | awk 'NR==1; NR > 1 {print \$0 | "sort -T '.' -k1,1 -k2,2n"}' | cut -f6- > tmp.txt
     paste $boolean_txt tmp.txt > ${prefix}.boolean.annotatePeaks.txt
+    """
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sed: \$(echo \$(sed --version 2>&1) | sed 's/^.*GNU sed) //; s/ .*\$//')
-    END_VERSIONS
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.boolean.annotatePeaks.txt
     """
 }
