@@ -17,7 +17,7 @@ process BAM_SPLIT_BY_STRAND {
     output:
     tuple val(meta), path("*.forward.bam"), emit: f_bam
     tuple val(meta), path("*.reverse.bam"), emit: r_bam
-    path "versions.yml"                   , emit: versions
+    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -42,11 +42,6 @@ process BAM_SPLIT_BY_STRAND {
             --bam \\
             --output ${prefix}.reverse.bam \\
             ${bam}
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
         """
     } else if (meta.strandedness == 'reverse') {
     """
@@ -65,11 +60,6 @@ process BAM_SPLIT_BY_STRAND {
             --bam \\
             --output ${prefix}.forward.bam \\
             ${bam}
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
         """
     }
 
@@ -78,10 +68,5 @@ process BAM_SPLIT_BY_STRAND {
     """
     touch ${prefix}.forward.bam
     touch ${prefix}.reverse.bam
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
     """
 }
