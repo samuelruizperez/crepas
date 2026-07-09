@@ -48,7 +48,6 @@ workflow BAM_ENCODE_PIPELINE {
     BED_TO_TAGALIGN (
         BEDTOOLS_BAMTOBED.out.bed
     )
-    ch_versions = ch_versions.mix(BED_TO_TAGALIGN.out.versions.first())
 
 
     BED_TO_TAGALIGN
