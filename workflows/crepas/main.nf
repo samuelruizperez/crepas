@@ -412,7 +412,6 @@ workflow CREPAS {
         ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_bai
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
     
     } else {
         // If no spike-in genome add genome to metas

@@ -17,7 +17,7 @@ workflow BAM_SPIKEIN_SPLIT {
     total_mapped_reads_key  // String
 
     main:
-    ch_versions = channel.empty()
+
     ch_multiqc_files = channel.empty()
 
     //
@@ -29,7 +29,6 @@ workflow BAM_SPIKEIN_SPLIT {
         spikein_genome,
         'endo'
     )
-    ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_ENDO.out.versions.first())
 
     //
     // MODULE: split BAMs by spike-in genome (keep exogenous)
@@ -40,7 +39,6 @@ workflow BAM_SPIKEIN_SPLIT {
         spikein_genome,
         'exo'
     )
-    ch_versions = ch_versions.mix(BAM_SPLIT_BY_GENOME_EXO.out.versions.first())
 
     // add genome as meta field
     ch_bam_endo = BAM_SPLIT_BY_GENOME_ENDO.out.bam.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
@@ -147,5 +145,4 @@ workflow BAM_SPIKEIN_SPLIT {
 
     multiqc_files = ch_multiqc_files    // channel: [ multiqc_files ]
 
-    versions = ch_versions              // channel: [ versions.yml ]
 }

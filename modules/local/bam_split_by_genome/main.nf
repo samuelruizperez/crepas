@@ -18,7 +18,7 @@ process BAM_SPLIT_BY_GENOME {
 
     output:
     tuple val(meta), path("*.bam"), emit: bam
-    path "versions.yml"           , emit: versions
+    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -42,11 +42,6 @@ process BAM_SPLIT_BY_GENOME {
             > ${prefix}.${endo_genome}.bam
         
         rm ${prefix}.${endo_genome}.sam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
         """
     } else if (reads_to_keep == 'exo') {
         """
@@ -67,11 +62,6 @@ process BAM_SPLIT_BY_GENOME {
             > ${prefix}.${exo_genome}.bam
         
         rm ${prefix}.${exo_genome}.sam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
         """
     }
 
@@ -79,11 +69,5 @@ process BAM_SPLIT_BY_GENOME {
     def prefix = task.ext.prefix ?: "${meta.id}_${reads_to_keep}"
     """
     touch ${prefix}.${reads_to_keep}.bam
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
     """
-    
 }
