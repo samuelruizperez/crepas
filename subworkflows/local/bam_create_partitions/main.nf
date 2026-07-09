@@ -48,7 +48,6 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Split BAMs by strand (forward and reverse)
     //
     BAM_SPLIT_BY_STRAND ( ch_bam )
-    ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
 
     // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
@@ -251,7 +250,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_norm = BWAOB_NORMALIZE.out.normalized
-    ch_versions = ch_versions.mix(BWAOB_NORMALIZE.out.versions.first())
 
     // TODO: print for debugging
     ch_norm
@@ -297,7 +295,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_norm_scar_input
     )
     ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
-    ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
 
     // TODO: print for debugging
     ch_bdg_smi
