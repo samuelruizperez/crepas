@@ -533,7 +533,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             channel.value([[:], []])
         )
         ch_bw_avg = DEEPTOOLS_BIGWIGAVERAGE.out.bigwig
-        ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE.out.versions.first())
     }
 
     ch_bigwig
