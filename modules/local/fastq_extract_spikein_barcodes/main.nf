@@ -1,5 +1,5 @@
 //
-// Extract SNAP-CUTANA Spike-in barcodes from CUT&RUN and CUT&Tag reactions
+// Extract spike-in barcodes from CUT&RUN and CUT&Tag reactions
 // More info: https://support.epicypher.com/docs/analyzing-snap-cutana-spike-in-controls-and-results-cut-and-tag
 //
 process FASTQ_EXTRACT_SPIKEIN_BARCODES {

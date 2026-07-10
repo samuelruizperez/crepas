@@ -1,12 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "fastq_extract_spikein_barcodes"
 description: |
-  Count occurrences of SNAP-CUTANA spike-in barcode sequences (EpiCypher) in each mate of a
+  Count occurrences of spike-in barcode sequences (EpiCypher) in each mate of a
   paired-end FASTQ file, for quality control of CUT&RUN/CUT&Tag reactions
 keywords:
   - spike-in
   - barcode
-  - snap-cutana
   - cut&run
   - cut&tag
   - awk
