@@ -12,7 +12,7 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { CREPAS                   } from './workflows/crepas'
+include { CREPAS                  } from './workflows/crepas'
 include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_grothlab_crepas_pipeline'
 include { getGenomeAttribute      } from './subworkflows/local/utils_grothlab_crepas_pipeline'
