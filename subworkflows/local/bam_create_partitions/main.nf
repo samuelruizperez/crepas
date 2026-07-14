@@ -422,7 +422,6 @@ workflow BAM_CREATE_PARTITIONS {
     COLLECT_PARTITIONS (
         ch_to_collect
     )
-    ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
     //
     // Add meta information to the filtered partitions and bedgraph
