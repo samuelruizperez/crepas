@@ -79,7 +79,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
         ch_sparsebed,
         ch_active_regions
     )
-    ch_versions = ch_versions.mix(CONSENRICH.out.versions.first())
 
     
     // Create channel: [ val(meta), ch_csr_signal, bamlist_txt ]
