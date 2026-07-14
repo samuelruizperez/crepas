@@ -17,7 +17,7 @@ process EDD {
     tuple val(meta), path("*.log"), emit: log
     tuple val(meta), path("*_bin_score.bedgraph"), optional: true, emit: bin_score
     tuple val(meta), path("*_log_ratio*.bedgraph"), optional: true, emit: log_ratios
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('edd'), eval("edd --version | sed -e 's/edd //g'"), topic: versions, emit: versions_edd
 
     when:
     task.ext.when == null || task.ext.when
@@ -34,21 +34,12 @@ process EDD {
         ${ip_bam} \\
         ${input_bam} \\
         ./${prefix}/
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        edd: \$(edd --version | sed -e "s/edd //g")
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bed
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        edd: \$(edd --version | sed -e "s/edd //g")
-    END_VERSIONS
+    touch ${prefix}_peaks.bed
+    touch ${prefix}.log
     """
 }
