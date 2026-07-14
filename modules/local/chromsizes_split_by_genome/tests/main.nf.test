@@ -1,0 +1,93 @@
+nextflow_process {
+
+    name "Test Process CHROMSIZES_SPLIT_BY_GENOME"
+    script "../main.nf"
+    process "CHROMSIZES_SPLIT_BY_GENOME"
+
+    tag "modules"
+    tag "modules_local"
+    tag "chromsizes_split_by_genome"
+    tag "build_hybrid_fasta"
+    tag "samtools/faidx"
+
+    setup {
+
+        run("BUILD_HYBRID_FASTA") {
+            script "../../build_hybrid_fasta/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'sarscov2' ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    'sarscov2'
+                ]
+                input[1] = [
+                    [ id:'homo_sapiens' ], // meta2 map
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    'homo_sapiens'
+                ]
+                """
+            }
+        }
+
+        run("SAMTOOLS_FAIDX") {
+            script "../../../nf-core/samtools/faidx/main.nf"
+            process {
+                """
+                input[0] = BUILD_HYBRID_FASTA.out.fasta.map { meta, fasta -> [ meta, fasta, [] ] }
+                input[1] = true
+                """
+            }
+        }
+
+    }
+
+    test("sarscov2 + homo_sapiens - split chrom sizes by genome") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.sizes
+                input[1] = 'homo_sapiens'
+                input[2] = 'sarscov2'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out.endo_sizes,
+                    process.out.exo_sizes,
+                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    ).match() }
+            )
+        }
+
+    }
+
+    test("sarscov2 + homo_sapiens - split chrom sizes by genome - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.sizes
+                input[1] = 'homo_sapiens'
+                input[2] = 'sarscov2'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+}

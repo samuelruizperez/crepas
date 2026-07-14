@@ -277,7 +277,6 @@ workflow PREPARE_GENOME {
         CHROMSIZES_SPLIT_BY_GENOME ( ch_chrom_sizes_endo, spikein_genome, genome )
         ch_chrom_sizes_endo = CHROMSIZES_SPLIT_BY_GENOME.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
         ch_chrom_sizes_exo = CHROMSIZES_SPLIT_BY_GENOME.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
-        ch_versions        = ch_versions.mix(CHROMSIZES_SPLIT_BY_GENOME.out.versions)
     }
 
     ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel

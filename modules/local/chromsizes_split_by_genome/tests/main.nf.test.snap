@@ -1,0 +1,93 @@
+{
+    "sarscov2 + homo_sapiens - split chrom sizes by genome - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "sarscov2"
+                        },
+                        "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "sarscov2"
+                        },
+                        "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        "CHROMSIZES_SPLIT_BY_GENOME",
+                        "awk",
+                        "5.4.0"
+                    ]
+                ],
+                "endo_sizes": [
+                    [
+                        {
+                            "id": "sarscov2"
+                        },
+                        "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "exo_sizes": [
+                    [
+                        {
+                            "id": "sarscov2"
+                        },
+                        "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_awk": [
+                    [
+                        "CHROMSIZES_SPLIT_BY_GENOME",
+                        "awk",
+                        "5.4.0"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-13T16:07:46.462193168",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "sarscov2 + homo_sapiens - split chrom sizes by genome": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "sarscov2"
+                    },
+                    "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "sarscov2"
+                    },
+                    "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,a3510584933299bdfd04e4aaf37ca43d"
+                ]
+            ],
+            {
+                "versions_awk": [
+                    [
+                        "CHROMSIZES_SPLIT_BY_GENOME",
+                        "awk",
+                        "5.4.0"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-13T16:07:33.007227624",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
