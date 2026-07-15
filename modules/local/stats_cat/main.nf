@@ -1,4 +1,4 @@
-process SAMTOOLS_STATS_CAT {
+process STATS_CAT {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"

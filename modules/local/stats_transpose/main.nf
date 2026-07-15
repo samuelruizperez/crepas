@@ -1,4 +1,4 @@
-process SAMTOOLS_STATS_TRANSPOSE {
+process STATS_TRANSPOSE {
     tag "${meta.id}"
     label 'process_single'
 

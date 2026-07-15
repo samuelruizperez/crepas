@@ -1,4 +1,4 @@
-process FINAL_STAT_SUMMARY {
+process STATS_SUMMARY {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
