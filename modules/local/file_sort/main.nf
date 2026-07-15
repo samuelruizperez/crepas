@@ -13,7 +13,7 @@ process FILE_SORT {
 
     output:
     tuple val(meta), path("*.${extension}"), emit: sorted
-    path  "versions.yml"                   , emit: versions
+    tuple val("${task.process}"), val('coreutils'), eval("env sort --version | head -1 | sed 's/^sort (GNU coreutils) //'"), topic: versions, emit: versions_coreutils
 
     when:
     task.ext.when == null || task.ext.when
@@ -32,21 +32,11 @@ process FILE_SORT {
         $buffer \\
         $file \\
         > ${prefix}.${extension}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sort: \$(echo \$(sort --version 2>&1) | sed 's/^.*(GNU coreutils) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch  ${prefix}.${extension}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sort: \$(sort --version | sed -e "s/sort v//g")
-    END_VERSIONS
     """
 }
