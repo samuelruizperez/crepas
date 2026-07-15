@@ -2,7 +2,7 @@
 // FASTQ_ALIGN: Align fastq files to a reference genome
 //
 
-include { FASTQ_ALIGN_BWA as FASTQ_ALIGN_BWAMEM1 } from '../../../subworkflows/nf-core/fastq_align_bwa'
+include { FASTQ_ALIGN_BWA as FASTQ_ALIGN_BWAMEM1     } from '../../../subworkflows/nf-core/fastq_align_bwa'
 include { FASTQ_ALIGN_BWAMEM2                        } from '../../../subworkflows/local/fastq_align_bwamem2'
 include { FASTQ_ALIGN_BOWTIE2                        } from '../../../subworkflows/nf-core/fastq_align_bowtie2'
 include { FASTQ_ALIGN_BOWTIE                         } from '../../../subworkflows/local/fastq_align_bowtie'
@@ -212,10 +212,9 @@ workflow FASTQ_ALIGN {
     }
 
     emit:
-    bam      = ch_genome_bam          // channel: [ val(meta), path(bam) ]
-    bai      = ch_genome_bam_index    // channel: [ val(meta), path(bai) ]
-    samtools_stats_summary = ch_samtools_stats_summary  // channel: [ val(meta), path(summary) ]
-    multiqc_files = ch_multiqc_files            // channel: [ path(multiqc files ]
-
-    versions = ch_versions                      // channel: [ path(versions.yml) ]
+    bam                     = ch_genome_bam                 // channel: [ val(meta), path(bam) ]
+    bai                     = ch_genome_bam_index           // channel: [ val(meta), path(bai) ]
+    samtools_stats_summary  = ch_samtools_stats_summary     // channel: [ val(meta), path(summary) ]
+    multiqc_files           = ch_multiqc_files              // channel: [ path(multiqc files ]
+    versions = ch_versions                                  // channel: [ path(versions.yml) ]
 }
