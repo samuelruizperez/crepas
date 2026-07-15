@@ -218,9 +218,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_bwaob = BWAOB_SORT.out.sorted
-    ch_versions = ch_versions.mix(BWAOB_SORT.out.versions.first())
-
-
 
     // RPM normalization factors
     // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_or_rfd_smooth)
