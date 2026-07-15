@@ -409,7 +409,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         'bedGraph'
     )
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
-    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
 
     if (!skip_signal_vs_input && signal_vs_input_operation == 'soi') {
