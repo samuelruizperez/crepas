@@ -142,7 +142,6 @@ workflow BAM_CREATE_PARTITIONS {
         BEDTOOLS_GENOMECOV.out.genomecov,
         'bedGraph'
     )
-    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
     //
     // MODULE: Convert bedgraph to bigwig
