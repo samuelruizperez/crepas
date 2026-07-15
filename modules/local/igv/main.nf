@@ -13,7 +13,7 @@ process IGV {
     output:
     path "*files.txt", emit: txt
     path "*.xml", emit: xml
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('python'), eval("python --version 2>&1 | sed 's/^Python //'"), topic: versions, emit: versions_python
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,11 +35,6 @@ process IGV {
         --file_list ${prefix}.files.txt \
         --genome_fasta ${fasta_outpath} \
         --xml_output ${prefix}.xml
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //g')
-    END_VERSIONS
     """
 
     stub:
@@ -47,10 +42,5 @@ process IGV {
     """
     touch ${prefix}.files.txt
     touch ${prefix}.xml
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //g')
-    END_VERSIONS
     """
 }

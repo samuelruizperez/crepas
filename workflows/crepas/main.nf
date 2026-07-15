@@ -1133,7 +1133,6 @@ workflow CREPAS {
             ch_files_and_outpaths,
             ch_fasta_outpath            
         )
-        ch_versions = ch_versions.mix(IGV.out.versions)
     }
 
     //
