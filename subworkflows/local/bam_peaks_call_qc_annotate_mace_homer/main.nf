@@ -56,7 +56,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         ch_bam_merged_reps,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(MACE_PREPROCESSOR.out.versions.first())
 
     // Add strand to the meta information
     MACE_PREPROCESSOR.out.forward_wig.map { meta, forward_wig ->
@@ -102,7 +101,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         ch_bw,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(MACE_MACE.out.versions.first())
 
     //
     // Filter out samples with 0 MACE peaks called
@@ -148,7 +146,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         ch_peak_count_header_multiqc,
         ch_frip_score_multiqc
     )
-    ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks = channel.empty()
     // ch_plot_mace_qc_txt            = channel.empty()

@@ -14,7 +14,7 @@ process MACE_PREPROCESSOR {
     output:
     tuple val(meta), path("*_Forward.wig"), emit: forward_wig
     tuple val(meta), path("*_Reverse.wig"), emit: reverse_wig
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('mace'), eval("preprocessor.py --version 2>&1 | sed 's/^preprocessor\\.py //'"), topic: versions, emit: versions_mace
 
     when:
     task.ext.when == null || task.ext.when
@@ -29,11 +29,6 @@ process MACE_PREPROCESSOR {
         ${treatment} \\
         --chromSize ${chrom_sizes} \\
         --outPrefix ${prefix}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        mace_preprocessor: \$(preprocessor.py --version | sed -e "s/mace //g")
-    END_VERSIONS
     """
 
     stub:
@@ -41,10 +36,5 @@ process MACE_PREPROCESSOR {
     """
     touch ${prefix}_Forward.wig
     touch ${prefix}_Reverse.wig
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        mace_preprocessor: \$(preprocessor.py --version | sed -e "s/mace //g")
-    END_VERSIONS
     """
 }
