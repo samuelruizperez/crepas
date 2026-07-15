@@ -88,7 +88,7 @@ workflow CALL_PEAKS {
     ch_epic2_plot_homer_annotatepeaks_tsv = channel.empty()
     if (peak_caller == 'epic2') {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_bam,//.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
+            ch_bam_bai,//.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -214,19 +214,21 @@ workflow CALL_PEAKS {
             ch_blacklist
         )
         ch_edd_peaks = EDD.out.peaks
-        ch_versions = ch_versions.mix(EDD.out.versions.first())
     }
 
     ch_denopa_peaks = channel.empty()
     if (peak_caller == 'denopa') {
+
+        ch_bam_bai_for_denopa = ch_bam_bai
+                .filter { it -> it[0].exp_type in ['ATAC-seq'] }
+
         //
         // MODULE: Call peaks with denopa
         //
         DENOPA (
-            ch_all_ip_and_controls.filter { it -> it[0].exp_type in ['ATAC-seq'] }
+            ch_bam_bai_for_denopa
         )
         ch_denopa_peaks = DENOPA.out.arers
-        ch_versions = ch_versions.mix(DENOPA.out.versions.first())
     }
 
     ch_macs3_peaks = channel.empty()
