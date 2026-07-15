@@ -107,7 +107,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     FRIP_SCORE(
         ch_bam_peak
     )
-    ch_versions = ch_versions.mix(FRIP_SCORE.out.versions.first())
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peak

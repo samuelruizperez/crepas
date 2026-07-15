@@ -88,7 +88,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             UCSC_BEDCLIP.out.bedgraph,
             'sorted'
         )
-        ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 
         BIGTOOLS_BEDGRAPHTOBIGWIG (
             FILE_SORT.out.sorted,
@@ -113,7 +112,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     FRIP_SCORE (
         ch_bam_peaks
     )
-    ch_versions = ch_versions.mix(FRIP_SCORE.out.versions.first())
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peaks
