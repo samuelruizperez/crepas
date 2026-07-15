@@ -36,12 +36,13 @@ nextflow_process {
         }
 
         run("SAMTOOLS_REHEADER") {
-            script "../../samtools/reheader/main.nf"
+            script "../../../nf-core/samtools/reheader/main.nf"
             process {
                 """
                 input[0] = [
                     [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    []
                 ]
                 """
             }

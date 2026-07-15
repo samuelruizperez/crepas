@@ -56,8 +56,8 @@ nextflow_process {
         }
 
         run("SAMTOOLS_REHEADER") {
-            script "../../samtools/reheader/main.nf"
-            process { "input[0] = BOWTIE2_ALIGN.out.bam" }
+            script "../../../nf-core/samtools/reheader/main.nf"
+            process { "input[0] = BOWTIE2_ALIGN.out.bam.map { meta, bam -> [ meta, bam, [] ] }" }
         }
 
         run("SAMTOOLS_VIEW") {
