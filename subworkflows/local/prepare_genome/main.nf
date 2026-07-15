@@ -172,8 +172,7 @@ workflow PREPARE_GENOME {
         // MODULE: Sort GTF file with gff3sort
         //
         GFF3SORT ( ch_gtf )
-        ch_gtf = GFF3SORT.out.gtf
-        ch_versions = ch_versions.mix(GFF3SORT.out.versions)
+        ch_gtf = GFF3SORT.out.sorted
 
         //
         // MODULE: Compress sorted GTF file with bgzip
@@ -360,7 +359,6 @@ workflow PREPARE_GENOME {
         ch_blacklist//.ifEmpty([[:], []])
     )
     ch_whitelist = GENOME_WHITELIST_REGIONS.out.bed
-    ch_versions = ch_versions.mix(GENOME_WHITELIST_REGIONS.out.versions)
 
 
     //
