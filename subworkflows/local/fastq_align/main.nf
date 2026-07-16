@@ -15,7 +15,7 @@ include { FASTQ_ALIGN_MINIMAP2                       } from '../../../subworkflo
 workflow FASTQ_ALIGN {
     take:
     ch_reads            // channel: [mandatory] meta, reads
-    ch_fasta
+    ch_fasta_fai
     aligner
     ch_bwa_index
     ch_bwamem2_index
@@ -38,6 +38,12 @@ workflow FASTQ_ALIGN {
     ch_multiqc_files = channel.empty()
     ch_samtools_stats_summary = channel.empty()  
     ch_versions     = channel.empty()
+
+    //
+    // Remap ch_fasta_fai to ch_fasta
+    //
+    ch_fasta = ch_fasta_fai.map { meta, fasta , _fai -> [ meta, fasta ] }
+
 
     if (aligner == 'bwa') {
         FASTQ_ALIGN_BWAMEM1 (
@@ -63,7 +69,7 @@ workflow FASTQ_ALIGN {
             ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_BWAMEM2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BWAMEM2.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_BWAMEM2.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWAMEM2.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.flagstat.collect { it -> it[1] })
@@ -82,7 +88,7 @@ workflow FASTQ_ALIGN {
             ch_fasta
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BOWTIE.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.flagstat.collect { it -> it[1] })
@@ -121,7 +127,7 @@ workflow FASTQ_ALIGN {
             true
         )
         ch_genome_bam = FASTQ_ALIGN_STROBEALIGN.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_STROBEALIGN.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_STROBEALIGN.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STROBEALIGN.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.flagstat.collect { it -> it[1] })
@@ -136,20 +142,19 @@ workflow FASTQ_ALIGN {
         FASTQ_ALIGN_CHROMAP (
             ch_reads,
             ch_chromap_index,
-            ch_fasta,
+            ch_fasta_fai,
             [],
             [],
             [],
-            []
+            [],
+            true
         )
-
         ch_genome_bam = FASTQ_ALIGN_CHROMAP.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_CHROMAP.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_CHROMAP.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_CHROMAP.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_CHROMAP.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_CHROMAP.out.versions.first())
     }
 
     //
@@ -204,7 +209,7 @@ workflow FASTQ_ALIGN {
             true
         )
         ch_genome_bam = FASTQ_ALIGN_MINIMAP2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_MINIMAP2.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_MINIMAP2.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_MINIMAP2.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIMAP2.out.flagstat.collect { it -> it[1] })

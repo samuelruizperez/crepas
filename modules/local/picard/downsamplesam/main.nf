@@ -9,13 +9,12 @@ process PICARD_DOWNSAMPLESAM {
 
     input:
     tuple val(meta), path(reads), path(index)
-    tuple val(meta2), path(fasta)
-    tuple val(meta3), path(fai)
+    tuple val(meta2), path(fasta), path(fai)
 
     output:
-    tuple val(meta), path("*.bam") , emit: bam,  optional: true
-    tuple val(meta), path("*.bai") , emit: bai,  optional: true
-    tuple val(meta), path("*.cram"), emit: cram, optional: true
+    tuple val(meta), path("*.bam") , emit: bam,   optional: true
+    tuple val(meta), path("*.bai") , emit: index, optional: true
+    tuple val(meta), path("*.cram"), emit: cram,  optional: true
     tuple val(meta), path("*.metrics.txt"), emit: metrics, optional: true
     path  "versions.yml"                  , emit: versions
 

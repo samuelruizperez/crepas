@@ -14,7 +14,7 @@ include { TAGALIGN_FRIP_SCORE                                   } from '../../..
 workflow BAM_ENCODE_PIPELINE {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
-    ch_fasta                          // channel: [ val(meta), path(fasta) ]
+    ch_fasta_fai                      // channel: [ val(meta), path(fasta), path(fai) ]
     ch_chromsizes                     // channel: [ val(meta), path(chromsizes) ]
     ctl_depth_ratio_threshold
     peak_type
@@ -31,7 +31,7 @@ workflow BAM_ENCODE_PIPELINE {
     //
     SAMTOOLS_SORT (
         ch_bam,
-        ch_fasta,
+        ch_fasta_fai,
         ''
     )
 

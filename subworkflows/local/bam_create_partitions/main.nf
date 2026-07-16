@@ -23,7 +23,7 @@ workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
-    ch_fasta                // channel: [ val(meta), path(fasta) ]
+    ch_fasta_fai            // channel: [ val(meta), path(fasta), path(fai) ]
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
@@ -106,8 +106,8 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Run samtools stats, flagstat and idxstats per strand
     //
     BAM_STATS_SAMTOOLS (
-        ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0),
-        ch_fasta
+        ch_bam.join(SAMTOOLS_INDEX.out.index, by: 0),
+        ch_fasta_fai
     )
 
     // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
