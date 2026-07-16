@@ -47,6 +47,7 @@ workflow GROTHLAB_CREPAS {
     def spikein_barcode_table = params.spikein_barcode_table ?: (params.refgenie_ignore ? null : getGenomeAttribute('spikein_barcode_table'))
     def bwa_index             = params.bwa_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
     def bwamem2_index         = params.bwamem2_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bwamem2'))
+    def minibwa_index         = params.minibwa_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('minibwa'))
     def bowtie_index          = params.bowtie_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bowtie'))
     def bowtie2_index         = params.bowtie2_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bowtie2'))
     def chromap_index         = params.chromap_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('chromap'))
@@ -95,6 +96,7 @@ workflow GROTHLAB_CREPAS {
         gene_bed,
         bwa_index,
         bwamem2_index,
+        minibwa_index,
         bowtie_index,
         bowtie2_index,
         chromap_index,
@@ -140,6 +142,7 @@ workflow GROTHLAB_CREPAS {
         PREPARE_GENOME.out.initiation_zones,
         PREPARE_GENOME.out.bwa_index,
         PREPARE_GENOME.out.bwamem2_index,
+        PREPARE_GENOME.out.minibwa_index,
         PREPARE_GENOME.out.bowtie_index,
         PREPARE_GENOME.out.bowtie2_index,
         PREPARE_GENOME.out.chromap_index,

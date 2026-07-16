@@ -4,6 +4,7 @@
 
 include { FASTQ_ALIGN_BWA as FASTQ_ALIGN_BWAMEM1     } from '../../../subworkflows/nf-core/fastq_align_bwa'
 include { FASTQ_ALIGN_BWAMEM2                        } from '../../../subworkflows/local/fastq_align_bwamem2'
+include { FASTQ_ALIGN_MINIBWA                        } from '../../../subworkflows/local/fastq_align_minibwa'
 include { FASTQ_ALIGN_BOWTIE2                        } from '../../../subworkflows/nf-core/fastq_align_bowtie2'
 include { FASTQ_ALIGN_BOWTIE                         } from '../../../subworkflows/local/fastq_align_bowtie'
 include { FASTQ_ALIGN_STROBEALIGN                    } from '../../../subworkflows/local/fastq_align_strobealign'
@@ -19,6 +20,7 @@ workflow FASTQ_ALIGN {
     aligner
     ch_bwa_index
     ch_bwamem2_index
+    ch_minibwa_index
     ch_bowtie_index
     ch_bowtie2_index
     ch_chromap_index
@@ -66,7 +68,7 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_bwamem2_index,
             false,
-            ch_fasta
+            ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_BWAMEM2.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BWAMEM2.out.index
@@ -74,6 +76,21 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM2.out.idxstats.collect { it -> it[1] })
+    }
+
+    if (aligner == 'minibwa') {
+        FASTQ_ALIGN_MINIBWA (
+            ch_reads,
+            ch_minibwa_index,
+            true,
+            ch_fasta_fai
+        )
+        ch_genome_bam = FASTQ_ALIGN_MINIBWA.out.bam
+        ch_genome_bam_index = FASTQ_ALIGN_MINIBWA.out.index
+        ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_MINIBWA.out.stats)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIBWA.out.stats.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIBWA.out.flagstat.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_MINIBWA.out.idxstats.collect { it -> it[1] })
     }
 
 
@@ -85,7 +102,7 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_bowtie_index,
             save_unaligned,
-            ch_fasta
+            ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_BOWTIE.out.index
@@ -123,7 +140,7 @@ workflow FASTQ_ALIGN {
         FASTQ_ALIGN_STROBEALIGN (
             ch_reads,
             ch_strobealign_index,
-            ch_fasta,
+            ch_fasta_fai,
             true
         )
         ch_genome_bam = FASTQ_ALIGN_STROBEALIGN.out.bam
@@ -202,7 +219,7 @@ workflow FASTQ_ALIGN {
         FASTQ_ALIGN_MINIMAP2 (
             ch_reads,
             ch_minimap2_index,
-            ch_fasta,
+            ch_fasta_fai,
             true,
             'bai',
             false,

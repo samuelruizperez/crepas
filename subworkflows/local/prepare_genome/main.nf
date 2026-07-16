@@ -28,6 +28,7 @@ include {
 include {
     UNTAR as UNTAR_BWA_INDEX
     UNTAR as UNTAR_BWAMEM2_INDEX
+    UNTAR as UNTAR_MINIBWA_INDEX
     UNTAR as UNTAR_BOWTIE_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
     UNTAR as UNTAR_STAR_INDEX
@@ -41,6 +42,7 @@ include { GFFREAD                       } from '../../../modules/nf-core/gffread
 include { SAMTOOLS_FAIDX                } from '../../../modules/nf-core/samtools/faidx/main'
 include { BWA_INDEX                     } from '../../../modules/nf-core/bwa/index/main'
 include { BWAMEM2_INDEX                 } from '../../../modules/nf-core/bwamem2/index/main'
+include { MINIBWA_INDEX                 } from '../../../modules/nf-core/minibwa/index/main'
 include { BOWTIE_BUILD                  } from '../../../modules/nf-core/bowtie/build/main'
 include { BOWTIE2_BUILD                 } from '../../../modules/nf-core/bowtie2/build/main'
 include { CHROMAP_INDEX                 } from '../../../modules/nf-core/chromap/index/main'
@@ -88,6 +90,7 @@ workflow PREPARE_GENOME {
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
     bwamem2_index      //    file: /path/to/bwamem2/index/
+    minibwa_index      //    file: /path/to/minibwa/index/
     bowtie_index        //    file: /path/to/bowtie/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
     chromap_index      //    file: /path/to/chromap/index/
@@ -391,7 +394,22 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_bwamem2_index = BWAMEM2_INDEX ( ch_fasta ).index
-            ch_versions  = ch_versions.mix(BWAMEM2_INDEX.out.versions_bwamem2)
+        }
+    }
+
+    //
+    // Uncompress minibwa index or generate from scratch if required
+    //
+    ch_minibwa_index = channel.empty()
+    if (prepare_tool_index == 'minibwa') {
+        if (minibwa_index) {
+            if (minibwa_index.endsWith('.tar.gz')) {
+                ch_minibwa_index = UNTAR_MINIBWA_INDEX ( [ [id:'minibwa_index'], file(minibwa_index, checkIfExists: true) ] ).untar
+            } else {
+                ch_minibwa_index = channel.value( [ [id:'minibwa_index'], file(minibwa_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_minibwa_index = MINIBWA_INDEX ( ch_fasta ).index
         }
     }
 
@@ -501,7 +519,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_minimap2_index = MINIMAP2_INDEX ( ch_fasta ).index
-            ch_versions  = ch_versions.mix(MINIMAP2_INDEX.out.versions_minimap2)
         }
     }
 
@@ -615,6 +632,7 @@ workflow PREPARE_GENOME {
     initiation_zones       = ch_initiation_zones       //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index              = ch_bwa_index              //    path: bwa/index/
     bwamem2_index          = ch_bwamem2_index          //    channel: [ val(meta), [ bwamem2/index/ ]]
+    minibwa_index          = ch_minibwa_index          //    channel: [ val(meta), [ minibwa/index/ ]]
     bowtie_index           = ch_bowtie_index            //    channel: [ val(meta), [ bowtie/index/ ]]
     bowtie2_index          = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index          = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]

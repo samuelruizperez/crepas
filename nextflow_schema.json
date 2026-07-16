@@ -125,6 +125,11 @@
                     "description": "Path to directory or tar.gz archive for pre-built BWAMEM2 index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
+                "minibwa_index": {
+                    "type": "string",
+                    "description": "Path to directory or tar.gz archive for pre-built minibwa index.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
                 "bowtie_index": {
                     "type": "string",
                     "format": "path",
@@ -478,7 +483,7 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
+                    "enum": ["bwa", "bwamem2", "minibwa", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
                 },
                 "bwa_min_score": {
                     "type": "integer",
@@ -536,6 +541,25 @@
                     "type": "integer",
                     "default": 11,
                     "description": "Minimizer window size to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minibwa_preset": {
+                    "type": "string",
+                    "default": "sr",
+                    "description": "Preset to use for minibwa alignment (sr, lr or adap for mixed short/long reads). See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "fa_icon": "fas fa-map-signs",
+                    "enum": ["sr", "lr", "adap"]
+                },
+                "minibwa_min_seed_length": {
+                    "type": "integer",
+                    "default": 19,
+                    "description": "Minimum seed length to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minibwa_bandwidth": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Bandwidth to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
                     "fa_icon": "fas fa-map-signs"
                 }
             }

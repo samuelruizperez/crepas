@@ -93,6 +93,7 @@ workflow CREPAS {
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
     ch_bwamem2_index        // channel: path(bwamem2/index/)
+    ch_minibwa_index        // channel: path(minibwa/index/)
     ch_bowtie_index            // channel: path(bowtie/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
     ch_chromap_index          // channel: path(chromap.index)
@@ -201,6 +202,7 @@ workflow CREPAS {
         params.aligner,
         ch_bwa_index,
         ch_bwamem2_index,
+        ch_minibwa_index,
         ch_bowtie_index,
         ch_bowtie2_index,
         ch_chromap_index,
