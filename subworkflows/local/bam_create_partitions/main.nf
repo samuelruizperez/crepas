@@ -349,7 +349,6 @@ workflow BAM_CREATE_PARTITIONS {
         zero_crossing_radius
     )
     ch_rfd = PARTITION_OR_RFD_SMOOTH.out.rfd
-    ch_versions = ch_versions.mix(PARTITION_OR_RFD_SMOOTH.out.versions.first())
 
     // TODO: print for debugging
     ch_rfd
