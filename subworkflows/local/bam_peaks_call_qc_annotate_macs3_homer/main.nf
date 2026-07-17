@@ -43,7 +43,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         ch_bam,
         macs_gsize
     )
-    ch_versions = ch_versions.mix(MACS3_CALLPEAK.out.versions.first())
 
     //
     // Filter out samples with 0 MACS3 peaks called
@@ -147,7 +146,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             ch_gtf.map { it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt
-        ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions.first())
 
         if (!skip_peak_qc) {
 

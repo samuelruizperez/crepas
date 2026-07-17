@@ -127,7 +127,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             ch_fasta,
             ch_gtf
         )
-        ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions)
 
         //
         // MODULE: Add boolean fields to annotated consensus peaks to aid filtering
