@@ -1,7 +1,8 @@
 channels:
-- conda-forge
-- bioconda
+  - conda-forge
+  - bioconda
 dependencies:
-- pip
-- pip:
-  - TElocal==1.1.3
+  - conda-forge::gzip=1.14
+  - pip
+  - pip:
+    - TElocal==1.1.3
