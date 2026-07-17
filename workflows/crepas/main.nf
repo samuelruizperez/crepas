@@ -478,7 +478,6 @@ workflow CREPAS {
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
-    ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
 
     if (!params.skip_flT3) {
         //
@@ -778,7 +777,6 @@ workflow CREPAS {
             DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.table.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.versions.first())
 
         //
         // MODULE: deepTools heatmaps
@@ -786,7 +784,6 @@ workflow CREPAS {
         DEEPTOOLS_PLOTHEATMAP_GENES (
             DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP_GENES.out.versions.first())
     }
 
     // Removing the exogenous samples from the filtered_bam_index channel
@@ -894,7 +891,6 @@ workflow CREPAS {
             ch_ip_and_ipcontrols_bam_index
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.matrix.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
     //

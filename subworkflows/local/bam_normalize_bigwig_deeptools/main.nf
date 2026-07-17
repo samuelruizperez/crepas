@@ -102,7 +102,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         channel.value([[:], []])
     )
     ch_bdg_raw = DEEPTOOLS_BAMCOVERAGE.out.bedgraph
-    ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE.out.versions.first())
 
     // TODO: print for debugging
     ch_bdg_raw
@@ -497,7 +496,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             channel.value([[:], []])
         )
         ch_bw_compare = DEEPTOOLS_BIGWIGCOMPARE.out.output
-        ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGCOMPARE.out.versions.first())
 
     }
 

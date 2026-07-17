@@ -122,21 +122,21 @@
                     },
                     "deeptools/alignmentsieve": {
                         "branch": "master",
-                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "deeptools/bamcoverage": {
                         "branch": "master",
-                        "git_sha": "e753770db613ce014b3c4bc94f6cba443427b726",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "deeptools/bigwigcompare": {
                         "branch": "master",
-                        "git_sha": "e753770db613ce014b3c4bc94f6cba443427b726",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
@@ -164,14 +164,14 @@
                     },
                     "deeptools/plotfingerprint": {
                         "branch": "master",
-                        "git_sha": "e753770db613ce014b3c4bc94f6cba443427b726",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "deeptools/plotheatmap": {
                         "branch": "master",
-                        "git_sha": "e753770db613ce014b3c4bc94f6cba443427b726",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ],
@@ -186,7 +186,7 @@
                     },
                     "deeptools/plotprofile": {
                         "branch": "master",
-                        "git_sha": "e753770db613ce014b3c4bc94f6cba443427b726",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]

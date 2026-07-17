@@ -9,7 +9,6 @@ workflow BAM_SHIFT_READS {
     ch_fasta_fai                 // channel: [ val(meta), path(fasta), path(fai) ]
 
     main:
-    ch_versions = channel.empty()
 
     //
     // MODULE: Shift ATAC-seq reads
@@ -17,7 +16,6 @@ workflow BAM_SHIFT_READS {
     DEEPTOOLS_ALIGNMENTSIEVE (
         ch_bam_index
     )
-    ch_versions = ch_versions.mix(DEEPTOOLS_ALIGNMENTSIEVE.out.versions)
 
     //
     // SUBWORKFLOW: Sort, index and generate stats for the shifted BAM
@@ -33,5 +31,4 @@ workflow BAM_SHIFT_READS {
     stats    = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-    versions = ch_versions                          // channel: [ versions.yml ]
 }
