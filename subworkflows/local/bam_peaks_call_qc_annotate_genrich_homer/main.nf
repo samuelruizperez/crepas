@@ -78,7 +78,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         ch_ip_ipcontrol_bam_merged_reps,
         ch_blacklist.map { it -> it[1] }
     )
-    ch_versions = ch_versions.mix(GENRICH.out.versions.first())
 
     //
     // Filter out samples with 0 Genrich peaks called
