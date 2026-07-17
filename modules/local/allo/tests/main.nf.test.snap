@@ -1,0 +1,181 @@
+{
+    "homo_sapiens - bam - single_end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test_se",
+                        "single_end": true
+                    },
+                    "test_se.bam:md5,2a9246b53e322bd69e3a17bf4e938188"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test_se",
+                        "single_end": true
+                    },
+                    "test_se.sam:md5,03f8d21cd039fa767ca07111e3be59bd"
+                ]
+            ],
+            {
+                "versions_allo": [
+                    [
+                        "ALLO",
+                        "allo",
+                        "1.2.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "ALLO",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T10:49:14.214113316",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "homo_sapiens - bam - paired_end - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.sam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        "ALLO",
+                        "allo",
+                        "1.2.0"
+                    ]
+                ],
+                "4": [
+                    [
+                        "ALLO",
+                        "samtools",
+                        "1.21"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.sam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_allo": [
+                    [
+                        "ALLO",
+                        "allo",
+                        "1.2.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "ALLO",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T10:49:31.349441494",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "homo_sapiens - bam - paired_end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.bam:md5,69dbd45bcc85a29bcf0288dda3df7734"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.sam:md5,8bb91e2ce07d959e8ca3674a63230ffc"
+                ]
+            ],
+            {
+                "versions_allo": [
+                    [
+                        "ALLO",
+                        "allo",
+                        "1.2.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "ALLO",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T10:48:50.857974135",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    }
+}

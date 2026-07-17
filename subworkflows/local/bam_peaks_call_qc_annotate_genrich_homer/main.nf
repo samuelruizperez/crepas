@@ -13,7 +13,7 @@ include { PLOT_HOMER_ANNOTATEPEAKS         } from '../../../modules/local/plot_h
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ ipcontrol_bam ] ]
-    ch_fasta                          // channel: [ fasta  ]
+    ch_fasta_fai                      // channel: [ val(meta), path(fasta), path(fai) ]
     ch_gtf                            // channel: [ gtf ]
     ch_blacklist                      // channel: [ bed ]
     annotate_peaks_suffix             //  string: suffix for input HOMER annotate peaks files to be trimmed off
@@ -28,7 +28,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
 
     ch_versions = channel.empty()
 
-    SAMTOOLS_SORT ( ch_bam, ch_fasta, '' )
+    SAMTOOLS_SORT ( ch_bam, ch_fasta_fai, '' )
 
     SAMTOOLS_SORT
         .out
@@ -107,7 +107,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
     FRIP_SCORE(
         ch_bam_peak
     )
-    ch_versions = ch_versions.mix(FRIP_SCORE.out.versions.first())
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peak
@@ -125,7 +124,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         ch_peak_count_header_multiqc,
         ch_frip_score_multiqc
     )
-    ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks = channel.empty()
     ch_plot_gr_qc_txt = channel.empty()
@@ -139,7 +137,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER {
         //
         HOMER_ANNOTATEPEAKS(
             ch_gr_peaks,
-            ch_fasta.map { it -> it[1] },
+            ch_fasta_fai.map { it -> it[1] },
             ch_gtf.map { it -> it[1] }
         )
         ch_homer_annotatepeaks = HOMER_ANNOTATEPEAKS.out.txt

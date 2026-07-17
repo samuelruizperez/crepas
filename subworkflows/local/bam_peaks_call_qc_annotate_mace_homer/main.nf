@@ -52,11 +52,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     // MODULE: Preprocess BAM files for MACE peak caller
     //
-    MACE_PREPROCESSOR(
+    MACE_PREPROCESSOR (
         ch_bam_merged_reps,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(MACE_PREPROCESSOR.out.versions.first())
 
     // Add strand to the meta information
     MACE_PREPROCESSOR.out.forward_wig.map { meta, forward_wig ->
@@ -74,7 +73,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     // Merge forward and reverse strands into one channel
     ch_wig = ch_fwd_wig.mix(ch_rwd_wig)
 
-    UCSC_WIGTOBIGWIG(
+    UCSC_WIGTOBIGWIG (
         ch_wig,
         ch_chrom_sizes.map { it -> it[1] }
     )
@@ -98,11 +97,10 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     // MODULE: Border detection and border pairing with MACE
     //
-    MACE_MACE(
+    MACE_MACE (
         ch_bw,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(MACE_MACE.out.versions.first())
 
     //
     // Filter out samples with 0 MACE peaks called
@@ -128,10 +126,9 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     // Calculate FRiP score
     //
-    FRIP_SCORE(
+    FRIP_SCORE (
         ch_bam_peak
     )
-    ch_versions = ch_versions.mix(FRIP_SCORE.out.versions.first())
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peak
@@ -144,12 +141,11 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     //
     // FRiP score custom content for MultiQC
     //
-    MULTIQC_CUSTOM_PEAKS(
+    MULTIQC_CUSTOM_PEAKS (
         ch_bam_peak_frip,
         ch_peak_count_header_multiqc,
         ch_frip_score_multiqc
     )
-    ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks = channel.empty()
     // ch_plot_mace_qc_txt            = channel.empty()
@@ -161,7 +157,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         //
         // Annotate peaks with HOMER
         //
-        HOMER_ANNOTATEPEAKS(
+        HOMER_ANNOTATEPEAKS (
             ch_mace_peaks,
             ch_fasta.map { it -> it[1] },
             ch_gtf.map { it -> it[1] }
@@ -208,7 +204,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
             //
             // Peak annotation QC plots with R
             //
-            PLOT_HOMER_ANNOTATEPEAKS(
+            PLOT_HOMER_ANNOTATEPEAKS (
                 ch_homer_annotatepeaks_grouped,
                 ch_peak_annotation_header_multiqc,
                 annotate_peaks_suffix

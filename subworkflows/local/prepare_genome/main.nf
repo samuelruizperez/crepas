@@ -22,11 +22,13 @@ include {
     GUNZIP as GUNZIP_TE_GTF
     GUNZIP as GUNZIP_TECOUNT_TE_INDEX
     GUNZIP as GUNZIP_TELOCAL_TE_INDEX
+    GUNZIP as GUNZIP_STROBEALIGN_INDEX
     } from '../../../modules/nf-core/gunzip/main'
 
 include {
     UNTAR as UNTAR_BWA_INDEX
     UNTAR as UNTAR_BWAMEM2_INDEX
+    UNTAR as UNTAR_MINIBWA_INDEX
     UNTAR as UNTAR_BOWTIE_INDEX
     UNTAR as UNTAR_BOWTIE2_INDEX
     UNTAR as UNTAR_STAR_INDEX
@@ -35,27 +37,28 @@ include {
     UNTAR as UNTAR_MINIMAP2_INDEX
     } from '../../../modules/nf-core/untar/main'
 
-include { BUILD_HYBRID_FASTA } from '../../../modules/local/build_hybrid_fasta/main'
-include { GFFREAD              } from '../../../modules/nf-core/gffread/main'
-include { SAMTOOLS_FAIDX         } from '../../../modules/nf-core/samtools/faidx/main'
-include { BWA_INDEX            } from '../../../modules/nf-core/bwa/index/main'
-include { BWAMEM2_INDEX        } from '../../../modules/nf-core/bwamem2/index/main'
-include { BOWTIE_BUILD        } from '../../../modules/nf-core/bowtie/build/main'
-include { BOWTIE2_BUILD        } from '../../../modules/nf-core/bowtie2/build/main'
-include { CHROMAP_INDEX        } from '../../../modules/nf-core/chromap/index/main'
-include { STAR_GENOMEGENERATE      } from '../../../modules/nf-core/star/genomegenerate/main'
-include { HISAT2_BUILD       } from '../../../modules/nf-core/hisat2/build/main'
-include { HISAT2_EXTRACTSPLICESITES } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
-include { MINIMAP2_INDEX       } from '../../../modules/nf-core/minimap2/index/main'
-include { KHMER_UNIQUEKMERS        } from '../../../modules/nf-core/khmer/uniquekmers/main'
-include { RFD_TO_IZ                                               } from '../../../modules/local/rfd_to_iz/main'
+include { BUILD_HYBRID_FASTA            } from '../../../modules/local/build_hybrid_fasta/main'
+include { GFFREAD                       } from '../../../modules/nf-core/gffread/main'
+include { SAMTOOLS_FAIDX                } from '../../../modules/nf-core/samtools/faidx/main'
+include { BWA_INDEX                     } from '../../../modules/nf-core/bwa/index/main'
+include { BWAMEM2_INDEX                 } from '../../../modules/nf-core/bwamem2/index/main'
+include { MINIBWA_INDEX                 } from '../../../modules/nf-core/minibwa/index/main'
+include { BOWTIE_BUILD                  } from '../../../modules/nf-core/bowtie/build/main'
+include { BOWTIE2_BUILD                 } from '../../../modules/nf-core/bowtie2/build/main'
+include { CHROMAP_INDEX                 } from '../../../modules/nf-core/chromap/index/main'
+include { STAR_GENOMEGENERATE           } from '../../../modules/nf-core/star/genomegenerate/main'
+include { HISAT2_BUILD                  } from '../../../modules/nf-core/hisat2/build/main'
+include { HISAT2_EXTRACTSPLICESITES     } from '../../../modules/nf-core/hisat2/extractsplicesites/main'
+include { MINIMAP2_INDEX                } from '../../../modules/nf-core/minimap2/index/main'
+include { KHMER_UNIQUEKMERS             } from '../../../modules/nf-core/khmer/uniquekmers/main'
+include { RFD_TO_IZ                     } from '../../../modules/local/rfd_to_iz/main'
 
-include { GFF3SORT               } from '../../../modules/local/gff3sort/main'
-include { TABIX_BGZIP           } from '../../../modules/nf-core/tabix/bgzip/main'
-include { TABIX_TABIX           } from '../../../modules/nf-core/tabix/tabix/main'
-include { GTF2BED                  } from '../../../modules/local/gtf2bed/main'
-include { GENOME_WHITELIST_REGIONS } from '../../../modules/local/genome_whitelist_regions/main'
-include { CHROMSIZES_SPLIT_BY_GENOME  } from '../../../modules/local/chromsizes_split_by_genome/main'
+include { GFF3SORT                      } from '../../../modules/local/gff3sort/main'
+include { TABIX_BGZIP                   } from '../../../modules/nf-core/tabix/bgzip/main'
+include { TABIX_TABIX                   } from '../../../modules/nf-core/tabix/tabix/main'
+include { EAUTILS_GTF2BED               } from '../../../modules/nf-core/ea-utils/gtf2bed/main'
+include { GENOME_WHITELIST_REGIONS      } from '../../../modules/local/genome_whitelist_regions/main'
+include { CHROMSIZES_SPLIT_BY_GENOME    } from '../../../modules/local/chromsizes_split_by_genome/main'
 
 include {
     TETRANSCRIPTS_INDEXER as TETRANSCRIPTS_INDEXER_GENE
@@ -87,12 +90,14 @@ workflow PREPARE_GENOME {
     gene_bed           //    file: /path/to/gene.bed
     bwa_index          //    file: /path/to/bwa/index/
     bwamem2_index      //    file: /path/to/bwamem2/index/
+    minibwa_index      //    file: /path/to/minibwa/index/
     bowtie_index        //    file: /path/to/bowtie/index/
     bowtie2_index      //    file: /path/to/bowtie2/index/
     chromap_index      //    file: /path/to/chromap/index/
     star_index         //    file: /path/to/star/index/
     hisat2_index       //    file: /path/to/hisat2/index/
     minimap2_index     //    file: /path/to/minimap2/index/
+    strobealign_index  //    file: /path/to/strobealign_index
     splicesites        //    file: /path/to/splicesites.txt
     okseq_rfd_file     //    file: /path/to/okseq_rfd_file.bed
     initiation_zones   //    file: /path/to/initiation_zones.bed
@@ -170,8 +175,7 @@ workflow PREPARE_GENOME {
         // MODULE: Sort GTF file with gff3sort
         //
         GFF3SORT ( ch_gtf )
-        ch_gtf = GFF3SORT.out.gtf
-        ch_versions = ch_versions.mix(GFF3SORT.out.versions)
+        ch_gtf = GFF3SORT.out.sorted
 
         //
         // MODULE: Compress sorted GTF file with bgzip
@@ -242,8 +246,8 @@ workflow PREPARE_GENOME {
     // Uncompress gene BED annotation file or create from GTF if required
     //
     if (!gene_bed) {
-        ch_gene_bed = GTF2BED ( ch_gtf ).bed
-        ch_versions = ch_versions.mix(GTF2BED.out.versions)
+        ch_gene_bed = EAUTILS_GTF2BED ( ch_gtf ).bed
+        ch_versions = ch_versions.mix(EAUTILS_GTF2BED.out.versions)
     } else {
         if (gene_bed.endsWith('.gz')) {
             ch_gene_bed = GUNZIP_GENE_BED ( [ [id:'gene_bed'], file(gene_bed, checkIfExists: true) ] ).gunzip
@@ -275,7 +279,6 @@ workflow PREPARE_GENOME {
         CHROMSIZES_SPLIT_BY_GENOME ( ch_chrom_sizes_endo, spikein_genome, genome )
         ch_chrom_sizes_endo = CHROMSIZES_SPLIT_BY_GENOME.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
         ch_chrom_sizes_exo = CHROMSIZES_SPLIT_BY_GENOME.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
-        ch_versions        = ch_versions.mix(CHROMSIZES_SPLIT_BY_GENOME.out.versions)
     }
 
     ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel
@@ -359,7 +362,6 @@ workflow PREPARE_GENOME {
         ch_blacklist//.ifEmpty([[:], []])
     )
     ch_whitelist = GENOME_WHITELIST_REGIONS.out.bed
-    ch_versions = ch_versions.mix(GENOME_WHITELIST_REGIONS.out.versions)
 
 
     //
@@ -392,7 +394,22 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_bwamem2_index = BWAMEM2_INDEX ( ch_fasta ).index
-            ch_versions  = ch_versions.mix(BWAMEM2_INDEX.out.versions_bwamem2)
+        }
+    }
+
+    //
+    // Uncompress minibwa index or generate from scratch if required
+    //
+    ch_minibwa_index = channel.empty()
+    if (prepare_tool_index == 'minibwa') {
+        if (minibwa_index) {
+            if (minibwa_index.endsWith('.tar.gz')) {
+                ch_minibwa_index = UNTAR_MINIBWA_INDEX ( [ [id:'minibwa_index'], file(minibwa_index, checkIfExists: true) ] ).untar
+            } else {
+                ch_minibwa_index = channel.value( [ [id:'minibwa_index'], file(minibwa_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_minibwa_index = MINIBWA_INDEX ( ch_fasta ).index
         }
     }
 
@@ -426,7 +443,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_bowtie2_index = BOWTIE2_BUILD ( ch_fasta ).index
-            ch_versions      = ch_versions.mix(BOWTIE2_BUILD.out.versions)
         }
     }
 
@@ -503,9 +519,27 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_minimap2_index = MINIMAP2_INDEX ( ch_fasta ).index
-            ch_versions  = ch_versions.mix(MINIMAP2_INDEX.out.versions_minimap2)
         }
     }
+
+    //
+    // Uncompress Strobealign index or generate from scratch if required
+    //
+    ch_strobealign_index = channel.empty().first()
+    if (prepare_tool_index == 'strobealign') {
+        if (strobealign_index) {
+            if (strobealign_index.endsWith('.gz')) {
+                ch_strobealign_index = GUNZIP_STROBEALIGN_INDEX ( [ [id:'strobealign_index'], file(strobealign_index, checkIfExists: true) ] ).gunzip
+            } else {
+                ch_strobealign_index = channel.value( [ [id:'strobealign_index'], file(strobealign_index, checkIfExists: true) ] )
+            }
+        } else {
+            ch_strobealign_index = channel.value([[:], []])
+        }
+    }
+
+    
+
     //
     // Uncompress gene GTF for TE counting or use existing gene GTF
     // With this, it is possible to provide a different GTF specifically for TE counting
@@ -598,12 +632,14 @@ workflow PREPARE_GENOME {
     initiation_zones       = ch_initiation_zones       //    channel: [ val(meta), [ initiation_zones.bed ]]
     bwa_index              = ch_bwa_index              //    path: bwa/index/
     bwamem2_index          = ch_bwamem2_index          //    channel: [ val(meta), [ bwamem2/index/ ]]
+    minibwa_index          = ch_minibwa_index          //    channel: [ val(meta), [ minibwa/index/ ]]
     bowtie_index           = ch_bowtie_index            //    channel: [ val(meta), [ bowtie/index/ ]]
     bowtie2_index          = ch_bowtie2_index          //    channel: [ val(meta), [ bowtie2/index/ ]]
     chromap_index          = ch_chromap_index          //    channel: [ val(meta), [ chromap/index/ ]]
     star_index             = ch_star_index             //    channel: [ val(meta), [ star/index/ ]]
     hisat2_index           = ch_hisat2_index           //    channel: [ val(meta), [ hisat2/index/ ]]
     minimap2_index         = ch_minimap2_index         //    channel: [ val(meta), [ minimap2/index/ ]]
+    strobealign_index      = ch_strobealign_index         //    channel: [ val(meta), [ strobealign/index/ ]]
     splicesites            = ch_splicesites            //    channel: [ val(meta), [ splicesites.txt ]]
     te_counting_gene_gtf   = ch_te_counting_gene_gtf   //    channel: [ val(meta), [ te_counting_gene_gtf.gtf ]]
     tecount_gene_index     = ch_tecount_gene_index     //    channel: [ val(meta), [ tecount_gene_index.Ind ]]

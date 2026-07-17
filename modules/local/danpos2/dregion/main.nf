@@ -24,7 +24,7 @@ process DANPOS2_DREGION {
     tuple val(meta), path("result/pooled/*.refregions.xls"), emit: pooled_refregions, optional: true
     tuple val(meta), path("result/pooled/*.regions.xls"), emit: pooled_regions, optional: true
     tuple val(meta), path("result/pooled/*.wig"), emit: pooled_wig, optional: true
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('danpos'), eval("danpos.py dregion -h 2>&1 | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1"), emit: versions_danpos, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -51,29 +51,18 @@ process DANPOS2_DREGION {
 
     # replace any occurrence of 'treatment' in filenames with the prefix
     find ./ -type f -name '*treatment*' -exec bash -c 'f="{}"; mv "\$f" "\${f//treatment/${prefix}}"' \\;
-
-    # replace any occurrence of 'treatment' in subdirectory names with the prefix
-    #find ./ -mindepth 1 -maxdepth 1 -type d -name '*treatment*' -exec bash -c 'd="{}"; mv "\$d" "\${d//treatment/${prefix}}"' \\;
-    
-    # TODO: this is just to keep track of the final dir structure:
-    find .
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dregion -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
-    END_VERSIONS
     """
-    
+
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.peaks.xls
-    touch ${prefix}.input.wig
-    touch ${prefix}.smooth.wig
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        DANPOS: \$(echo \$(danpos.py dregion -h 2>&1) | grep -oP 'danpos\\s+\\K[\\d.]+' | head -1)
-    END_VERSIONS
+    mkdir -p result/pooled result/diff
+    touch ${prefix}.regions.integrative.xls
+    touch result/diff/${prefix}.local_gain.refregions.xls
+    touch result/diff/${prefix}.local_loss.refregions.xls
+    touch result/diff/${prefix}.wig
+    touch result/pooled/${prefix}.refregions.xls
+    touch result/pooled/${prefix}.regions.xls
+    touch result/pooled/${prefix}.wig
     """
 }

@@ -1,8 +1,12 @@
-[![GitHub Actions CI Status](https://github.com/grothlab/crepas/actions/workflows/ci.yml/badge.svg)](https://github.com/grothlab/crepas/actions/workflows/ci.yml)
+# grothlab/crepas
+
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/grothlab/crepas)
+[![GitHub Actions CI Status](https://github.com/grothlab/crepas/actions/workflows/nf-test.yml/badge.svg)](https://github.com/grothlab/crepas/actions/workflows/nf-test.yml)
 [![GitHub Actions Linting Status](https://github.com/grothlab/crepas/actions/workflows/linting.yml/badge.svg)](https://github.com/grothlab/crepas/actions/workflows/linting.yml)
 [![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.20788108-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.20788108)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.10.0-23aa62.svg)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
+[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.0.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.0.2)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -26,7 +30,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 3. Adapter, quality or hard trimming ([`Trim Galore!`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
 
-4. Alignment to reference genome ([`BWA MEM`](https://sourceforge.net/projects/bio-bwa/files/), [`BWA MEM2`](https://github.com/bwa-mem2/bwa-mem2), [`Chromap`](https://github.com/haowenz/chromap), [`Bowtie`](https://bowtie-bio.sourceforge.net/manual.shtml), [`Bowtie2`](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [`STAR`](https://github.com/alexdobin/STAR), [`HISAT2`](https://daehwankimlab.github.io/hisat2/), [`minimap2`](https://lh3.github.io/minimap2/minimap2.html) or [`strobealign`](https://github.com/ksahlin/strobealign))
+4. Alignment to reference genome ([`BWA MEM`](https://sourceforge.net/projects/bio-bwa/files/), [`BWA MEM2`](https://github.com/bwa-mem2/bwa-mem2), [`minibwa`](https://github.com/lh3/minibwa), [`Chromap`](https://github.com/haowenz/chromap), [`Bowtie`](https://bowtie-bio.sourceforge.net/manual.shtml), [`Bowtie2`](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [`STAR`](https://github.com/alexdobin/STAR), [`HISAT2`](https://daehwankimlab.github.io/hisat2/), [`minimap2`](https://lh3.github.io/minimap2/minimap2.html) or [`strobealign`](https://github.com/ksahlin/strobealign))
 
 5. Merging of alignments from multiple libraries of the same sample (technical replicates) ([`picard`](https://broadinstitute.github.io/picard/))
 
@@ -184,18 +188,20 @@ The [crepas](https://github.com/grothlab/crepas) pipeline was written by Samuel 
 
 ## Contributions and Support
 
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+If you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).
 
 <!-- TODO: -->
 For further information or help, don't hesitate to get in touch through the pipeline's [GitHub Discussions](https://github.com/grothlab/crepas/discussions) or directly with Samuel Ruiz-Pérez ([samper@cancer.dk](mailto:samper@cancer.dk))
 
 ## Citations
 
-If you use [crepas](https://github.com/grothlab/crepas) for your analysis, please cite it as below:
+If you use grothlab/crepas for your analysis, please cite it using the following doi: [10.5281/zenodo.20788108](https://doi.org/10.5281/zenodo.20788108)
 
 >  Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://doi.org/10.5281/zenodo.20788108
 
-This pipeline uses code developed and maintained by the [nf-core](https://nf-co.re) initative, and reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
+An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
+
+This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).
 
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >
@@ -210,5 +216,3 @@ It also uses adapted scripts from [nf-core/chipseq](https://github.com/nf-core/c
 > Harshil Patel, Jose Espinosa-Carrasco, Chuan Wang, Phil Ewels, nf-core bot, Tiago Chedraoui Silva, Alexander Peltzer, Björn Langer, Sarah Guinchard, Maxime U. Garcia, Drew Behrens, Matthias Hörtenhuber, Adam Talbot, Konrad Rokicki, Robert Syme, Rotholandus, Samuel Ruiz Pérez, Sofia Haglund, Steffen Möller, Warren Winfried “Winni” Kretzschmar, and Kevin Menden. 
 >
 > Zenodo. 2024. doi: [10.5281/zenodo.13899404](https://doi.org/10.5281/zenodo.13899404).
-
-In addition, an extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.

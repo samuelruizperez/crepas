@@ -15,7 +15,6 @@ include { completionEmail           } from '../../../subworkflows/nf-core/utils_
 include { completionSummary         } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { getWorkflowVersion        } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { logColours                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { imNotification            } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
 
 /*
@@ -29,8 +28,12 @@ workflow PIPELINE_INITIALISATION {
     take:
     version           // boolean: Display version and exit
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
-    nextflow_cli_args //   array: List of positional nextflow CLI args
-    outdir            //  string: The output directory where the results will be saved
+    monochrome_logs   // boolean: Do not use coloured log outputs
+    nextflow_cli_args // array: List of positional nextflow CLI args
+    outdir            // string: The output directory where the results will be saved
+    help              // boolean: Display help message and exit
+    help_full         // boolean: Show the full help message
+    show_hidden       // boolean: Show hidden parameters in the help message
 
     main:
 
@@ -46,13 +49,54 @@ workflow PIPELINE_INITIALISATION {
         workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
     )
 
+//
+    // Validate parameters and generate parameter summary to stdout
+    //
+    def colors = logColours(monochrome_logs)
+    def before_text = """
+        
+                                                                ╔██████╗                       
+                                                                ██╔══██║                       
+                               ██████╗               ╔██████╗   ███████║                       
+                     ██████╗   ██╔══██╗              ██╔══██║   ██╔══██║                       
+                    ██╔════╝   ██████╔╝   ╔██████╗   ██████╔╝   ██║_ ██║                       
+                    ██║        ██╔══██╗_  ██╔════╝   ██╔═══╝    ╚═╝ \\╚═╝                       
+                    ██║ _      ██║  ██║ \\ █████╗  /\\ ██║  /\\   ///\\. \\     ╔███████            
+                    ╚██████╗   ╚═╝ ///:. \\██╔══╝ /. \\╚═╝ // \\/////\\:. \\    ██╔════╝            
+             /\\      ╚//: \\╝ _/\\_ /////:. ║██████╗/: \\_ ///.//////\\\\:. \\  /███████╗\\  /\\       
+            //.\\\\    ///:. \\///: \\//////:.╚══════╝/\\.. \\\\/\\///////\\\\\\:. \\//╚════██║ \\/. \\\\     
+           //:.. \\  ///:.. ////:. \\//////:. \\///////:.  \\\\////////\\\\\\::. \\\\███████║ //::. \\\\   
+          ///:... \\/////: /////\\:. \\////\\\\:. \\///////:.. \\////////\\\\\\\\::: \\╚══════╝////:... \\  
+          ───────────────────────────────────────────────────────────────────────────────────  
+
+"""
+    def after_text = """${workflow.manifest.doi ? "\n* The pipeline\n" : ""}${workflow.manifest.doi.tokenize(",").collect { doi -> "    https://doi.org/${doi.trim().replace('https://doi.org/','')}"}.join("\n")}${workflow.manifest.doi ? "\n" : ""}
+* The Epigenome Replication and Maintenance group at the Center for Epigenetic Cell Memory (EpiC), 
+    Danish Cancer Institute, Danish Cancer Society:
+    https://www.cancer.dk/danish-cancer-institute/research-groups/epigenome-replication-and-maintenance/
+
+* Software dependencies
+    https://github.com/grothlab/crepas/blob/master/CITATIONS.md
+"""
+    if (monochrome_logs) {
+        before_text = before_text.replaceAll(/\033\[[0-9;]*m/, '')
+    }
+
+    command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
+
     //
     // Validate parameters and generate parameter summary to stdout
     //
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
         validate_params,
-        null
+        null,
+        help,
+        help_full,
+        show_hidden,
+        before_text,
+        after_text,
+        command
     )
 
     //
@@ -68,6 +112,7 @@ workflow PIPELINE_INITIALISATION {
     validateInputParameters()
 
     emit:
+
     versions = ch_versions
 
 }
@@ -367,7 +412,6 @@ workflow PIPELINE_COMPLETION {
     plaintext_email // boolean: Send plain-text email instead of HTML
     outdir          //    path: Path to output directory where results will be published
     monochrome_logs // boolean: Disable ANSI colour codes in log output
-    hook_url        //  string: hook URL for notifications
     multiqc_report  //  string: Path to MultiQC report
 
     main:
@@ -392,9 +436,6 @@ workflow PIPELINE_COMPLETION {
 
         completionSummary(monochrome_logs)
 
-        if (hook_url) {
-            imNotification(summary_params, hook_url)
-        }
     }
 
     workflow.onError {
@@ -489,7 +530,7 @@ def validateInputParameters() {
         }
     }
 
-    if (!params.containsKey('macs_gsize')) {
+    if (!params.macs_gsize) {
         macsGsizeWarn(log)
     }
 
@@ -520,8 +561,8 @@ def validateInputParameters() {
     }
 
     if (params.map_n_multimappers) {
-        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2'].contains(params.aligner)) {
-            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', or 'minimap2'.")
+        if (!['chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2', 'minibwa'].contains(params.aligner)) {
+            error("The `--map_n_multimappers` parameter requires the aligner to be set to 'chromap', 'bowtie2', 'hisat2', 'star', 'bowtie', 'strobealign', 'minimap2', or 'minibwa'.")
         }
     }
 

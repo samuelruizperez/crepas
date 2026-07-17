@@ -23,7 +23,7 @@ workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
-    ch_fasta                // channel: [ val(meta), path(fasta) ]
+    ch_fasta_fai            // channel: [ val(meta), path(fasta), path(fai) ]
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
@@ -48,7 +48,6 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Split BAMs by strand (forward and reverse)
     //
     BAM_SPLIT_BY_STRAND ( ch_bam )
-    ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
 
     // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
@@ -107,8 +106,8 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Run samtools stats, flagstat and idxstats per strand
     //
     BAM_STATS_SAMTOOLS (
-        ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0),
-        ch_fasta
+        ch_bam.join(SAMTOOLS_INDEX.out.index, by: 0),
+        ch_fasta_fai
     )
 
     // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
@@ -143,7 +142,6 @@ workflow BAM_CREATE_PARTITIONS {
         BEDTOOLS_GENOMECOV.out.genomecov,
         'bedGraph'
     )
-    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
     //
     // MODULE: Convert bedgraph to bigwig
@@ -220,9 +218,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_bwaob = BWAOB_SORT.out.sorted
-    ch_versions = ch_versions.mix(BWAOB_SORT.out.versions.first())
-
-
 
     // RPM normalization factors
     // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_or_rfd_smooth)
@@ -251,7 +246,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_norm = BWAOB_NORMALIZE.out.normalized
-    ch_versions = ch_versions.mix(BWAOB_NORMALIZE.out.versions.first())
 
     // TODO: print for debugging
     ch_norm
@@ -297,7 +291,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_norm_scar_input
     )
     ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
-    ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
 
     // TODO: print for debugging
     ch_bdg_smi
@@ -425,7 +418,6 @@ workflow BAM_CREATE_PARTITIONS {
     COLLECT_PARTITIONS (
         ch_to_collect
     )
-    ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
     //
     // Add meta information to the filtered partitions and bedgraph

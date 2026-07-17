@@ -29,7 +29,7 @@ process BED_FILTER_BLACKLIST {
     def prefix = task.ext.prefix ?: "${meta.id}.flTbl"
     def zcat_arg = peaks.name.endsWith('.gz') ? 'zcat' : 'cat'
     def max_score_arg = max_score ?: 1000
-    def filter_chr_arg = filter_chr ? "| grep -P 'chr[\\dXY]+[ \\t]'" : ''
+    def filter_chr_arg = filter_chr ? "| { grep -P 'chr[\\dXY]+[ \\t]' || true; }" : ''
     def peak_types = ['narrowPeak', 'broadPeak', 'bed']
     if (!peak_types.contains(peak_type)) {
         log.error "[ERROR] Invalid option: '${peak_type}'. Valid options for 'peak_type': ${peak_types.join(', ')}."

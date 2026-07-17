@@ -4,4 +4,4 @@ channels:
 - conda-forge
 - bioconda
 dependencies:
-- bioconda::tetranscripts
+  - bioconda::tetranscripts=2.2.3

@@ -6,4 +6,6 @@ results/
 testing/
 testing*
 *.pyc
-/null
+null/
+.lineage/
+.nf-test*

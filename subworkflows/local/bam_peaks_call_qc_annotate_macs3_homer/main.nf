@@ -68,7 +68,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         MACS3_BDGCMP (
             ch_bdgs
         )
-        ch_versions = ch_versions.mix(MACS3_BDGCMP.out.versions.first())
 
         BEDTOOLS_SLOP (
             MACS3_BDGCMP.out.bdg,
@@ -78,7 +77,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         AWK_FIX_MACS3_BDGCMP (
             BEDTOOLS_SLOP.out.bed,
         )
-        ch_versions = ch_versions.mix(AWK_FIX_MACS3_BDGCMP.out.versions.first())
 
         UCSC_BEDCLIP (
             AWK_FIX_MACS3_BDGCMP.out.bed,
@@ -90,13 +88,11 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             UCSC_BEDCLIP.out.bedgraph,
             'sorted'
         )
-        ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 
         BIGTOOLS_BEDGRAPHTOBIGWIG (
             FILE_SORT.out.sorted,
             ch_chrom_sizes
         )
-        ch_versions = ch_versions.mix(BIGTOOLS_BEDGRAPHTOBIGWIG.out.versions.first())
     }
 
 
@@ -116,7 +112,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
     FRIP_SCORE (
         ch_bam_peaks
     )
-    ch_versions = ch_versions.mix(FRIP_SCORE.out.versions.first())
 
     // Create channels: [ meta, peaks, frip ]
     ch_bam_peaks
@@ -135,7 +130,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
         ch_peak_count_header_multiqc,
         ch_frip_score_multiqc
     )
-    ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PEAKS.out.versions.first())
 
     ch_homer_annotatepeaks          = channel.empty()
     ch_plot_macs3_qc_txt            = channel.empty()

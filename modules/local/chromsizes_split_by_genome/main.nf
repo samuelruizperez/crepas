@@ -4,8 +4,8 @@ process CHROMSIZES_SPLIT_BY_GENOME {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ubuntu:22.04' :
-        'nf-core/ubuntu:22.04' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/19/198ab15844726d095c90e454aa9b1cf91b7e3517dd62451791c596e2a2229082/data' :
+        'community.wave.seqera.io/library/coreutils_gawk_sed:e167f5dd848b5ae9' }"
 
     input:
     tuple val(meta), path(sizes)
@@ -15,7 +15,7 @@ process CHROMSIZES_SPLIT_BY_GENOME {
     output:
     tuple val(meta), path ("*.${endo_genome_string}.sizes") , emit: endo_sizes
     tuple val(meta), path ("*.${exo_genome_string}.sizes")  , emit: exo_sizes
-    path  "versions.yml"                                    , emit: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | head -1 | sed 's/^GNU Awk //; s/,.*\$//'"), topic: versions, emit: versions_awk
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,13 +35,6 @@ process CHROMSIZES_SPLIT_BY_GENOME {
         '(\$1 ~ /_${exo_genome_string}\$/) {sub(/_${exo_genome_string}\$/, "", \$1); print}' \\
         ${sizes} \\
         > ${prefix}.${exo_genome_string}.sizes
-
-
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -49,10 +42,5 @@ process CHROMSIZES_SPLIT_BY_GENOME {
     """
     touch ${prefix}.${endo_genome_string}.sizes
     touch ${prefix}.${exo_genome_string}.sizes
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 }

@@ -400,7 +400,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         'bedGraph'
     )
     ch_bdg_map_norm = ch_bdg_map.mix(BEDGRAPH_NORMALIZE.out.normalized)
-    ch_versions = ch_versions.mix(BEDGRAPH_NORMALIZE.out.versions.first())
 
     //
     // MODULE: Sort the bedgraph so that it works with ucsc_bedgraphtobigwig
@@ -410,7 +409,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         'bedGraph'
     )
     ch_bdg_all = BEDGRAPH_SORT.out.sorted
-    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
 
     if (!skip_signal_vs_input && signal_vs_input_operation == 'soi') {
@@ -441,7 +439,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bdg_ip_control_soi
         )
         ch_bdg_all = BEDGRAPH_SIGNAL_OVER_INPUT.out.bedgraph.mix(ch_bdg_all)
-        ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_OVER_INPUT.out.versions.first())
 
     }
 
@@ -535,7 +532,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             channel.value([[:], []])
         )
         ch_bw_avg = DEEPTOOLS_BIGWIGAVERAGE.out.bigwig
-        ch_versions = ch_versions.mix(DEEPTOOLS_BIGWIGAVERAGE.out.versions.first())
     }
 
     ch_bigwig

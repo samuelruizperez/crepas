@@ -13,7 +13,7 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
 
     output:
     tuple val(meta), path("*.bw"), emit: bigwig
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('bigtools'), eval("bigtools bedgraphtobigwig --version | sed 's/^bigtools-bedgraphtobigwig //'"), emit: versions_bigtools, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,21 +28,11 @@ process BIGTOOLS_BEDGRAPHTOBIGWIG {
         ${bedgraph} \\
         ${sizes} \\
         ${prefix}.bw
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bigtools-bedgraphtobigwig: \$( bigtools bedgraphtobigwig --version | sed 's/^bigtools-bedgraphtobigwig //' )
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.bw
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bigtools-bedgraphtobigwig: \$( bigtools bedgraphtobigwig --version | sed 's/^bigtools-bedgraphtobigwig //' )
-    END_VERSIONS
     """
 }

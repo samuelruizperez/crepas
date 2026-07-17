@@ -5,8 +5,8 @@ include { BAM_SORT_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_sort
 
 workflow BAM_SHIFT_READS {
     take:
-    ch_bam_bai                   // channel: [ val(meta), [ bam ], [bai] ]
-    ch_fasta                     // channel: [ val(meta), [ fasta ] ]
+    ch_bam_index                   // channel: [ val(meta), [ bam ], [index] ]
+    ch_fasta_fai                 // channel: [ val(meta), path(fasta), path(fai) ]
 
     main:
     ch_versions = channel.empty()
@@ -15,7 +15,7 @@ workflow BAM_SHIFT_READS {
     // MODULE: Shift ATAC-seq reads
     //
     DEEPTOOLS_ALIGNMENTSIEVE (
-        ch_bam_bai
+        ch_bam_index
     )
     ch_versions = ch_versions.mix(DEEPTOOLS_ALIGNMENTSIEVE.out.versions)
 
@@ -24,12 +24,12 @@ workflow BAM_SHIFT_READS {
     //
     BAM_SORT_STATS_SAMTOOLS (
         DEEPTOOLS_ALIGNMENTSIEVE.out.bam,
-        ch_fasta
+        ch_fasta_fai
     )
 
     emit:
     bam      = BAM_SORT_STATS_SAMTOOLS.out.bam      // channel: [ val(meta), [ bam ] ]
-    bai    = BAM_SORT_STATS_SAMTOOLS.out.bai    // channel: [ val(meta), [ bai ] ]
+    index    = BAM_SORT_STATS_SAMTOOLS.out.index    // channel: [ val(meta), [ index ] ]
     stats    = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]

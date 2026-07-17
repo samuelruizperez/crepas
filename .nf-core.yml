@@ -1,15 +1,16 @@
 lint:
+  actions_awsfulltest: false
   actions_nf_test: false
   container_configs: false
   modules_config: false
   multiqc_config: false
   nf_test_content: false
-  actions_awsfulltest: false
 nf_core_version: 4.0.2
 repository_type: pipeline
 template:
-  author: "Samuel Ruiz-Pérez, Qian Du, Alva Biran, Anja Groth, Nicolas Alcaraz"
-  description: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies.
+  author: "Samuel Ruiz-P\xE9rez, Qian Du, Alva Biran, Anja Groth, Nicolas Alcaraz"
+  description: a reproducible nascent chromatin sequencing analysis pipeline for epigenome
+    replication studies.
   force: false
   is_nfcore: false
   name: crepas

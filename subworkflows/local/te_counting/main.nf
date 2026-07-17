@@ -9,7 +9,7 @@ workflow TE_COUNTING {
 
     take:
     ch_bam
-    ch_fasta
+    ch_fasta_fai
     skip_name_sort // boolean: skip name sorting of BAM files
     ch_tecount_gene_index
     ch_tecount_te_index
@@ -27,7 +27,7 @@ workflow TE_COUNTING {
         //
         SAMTOOLS_SORT (
             ch_bam,
-            ch_fasta,
+            ch_fasta_fai,
             ''
         )
         ch_bam = SAMTOOLS_SORT.out.bam
