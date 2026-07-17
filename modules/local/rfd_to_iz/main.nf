@@ -16,7 +16,7 @@ process RFD_TO_IZ {
     tuple val(meta), path("*.prefiltered.bed"), emit: okseq_filtered_bed
     tuple val(meta), path("*.init_zones.bed"),  emit: iz_bed
     tuple val(meta), path("*.rm_overlaps.bed"), emit: iz_rm_overlaps_bed
-    path "versions.yml",      emit: versions
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^R version //; s/ .*\$//'"), topic: versions, emit: versions_rbase
 
     when:
     task.ext.when == null || task.ext.when
@@ -34,11 +34,6 @@ process RFD_TO_IZ {
         --prefix ${prefix} \\
         --outdir ./ \\
         ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -47,10 +42,5 @@ process RFD_TO_IZ {
     touch  ${prefix}.prefiltered.bed
     touch  ${prefix}.init_zones.bed
     touch  ${prefix}.rm_overlaps.bed
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 }

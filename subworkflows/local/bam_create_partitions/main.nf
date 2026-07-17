@@ -521,7 +521,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
     ch_okseq
         .combine(RFD_TO_IZ.out.iz_rm_overlaps_bed, by: 0)
