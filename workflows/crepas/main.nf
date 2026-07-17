@@ -956,7 +956,6 @@ workflow CREPAS {
         params.genome,
         params.spikein_genome ?: channel.value([])
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
     //
     // MODULE: Create IGV session

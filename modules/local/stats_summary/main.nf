@@ -13,7 +13,7 @@ process STATS_SUMMARY {
 
     output:
     path "*.tsv", emit: tsv
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^R version //; s/ .*\$//'"), emit: versions_r, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -30,21 +30,11 @@ process STATS_SUMMARY {
         ${exo} \\
         --prefix ${prefix} \\
         --outdir ./
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: 'final_samtools_stats_summary'
     """
     touch ${prefix}.tsv
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 }

@@ -11,7 +11,8 @@ process STATS_CAT {
 
     output:
     path "*.tsv", emit: cat
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | head -1 | sed 's/^GNU Awk //; s/,.*\$//'"), emit: versions_awk, topic: versions
+    tuple val("${task.process}"), val('coreutils'), eval("sort --version 2>&1 | head -1 | sed 's/^sort (GNU coreutils) //'"), emit: versions_coreutils, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,22 +23,11 @@ process STATS_CAT {
     (head -n 1 ${t_stats[0]} && tail -q -n +2 ${t_stats.join(' ')}) \\
     | awk 'NR==1{print;next} {print \$0 | "sort -k1,1"}' \\
     > ${prefix}.tsv
-    
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "samtools_stats_cat"
     """
     touch ${prefix}.tsv
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 }

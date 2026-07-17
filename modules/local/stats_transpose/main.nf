@@ -12,7 +12,9 @@ process STATS_TRANSPOSE {
 
     output:
     tuple val(meta), path("*.tsv"), emit: t_stats
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | head -1 | sed 's/^GNU Awk //; s/,.*\$//'"), emit: versions_awk, topic: versions
+    tuple val("${task.process}"), val('sed'), eval("sed --version 2>&1 | head -1 | sed 's/^sed (GNU sed) //'"), emit: versions_sed, topic: versions
+    tuple val("${task.process}"), val('coreutils'), eval("sort --version 2>&1 | head -1 | sed 's/^sort (GNU coreutils) //'"), emit: versions_coreutils, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -47,21 +49,11 @@ process STATS_TRANSPOSE {
 
     # prepend column with ID as first row and the basename as second row
     awk ${args3} -v basename="\$basename" 'NR==1{print "ID\\t"\$0} NR==2{print basename"\\t"\$0} NR>2{print}' ${prefix}.tmp2 > ${prefix}.tsv
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.tsv
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 }
