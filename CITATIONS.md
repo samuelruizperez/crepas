@@ -98,9 +98,9 @@
 
   > Gaspar JM. Genrich: detecting sites of genomic enrichment. GitHub repository. URL: https://github.com/jsh58/Genrich.
 
-- [gtf2bed](https://pubmed.ncbi.nlm.nih.gov/22576172/)
+- [gtf2bed (ea-utils)](https://github.com/ExpressionAnalysis/ea-utils)
 
-  > Neph S, Kuehn MS, Reynolds AP, Haugen E, Thurman RE, Johnson AK, Rynes E, Maurano MT, Vierstra J, Thomas S, Sandstrom R, Humbert R, Stamatoyannopoulos JA. BEDOPS: high-performance genomic feature operations. Bioinformatics. 2012 Jul 15;28(14):1919-20. doi: 10.1093/bioinformatics/bts277. PubMed PMID: 22576172; PubMed Central PMCID: PMC3389768.
+  > Aronesty E. Comparison of Sequencing Utility Programs. The Open Bioinformatics Journal. 2013;7:1-8. doi: 10.2174/1875036201307010001. Software: ea-utils, command-line tools for processing biological sequencing data. GitHub repository. URL: https://github.com/ExpressionAnalysis/ea-utils.
 
 - [gunzip / gzip](https://www.gnu.org/software/gzip/)
 
@@ -130,6 +130,10 @@
 
   > Zhang Y, Liu T, Meyer CA, Eeckhoute J, Johnson DS, Bernstein BE, Nusbaum C, Myers RM, Brown M, Li W, Liu XS. Model-based Analysis of ChIP-Seq (MACS). Genome Biol. 2008;9(9):R137. doi: 10.1186/gb-2008-9-9-r137. PubMed PMID: 18798982; PubMed Central PMCID: PMC2592715.
 
+- [minibwa](https://github.com/lh3/minibwa)
+
+  > Li H. minibwa: a minimalistic version of the BWA read aligner. GitHub repository. URL: https://github.com/lh3/minibwa. See also Li H. Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. arXiv. 2013. doi: 10.48550/arXiv.1303.3997.
+
 - [minimap2](https://www.ncbi.nlm.nih.gov/pubmed/29750242/)
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PubMed PMID: 29750242; PubMed Central PMCID: PMC6137996.
@@ -145,6 +149,10 @@
 - [phantompeakqualtools](https://github.com/kundajelab/phantompeakqualtools)
 
   > Kundaje A. phantompeakqualtools: ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq quality metrics based on strand cross-correlation. GitHub repository. URL: https://github.com/kundajelab/phantompeakqualtools. Suggested citations include Landt SG et al. ChIP-seq guidelines and practices of the ENCODE and modENCODE consortia. Genome Res. 2012;22(9):1813-31. doi: 10.1101/gr.136184.111; and Kharchenko PK et al. Design and analysis of ChIP-seq experiments for DNA-binding proteins. Nat Biotechnol. 2008;26(12):1351-9. doi: 10.1038/nbt.1508.
+
+- [Picard](https://broadinstitute.github.io/picard/)
+
+  > Broad Institute. Picard toolkit. Broad Institute, GitHub repository. URL: https://broadinstitute.github.io/picard/.
 
 - [R](https://www.R-project.org/)
 
