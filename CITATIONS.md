@@ -2,7 +2,7 @@
 
 ## [crepas](https://github.com/grothlab/crepas)
 
->  Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://github.com/grothlab/crepas
+> Ruiz-Pérez, S., Du, Q., Biran, A., Groth, A., & Alcaraz, N. (2026). CREPAS: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies. https://github.com/grothlab/crepas
 
 ## [nf-core](https://pubmed.ncbi.nlm.nih.gov/32055031/)
 
@@ -221,7 +221,6 @@
 - [UCSC tools](https://genome.cshlp.org/content/12/6/996)
 
   > Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, Haussler D. The human genome browser at UCSC. Genome Res. 2002 Jun;12(6):996-1006. doi: 10.1101/gr.229102. PubMed PMID: 12045153.
-
 
 ## R packages
 

@@ -45,10 +45,20 @@
             },
             "exp_type": {
                 "type": "string",
-                "enum": ["ChIP-seq", "ChOR-seq", "SCAR-seq", "ChIP-exo", "ATAC-seq", "OK-seq", "CUTandRUN", "CUTandTag", "TIP-seq"],
+                "enum": [
+                    "ChIP-seq",
+                    "ChOR-seq",
+                    "SCAR-seq",
+                    "ChIP-exo",
+                    "ATAC-seq",
+                    "OK-seq",
+                    "CUTandRUN",
+                    "CUTandTag",
+                    "TIP-seq"
+                ],
                 "errorMessage": "Sequencing experiment type must be provided and be one of: 'ChIP-seq', 'ChOR-seq', 'SCAR-seq', 'ChIP-exo', 'ATAC-seq', 'OK-seq', 'CUTandRUN', 'CUTandTag', 'TIP-seq'",
                 "meta": ["exp_type"]
-            },            
+            },
             "strandedness": {
                 "type": "string",
                 "enum": ["forward", "reverse"],

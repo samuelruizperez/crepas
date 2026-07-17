@@ -112,7 +112,7 @@ output:
       - "denopa":
           type: string
           description: The name of the tool
-      - "/root/miniconda3/bin/python3 -c \"import pkg_resources; print(pkg_resources.get_distribution('deNOPA').version)\"":
+      - '/root/miniconda3/bin/python3 -c "import pkg_resources; print(pkg_resources.get_distribution(''deNOPA'').version)"':
           type: eval
           description: The expression to obtain the version of the tool
 
@@ -124,7 +124,7 @@ topics:
       - "denopa":
           type: string
           description: The name of the tool
-      - "/root/miniconda3/bin/python3 -c \"import pkg_resources; print(pkg_resources.get_distribution('deNOPA').version)\"":
+      - '/root/miniconda3/bin/python3 -c "import pkg_resources; print(pkg_resources.get_distribution(''deNOPA'').version)"':
           type: eval
           description: The expression to obtain the version of the tool
 authors:

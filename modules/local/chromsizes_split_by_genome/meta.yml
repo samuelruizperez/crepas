@@ -27,7 +27,7 @@ input:
           e.g. [ id:'test', single_end:false ]
     - sizes:
         type: file
-        description: Combined chromosome sizes file (2-column TSV: name, length) for the hybrid endogenous + spike-in genome, with spike-in contigs named `<contig>_<spikein_genome>`
+        description: "Combined chromosome sizes file (2-column TSV: name, length) for the hybrid endogenous + spike-in genome, with spike-in contigs named `<contig>_<spikein_genome>`"
         pattern: "*.sizes"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV

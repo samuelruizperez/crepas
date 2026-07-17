@@ -28,7 +28,7 @@ input:
           e.g. [ id:'test', single_end:false ]
     - sizes:
         type: file
-        description: Chromosome sizes file (2-column TSV: name, length)
+        description: "Chromosome sizes file (2-column TSV: name, length)"
         pattern: "*.sizes"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV

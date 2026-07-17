@@ -359,7 +359,8 @@
                     "type": "boolean",
                     "description": "Skip splitting the BAM file by chromosome for UMI deduplication.",
                     "fa_icon": "fas fa-fast-forward",
-                    "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."}
+                    "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."
+                }
             }
         },
         "adapter_trimming_options": {
@@ -483,7 +484,18 @@
                     "default": "chromap",
                     "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bwamem2", "minibwa", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
+                    "enum": [
+                        "bwa",
+                        "bwamem2",
+                        "minibwa",
+                        "bowtie",
+                        "bowtie2",
+                        "chromap",
+                        "star",
+                        "hisat2",
+                        "strobealign",
+                        "minimap2"
+                    ]
                 },
                 "bwa_min_score": {
                     "type": "integer",
@@ -885,7 +897,20 @@
                     "default": "macs3",
                     "description": "Specifies the peak calling algorithm to use.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "dtriple", "edd", "denopa", "seacr"]
+                    "enum": [
+                        "macs3",
+                        "genrich",
+                        "consenrich",
+                        "epic2",
+                        "mace",
+                        "dpeak",
+                        "dpos",
+                        "dregion",
+                        "dtriple",
+                        "edd",
+                        "denopa",
+                        "seacr"
+                    ]
                 },
                 "narrow_peak": {
                     "type": "boolean",
@@ -1013,7 +1038,7 @@
                     "description": "Whether to plot all samples in a group together in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#per-group) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "input_cisrpm_in_plotprofile" : {
+                "input_cisrpm_in_plotprofile": {
                     "type": "boolean",
                     "description": "Whether to include the input CISRPM signal in the gene or consensus peak profile plots.",
                     "fa_icon": "fas fa-chart-area"

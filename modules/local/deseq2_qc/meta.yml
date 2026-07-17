@@ -110,7 +110,7 @@ output:
       - "bioconductor-deseq2":
           type: string
           description: The name of the tool
-      - "Rscript -e 'library(DESeq2); cat(as.character(packageVersion(\"DESeq2\")))'":
+      - 'Rscript -e ''library(DESeq2); cat(as.character(packageVersion("DESeq2")))''':
           type: eval
           description: The expression to obtain the version of the tool
 
@@ -131,7 +131,7 @@ topics:
       - "bioconductor-deseq2":
           type: string
           description: The name of the tool
-      - "Rscript -e 'library(DESeq2); cat(as.character(packageVersion(\"DESeq2\")))'":
+      - 'Rscript -e ''library(DESeq2); cat(as.character(packageVersion("DESeq2")))''':
           type: eval
           description: The expression to obtain the version of the tool
 authors:
