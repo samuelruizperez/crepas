@@ -20,7 +20,7 @@ process PARTITION_OR_RFD_PLOT {
     tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
     tuple val(meta), path("*.scatter_plot.pdf"),   emit: scatter_pdf, optional:true
     tuple val(meta), path("*.scatter_plot.png"),   emit: scatter_png, optional:true
-    path "versions.yml",                           emit: versions
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^R version //; s/ .*\$//'"), topic: versions, emit: versions_rbase
 
     when:
     task.ext.when == null || task.ext.when
@@ -47,11 +47,6 @@ process PARTITION_OR_RFD_PLOT {
         --prefix ${prefix} \\
         --outdir ./ \\
         ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -59,14 +54,10 @@ process PARTITION_OR_RFD_PLOT {
     """
     touch  ${prefix}.scatter_plot.pdf
     touch  ${prefix}.scatter_plot.png
-    touch  ${prefix}.plot_raw.pdf
-    touch  ${prefix}.plot_raw.png
-    touch  ${prefix}.plot_smoothed.pdf
-    touch  ${prefix}.plot_smoothed.png
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
+    touch  ${prefix}_plot_raw.pdf
+    touch  ${prefix}_plot_raw.png
+    touch  ${prefix}_plot_smoothed.pdf
+    touch  ${prefix}_plot_smoothed.png
+    touch  ${prefix}_mean_values.tsv
     """
 }

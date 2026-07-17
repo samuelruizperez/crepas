@@ -1,0 +1,171 @@
+{
+    "sarscov2 - okseq rfd - plot around initiation zones - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_raw.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_raw.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_smoothed.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_smoothed.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_mean_values.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.scatter_plot.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "6": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.scatter_plot.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "7": [
+                    [
+                        "PARTITION_OR_RFD_PLOT",
+                        "r-base",
+                        "4.4.3"
+                    ]
+                ],
+                "mean_values": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_mean_values.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "plot_raw_pdf": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_raw.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "plot_raw_png": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_raw.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "plot_smoothed_pdf": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_smoothed.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "plot_smoothed_png": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_plot_smoothed.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "scatter_pdf": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.scatter_plot.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "scatter_png": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.scatter_plot.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_rbase": [
+                    [
+                        "PARTITION_OR_RFD_PLOT",
+                        "r-base",
+                        "4.4.3"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-17T15:23:38.278546929",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "sarscov2 - okseq rfd - plot around initiation zones": {
+        "content": [
+            [
+                "test.RFD_plot_raw.pdf"
+            ],
+            [
+                "test.RFD_plot_smoothed.pdf"
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RFD_mean_values.tsv:md5,59983245b13d6f7155cf90f0f53535bb"
+                ]
+            ],
+            {
+                "versions_rbase": [
+                    [
+                        "PARTITION_OR_RFD_PLOT",
+                        "r-base",
+                        "4.4.3"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-17T15:23:21.188256977",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

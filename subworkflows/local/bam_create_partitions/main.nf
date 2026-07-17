@@ -535,7 +535,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(RFD_PLOT.out.versions.first())
 
 
     // Create channel: [ val(meta), [ scar_tsv ], [ input_tsv ], [ minusinput_tsv ] ]
@@ -581,7 +580,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
