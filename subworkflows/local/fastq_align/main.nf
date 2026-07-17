@@ -200,12 +200,11 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_hisat2_index,
             ch_splicesites,
-            ch_fasta,
-            save_unaligned,
-            sort_bam
+            ch_fasta_fai,
+            save_unaligned
         )
         ch_genome_bam = FASTQ_ALIGN_HISAT2.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_HISAT2.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_HISAT2.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_HISAT2.out.flagstat.collect { it -> it[1] })
