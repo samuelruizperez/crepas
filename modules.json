@@ -56,7 +56,7 @@
                     },
                     "bowtie2/align": {
                         "branch": "master",
-                        "git_sha": "ab146e7909edbf6dcc6459de57eef29dceb61d42",
+                        "git_sha": "0cd85f32cf1a1828205b16e4267277ba9457570b",
                         "installed_by": [
                             "fastq_align_bowtie2",
                             "modules"
@@ -64,7 +64,7 @@
                     },
                     "bowtie2/build": {
                         "branch": "master",
-                        "git_sha": "447f7bc0fa41dfc2400c8cad4c0291880dc060cf",
+                        "git_sha": "a0961c41021561ac7cf139f86bd7812a2f99e994",
                         "installed_by": [
                             "modules"
                         ]
@@ -610,7 +610,7 @@
                     },
                     "fastq_align_bowtie2": {
                         "branch": "master",
-                        "git_sha": "ab146e7909edbf6dcc6459de57eef29dceb61d42",
+                        "git_sha": "0cd85f32cf1a1828205b16e4267277ba9457570b",
                         "installed_by": [
                             "subworkflows"
                         ]
