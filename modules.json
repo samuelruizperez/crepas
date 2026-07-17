@@ -71,14 +71,14 @@
                     },
                     "bwa/index": {
                         "branch": "master",
-                        "git_sha": "966ba9887e2b04d89d64db06c01508873bde13b1",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "bwa/mem": {
                         "branch": "master",
-                        "git_sha": "966ba9887e2b04d89d64db06c01508873bde13b1",
+                        "git_sha": "2fb127c8fd13de0adaa676df7169131e45c0b114",
                         "installed_by": [
                             "fastq_align_bwa",
                             "modules"
@@ -617,7 +617,7 @@
                     },
                     "fastq_align_bwa": {
                         "branch": "master",
-                        "git_sha": "7ac6cbe7c17c2dad685da7f70496c8f48ea48687",
+                        "git_sha": "cbb7a6362981f07d2c26e43f8186025320569ffd",
                         "installed_by": [
                             "subworkflows"
                         ]

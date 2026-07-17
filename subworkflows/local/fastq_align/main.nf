@@ -52,15 +52,14 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_bwa_index,
             false,
-            ch_fasta
+            ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_BWAMEM1.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_BWAMEM1.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_BWAMEM1.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_BWAMEM1.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM1.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM1.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWAMEM1.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BWAMEM1.out.versions.first())
     }
 
     if (aligner == 'bwamem2') {
