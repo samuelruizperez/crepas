@@ -477,7 +477,6 @@ workflow BAM_CREATE_PARTITIONS {
     PARTITION_AVERAGE (
         ch_partitions_brep
     )
-    ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
 
     //
     // Add meta information to the filtered partitions and bedgraph

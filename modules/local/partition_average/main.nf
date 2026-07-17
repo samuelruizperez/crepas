@@ -14,7 +14,8 @@ process PARTITION_AVERAGE {
     tuple val(meta), path("${prefix}.tsv"), emit: tsv
     tuple val(meta), path("${prefix}.flT_by_counts.tsv"), emit: filtered_tsv
     tuple val(meta), path("${prefix}.flT_by_counts.bdg"), emit: filtered_bdg
-    path  "versions.yml"          , emit: versions
+    tuple val("${task.process}"), val('awk'), eval("awk -Wversion 2>&1 | head -1 | sed 's/^GNU Awk //; s/,.*\$//'"), topic: versions, emit: versions_awk
+    tuple val("${task.process}"), val('coreutils'), eval("env paste --version | head -1 | sed 's/^paste (GNU coreutils) //'"), topic: versions, emit: versions_coreutils
 
     when:
     task.ext.when == null || task.ext.when
@@ -77,11 +78,6 @@ process PARTITION_AVERAGE {
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
     ${prefix}.flT_by_counts.tsv \\
     > ${prefix}.flT_by_counts.bdg
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -90,10 +86,5 @@ process PARTITION_AVERAGE {
     touch ${prefix}.tsv
     touch  ${prefix}.flT_by_counts.tsv
     touch ${prefix}.flT_by_counts.bdg
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        awk: \$(echo \$(awk -Wversion 2>&1) | sed 's/^.*(GNU Awk) //; s/ Copyright.*\$//')
-    END_VERSIONS
     """
 }
