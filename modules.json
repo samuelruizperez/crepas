@@ -86,14 +86,14 @@
                     },
                     "bwamem2/index": {
                         "branch": "master",
-                        "git_sha": "5dd46a36fca68d6ad1a6b22ec47adc8c6863717d",
+                        "git_sha": "62ce917fd775aaef732eb82019de069c765adfd3",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "bwamem2/mem": {
                         "branch": "master",
-                        "git_sha": "5dd46a36fca68d6ad1a6b22ec47adc8c6863717d",
+                        "git_sha": "62ce917fd775aaef732eb82019de069c765adfd3",
                         "installed_by": [
                             "modules"
                         ]
