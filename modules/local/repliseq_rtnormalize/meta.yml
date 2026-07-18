@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "repliseq_rtnormalize"
+description: Calculate and normalize a replication-timing (E/L ratio) track for one Repli-seq sample from a multi-replicate, multi-phase read-count table, with a choice of replicate-combination strategy, normalization, and smoothing
+keywords:
+  - repli-seq
+  - replication timing
+  - loess
+  - quantile normalization
+  - cpm
+  - bedgraph
+tools:
+  - "preprocessCore":
+      description: |
+        A library of core preprocessing routines for microarray/high-throughput data, including
+        quantile normalization. Used here (`normalize.quantiles()`) to optionally quantile
+        normalize between replicates, on top of CPM normalization.
+      homepage: https://bioconductor.org/packages/release/bioc/html/preprocessCore.html
+      documentation: https://bioconductor.org/packages/release/bioc/html/preprocessCore.html
+      tool_dev_url: https://github.com/bmbolstad/preprocessCore
+      licence: ["GPL-2.0-only"]
+      identifier: "biotools:preprocesscore"
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample (condition) information
+          e.g. [ id:'test' ]
+    - counts:
+        type: file
+        description: |
+          Raw per-window read-count table (chr, start, end, then one column per replicate), e.g.
+          `DEEPTOOLS_MULTIBAMSUMMARY`'s `--outRawCounts` output; its one header line is always
+          skipped. Column order must match `phases`/`breps`.
+        pattern: "*.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - phases:
+        type: list
+        description: Phase ('early' or 'late') of each count column, in the same order as `counts`
+    - breps:
+        type: list
+        description: |
+          Biological replicate identifier of each count column, in the same order as `counts`.
+          Used to match early/late replicate pairs for `--method paired`.
+output:
+  raw:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.RT.raw.bedGraph":
+          type: file
+          description: Raw (unsmoothed) replication-timing log2(early/late) ratio track
+          pattern: "*.RT.raw.bedGraph"
+          ontologies:
+            - edam: "http://edamontology.org/format_3583" # bedGraph
+  smooth:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.RT.smooth.bedGraph":
+          type: file
+          description: |
+            Smoothed replication-timing track (loess or rolling-mean, per `task.ext.args`
+            `--smooth`; identical to the raw track when `--smooth none`)
+          pattern: "*.RT.smooth.bedGraph"
+          ontologies:
+            - edam: "http://edamontology.org/format_3583" # bedGraph
+  qc:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.qc.txt":
+          type: file
+          description: |
+            QC/provenance report: chosen replicate-combination method (and, when `--method auto`,
+            the matched/mismatched replicate-pair correlations behind that choice), normalization,
+            smoothing settings, and number of bins used
+          pattern: "*.qc.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # textual format
+  versions_r:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "r-base":
+          type: string
+          description: The name of the tool
+      - "R --version | head -1 | sed 's/R version //; s/ .*//'":
+          type: eval
+          description: The expression to obtain the version of the tool
+
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "r-base":
+          type: string
+          description: The name of the tool
+      - "R --version | head -1 | sed 's/R version //; s/ .*//'":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@samuelruizperez"
+maintainers:
+  - "@samuelruizperez"

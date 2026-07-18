@@ -1,0 +1,112 @@
+nextflow_process {
+
+    name "Test Process REPLISEQ_RTNORMALIZE"
+    script "../main.nf"
+    process "REPLISEQ_RTNORMALIZE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "repliseq_rtnormalize"
+    tag "deeptools/multibamsummary"
+
+    setup {
+
+        // Two "phases" x two biological replicates, built from four distinct real, same-genome
+        // public test BAMs (chr21) so both matched (same brep) and mismatched (different brep)
+        // early/late pairs exist for the paired/pooled/auto replicate-combination logic to compare.
+        run("DEEPTOOLS_MULTIBAMSUMMARY") {
+            script "../../../nf-core/deeptools/multibamsummary/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.markduplicates.sorted.bam', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.recalibrated.sorted.bam', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.markduplicates.sorted.bam', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.recalibrated.sorted.bam', checkIfExists: true)
+                    ],
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.markduplicates.sorted.bam.bai', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.recalibrated.sorted.bam.bai', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.markduplicates.sorted.bam.bai', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.recalibrated.sorted.bam.bai', checkIfExists: true)
+                    ],
+                    [ 'early_1', 'early_2', 'late_1', 'late_2' ]
+                ]
+                input[1] = [ [:], [] ]
+                """
+            }
+        }
+
+    }
+
+    test("homo_sapiens - 4 replicates - default (auto, cpm, loess)") {
+
+        when {
+            process {
+                """
+                input[0] = DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts.map { meta, counts ->
+                    [ meta, counts, [ 'early', 'early', 'late', 'late' ], [ '1', '2', '1', '2' ] ]
+                }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+    test("homo_sapiens - 4 replicates - pooled, quantile-normalized, rolling-mean smoothed") {
+
+        config "./nextflow_pooled_qn_roll.config"
+
+        when {
+            process {
+                """
+                input[0] = DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts.map { meta, counts ->
+                    [ meta, counts, [ 'early', 'early', 'late', 'late' ], [ '1', '2', '1', '2' ] ]
+                }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+    test("homo_sapiens - 4 replicates - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts.map { meta, counts ->
+                    [ meta, counts, [ 'early', 'early', 'late', 'late' ], [ '1', '2', '1', '2' ] ]
+                }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+}

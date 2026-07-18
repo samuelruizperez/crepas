@@ -1,0 +1,5 @@
+sample,biological_replicate,exp_type,rt_phase,fastq_1
+mESC,1,Repli-seq,early,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR100/099/SRR10022299/SRR10022299.fastq.gz
+mESC,2,Repli-seq,early,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR100/000/SRR10022300/SRR10022300.fastq.gz
+mESC,1,Repli-seq,late,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR100/003/SRR10022303/SRR10022303.fastq.gz
+mESC,2,Repli-seq,late,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR100/004/SRR10022304/SRR10022304.fastq.gz

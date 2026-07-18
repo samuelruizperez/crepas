@@ -348,6 +348,14 @@ workflow INPUT_CHECK {
             } else if (meta.strandedness) {
                 error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq, OK-seq and eSPAN. Check sample: ${meta.id}")
             }
+            // Repli-seq checks
+            if (meta.exp_type == 'Repli-seq') {
+                if (!meta.rt_phase) {
+                    error("ERROR: `rt_phase` must be specified ('early' or 'late') for Repli-seq samples. Check sample: ${meta.id}")
+                }
+            } else if (meta.rt_phase) {
+                error("ERROR: `rt_phase` must not be specified for samples other than Repli-seq. Check sample: ${meta.id}")
+            }
             // Antibody checks
             if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'eSPAN', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {
