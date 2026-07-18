@@ -76,11 +76,11 @@ workflow CREPAS {
     ch_versions               // channel: [ path(versions.yml) ]
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
+    ch_chrom_sizes
+    ch_endo_chromsizes       // path(chrom.sizes.endo)
+    ch_exo_chromsizes
     ch_gtf                    // channel: path(genome.gtf)
     ch_gene_bed               // channel: path(gene.beds)
-    ch_chrom_sizes
-    ch_chrom_sizes_endo       // path(chrom.sizes.endo)
-    ch_chrom_sizes_exo
     ch_effective_gsize        
     ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
@@ -704,8 +704,8 @@ workflow CREPAS {
     //
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
         ch_filtered_bam_index,
-        ch_chrom_sizes_endo,
-        ch_chrom_sizes_exo,
+        ch_endo_chromsizes,
+        ch_exo_chromsizes,
         params.genome,
         params.spikein_genome,
         params.min_reads_for_norm,
@@ -829,7 +829,7 @@ workflow CREPAS {
         ch_fasta_fai,
         ch_gtf,
         ch_effective_gfraction,
-        ch_chrom_sizes_endo,
+        ch_endo_chromsizes,
         ch_blacklist.ifEmpty([[:], []]),
         ch_sparsebed.ifEmpty([[:], []]),
         ch_active_regions.ifEmpty([[:], []]),
@@ -900,7 +900,7 @@ workflow CREPAS {
         BAM_ENCODE_PIPELINE (
             ch_filtered_bam,
             ch_fasta_fai,
-            ch_chrom_sizes_endo,
+            ch_endo_chromsizes,
             params.ctl_depth_ratio_threshold,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
             ch_blacklist.ifEmpty([[:], []]),
@@ -915,15 +915,15 @@ workflow CREPAS {
     ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
-    // Make ch_chrom_sizes_endo empty if there are no SCAR-seq samples
+    // Make ch_endo_chromsizes empty if there are no SCAR-seq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
-    ch_chrom_sizes_endo
+    ch_endo_chromsizes
         .combine(ch_filtered_bam_ss)
         .first()
         .map { sizes_meta, sizes, ss_meta, ss_bam ->
             [sizes_meta, sizes]
         }
-        .set { ch_chrom_sizes_endo_ss }
+        .set { ch_endo_chromsizes_ss }
 
     //
     // SUBWORKFLOW: SCAR-seq and OK-seq analysis: partitioning of reads
@@ -932,7 +932,7 @@ workflow CREPAS {
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
         ch_fasta_fai,
-        ch_chrom_sizes_endo_ss,
+        ch_endo_chromsizes_ss,
         ch_blacklist.ifEmpty([[:], []]),
         ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
         ch_initiation_zones.ifEmpty([[:], [[]]]),

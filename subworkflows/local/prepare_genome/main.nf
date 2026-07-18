@@ -3,8 +3,9 @@
 //
 
 include {
-    GUNZIP as GUNZIP_FASTA
+    GUNZIP as GUNZIP_ENDO_FASTA
     GUNZIP as GUNZIP_SPIKEIN_FASTA
+    GUNZIP as GUNZIP_HYBRID_FASTA
     GUNZIP as GUNZIP_GTF
     GUNZIP as GUNZIP_GFF
     GUNZIP as GUNZIP_GENE_BED
@@ -39,7 +40,11 @@ include {
 
 include { BUILD_HYBRID_FASTA            } from '../../../modules/local/build_hybrid_fasta/main'
 include { GFFREAD                       } from '../../../modules/nf-core/gffread/main'
-include { SAMTOOLS_FAIDX                } from '../../../modules/nf-core/samtools/faidx/main'
+include {
+    SAMTOOLS_FAIDX as SAMTOOLS_FAIDX_ENDO
+    SAMTOOLS_FAIDX as SAMTOOLS_FAIDX_SPIKEIN
+    SAMTOOLS_FAIDX as SAMTOOLS_FAIDX_HYBRID
+} from '../../../modules/nf-core/samtools/faidx/main'
 include { BWA_INDEX                     } from '../../../modules/nf-core/bwa/index/main'
 include { BWAMEM2_INDEX                 } from '../../../modules/nf-core/bwamem2/index/main'
 include { MINIBWA_INDEX                 } from '../../../modules/nf-core/minibwa/index/main'
@@ -58,7 +63,7 @@ include { TABIX_BGZIP                   } from '../../../modules/nf-core/tabix/b
 include { TABIX_TABIX                   } from '../../../modules/nf-core/tabix/tabix/main'
 include { EAUTILS_GTF2BED               } from '../../../modules/nf-core/ea-utils/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS      } from '../../../modules/local/genome_whitelist_regions/main'
-include { CHROMSIZES_SPLIT_BY_GENOME    } from '../../../modules/local/chromsizes_split_by_genome/main'
+include { FASTA_SPLIT_BY_GENOME         } from '../../../modules/local/fasta_split_by_genome/main'
 
 include {
     TETRANSCRIPTS_INDEXER as TETRANSCRIPTS_INDEXER_GENE
@@ -77,6 +82,7 @@ workflow PREPARE_GENOME {
     prepare_tool_index //    string  : tool to prepare index for
     fasta              //    path: path to genome fasta file
     spikein_fasta      //    path: path to spike-in genome fasta file
+    hybrid_fasta       //    path: path to hybrid fasta file
     gtf                //    file: /path/to/genome.gtf
     gff                //    file: /path/to/genome.gff
     blacklist          //    file: /path/to/blacklist.bed
@@ -116,19 +122,40 @@ workflow PREPARE_GENOME {
     ch_versions = channel.empty()
 
     //
-    // Uncompress genome fasta file if required
+    // Uncompress genome endogenous fasta file if required
     //
-    ch_fasta = channel.empty()
-    if (fasta.endsWith('.gz')) {
-        ch_fasta    = GUNZIP_FASTA ( [ [id:'fasta'], file(fasta, checkIfExists: true) ] ).gunzip
-    } else {
-        ch_fasta = channel.value([ [ id:'fasta' ], file(fasta, checkIfExists: true) ])
+    ch_fasta_to_align = channel.empty()
+    ch_endo_fasta = channel.empty()
+    if (fasta) {
+        if (fasta.endsWith('.gz')) {
+            ch_endo_fasta    = GUNZIP_ENDO_FASTA ( [ [id:'fasta'], file(fasta, checkIfExists: true) ] ).gunzip
+        } else {
+            ch_endo_fasta    = channel.value([ [ id:'fasta' ], file(fasta, checkIfExists: true) ])
+        }
+        ch_fasta_to_align = ch_endo_fasta
     }
 
     //
-    // Uncompress spike-in genome fasta file if required
+    // Uncompress or generate hybrid genome fasta file if required
     //
-    if (spikein_fasta) {
+    ch_hybrid_fasta = channel.empty()
+    ch_spikein_fasta = channel.empty()
+    if (hybrid_fasta) {
+        if (hybrid_fasta.endsWith('.gz')) {
+            ch_hybrid_fasta    = GUNZIP_HYBRID_FASTA ( [ [id:'hybrid_fasta'], file(hybrid_fasta, checkIfExists: true) ] ).gunzip
+        } else {
+            ch_hybrid_fasta = channel.value([ [ id:'hybrid_fasta' ], file(hybrid_fasta, checkIfExists: true) ])
+        }
+        ch_fasta_to_align = ch_hybrid_fasta
+
+        //
+        // MODULE: Split hybrid fasta file into endogenous and spike-in fasta files
+        //
+        FASTA_SPLIT_BY_GENOME ( ch_hybrid_fasta, spikein_genome, genome )
+        ch_endo_fasta = FASTA_SPLIT_BY_GENOME.out.endo_fasta.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
+        ch_spikein_fasta = FASTA_SPLIT_BY_GENOME.out.exo_fasta.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
+
+    } else if (spikein_fasta) {
         if (spikein_fasta.endsWith('.gz')) {
             ch_spikein_fasta    = GUNZIP_SPIKEIN_FASTA ( [ [id:'spikein_fasta'], file(spikein_fasta, checkIfExists: true) ] ).gunzip
         } else {
@@ -139,10 +166,40 @@ workflow PREPARE_GENOME {
         // MODULE: Create hybrid fasta file with endogenous and spike-in chromosomes
         //
         BUILD_HYBRID_FASTA (
-            ch_fasta.map { meta, fa -> [ meta, fa, genome ] },
+            ch_endo_fasta.map { meta, fa -> [ meta, fa, genome ] },
             ch_spikein_fasta.map { meta, fa -> [ meta, fa, spikein_genome ] }
         )
-        ch_fasta = BUILD_HYBRID_FASTA.out.fasta
+        ch_hybrid_fasta = BUILD_HYBRID_FASTA.out.fasta
+        ch_fasta_to_align = ch_hybrid_fasta
+
+    }
+
+    // Create channel: [ val(meta), fasta, fai ]
+    // For FAIDX, since we do not have a fai yet
+    ch_endo_fasta_fai = ch_endo_fasta.combine(channel.value([[]])).first()
+    ch_spikein_fasta_fai = ch_spikein_fasta.combine(channel.value([[]])).first()
+    ch_hybrid_fasta_fai = ch_hybrid_fasta.combine(channel.value([[]])).first()
+
+    //
+    // MODULE: Create fai and chromosome sizes files
+    //
+    SAMTOOLS_FAIDX_ENDO ( ch_endo_fasta_fai, true )
+    SAMTOOLS_FAIDX_SPIKEIN ( ch_spikein_fasta_fai, true )
+    SAMTOOLS_FAIDX_HYBRID ( ch_hybrid_fasta_fai, true )
+
+    ch_endo_chromsizes = SAMTOOLS_FAIDX_ENDO.out.sizes
+    ch_endo_fai = SAMTOOLS_FAIDX_ENDO.out.fai
+    ch_spikein_chromsizes = SAMTOOLS_FAIDX_SPIKEIN.out.sizes
+    ch_spikein_fai = SAMTOOLS_FAIDX_SPIKEIN.out.fai
+    ch_hybrid_chromsizes = SAMTOOLS_FAIDX_HYBRID.out.sizes
+    ch_hybrid_fai = SAMTOOLS_FAIDX_HYBRID.out.fai
+
+    if (fasta) {
+        ch_fai_to_align = ch_endo_fai
+        ch_chromsizes_to_align = ch_endo_chromsizes
+    } else if (hybrid_fasta) {
+        ch_fai_to_align = ch_hybrid_fai
+        ch_chromsizes_to_align = ch_hybrid_chromsizes
     }
 
 
@@ -166,7 +223,7 @@ workflow PREPARE_GENOME {
             gff = file(gff, checkIfExists: true)
             ch_gff = channel.value( [ [id:"${gff.getBaseName(1)}"], gff ] )
         }
-        ch_gtf      = GFFREAD ( ch_gff, ch_fasta.map{ it -> it[1] } ).gtf
+        ch_gtf      = GFFREAD ( ch_gff, ch_endo_fasta.map{ it -> it[1] } ).gtf
     }
 
     if (!skip_gtf_index) {
@@ -241,7 +298,6 @@ workflow PREPARE_GENOME {
         }
     }
 
-
     //
     // Uncompress gene BED annotation file or create from GTF if required
     //
@@ -256,30 +312,6 @@ workflow PREPARE_GENOME {
         }
     }
 
-    // Create channel: [ val(meta), fasta, fai ]
-    // we do not have a fai
-    ch_fasta
-        .combine(channel.value([[]]))
-        .first()
-        .set { ch_fasta_fai }
-
-    //
-    // MODULE: Create chromosome sizes file
-    //
-    SAMTOOLS_FAIDX ( ch_fasta_fai, true )
-    ch_chrom_sizes      = SAMTOOLS_FAIDX.out.sizes
-    ch_chrom_sizes_endo = ch_chrom_sizes
-    ch_fai              = SAMTOOLS_FAIDX.out.fai
-
-    //
-    // Create endogenous genome chromosome sizes file
-    //
-    ch_chrom_sizes_exo = channel.empty()
-    if (spikein_genome) {
-        CHROMSIZES_SPLIT_BY_GENOME ( ch_chrom_sizes_endo, spikein_genome, genome )
-        ch_chrom_sizes_endo = CHROMSIZES_SPLIT_BY_GENOME.out.endo_sizes.map { it -> [ it[0] + [ genome: genome ], it[1] ] }
-        ch_chrom_sizes_exo = CHROMSIZES_SPLIT_BY_GENOME.out.exo_sizes.map { it -> [ it[0] + [ genome: spikein_genome ], it[1] ] }
-    }
 
     ch_okseq_rfd_file = channel.empty().first() // .first() ensures it is a value channel
     if (okseq_rfd_file) {
@@ -304,7 +336,7 @@ workflow PREPARE_GENOME {
         RFD_TO_IZ (
             ch_okseq_rfd_file,
             ch_blacklist.ifEmpty([[:], []]),
-            ch_chrom_sizes_endo
+            ch_endo_chromsizes
         )
         ch_initiation_zones = RFD_TO_IZ.out.iz_bed
         ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
@@ -320,14 +352,14 @@ workflow PREPARE_GENOME {
     ch_effective_gsize = channel.empty()
     if (!macs_gsize) {
         KHMER_UNIQUEKMERS (
-            ch_fasta,
+            ch_endo_fasta,
             read_length
         )
         ch_effective_gsize = KHMER_UNIQUEKMERS.out.kmers.map { it -> it[1].text.trim() }
     }
 
     // Create a channel with the effective genome fraction
-    ch_chrom_sizes_endo
+    ch_endo_chromsizes
         .map { meta, bed ->
             bed.splitCsv(header: false, sep: '\t')
         }
@@ -358,7 +390,7 @@ workflow PREPARE_GENOME {
     //
     ch_whitelist = channel.empty()
     GENOME_WHITELIST_REGIONS (
-        ch_chrom_sizes_endo,
+        ch_endo_chromsizes,
         ch_blacklist//.ifEmpty([[:], []])
     )
     ch_whitelist = GENOME_WHITELIST_REGIONS.out.bed
@@ -376,7 +408,7 @@ workflow PREPARE_GENOME {
                 ch_bwa_index = channel.value( [ [id:'bwa_index'], file(bwa_index, checkIfExists: true) ] )
             }
         } else {
-            ch_bwa_index = BWA_INDEX ( ch_fasta ).index
+            ch_bwa_index = BWA_INDEX ( ch_fasta_to_align ).index
             ch_versions  = ch_versions.mix(BWA_INDEX.out.versions)
         }
     }
@@ -393,7 +425,7 @@ workflow PREPARE_GENOME {
                 ch_bwamem2_index = channel.value( [ [id:'bwamem2_index'], file(bwamem2_index, checkIfExists: true) ] )
             }
         } else {
-            ch_bwamem2_index = BWAMEM2_INDEX ( ch_fasta ).index
+            ch_bwamem2_index = BWAMEM2_INDEX ( ch_fasta_to_align ).index
         }
     }
 
@@ -409,7 +441,7 @@ workflow PREPARE_GENOME {
                 ch_minibwa_index = channel.value( [ [id:'minibwa_index'], file(minibwa_index, checkIfExists: true) ] )
             }
         } else {
-            ch_minibwa_index = MINIBWA_INDEX ( ch_fasta ).index
+            ch_minibwa_index = MINIBWA_INDEX ( ch_fasta_to_align ).index
         }
     }
 
@@ -425,7 +457,7 @@ workflow PREPARE_GENOME {
                 ch_bowtie_index = channel.value( [ [id:'bowtie_index'], file(bowtie_index, checkIfExists: true) ] )
             }
         } else {
-            ch_bowtie_index = BOWTIE_BUILD ( ch_fasta ).index
+            ch_bowtie_index = BOWTIE_BUILD ( ch_fasta_to_align ).index
             ch_versions      = ch_versions.mix(BOWTIE_BUILD.out.versions)
         }
     }
@@ -442,7 +474,7 @@ workflow PREPARE_GENOME {
                 ch_bowtie2_index = channel.value( [ [id:'bowtie2_index'], file(bowtie2_index, checkIfExists: true) ] )
             }
         } else {
-            ch_bowtie2_index = BOWTIE2_BUILD ( ch_fasta ).index
+            ch_bowtie2_index = BOWTIE2_BUILD ( ch_fasta_to_align ).index
         }
     }
 
@@ -458,7 +490,7 @@ workflow PREPARE_GENOME {
                 ch_chromap_index = channel.value( [ [id:'chromap_index'], file(chromap_index, checkIfExists: true) ] )
             }
         } else {
-            ch_chromap_index = CHROMAP_INDEX ( ch_fasta ).index
+            ch_chromap_index = CHROMAP_INDEX ( ch_fasta_to_align ).index
             ch_versions  = ch_versions.mix(CHROMAP_INDEX.out.versions)
         }
     }
@@ -475,7 +507,7 @@ workflow PREPARE_GENOME {
                 ch_star_index = channel.value( [ [id:'star_index'], file(star_index, checkIfExists: true) ] )
             }
         } else {
-            ch_star_index = STAR_GENOMEGENERATE ( ch_fasta, ch_gtf ).index
+            ch_star_index = STAR_GENOMEGENERATE ( ch_fasta_to_align, ch_gtf ).index
             ch_versions   = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
         }
     }
@@ -502,7 +534,7 @@ workflow PREPARE_GENOME {
                 ch_hisat2_index = channel.value( [ [id:'hisat2_index'], file(hisat2_index, checkIfExists: true) ] )
             }
         } else {
-            ch_hisat2_index = HISAT2_BUILD ( ch_fasta, ch_gtf, ch_splicesites ).index
+            ch_hisat2_index = HISAT2_BUILD ( ch_fasta_to_align, ch_gtf, ch_splicesites ).index
         }
     }
 
@@ -518,7 +550,7 @@ workflow PREPARE_GENOME {
                 ch_minimap2_index = channel.value( [ [id:'minimap2_index'], file(minimap2_index, checkIfExists: true) ] )
             }
         } else {
-            ch_minimap2_index = MINIMAP2_INDEX ( ch_fasta ).index
+            ch_minimap2_index = MINIMAP2_INDEX ( ch_fasta_to_align ).index
         }
     }
 
@@ -613,13 +645,20 @@ workflow PREPARE_GENOME {
 
         
     emit:
-    fasta                  = ch_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
-    fai                    = ch_fai                    //    channel: [ val(meta), [ genome.fai ]]
+    fasta_to_align         = ch_fasta_to_align
+    fai_to_align           = ch_fai_to_align
+    chromsizes_to_align    = ch_chromsizes_to_align
+    endo_fasta             = ch_endo_fasta                  //    channel: [ val(meta), [ genome.fasta ]]
+    endo_fai               = ch_endo_fai                    //    channel: [ val(meta), [ genome.fai ]]
+    spikein_fasta          = ch_spikein_fasta          //    channel: [ val(meta), [ spikein_genome.fasta ]]
+    spikein_fai            = ch_spikein_fai                    //    channel: [ val(meta), [ spikein_genome.fai ]]
+    hybrid_fasta           = ch_hybrid_fasta          //    channel: [ val(meta), [ hybrid_genome.fasta ]]
+    hybrid_fai             = ch_hybrid_fai            //    channel: [ val(meta), [ hybrid_genome.fai ]]
     gtf                    = ch_gtf                    //    channel: [ val(meta), [ genome.gtf ]]
     gene_bed               = ch_gene_bed               //    channel: [ val(meta), [ gene.bed ]]
-    chrom_sizes            = ch_chrom_sizes           //    channel: [ val(meta), [ genome.sizes ]]
-    chrom_sizes_endo       = ch_chrom_sizes_endo       //    channel: [ val(meta), [ genome_endo.sizes ]]
-    chrom_sizes_exo        = ch_chrom_sizes_exo        //    channel: [ val(meta), [ genome_exo.sizes ]]
+    endo_chromsizes        = ch_endo_chromsizes       //    channel: [ val(meta), [ genome.sizes ]]
+    spikein_chromsizes     = ch_spikein_chromsizes        //    channel: [ val(meta), [ spikein_genome.sizes ]]
+    hybrid_chromsizes      = ch_hybrid_chromsizes   //    channel: [ val(meta), [ hybrid_genome.sizes ]]
     effective_gsize        = ch_effective_gsize        //    channel: [ val(meta), [ effective_genome_size.txt ]]
     effective_gfraction    = ch_effective_gfraction
     whitelist              = ch_whitelist              //    channel: [ val(meta), [ *.include_regions.bed ]]

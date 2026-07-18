@@ -44,6 +44,7 @@ workflow GROTHLAB_CREPAS {
     // TODO: simplify, readability
     def fasta                 = params.fasta ?: (params.refgenie_ignore ? null : getGenomeAttribute('fasta'))
     def spikein_fasta         = params.spikein_fasta ?: (params.refgenie_ignore ? null : getGenomeAttribute('spikein_fasta'))
+    def hybrid_fasta          = params.hybrid_fasta ?: (params.refgenie_ignore ? null : getGenomeAttribute('hybrid_fasta'))
     def spikein_barcode_table = params.spikein_barcode_table ?: (params.refgenie_ignore ? null : getGenomeAttribute('spikein_barcode_table'))
     def bwa_index             = params.bwa_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bwa'))
     def bwamem2_index         = params.bwamem2_index ?: (params.refgenie_ignore ? null : getGenomeAttribute('bwamem2'))
@@ -83,6 +84,7 @@ workflow GROTHLAB_CREPAS {
         params.aligner,
         fasta,
         spikein_fasta,
+        hybrid_fasta,
         gtf,
         gff,
         blacklist,
@@ -123,13 +125,13 @@ workflow GROTHLAB_CREPAS {
     //
     CREPAS (
         ch_versions,
-        PREPARE_GENOME.out.fasta,
-        PREPARE_GENOME.out.fai,
+        PREPARE_GENOME.out.fasta_to_align,
+        PREPARE_GENOME.out.fai_to_align,
+        PREPARE_GENOME.out.chromsizes_to_align,
+        PREPARE_GENOME.out.endo_chromsizes,
+        PREPARE_GENOME.out.spikein_chromsizes,
         PREPARE_GENOME.out.gtf,
         PREPARE_GENOME.out.gene_bed,
-        PREPARE_GENOME.out.chrom_sizes,
-        PREPARE_GENOME.out.chrom_sizes_endo,
-        PREPARE_GENOME.out.chrom_sizes_exo,
         PREPARE_GENOME.out.effective_gsize,
         PREPARE_GENOME.out.effective_gfraction,
         PREPARE_GENOME.out.whitelist,

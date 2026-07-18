@@ -1,14 +1,13 @@
 nextflow_process {
 
-    name "Test Process CHROMSIZES_SPLIT_BY_GENOME"
+    name "Test Process FASTA_SPLIT_BY_GENOME"
     script "../main.nf"
-    process "CHROMSIZES_SPLIT_BY_GENOME"
+    process "FASTA_SPLIT_BY_GENOME"
 
     tag "modules"
     tag "modules_local"
-    tag "chromsizes_split_by_genome"
+    tag "fasta_split_by_genome"
     tag "build_hybrid_fasta"
-    tag "samtools/faidx"
 
     setup {
 
@@ -30,24 +29,14 @@ nextflow_process {
             }
         }
 
-        run("SAMTOOLS_FAIDX") {
-            script "../../../nf-core/samtools/faidx/main.nf"
-            process {
-                """
-                input[0] = BUILD_HYBRID_FASTA.out.fasta.map { meta, fasta -> [ meta, fasta, [] ] }
-                input[1] = true
-                """
-            }
-        }
-
     }
 
-    test("sarscov2 + homo_sapiens - split chrom sizes by genome") {
+    test("sarscov2 + homo_sapiens - split fasta by genome") {
 
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.sizes
+                input[0] = BUILD_HYBRID_FASTA.out.fasta
                 input[1] = 'homo_sapiens'
                 input[2] = 'sarscov2'
                 """
@@ -58,8 +47,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    process.out.endo_sizes,
-                    process.out.exo_sizes,
+                    process.out.endo_fasta,
+                    process.out.exo_fasta,
                     process.out.findAll { key, val -> key.startsWith('versions') }
                     ).match() }
             )
@@ -67,14 +56,14 @@ nextflow_process {
 
     }
 
-    test("sarscov2 + homo_sapiens - split chrom sizes by genome - stub") {
+    test("sarscov2 + homo_sapiens - split fasta by genome - stub") {
 
         options "-stub"
 
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.sizes
+                input[0] = BUILD_HYBRID_FASTA.out.fasta
                 input[1] = 'homo_sapiens'
                 input[2] = 'sarscov2'
                 """

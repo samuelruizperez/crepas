@@ -1,5 +1,5 @@
 {
-    "sarscov2 + homo_sapiens - split chrom sizes by genome - stub": {
+    "sarscov2 + homo_sapiens - split fasta by genome - stub": {
         "content": [
             {
                 "0": [
@@ -7,7 +7,7 @@
                         {
                             "id": "sarscov2"
                         },
-                        "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "sarscov2_homo_sapiens.sarscov2.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "1": [
@@ -15,55 +15,55 @@
                         {
                             "id": "sarscov2"
                         },
-                        "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "sarscov2_homo_sapiens.homo_sapiens.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "2": [
                     [
-                        "CHROMSIZES_SPLIT_BY_GENOME",
-                        "awk",
-                        "5.4.0"
+                        "FASTA_SPLIT_BY_GENOME",
+                        "seqkit",
+                        "2.13.0"
                     ]
                 ],
-                "endo_sizes": [
+                "endo_fasta": [
                     [
                         {
                             "id": "sarscov2"
                         },
-                        "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "sarscov2_homo_sapiens.sarscov2.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "exo_sizes": [
+                "exo_fasta": [
                     [
                         {
                             "id": "sarscov2"
                         },
-                        "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "sarscov2_homo_sapiens.homo_sapiens.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "versions_awk": [
+                "versions_seqkit": [
                     [
-                        "CHROMSIZES_SPLIT_BY_GENOME",
-                        "awk",
-                        "5.4.0"
+                        "FASTA_SPLIT_BY_GENOME",
+                        "seqkit",
+                        "2.13.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-07-13T16:07:46.462193168",
+        "timestamp": "2026-07-18T13:03:30.056824482",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.04.4"
         }
     },
-    "sarscov2 + homo_sapiens - split chrom sizes by genome": {
+    "sarscov2 + homo_sapiens - split fasta by genome": {
         "content": [
             [
                 [
                     {
                         "id": "sarscov2"
                     },
-                    "sarscov2_homo_sapiens.fa.sarscov2.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c"
+                    "sarscov2_homo_sapiens.sarscov2.fasta:md5,483f4a5dfe60171c86ee9b7e6dff908b"
                 ]
             ],
             [
@@ -71,23 +71,23 @@
                     {
                         "id": "sarscov2"
                     },
-                    "sarscov2_homo_sapiens.fa.homo_sapiens.sizes:md5,a3510584933299bdfd04e4aaf37ca43d"
+                    "sarscov2_homo_sapiens.homo_sapiens.fasta:md5,f315020d899597c1b57e5fe9f60f4c3e"
                 ]
             ],
             {
-                "versions_awk": [
+                "versions_seqkit": [
                     [
-                        "CHROMSIZES_SPLIT_BY_GENOME",
-                        "awk",
-                        "5.4.0"
+                        "FASTA_SPLIT_BY_GENOME",
+                        "seqkit",
+                        "2.13.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-07-13T16:07:33.007227624",
+        "timestamp": "2026-07-18T13:03:15.641702503",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.04.4"
         }
     }
 }

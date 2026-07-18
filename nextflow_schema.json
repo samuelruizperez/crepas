@@ -97,6 +97,15 @@
                     "description": "Path to exogenous (spike-in) FASTA genome file. If you provide this, the a hybrid fasta reference file will be generated and used for alignment index building.",
                     "fa_icon": "far fa-file-code"
                 },
+                "hybrid_fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "exists": true,
+                    "description": "Path to a pre-built hybrid (endogenous + spike-in) FASTA genome file, with spike-in contigs named `<chromosome_name>_<spikein_genome>`. If provided, this is used directly instead of generating a hybrid fasta from `--fasta`/`--spikein_fasta`, and takes priority if both `--fasta` and `--hybrid_fasta` are set.",
+                    "fa_icon": "far fa-file-code"
+                },
                 "gtf": {
                     "type": "string",
                     "format": "file-path",

@@ -488,8 +488,20 @@ def validateInputParameters() {
     // the pipeline from failing due to missing genome in igenomes
     //genomeExistsError()
 
-    if (!params.fasta) {
-        error("Genome fasta file not specified with e.g. '--fasta genome.fa' or via a detectable config file.")
+    if (!params.fasta && !params.hybrid_fasta) {
+        error("Genome fasta file not specified with e.g. '--fasta genome.fa' or '--hybrid_fasta hybrid_genome.fa', or via a detectable config file.")
+    }
+
+    if (params.fasta && params.hybrid_fasta) {
+        fastaHybridFastaWarn(log)
+    }
+
+    if (params.spikein_genome && !((params.fasta && params.spikein_fasta) || params.hybrid_fasta)) {
+        error("A spike-in genome (`--spikein_genome`) has been provided. You must provide either both `--fasta` and `--spikein_fasta`, or `--hybrid_fasta`.")
+    }
+
+    if (params.spikein_genome && params.strobealign_index && !params.hybrid_fasta) {
+        error("A pre-built strobealign index (`--strobealign_index`) has been provided along with a spike-in genome (`--spikein_genome`). `--hybrid_fasta` must also be provided in this case.")
     }
 
     if (!params.gtf && !params.containsKey('gff')) {
@@ -648,6 +660,16 @@ def methodsDescriptionText(mqc_methods_yaml) {
     def description_html = engine.createTemplate(methods_text).make(meta)
 
     return description_html.toString()
+}
+
+//
+// Print a warning if both fasta and hybrid_fasta have been provided
+//
+def fastaHybridFastaWarn(log) {
+    log.warn "=============================================================================\n" +
+        "  Both '--fasta' and '--hybrid_fasta' parameters have been provided.\n" +
+        "  Using '--hybrid_fasta' file as priority.\n" +
+        "==================================================================================="
 }
 
 //
