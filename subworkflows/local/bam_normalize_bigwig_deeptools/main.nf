@@ -188,6 +188,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     // RPM normalization factors
     ch_bdg_rpm = channel.empty()
     ch_bdg_map
+        .filter { meta, bdg ->
+            def denom = meta[meta.ref_total_mapped_reads_for_rpm_key]
+            if (!denom) {
+                log.warn "Skipping RPM normalization for sample '${meta.id}': total mapped reads (key '${meta.ref_total_mapped_reads_for_rpm_key}') is missing or zero."
+                return false
+            }
+            true
+        }
         .map { meta, bdg ->
             def meta_clone = meta.clone()
             meta_clone.norm_factor_val = 1e6 / meta[meta.ref_total_mapped_reads_for_rpm_key]
@@ -238,6 +246,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             ch_bdg_genome
                 .endo
                 .combine(ch_bdg_genome.exo, by: [0,1])
+                .filter { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
+                    def denom = exo_meta[exo_meta.ref_total_mapped_reads_for_srpm_key]
+                    if (!denom) {
+                        log.warn "Skipping SRPM normalization for sample '${endo_meta.id}': spike-in total mapped reads (key '${exo_meta.ref_total_mapped_reads_for_srpm_key}') is missing or zero."
+                        return false
+                    }
+                    true
+                }
                 .map { id, antibody, endo_meta, endo_bdg, exo_meta, exo_bdg ->
                     def meta_clone = endo_meta.clone()
                     meta_clone.norm_factor_val = 1e6 / exo_meta[exo_meta.ref_total_mapped_reads_for_srpm_key]
@@ -249,6 +265,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         } else {
             ch_bdg_genome
                 .endo
+                .filter { id, antibody, endo_meta, endo_bdg ->
+                    def denom = endo_meta[endo_meta.exo_ref_total_mapped_reads_for_srpm_key]
+                    if (!denom) {
+                        log.warn "Skipping SRPM normalization for sample '${endo_meta.id}': spike-in total mapped reads (key '${endo_meta.exo_ref_total_mapped_reads_for_srpm_key}') is missing or zero."
+                        return false
+                    }
+                    true
+                }
                 .map { id, antibody, endo_meta, endo_bdg ->
                     def meta_clone = endo_meta.clone()
                     meta_clone.norm_factor_val = 1e6 / endo_meta[endo_meta.exo_ref_total_mapped_reads_for_srpm_key]
@@ -316,6 +340,15 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             // Combine the combined ChIPs with the combined inputs
             ch_bdg_genome_ip
                 .combine(ch_bdg_genome_ipcontrol, by: [0,1])
+                .filter { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
+                    def exo_ip_denom = exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm_key]
+                    def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                        log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
+                        return false
+                    }
+                    true
+                }
                 .map { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
                         def meta_clone = endo_ip_meta.clone()
                         meta_clone.norm_factor_val = (1e6 / exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm_key]) * (exo_ipcontrol_meta[exo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key] / endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key])
@@ -342,6 +375,15 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
             ch_bdg_genome_ip
                 .combine(ch_bdg_genome_ipcontrol, by: [0,1])
+                .filter { ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
+                    def exo_ip_denom = endo_ip_meta[endo_ip_meta.exo_ref_total_mapped_reads_for_cisrpm_key]
+                    def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                        log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
+                        return false
+                    }
+                    true
+                }
                 .map { ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
                         def meta_clone = endo_ip_meta.clone()
                         meta_clone.norm_factor_val = (1e6 / endo_ip_meta[endo_ip_meta.exo_ref_total_mapped_reads_for_cisrpm_key]) * (endo_ipcontrol_meta[endo_ipcontrol_meta.exo_ref_total_mapped_reads_for_cisrpm_key] / endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key])
@@ -359,6 +401,14 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bdg_map
         .filter { meta, bdg ->
             meta.genome == genome && meta.is_input_control
+        }
+        .filter { meta, bdg ->
+            def denom = meta[meta.ref_total_mapped_reads_for_cisrpm_key]
+            if (!denom) {
+                log.warn "Skipping CISRPM normalization for sample '${meta.id}': total mapped reads (key '${meta.ref_total_mapped_reads_for_cisrpm_key}') is missing or zero."
+                return false
+            }
+            true
         }
         .map { meta, bdg ->
             def meta_clone = meta.clone()
