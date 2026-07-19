@@ -46,8 +46,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             meta_clone.norm_factor_type = 'raw'
             [ meta_clone, bam, bai ]
         }
-        // Remove empty BAMs to prevent bamCoverage errors
-        .filter { meta, bam, bai -> meta[meta.last_total_mapped_reads_key] >= min_reads_for_norm }
         .set { ch_bam_bai }
         
 
@@ -67,7 +65,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
             ch_bam_bai_genome
                 .endo
-                .combine(ch_bam_bai_genome.exo.ifEmpty([[], [], [], [], []]), by: [0,1]) // .ifEmpty is to avoid empty ch_bam_bai_endo if there are no non-empty exo
+                .combine(ch_bam_bai_genome.exo, by: [0,1])
                 .map { id, antibody, endo_meta, endo_bam, endo_bai, exo_meta, exo_bam, exo_bai ->
                     def meta_clone = endo_meta.clone()
                     meta_clone.exo_flT1_total_mapped_reads = exo_meta.flT1_total_mapped_reads
@@ -91,6 +89,9 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 ch_bam_bai = ch_bam_bai_endo
             }
     }
+
+    // Remove empty BAMs to prevent bamCoverage errors
+    ch_bam_bai =  ch_bam_bai.filter { meta, bam, bai -> meta[meta.last_total_mapped_reads_key] >= min_reads_for_norm }
 
     //
     // MODULE: Calculate raw coverage per bin
