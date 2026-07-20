@@ -14,13 +14,10 @@ workflow FASTQ_ALIGN_BOWTIE {
 
     main:
 
-    ch_versions = channel.empty()
-
     //
     // Map reads with Bowtie2
     //
     BOWTIE_ALIGN ( ch_reads, ch_index, save_unaligned )
-    ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
     //
     // Sort, index BAM file and run samtools stats, flagstat and idxstats
@@ -37,6 +34,4 @@ workflow FASTQ_ALIGN_BOWTIE {
     stats            = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
     flagstat         = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats         = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-
-    versions         = ch_versions                      // channel: [ versions.yml ]
 }

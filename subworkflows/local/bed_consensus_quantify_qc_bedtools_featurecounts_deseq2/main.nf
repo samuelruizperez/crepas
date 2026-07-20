@@ -32,7 +32,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
 
     main:
 
-    ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
 
     //TODO: print to fiule for debugging
@@ -271,5 +270,4 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     deseq2_qc_size_factors  = ch_deseq2_qc_size_factors         // channel: [ txt ]
 
     multiqc_files           = ch_multiqc_files                   // channel: [ multiqc_files ]
-    versions                = ch_versions                       // channel: [ versions.yml ]
 }

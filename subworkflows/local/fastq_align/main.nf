@@ -36,8 +36,7 @@ workflow FASTQ_ALIGN {
     main:
 
     ch_multiqc_files = channel.empty()
-    ch_samtools_stats_summary = channel.empty()  
-    ch_versions     = channel.empty()
+    ch_samtools_stats_summary = channel.empty()
 
 
     if (aligner == 'bwa') {
@@ -102,7 +101,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BOWTIE.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_BOWTIE.out.versions.first())
     }
 
     //
@@ -140,7 +138,6 @@ workflow FASTQ_ALIGN {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STROBEALIGN.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(FASTQ_ALIGN_STROBEALIGN.out.versions.first())
     }
 
     //
@@ -226,5 +223,4 @@ workflow FASTQ_ALIGN {
     bai                     = ch_genome_bam_index           // channel: [ val(meta), path(bai) ]
     samtools_stats_summary  = ch_samtools_stats_summary     // channel: [ val(meta), path(summary) ]
     multiqc_files           = ch_multiqc_files              // channel: [ path(multiqc files ]
-    versions = ch_versions                                  // channel: [ path(versions.yml) ]
 }

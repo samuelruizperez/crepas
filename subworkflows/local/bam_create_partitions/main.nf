@@ -34,8 +34,6 @@ workflow BAM_CREATE_PARTITIONS {
 
     main:
 
-    ch_versions = channel.empty()
-
     // TODO: print for debugging
     ch_bam
         .map { meta, bam ->
@@ -201,7 +199,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_windows_bigwig
     )
     ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
-    ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
 
     // TODO: print for debugging
     ch_bwaob
@@ -583,6 +580,5 @@ workflow BAM_CREATE_PARTITIONS {
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
-    versions = ch_versions                    // channel: [ versions.yml ]
 }
 

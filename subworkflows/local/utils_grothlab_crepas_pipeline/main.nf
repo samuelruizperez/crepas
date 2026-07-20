@@ -37,8 +37,6 @@ workflow PIPELINE_INITIALISATION {
 
     main:
 
-    ch_versions = channel.empty()
-
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
     //
@@ -110,10 +108,6 @@ workflow PIPELINE_INITIALISATION {
     // Custom validation for pipeline parameters
     //
     validateInputParameters()
-
-    emit:
-
-    versions = ch_versions
 
 }
 
@@ -395,7 +389,6 @@ workflow INPUT_CHECK {
 
     emit:
     fastq = ch_fastq                                    // channel: [ val(meta), [ reads ] ]
-    versions = channel.empty() // channel: [ versions.yml ]
 }
 
 /*

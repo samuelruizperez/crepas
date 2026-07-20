@@ -25,8 +25,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
 
     main:
 
-    ch_versions = channel.empty()
-
     // Create channel: [ meta, [bams_merged_reps] ]
     ch_bam_bai
         .map { meta, bam, bai ->
@@ -77,7 +75,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
         ch_wig,
         ch_chrom_sizes.map { it -> it[1] }
     )
-    ch_versions = ch_versions.mix(UCSC_WIGTOBIGWIG.out.versions.first())
 
     // Split channel by strand and create channels: [ meta, bw ]
     UCSC_WIGTOBIGWIG.out.bw.map { meta, bw ->
@@ -228,5 +225,4 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER {
     plot_homer_annotatepeaks_txt = ch_plot_homer_annotatepeaks_txt // channel: [ txt ]
     plot_homer_annotatepeaks_pdf = ch_plot_homer_annotatepeaks_pdf // channel: [ pdf ]
     plot_homer_annotatepeaks_tsv = ch_plot_homer_annotatepeaks_tsv // channel: [ tsv ]
-    versions                     = ch_versions // channel: [ versions.yml ]
 }

@@ -118,7 +118,6 @@ workflow GROTHLAB_CREPAS {
         tecount_te_index,
         telocal_te_index
     )
-    ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
 
     //
     // WORKFLOW: Run grothlab/crepas workflow
@@ -160,7 +159,6 @@ workflow GROTHLAB_CREPAS {
     )
     emit:
     multiqc_report = CREPAS.out.multiqc_report // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                // channel: [version1, version2, ...]
 }
 
 /*

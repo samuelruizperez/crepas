@@ -169,7 +169,6 @@ workflow CREPAS {
         ch_fastq,
         params.seq_center
     )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     //
     // SUBWORKFLOW: Read QC and trim adapters
@@ -219,7 +218,6 @@ workflow CREPAS {
     ch_genome_bam = FASTQ_ALIGN.out.bam
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN.out.samtools_stats_summary)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN.out.multiqc_files)
-    ch_versions = ch_versions.mix(FASTQ_ALIGN.out.versions)
 
     //
     // MODULE: Merge resequenced BAM files
@@ -303,7 +301,6 @@ workflow CREPAS {
             ch_merged_bam
         )
         ch_multiqc_files = ch_multiqc_files.mix(PRESEQ_LCEXTRAP.out.lc_extrap.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
     }
 
     ch_merged_bam_index_with_umi = ch_merged_bam_index.filter { meta, bam, index -> meta.with_umi }
@@ -387,7 +384,6 @@ workflow CREPAS {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.barcode_counts,
             ch_flT1_total
         )
-        ch_versions = ch_versions.mix(SPIKEIN_BARCODES.out.versions.first())
 
     }
 
@@ -684,7 +680,6 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
 
     }
 
@@ -715,7 +710,6 @@ workflow CREPAS {
         params.skip_plotcorrelation,
         params.skip_plotpca
     )
-    ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
 
     if (!params.skip_genes_plotprofile) {
@@ -903,7 +897,6 @@ workflow CREPAS {
             params.idr_filtering_threshold,
             params.encode_peak_max_score
         )
-        ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 
     }
 
@@ -937,7 +930,6 @@ workflow CREPAS {
         params.zero_crossing_radius
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
-    ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)
 
     //
     // SUBWORKFLOW: Create SAMtools summary table

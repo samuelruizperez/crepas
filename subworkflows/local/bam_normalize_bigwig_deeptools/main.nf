@@ -36,8 +36,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     main:
 
-    ch_versions = channel.empty()
-
 
     ch_bam_bai
         .map { meta, bam, bai ->
@@ -665,6 +663,4 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     bigwig_avg_exo   = ch_bw_avg.filter { it -> it[0].genome == spikein_genome }      // channel: [ val(meta), [ bigwig ] ]
     bigwig_all_endo  = ch_bigwig_all_endo      // channel: [ val(meta), [ bigwig ] ]
     bigwig_all_exo   = ch_bw_all.filter { it -> it[0].genome == spikein_genome }      // channel: [ val(meta), [ bigwig ]
-    
-    versions      = ch_versions                                     // channel: [ versions.yml ]
 }

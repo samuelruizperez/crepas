@@ -14,8 +14,6 @@ workflow BAM_DOWNSAMPLE {
 
     main:
 
-    ch_versions = channel.empty()
-
     // TODO: simplify this subworkflow: several steps are repeated for the different downsampling methods
     // TODO: check if samples without input control and samples without spike-in can still be downsampled
     // TODO: perhaps add:
@@ -362,5 +360,4 @@ workflow BAM_DOWNSAMPLE {
     stats    = BAM_STATS_SAMTOOLS.out.stats                          // channel: [ val(meta), [ stats ] ]
     flagstat = ch_ds_flagstat                                        // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats                       // channel: [ val(meta), [ idxstats ] ]
-    versions = ch_versions                                           // channel: [ versions.yml ]
 }

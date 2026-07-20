@@ -24,8 +24,6 @@ workflow BAM_ENCODE_PIPELINE {
 
     main:
 
-    ch_versions = channel.empty()
-
     //
     // MODULE: Name-sorting BAM files
     //
@@ -365,7 +363,6 @@ workflow BAM_ENCODE_PIPELINE {
     IDR (
         ch_for_idr
     )
-    ch_versions = ch_versions.mix(IDR.out.versions.first())
 
     //
     // MODULE: Filter peaks by IDR threshold
@@ -519,8 +516,14 @@ workflow BAM_ENCODE_PIPELINE {
         ch_chromsizes
     )
 
-
     emit:
-
-    versions                     = ch_versions                      // channel: [ versions.yml ]
+    tagalign            = ch_tagalign                                // channel: [ val(meta), path(tagalign) ]
+    ccscores            = PHANTOMPEAKQUALTOOLS_SPP.out.ccscores       // channel: [ val(meta), path(ccscores) ]
+    spp_peaks           = PEAKS_FILTER_BLACKLIST.out.peaks            // channel: [ val(meta), path(peak) ]
+    idr                 = IDR.out.idr                                // channel: [ val(meta), path(idr) ]
+    idr_peaks           = IDR_FILTER_THRESHOLD.out.peaks              // channel: [ val(meta), path(peak) ]
+    naive_overlap_peaks = PEAKS_NAIVE_OVERLAP.out.peak_overlap        // channel: [ val(meta), path(peak) ]
+    consensus_peaks     = CONSENSUS_FILTER_BLACKLIST.out.peaks        // channel: [ val(meta), path(peak) ]
+    frip_bed            = TAGALIGN_FRIP_SCORE.out.bed                 // channel: [ val(meta), path(bed) ]
+    frip                = TAGALIGN_FRIP_SCORE.out.frip                // channel: [ val(meta), path(frip_txt) ]
 }

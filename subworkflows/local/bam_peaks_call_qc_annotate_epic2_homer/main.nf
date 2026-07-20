@@ -26,8 +26,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
 
     main:
 
-    ch_versions = channel.empty()
-
     // Branch channels based on if input control is present
     ch_bam_bai
         .branch { meta, bam, bai ->
@@ -229,6 +227,4 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     plot_homer_annotatepeaks_txt = ch_plot_homer_annotatepeaks_txt  // channel: [ txt ]
     plot_homer_annotatepeaks_pdf = ch_plot_homer_annotatepeaks_pdf  // channel: [ pdf ]
     plot_homer_annotatepeaks_tsv = ch_plot_homer_annotatepeaks_tsv  // channel: [ tsv ]
-
-    versions                     = ch_versions                      // channel: [ versions.yml ]
 }

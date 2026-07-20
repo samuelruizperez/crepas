@@ -15,8 +15,6 @@ workflow FASTQ_ALIGN_STROBEALIGN {
 
     main:
 
-    ch_versions = channel.empty()
-
     ch_fasta = ch_fasta_fai.map { meta, fasta, _fai -> [ meta, fasta ] }
 
     //
@@ -29,7 +27,6 @@ workflow FASTQ_ALIGN_STROBEALIGN {
         sort_bam
     )
     ch_bam = STROBEALIGN.out.bam
-    ch_versions = ch_versions.mix(STROBEALIGN.out.versions)
 
     //
     // MODULE: Index BAM file with samtools
@@ -50,6 +47,4 @@ workflow FASTQ_ALIGN_STROBEALIGN {
     stats            = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
     flagstat         = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
     idxstats         = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-
-    versions         = ch_versions                      // channel: [ versions.yml ]
 }

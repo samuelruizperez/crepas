@@ -13,19 +13,14 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER {
 
     main:
 
-    ch_versions = channel.empty()
-
-
     SEACR_CALLPEAK (
         ch_bedgraph,
         seacr_peak_threshold
     )
     ch_seacr_peaks       = SEACR_CALLPEAK.out.bed
-    ch_versions          = ch_versions.mix(SEACR_CALLPEAK.out.versions)
 
 
     emit:
     peaks                        = ch_seacr_peaks                   // channel: [ val(meta), [ peaks ] ]
-    versions                     = ch_versions                      // channel: [ val(tool), version ]
 
 }

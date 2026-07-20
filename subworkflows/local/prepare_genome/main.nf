@@ -118,8 +118,6 @@ workflow PREPARE_GENOME {
 
     main:
 
-    ch_versions = channel.empty()
-
     //
     // Uncompress genome endogenous fasta file if required
     //
@@ -237,7 +235,7 @@ workflow PREPARE_GENOME {
         // MODULE: Compress and index sorted GTF file with bgzip/tabix
         //
         HTSLIB_BGZIPTABIX (
-            ch_gtf.map { meta, file -> [ meta, gtf, [], [] ] },
+            ch_gtf.map { meta, file -> [ meta, file, [], [] ] },
             'compress',
             true,
             'gtf'
@@ -302,7 +300,6 @@ workflow PREPARE_GENOME {
     //
     if (!gene_bed) {
         ch_gene_bed = EAUTILS_GTF2BED ( ch_gtf ).bed
-        ch_versions = ch_versions.mix(EAUTILS_GTF2BED.out.versions)
     } else {
         if (gene_bed.endsWith('.gz')) {
             ch_gene_bed = GUNZIP_GENE_BED ( [ [id:'gene_bed'], file(gene_bed, checkIfExists: true) ] ).gunzip
@@ -675,5 +672,4 @@ workflow PREPARE_GENOME {
     telocal_gene_index     = ch_telocal_gene_index     //    channel: [ val(meta), [ telocal_gene_index.Ind ]]
     tecount_te_index       = ch_tecount_te_index       //    channel: [ val(meta), [ tecount_te_index.Ind ]]
     telocal_te_index       = ch_telocal_te_index       //    channel: [ val(meta), [ telocal_te_index.locInd ]]
-    versions               = ch_versions                //    channel: [ versions.yml ]
 }
