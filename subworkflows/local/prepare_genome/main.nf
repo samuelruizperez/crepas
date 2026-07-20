@@ -601,7 +601,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_tecount_gene_index = TETRANSCRIPTS_INDEXER_GENE ( ch_te_counting_gene_gtf, 'gene' ).index
-            ch_versions = ch_versions.mix(TETRANSCRIPTS_INDEXER_GENE.out.versions)
         }
         if (tecount_te_index) {
             if (tecount_te_index.endsWith('.gz')) {
@@ -616,7 +615,6 @@ workflow PREPARE_GENOME {
                 ch_te_gtf = channel.value( [ [id:'te_gtf'], file(te_gtf, checkIfExists: true) ] )
             }
             ch_tecount_te_index = TETRANSCRIPTS_INDEXER_TE ( ch_te_gtf, 'te' ).index
-            ch_versions = ch_versions.mix(TETRANSCRIPTS_INDEXER_TE.out.versions)
         }
 
         if (!skip_telocal) {
@@ -628,7 +626,6 @@ workflow PREPARE_GENOME {
                 }
             } else {
                 ch_telocal_gene_index = TELOCAL_INDEXER_GENE ( ch_te_counting_gene_gtf, 'gene' ).index
-                ch_versions = ch_versions.mix(TELOCAL_INDEXER_GENE.out.versions)
             }
             if (telocal_te_index) {
                 if (telocal_te_index.endsWith('.gz')) {
@@ -638,7 +635,6 @@ workflow PREPARE_GENOME {
                 }
             } else if (te_gtf) {
                 ch_telocal_te_index = TELOCAL_INDEXER_TE ( ch_te_gtf, 'TE' ).index
-                ch_versions = ch_versions.mix(TELOCAL_INDEXER_TE.out.versions)
             }
         }
     }
