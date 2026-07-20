@@ -7,14 +7,14 @@ nextflow_process {
     tag "modules"
     tag "modules_local"
     tag "mace_mace"
-    tag "cat/cat"
+    tag "find/concatenate"
 
     // No real-run test: mace.py hardcodes a minimum of 30 border-pair clusters before it will
     // produce any output (sys.exit(1) below that, no CLI override exists). No small real dataset
-    // can realistically clear that bar, so only stub coverage is practical here.
+    // can clear that bar, so only stub coverage is practical here.
     setup {
-        run("CAT_CAT", alias: "CAT_FORWARD_BW") {
-            script "../../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_FORWARD_BW") {
+            script "../../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [
@@ -25,8 +25,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_REVERSE_BW") {
-            script "../../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_REVERSE_BW") {
+            script "../../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [

@@ -70,11 +70,6 @@
                         "git_sha": "62ce917fd775aaef732eb82019de069c765adfd3",
                         "installed_by": ["modules"]
                     },
-                    "cat/cat": {
-                        "branch": "master",
-                        "git_sha": "7ed72ef972290b93d0bdd7c60ff00a693250f77a",
-                        "installed_by": ["modules"]
-                    },
                     "chromap/chromap": {
                         "branch": "master",
                         "git_sha": "f2f969a4ee32243c7fab75f341f9be1dd3ce1a23",
@@ -141,6 +136,11 @@
                         "installed_by": ["modules"]
                     },
                     "fastqc": {
+                        "branch": "master",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
+                    },
+                    "find/concatenate": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]

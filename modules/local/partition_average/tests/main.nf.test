@@ -8,55 +8,55 @@ nextflow_process {
     tag "modules_local"
     tag "partition_average"
     tag "collect_partitions"
-    tag "cat/cat"
+    tag "find/concatenate"
 
     setup {
 
         // Build two real 12-column partition tables (one per biological replicate) by
-        // running COLLECT_PARTITIONS twice. Its six inputs are cheap CAT_CAT copies of a
+        // running COLLECT_PARTITIONS twice. Its six inputs are cheap FIND_CONCATENATE copies of a
         // single real BED file (same approach as the COLLECT_PARTITIONS test).
-        run("CAT_CAT", alias: "CAT_WINDOWS") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_WINDOWS") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'windows' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_BWAOB_FWD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_BWAOB_FWD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'bwaob_fwd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_BWAOB_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_BWAOB_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'bwaob_rev' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_NORM_FWD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORM_FWD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'norm_fwd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_NORM_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORM_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'norm_rev' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_RFD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_RFD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'rfd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]

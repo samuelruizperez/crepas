@@ -57,8 +57,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'sparsebed' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -74,7 +74,7 @@ nextflow_process {
             process {
                 """
                 input[0] = SAMTOOLS_REHEADER.out.bam
-                    .join(SAMTOOLS_INDEX.out.bai, by: 0)
+                    .join(SAMTOOLS_INDEX.out.index, by: 0)
                     .map { meta, bam, bai -> [ meta, [ bam ], [ bai ], [], [] ] }
                 input[1] = SAMTOOLS_FAIDX.out.sizes.map { meta, sizesFile ->
                     def renamed = sizesFile.resolveSibling(sizesFile.baseName + '.chr1.sizes')
@@ -82,7 +82,7 @@ nextflow_process {
                     return [ meta, renamed ]
                 }
                 input[2] = [ [:], [] ]
-                input[3] = CAT_CAT.out.file_out.map { meta, bedFile ->
+                input[3] = FIND_CONCATENATE.out.file_out.map { meta, bedFile ->
                     def renamed = bedFile.resolveSibling(bedFile.baseName + '.chr1.bed')
                     renamed.text = bedFile.text.replaceAll('MT192765.1', 'chr1')
                     return [ meta, renamed ]
@@ -112,7 +112,7 @@ nextflow_process {
             process {
                 """
                 input[0] = SAMTOOLS_REHEADER.out.bam
-                    .join(SAMTOOLS_INDEX.out.bai, by: 0)
+                    .join(SAMTOOLS_INDEX.out.index, by: 0)
                     .map { meta, bam, bai -> [ meta, [ bam ], [ bai ], [], [] ] }
                 input[1] = SAMTOOLS_FAIDX.out.sizes.map { meta, sizesFile ->
                     def renamed = sizesFile.resolveSibling(sizesFile.baseName + '.chr1.sizes')

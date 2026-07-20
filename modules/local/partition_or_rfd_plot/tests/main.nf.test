@@ -13,7 +13,7 @@ nextflow_process {
     tag "bedtools/makewindows"
     tag "ucsc/bigwigaverageoverbed"
     tag "bedgraph_normalize"
-    tag "cat/cat"
+    tag "find/concatenate"
 
     setup {
 
@@ -32,16 +32,16 @@ nextflow_process {
                 """
             }
         }
-        run("CAT_CAT", alias: "CAT_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'rev' ], tab ] } """ }
         }
-        run("CAT_CAT", alias: "CAT_NORMF") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORMF") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'normf' ], tab ] } """ }
         }
-        run("CAT_CAT", alias: "CAT_NORMR") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORMR") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'normr' ], tab ] } """ }
         }
         run("BEDGRAPH_NORMALIZE", alias: "NORM_RFD") {

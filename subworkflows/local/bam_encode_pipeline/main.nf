@@ -2,7 +2,7 @@ include { SAMTOOLS_SORT                                         } from '../../..
 include { BEDTOOLS_BAMTOBED                                     } from '../../../modules/nf-core/bedtools/bamtobed/main'
 include { BED_TO_TAGALIGN                                       } from '../../../modules/local/bed_to_tagalign/main'
 include { TAGALIGN_SELF_PSEUDOREPLICATES                        } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
-include { CAT_CAT as TAGALIGN_POOL                              } from '../../../modules/nf-core/cat/cat/main'
+include { FIND_CONCATENATE as TAGALIGN_POOL                     } from '../../../modules/nf-core/find/concatenate/main'
 include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP      } from '../../../modules/nf-core/phantompeakqualtools/main'
 include { BED_FILTER_BLACKLIST as PEAKS_FILTER_BLACKLIST        } from '../../../modules/local/bed_filter_blacklist/main'
 include { IDR                                                   } from '../../../modules/nf-core/idr/main'

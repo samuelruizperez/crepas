@@ -12,13 +12,13 @@ nextflow_process {
     tag "bedtools/makewindows"
     tag "ucsc/bigwigaverageoverbed"
     tag "bedgraph_normalize"
-    tag "cat/cat"
+    tag "find/concatenate"
 
     setup {
 
         // Build a real 12-column OK-seq RFD partition table with COLLECT_PARTITIONS.
         // It needs a 4-column windows BED (makewindows -i srcwinnum) plus five 6-column
-        // BigWigAverageOverBed tables; here one real table is copied (CAT_CAT) into the
+        // BigWigAverageOverBed tables; here one real table is copied (FIND_CONCATENATE) into the
         // five slots so COLLECT_PARTITIONS emits exactly 12 columns.
         run("BEDTOOLS_MAKEWINDOWS") {
             script "../../../nf-core/bedtools/makewindows/main.nf"
@@ -39,16 +39,16 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'rev' ], tab ] } """ }
         }
-        run("CAT_CAT", alias: "CAT_NORMF") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORMF") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'normf' ], tab ] } """ }
         }
-        run("CAT_CAT", alias: "CAT_NORMR") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORMR") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process { """ input[0] = UCSC_BIGWIGAVERAGEOVERBED.out.tab.map { meta, tab -> [ [ id:'normr' ], tab ] } """ }
         }
         // RFD slot: zero out column 4 (-> RFD_deriv) so the zero-derivative filter keeps

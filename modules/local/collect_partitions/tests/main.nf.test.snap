@@ -48,47 +48,6 @@
             "nextflow": "26.04.6"
         }
     },
-    "sarscov2 - bam - collect partitions - stub": {
-        "content": [
-            {
-                "0": [
-                    
-                ],
-                "1": [
-                    
-                ],
-                "2": [
-                    
-                ],
-                "3": [
-                    
-                ],
-                "4": [
-                    
-                ],
-                "filtered_bdg": [
-                    
-                ],
-                "filtered_tsv": [
-                    
-                ],
-                "tsv": [
-                    
-                ],
-                "versions_awk": [
-                    
-                ],
-                "versions_coreutils": [
-                    
-                ]
-            }
-        ],
-        "timestamp": "2026-07-13T16:08:17.079362969",
-        "meta": {
-            "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
-        }
-    },
     "sarscov2 - bed - collect partitions - stub": {
         "content": [
             {

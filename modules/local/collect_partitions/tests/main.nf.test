@@ -7,12 +7,12 @@ nextflow_process {
     tag "modules"
     tag "modules_local"
     tag "collect_partitions"
-    tag "cat/cat"
+    tag "find/concatenate"
 
     setup {
 
-        run("CAT_CAT", alias: "CAT_WINDOWS") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_WINDOWS") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'windows' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -20,8 +20,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_BWAOB_FWD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_BWAOB_FWD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'bwaob_fwd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -29,8 +29,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_BWAOB_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_BWAOB_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'bwaob_rev' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -38,8 +38,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_NORM_FWD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORM_FWD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'norm_fwd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -47,8 +47,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_NORM_REV") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_NORM_REV") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'norm_rev' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
@@ -56,8 +56,8 @@ nextflow_process {
             }
         }
 
-        run("CAT_CAT", alias: "CAT_RFD") {
-            script "../../../nf-core/cat/cat/main.nf"
+        run("FIND_CONCATENATE", alias: "CAT_RFD") {
+            script "../../../nf-core/find/concatenate/main.nf"
             process {
                 """
                 input[0] = [ [ id:'rfd' ], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true) ]
