@@ -31,8 +31,6 @@ workflow FASTQ_ALIGN {
     ch_gtf
     ch_splicesites
     save_unaligned
-    seq_platform
-    seq_center
     sort_bam
 
     main:
@@ -181,13 +179,11 @@ workflow FASTQ_ALIGN {
             ch_star_index,
             ch_gtf,
             true,
-            seq_platform ?: '',
-            seq_center ?: '',
-            ch_fasta,
+            ch_fasta_fai,
             channel.value([[:], []])
         )
         ch_genome_bam = FASTQ_ALIGN_STAR.out.bam
-        ch_genome_bam_index = FASTQ_ALIGN_STAR.out.bai
+        ch_genome_bam_index = FASTQ_ALIGN_STAR.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN_STAR.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_STAR.out.flagstat.collect { it -> it[1] })

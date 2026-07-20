@@ -213,8 +213,6 @@ workflow CREPAS {
         ch_gtf,
         ch_splicesites,
         params.save_unaligned,
-        params.seq_platform,
-        params.seq_center,
         params.sort_bam
 
     )
