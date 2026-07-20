@@ -1,5 +1,4 @@
 include { PICARD_DOWNSAMPLESAM                           } from '../../../modules/local/picard/downsamplesam/main'
-include { SAMTOOLS_INDEX                                 } from '../../../modules/nf-core/samtools/index/main'
 include { BAM_STATS_SAMTOOLS                             } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
 include { BAM_FLAGSTAT_MAPPED as BAM_FLAGSTAT_MAPPED_DSP } from '../../../modules/local/bam_flagstat_mapped/main'
 
@@ -318,15 +317,7 @@ workflow BAM_DOWNSAMPLE {
         ch_fasta_fai
     )
     ch_ds_bam = PICARD_DOWNSAMPLESAM.out.bam
-    ch_versions = ch_versions.mix(PICARD_DOWNSAMPLESAM.out.versions)
-
-    //
-    // MODULE: Index BAMs
-    //
-    SAMTOOLS_INDEX(
-        ch_ds_bam
-    )
-    ch_ds_index = SAMTOOLS_INDEX.out.index
+    ch_ds_index = PICARD_DOWNSAMPLESAM.out.index
 
     //
     // SUBWORKFLOW: Run SAMtools stats, flagstat and idxstats
