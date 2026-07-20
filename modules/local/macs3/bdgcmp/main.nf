@@ -4,7 +4,7 @@ process MACS3_BDGCMP {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/macs3:3.0.1--py311h0152c62_3':
         'biocontainers/macs3:3.0.1--py311h0152c62_3' }"
 

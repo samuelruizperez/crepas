@@ -7,7 +7,7 @@ process BAM_SPLIT_BY_STRAND {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/samtools:1.21--h50ea8bc_0' :
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 

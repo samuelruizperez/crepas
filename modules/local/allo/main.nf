@@ -3,7 +3,7 @@ process ALLO {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/allo_samtools:9c6e229f802e6c51' :
         'community.wave.seqera.io/library/allo_samtools:0cfc6883c80e7505' }"
 

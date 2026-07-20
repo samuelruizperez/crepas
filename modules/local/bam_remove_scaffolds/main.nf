@@ -3,7 +3,7 @@ process BAM_REMOVE_SCAFFOLDS {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/33/3388ed16c02ec833ab56da2cb4a6d1fbf2266460e1a04754692fe5c0716cf3e0/data' :
         'community.wave.seqera.io/library/htslib_samtools_gawk:235fd990e554cf33' }"
 

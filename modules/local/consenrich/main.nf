@@ -3,7 +3,7 @@ process CONSENRICH {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/5f/5f4dd21bd3f68dfe71b6d6a8624340b8735b43ef0c63b3a95031b4eb93403790/data'
         : 'community.wave.seqera.io/library/bedtools_deeptools_pybedtools_pybigwig_pruned:01282f183573fac0'}"
 

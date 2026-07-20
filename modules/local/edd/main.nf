@@ -3,7 +3,7 @@ process EDD {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ff/ff12cfef6551c56963bb0c98777c8eac9021d0c6150317c5d7991cd5a7007480/data'
         : 'community.wave.seqera.io/library/edd:1.1.19--56ecc27069bc9001'}"
 

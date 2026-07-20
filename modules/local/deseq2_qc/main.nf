@@ -3,7 +3,7 @@ process DESEQ2_QC {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bioconductor-biocparallel_bioconductor-complexheatmap_bioconductor-deseq2_bioconductor-tximport_pruned:95aef8e10f40bd25' :
         'community.wave.seqera.io/library/bioconductor-biocparallel_bioconductor-complexheatmap_bioconductor-deseq2_bioconductor-tximport_pruned:734b06a8a49c9ab7' }"
 

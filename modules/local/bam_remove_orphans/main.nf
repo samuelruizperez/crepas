@@ -9,7 +9,7 @@ process BAM_REMOVE_ORPHANS {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/06/0654633a56b94c91d27e119ff13755b1c605c96ccb8e392fbb6abeb0c859343d/data' :
         'community.wave.seqera.io/library/pysam_samtools:80fdc084a2b4ffc3' }"
 

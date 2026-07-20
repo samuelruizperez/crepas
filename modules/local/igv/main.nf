@@ -2,7 +2,7 @@ process IGV {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c6/c6135cbef4e9b7044424e79d7edfc6a44bb0178174e24c3bd6e5fc1f742d1ecf/data':
         'community.wave.seqera.io/library/coreutils_python:4f8a678b09a371d6' }"
 

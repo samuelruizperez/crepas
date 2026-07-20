@@ -2,7 +2,7 @@ process MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS {
     tag "$meta.id"
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/73/7362cb534743c8e26c5aca81c6b04148e43532438a02dbb45778fc69883fa7d0/data' :
         'community.wave.seqera.io/library/coreutils_gawk_r-base:9e0d80fa4a74052b' }"
 

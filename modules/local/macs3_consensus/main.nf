@@ -6,7 +6,7 @@ process MACS3_CONSENSUS {
     label 'process_long'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/bedtools_biopython_r-optparse_r-upsetr:eb93fd19a8e7d9ea':
         'community.wave.seqera.io/library/bedtools_biopython_r-optparse_r-upsetr:71c4f71726f54101' }"
 

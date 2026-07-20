@@ -7,7 +7,7 @@ process TAGALIGN_SELF_PSEUDOREPLICATES {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d6/d6696567851b54790cac3acd1e6744ca336f21d809e6fa3a1342cd3dae688198/data' :
         'community.wave.seqera.io/library/coreutils_gawk_openssl:8729727b42757e72' }"
 

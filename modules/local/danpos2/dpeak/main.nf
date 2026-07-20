@@ -3,7 +3,7 @@ process DANPOS2_DPEAK {
     label 'process_low_memory'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/dd/dd9856b8473bf4b2e67285cc76dda3f9184e9bfe8432c8b667cde9ce1f971ef3/data'
         : 'community.wave.seqera.io/library/danpos:2.2.2--34b9ae5a26a3f9b4'}"
 

@@ -3,7 +3,7 @@ process TELOCAL {
     label 'process_high_memory_long'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c8/c89f9d505c73c8b5c98fec7ced5b5f98d9b07686df8a94bb08856f2924cf5e77/data' :
         'community.wave.seqera.io/library/gzip_pip_telocal:f0760b2c5d9e40b8' }"
 

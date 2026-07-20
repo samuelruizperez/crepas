@@ -3,7 +3,7 @@ process ROCCO {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/a0/a0526a7f7adf6fa2e99db65b1da7b13e60dc50568378c5ed02a40f87901725a2/data' :
         'community.wave.seqera.io/library/bedtools_deeptoolsintervals_pybedtools_samtools_pruned:4e193f772646372f' }"
 

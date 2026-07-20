@@ -3,7 +3,7 @@ process EPIC2 {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/9f/9f41b3fd2e4992c1a7012a86c5ec7f7c58db2cc262188117eedfb5d078de668f/data'
         : 'community.wave.seqera.io/library/epic2_pyranges_gawk:ae3474e51d3dfc5e'}"
 

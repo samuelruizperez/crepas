@@ -4,7 +4,7 @@ process MMR {
 
     // WARN: Version information not provided by tool on CLI. Please update version string below when bumping container versions.
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/mmr:c5ce80a--0042edeccacdf2bc' :
         'community.wave.seqera.io/library/mmr:c5ce80a--1ec1f5037b507cc0' }"
 

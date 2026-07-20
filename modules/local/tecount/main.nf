@@ -3,7 +3,7 @@ process TECOUNT {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/db/db7f82ebfe1c9f765a08b89ee98f2a9db9952b8bf6a0508a0305631683d4199c/data':
         'community.wave.seqera.io/library/tetranscripts_pigz:5c9ae6961179bdf5' }"
 

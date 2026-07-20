@@ -3,7 +3,7 @@ process BAM_FLAGSTAT_MAPPED {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e4/e4733e27a0c96155d1405ddb1bcb173c68367c0fc396faac8bf7ad1f95436727/data'
         : 'community.wave.seqera.io/library/coreutils_gawk_ripgrep_sed:0be2a714bf896bff'}"
 

@@ -3,7 +3,7 @@ process UMITRANSFER {
     label "process_medium"
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/umi-transfer:1.5.0--h715e4b3_0' :
         'quay.io/biocontainers/umi-transfer:1.5.0--h715e4b3_0' }"
 
