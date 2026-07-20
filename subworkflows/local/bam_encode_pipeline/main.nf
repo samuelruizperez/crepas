@@ -63,7 +63,6 @@ workflow BAM_ENCODE_PIPELINE {
     TAGALIGN_SELF_PSEUDOREPLICATES (
         ch_tagalign_ips_for_pseudoreps
     )
-    ch_versions = ch_versions.mix(TAGALIGN_SELF_PSEUDOREPLICATES.out.versions.first())
 
     // Add pseudoreplicate to metadata
     TAGALIGN_SELF_PSEUDOREPLICATES.out.tagalign1
