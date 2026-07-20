@@ -17,7 +17,7 @@ workflow BAM_ENCODE_PIPELINE {
     ch_fasta_fai                      // channel: [ val(meta), path(fasta), path(fai) ]
     ch_chromsizes                     // channel: [ val(meta), path(chromsizes) ]
     ctl_depth_ratio_threshold
-    peak_type
+    val_peak_type
     ch_blacklist
     idr_filtering_threshold
     encode_peak_max_score
@@ -237,7 +237,7 @@ workflow BAM_ENCODE_PIPELINE {
         PHANTOMPEAKQUALTOOLS_SPP.out.regionpeak,
         ch_blacklist,
         true, // filter_chr
-        peak_type,
+        val_peak_type,
         encode_peak_max_score
     )
 
@@ -348,15 +348,15 @@ workflow BAM_ENCODE_PIPELINE {
         .mix(ch_spp_peaks_pooled_pseudoreps_for_idr)
         .mix(ch_spp_peaks_self_pseudoreps_for_idr)
         .map { meta, peaks, pooled_peak ->
-            [ meta + [ peak_consensus_type: 'idr' ], peaks, pooled_peak ]
+            [ meta + [ peak_consensus_type: 'idr' ], peaks, val_peak_type, pooled_peak ]
         }
         .set { ch_for_idr }
 
         
     // TODO: save for debugging
     ch_for_idr
-        .map { meta, peaks, pooled_peak ->
-            "${meta}\t${peaks}\t${pooled_peak}"
+        .map { meta, peaks, peak_type, pooled_peak ->
+            "${meta}\t${peaks}\t${peak_type}\t${pooled_peak}"
         }
         .collectFile(name: 'ch_for_idr.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_ENCODE_PIPELINE")
 
@@ -364,8 +364,7 @@ workflow BAM_ENCODE_PIPELINE {
     // MODULE: IDR analysis
     //
     IDR (
-        ch_for_idr,
-        peak_type
+        ch_for_idr
     )
     ch_versions = ch_versions.mix(IDR.out.versions.first())
 
@@ -374,13 +373,13 @@ workflow BAM_ENCODE_PIPELINE {
     //
     IDR_FILTER_THRESHOLD (
         IDR.out.idr,
-        peak_type,
+        val_peak_type,
         idr_filtering_threshold
     )
 
 
     ch_for_idr
-        .map { meta, peaks, pooled_peak ->
+        .map { meta, peaks, peak_type, pooled_peak ->
             [ meta + [ peak_consensus_type: 'naive_overlap' ], peaks, pooled_peak ]
         }
         .set { ch_for_naive_overlap }
@@ -391,7 +390,7 @@ workflow BAM_ENCODE_PIPELINE {
     //
     PEAKS_NAIVE_OVERLAP (
         ch_for_naive_overlap,
-        peak_type
+        val_peak_type
     )
 
     IDR_FILTER_THRESHOLD
@@ -407,7 +406,7 @@ workflow BAM_ENCODE_PIPELINE {
             ch_peaks_for_fltbl,
             ch_blacklist,
             true, // filter_chr
-            peak_type,
+            val_peak_type,
             encode_peak_max_score
     )
     ch_peaks_fltbl = CONSENSUS_FILTER_BLACKLIST.out.peaks
