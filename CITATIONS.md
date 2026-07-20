@@ -78,6 +78,10 @@
 
   > Lund EG, Oldenburg AR, Collas P. Enriched domain detector: a program for detection of wide genomic enrichment domains robust against local variations. Nucleic Acids Res. 2014 Jun;42(11):e92. doi: 10.1093/nar/gku251. PubMed PMID: 24782521; PubMed Central PMCID: PMC4066758.
 
+- [ENCODE chip-seq-pipeline2](https://github.com/ENCODE-DCC/chip-seq-pipeline2)
+
+  > ENCODE Data Coordinating Center. ENCODE ChIP-seq pipeline (chip-seq-pipeline2). GitHub repository. URL: https://github.com/ENCODE-DCC/chip-seq-pipeline2.
+
 - [epic2](https://www.ncbi.nlm.nih.gov/pubmed/30923821/)
 
   > Stovner EB, Sætrom P. epic2 efficiently finds diffuse domains in ChIP-seq data. Bioinformatics. 2019 Nov 1;35(21):4392-4393. doi: 10.1093/bioinformatics/btz232. PubMed PMID: 30923821.
