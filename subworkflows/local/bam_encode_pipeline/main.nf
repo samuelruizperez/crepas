@@ -228,7 +228,6 @@ workflow BAM_ENCODE_PIPELINE {
     PHANTOMPEAKQUALTOOLS_SPP (
         ch_tagalign_for_spp
     )
-    ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS_SPP.out.versions.first())
 
     //
     // MODULE: Filter peaks by blacklist, chromosomes, and max score

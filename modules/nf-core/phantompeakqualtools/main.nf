@@ -17,7 +17,8 @@ process PHANTOMPEAKQUALTOOLS {
     tuple val(meta), path("*.Rdata"), emit: rdata
     tuple val(meta), path("*.narrowPeak.gz"), emit: narrowpeak, optional: true
     tuple val(meta), path("*.regionPeak.gz"), emit: regionpeak, optional: true
-    path  "versions.yml"            , emit: versions
+    tuple val("${task.process}"), val('phantompeakqualtools'), val('1.2.2'), topic: versions, emit: versions_phantompeakqualtools
+    // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,7 +29,6 @@ process PHANTOMPEAKQUALTOOLS {
     def prefix = task.ext.prefix ?: "${meta.id}.spp"
     def input_control_arg = input_control ? "-i='${input_control}'" : ''
     def peaks_arg = input_control ? "-savn='${prefix}.narrowPeak' -savr='${prefix}.regionPeak'" : ""
-    def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     RUN_SPP=`which run_spp.R`
     Rscript ${args} -e "library(caTools); source(\\"\$RUN_SPP\\")" \\
@@ -40,26 +40,15 @@ process PHANTOMPEAKQUALTOOLS {
         ${args2} \\
         -p=${task.cpus} \\
         ${peaks_arg}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        phantompeakqualtools: $VERSION
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}.spp"
     def peaks_arg = input_control ? "touch ${prefix}.narrowPeak; touch ${prefix}.regionPeak;" : ""
-    def VERSION = '1.2.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
     touch ${prefix}.pdf
     touch ${prefix}.Rdata
     touch ${prefix}.ccscores
     ${peaks_arg}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        phantompeakqualtools: $VERSION
-    END_VERSIONS
     """
 }

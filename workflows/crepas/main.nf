@@ -575,7 +575,6 @@ workflow CREPAS {
             ch_filtered_bam_for_spp
         )
         ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
         //
         // MODULE: MultiQC custom content for Phantompeaktools
