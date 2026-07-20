@@ -39,11 +39,6 @@ workflow FASTQ_ALIGN {
     ch_samtools_stats_summary = channel.empty()  
     ch_versions     = channel.empty()
 
-    //
-    // Remap ch_fasta_fai to ch_fasta
-    //
-    ch_fasta = ch_fasta_fai.map { meta, fasta , _fai -> [ meta, fasta ] }
-
 
     if (aligner == 'bwa') {
         FASTQ_ALIGN_BWAMEM1 (
