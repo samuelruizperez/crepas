@@ -258,7 +258,6 @@ workflow CREPAS {
         ch_sort_bam
     )
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
-    ch_versions = ch_versions.mix(PICARD_MERGESAMFILES.out.versions.first())
 
     SAMTOOLS_INDEX (
         ch_merged_bam

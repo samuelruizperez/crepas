@@ -21,7 +21,7 @@ nextflow_process {
                         [ id:'test', single_end:false ], // meta map
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.name.sorted.bam', checkIfExists: true)
                     ]
-                    input[1] = [[ id:'test' ], []]
+                    input[1] = [[ id:'test' ], [], []]
                     """
                 }
             }
@@ -59,7 +59,7 @@ nextflow_process {
                         [ id:'test_se', single_end:true ], // meta map
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test3.single_end.markduplicates.sorted.bam', checkIfExists: true)
                     ]
-                    input[1] = [[ id:'test_se' ], []]
+                    input[1] = [[ id:'test_se' ], [], []]
                     """
                 }
             }

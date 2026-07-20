@@ -59,8 +59,7 @@ include { KHMER_UNIQUEKMERS             } from '../../../modules/nf-core/khmer/u
 include { RFD_TO_IZ                     } from '../../../modules/local/rfd_to_iz/main'
 
 include { GFF3SORT                      } from '../../../modules/local/gff3sort/main'
-include { TABIX_BGZIP                   } from '../../../modules/nf-core/tabix/bgzip/main'
-include { TABIX_TABIX                   } from '../../../modules/nf-core/tabix/tabix/main'
+include { HTSLIB_BGZIPTABIX             } from '../../../modules/nf-core/htslib/bgziptabix/main'
 include { EAUTILS_GTF2BED               } from '../../../modules/nf-core/ea-utils/gtf2bed/main'
 include { GENOME_WHITELIST_REGIONS      } from '../../../modules/local/genome_whitelist_regions/main'
 include { FASTA_SPLIT_BY_GENOME         } from '../../../modules/local/fasta_split_by_genome/main'
@@ -235,14 +234,14 @@ workflow PREPARE_GENOME {
         ch_gtf = GFF3SORT.out.sorted
 
         //
-        // MODULE: Compress sorted GTF file with bgzip
+        // MODULE: Compress and index sorted GTF file with bgzip/tabix
         //
-        TABIX_BGZIP ( ch_gtf )
-
-        //
-        // MODULE: Index compressed GTF file with tabix
-        //
-        TABIX_TABIX ( TABIX_BGZIP.out.output )
+        HTSLIB_BGZIPTABIX (
+            ch_gtf.map { meta, file -> [ meta, gtf, [], [] ] },
+            'compress',
+            true,
+            'gtf'
+        )
 
     }
 
@@ -339,7 +338,6 @@ workflow PREPARE_GENOME {
             ch_endo_chromsizes
         )
         ch_initiation_zones = RFD_TO_IZ.out.iz_bed
-        ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
     }
 
 
@@ -409,7 +407,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_bwa_index = BWA_INDEX ( ch_fasta_to_align ).index
-            ch_versions  = ch_versions.mix(BWA_INDEX.out.versions)
         }
     }
 
@@ -458,7 +455,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_bowtie_index = BOWTIE_BUILD ( ch_fasta_to_align ).index
-            ch_versions      = ch_versions.mix(BOWTIE_BUILD.out.versions)
         }
     }
 
@@ -491,7 +487,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_chromap_index = CHROMAP_INDEX ( ch_fasta_to_align ).index
-            ch_versions  = ch_versions.mix(CHROMAP_INDEX.out.versions)
         }
     }
 
@@ -508,7 +503,6 @@ workflow PREPARE_GENOME {
             }
         } else {
             ch_star_index = STAR_GENOMEGENERATE ( ch_fasta_to_align, ch_gtf ).index
-            ch_versions   = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
         }
     }
 

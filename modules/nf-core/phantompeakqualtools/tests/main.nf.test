@@ -25,7 +25,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out.spp,
+                { assert snapshot(process.out.ccscores,
                                   file(process.out.pdf.get(0).get(1)).name,
                                   file(process.out.rdata.get(0).get(1)).name,
                                   process.out.versions)
@@ -52,7 +52,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out.spp,
+                { assert snapshot(process.out.ccscores,
                                   file(process.out.pdf.get(0).get(1)).name,
                                   file(process.out.rdata.get(0).get(1)).name,
                                   process.out.versions)

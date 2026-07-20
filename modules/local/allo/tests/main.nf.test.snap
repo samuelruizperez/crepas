@@ -7,7 +7,7 @@
                         "id": "test_se",
                         "single_end": true
                     },
-                    "test_se.bam:md5,2a9246b53e322bd69e3a17bf4e938188"
+                    "test_se.bam:md5,5eef471b4aec196b0bf7f9071a2a564a"
                 ]
             ],
             [
@@ -16,7 +16,7 @@
                         "id": "test_se",
                         "single_end": true
                     },
-                    "test_se.sam:md5,03f8d21cd039fa767ca07111e3be59bd"
+                    "test_se.sam:md5,b9ce344ca532717c3f2f68212366f715"
                 ]
             ],
             {
@@ -36,10 +36,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-07-06T10:49:14.214113316",
+        "timestamp": "2026-07-20T15:56:13.488367583",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "25.10.4"
+            "nextflow": "26.04.6"
         }
     },
     "homo_sapiens - bam - paired_end - stub": {
@@ -143,7 +143,7 @@
                         "id": "test",
                         "single_end": false
                     },
-                    "test.bam:md5,69dbd45bcc85a29bcf0288dda3df7734"
+                    "test.bam:md5,d3ce94482b50705ca05e0b1e136638d2"
                 ]
             ],
             [
@@ -152,7 +152,7 @@
                         "id": "test",
                         "single_end": false
                     },
-                    "test.sam:md5,8bb91e2ce07d959e8ca3674a63230ffc"
+                    "test.sam:md5,f81212097ac7c83a0f32cadbfa3a65f1"
                 ]
             ],
             {
@@ -172,10 +172,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-07-06T10:48:50.857974135",
+        "timestamp": "2026-07-20T15:55:48.693990559",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "25.10.4"
+            "nextflow": "26.04.6"
         }
     }
 }
