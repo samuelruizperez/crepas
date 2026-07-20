@@ -14,7 +14,7 @@ process PLOT_MACS3_QC {
     output:
     tuple val(meta), path("*.txt")       , emit: txt
     tuple val(meta), path("*.pdf")       , emit: pdf
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^.*R version //; s/ .*\$//'"), emit: versions_rbase, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -29,11 +29,6 @@ process PLOT_MACS3_QC {
         -s ${peaks.join(',').replaceAll("_peaks.${peak_type}","")} \\
         -p $prefix \\
         $args
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -41,10 +36,5 @@ process PLOT_MACS3_QC {
     """
     touch ${prefix}.txt
     touch ${prefix}.pdf
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 }

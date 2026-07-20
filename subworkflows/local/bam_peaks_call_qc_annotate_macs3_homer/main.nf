@@ -174,7 +174,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             )
             ch_plot_macs3_qc_txt = PLOT_MACS3_QC.out.txt
             ch_plot_macs3_qc_pdf = PLOT_MACS3_QC.out.pdf
-            ch_versions = ch_versions.mix(PLOT_MACS3_QC.out.versions)
 
             // Create channels: [ meta, [ anns ] ]
             // Where meta = [ id:exp_type, exp_type:exp_type ]
@@ -202,7 +201,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
             ch_plot_homer_annotatepeaks_txt = PLOT_HOMER_ANNOTATEPEAKS.out.txt
             ch_plot_homer_annotatepeaks_pdf = PLOT_HOMER_ANNOTATEPEAKS.out.pdf
             ch_plot_homer_annotatepeaks_tsv = PLOT_HOMER_ANNOTATEPEAKS.out.tsv
-            ch_versions = ch_versions.mix(PLOT_HOMER_ANNOTATEPEAKS.out.versions)
         }
     }
 
