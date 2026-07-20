@@ -13,7 +13,7 @@ process TETRANSCRIPTS_INDEXER {
 
     output:
     tuple val(meta), path("*.ind"),   emit: index
-    path "versions.yml",              emit: versions
+    tuple val("${task.process}"), val('TEtranscripts_indexer'), eval("TEtranscripts_indexer.py --version | sed 's/TEtranscripts_indexer //g'"), emit: versions_tetranscripts_indexer, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,20 +25,10 @@ process TETRANSCRIPTS_INDEXER {
         ${args} \\
         --afile ${gtf} \\
         --itype ${index_type}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TEtranscripts_indexer: \$(TEtranscripts_indexer.py --version | sed 's/TEtranscripts_indexer //g')
-    END_VERSIONS
     """
 
     stub:
     """
     touch TEtranscripts_index.ind
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TEtranscripts_indexer: \$(TEtranscripts_indexer.py --version | sed 's/TEtranscripts_indexer //g')
-    END_VERSIONS
     """
 }

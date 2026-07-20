@@ -13,7 +13,7 @@ process TELOCAL_INDEXER {
 
     output:
     tuple val(meta), path("*.{ind,locInd}"), emit: index
-    path "versions.yml", emit: versions
+    tuple val("${task.process}"), val('TElocal_indexer'), eval("TElocal_indexer.py --version | sed 's/TElocal_indexer //g'"), emit: versions_telocal_indexer, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,21 +25,11 @@ process TELOCAL_INDEXER {
         ${args} \\
         --afile ${gtf} \\
         --itype ${index_type}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TElocal_indexer: \$(TElocal_indexer.py --version | sed 's/TElocal_indexer //g')
-    END_VERSIONS
     """
 
     stub:
     def suffix = index_type == 'gene' ? 'ind' : 'locInd'
     """
     touch TElocal_index.${suffix}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        TElocal_indexer: \$(TElocal_indexer.py --version | sed 's/TElocal_indexer //g')
-    END_VERSIONS
     """
 }
