@@ -13,7 +13,6 @@ include { UTILS_NFCORE_PIPELINE     } from '../../../subworkflows/nf-core/utils_
 include { UTILS_NEXTFLOW_PIPELINE   } from '../../../subworkflows/nf-core/utils_nextflow_pipeline'
 include { completionEmail           } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
-include { getWorkflowVersion        } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { logColours                } from '../../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
 

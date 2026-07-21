@@ -13,6 +13,8 @@ components:
   - sambamba/view
   - samtools/sort
   - bam_remove_orphans
+  - bam_flagstat_mapped
+  - bam_sort_stats_samtools
   - bam_sort_stats_samtools
   - bam_flagstat_mapped
 input:

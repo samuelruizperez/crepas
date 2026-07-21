@@ -18,6 +18,7 @@ components:
   - homer/annotatepeaks
   - frip_score
   - multiqc_custom_peaks
+  - plot_macs3_qc
   - plot_homer_annotatepeaks
 input:
   - ch_bam_bai:

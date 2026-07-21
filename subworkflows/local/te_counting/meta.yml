@@ -12,7 +12,7 @@ keywords:
 components:
   - samtools/sort
   - tecount
-  - telocal/telocal
+  - telocal
 input:
   - ch_bam:
       description: |

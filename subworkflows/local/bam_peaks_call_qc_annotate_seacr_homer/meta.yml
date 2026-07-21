@@ -8,9 +8,9 @@ keywords:
 components:
   - seacr/callpeak
 input:
-  - ch_bedgraph:
+  - ch_bedgraph_control:
       description: |
-        IP bedGraph file(s) and matched input control bedGraph file(s)
+        IP bedGraph file(s) and matched input control bedGraph file(s), when a control exists
         Structure: [ val(meta), [ path(ip_bedgraph) ], [ path(ipcontrol_bedgraph) ] ]
   - seacr_peak_threshold:
       type: float

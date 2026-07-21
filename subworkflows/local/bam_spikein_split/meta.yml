@@ -14,6 +14,7 @@ components:
   - bam_remove_orphans
   - bam_sort_stats_samtools
   - bam_flagstat_mapped
+  - bam_flagstat_mapped
 input:
   - ch_bam:
       description: |

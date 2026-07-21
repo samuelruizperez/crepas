@@ -8,6 +8,7 @@ description: |
 keywords:
   - peak-calling
   - consensus-peaks
+  - chip-seq
 components:
   - bam_peaks_call_qc_annotate_epic2_homer
   - bam_peaks_call_qc_annotate_macs3_homer

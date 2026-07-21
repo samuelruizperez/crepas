@@ -18,7 +18,27 @@ keywords:
   - initialise
   - input-check
   - completion
-components: []
+components:
+  - utils_nfschema_plugin
+  - utils_nfcore_pipeline
+  - utils_nextflow_pipeline
+  - completionemail
+  - completionsummary
+  - logcolours
+input:
+  - success:
+      type: boolean
+      description: |
+        Dummy input, present only to satisfy the subworkflow meta.yml schema. This file exports
+        three separate workflows (PIPELINE_INITIALISATION, INPUT_CHECK, PIPELINE_COMPLETION),
+        each with its own distinct take:/emit: signature; see main.nf for their real inputs.
+output:
+  - success:
+      type: boolean
+      description: |
+        Dummy output, present only to satisfy the subworkflow meta.yml schema. This file exports
+        three separate workflows (PIPELINE_INITIALISATION, INPUT_CHECK, PIPELINE_COMPLETION),
+        each with its own distinct take:/emit: signature; see main.nf for their real outputs.
 authors:
   - "@samuelruizperez"
 maintainers:
