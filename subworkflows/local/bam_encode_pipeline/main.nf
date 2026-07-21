@@ -3,7 +3,7 @@ include { BEDTOOLS_BAMTOBED                                     } from '../../..
 include { BED_TO_TAGALIGN                                       } from '../../../modules/local/bed_to_tagalign/main'
 include { TAGALIGN_SELF_PSEUDOREPLICATES                        } from '../../../modules/local/tagalign_self_pseudoreplicates/main'
 include { FIND_CONCATENATE as TAGALIGN_POOL                     } from '../../../modules/nf-core/find/concatenate/main'
-include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP      } from '../../../modules/nf-core/phantompeakqualtools/main'
+include { PHANTOMPEAKQUALTOOLS as PHANTOMPEAKQUALTOOLS_SPP      } from '../../../modules/local/phantompeakqualtools/main'
 include { BED_FILTER_BLACKLIST as PEAKS_FILTER_BLACKLIST        } from '../../../modules/local/bed_filter_blacklist/main'
 include { IDR                                                   } from '../../../modules/nf-core/idr/main'
 include { IDR_FILTER_THRESHOLD                                  } from '../../../modules/local/idr_filter_threshold/main'

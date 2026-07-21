@@ -104,7 +104,8 @@
                     "deeptools/multibigwigsummary": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/deeptools/multibigwigsummary/deeptools-multibigwigsummary.diff"
                     },
                     "deeptools/plotcorrelation": {
                         "branch": "master",
@@ -226,11 +227,6 @@
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "98403d15b0e50edae1f3fec5eae5e24982f1fade",
-                        "installed_by": ["modules"]
-                    },
-                    "phantompeakqualtools": {
-                        "branch": "master",
-                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
                         "installed_by": ["modules"]
                     },
                     "picard/addorreplacereadgroups": {

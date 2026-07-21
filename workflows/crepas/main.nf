@@ -51,7 +51,7 @@ include { SAMTOOLS_INDEX                                                    } fr
 include { PICARD_MERGESAMFILES                                              } from '../../modules/nf-core/picard/mergesamfiles/main'
 include { PICARD_COLLECTMULTIPLEMETRICS                                     } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP                                                   } from '../../modules/nf-core/preseq/lcextrap/main'
-include { PHANTOMPEAKQUALTOOLS                                              } from '../../modules/nf-core/phantompeakqualtools/main'
+include { PHANTOMPEAKQUALTOOLS                                              } from '../../modules/local/phantompeakqualtools/main'
 include { DEEPTOOLS_COMPUTEMATRIX as DEEPTOOLS_COMPUTEMATRIX_GENES          } from '../../modules/nf-core/deeptools/computematrix/main'
 include { DEEPTOOLS_PLOTPROFILE as DEEPTOOLS_PLOTPROFILE_GENES              } from '../../modules/nf-core/deeptools/plotprofile/main'
 include { DEEPTOOLS_PLOTHEATMAP as DEEPTOOLS_PLOTHEATMAP_GENES              } from '../../modules/nf-core/deeptools/plotheatmap/main'

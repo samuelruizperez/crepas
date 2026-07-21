@@ -2,6 +2,12 @@ lint:
   actions_awsfulltest: false
   actions_nf_test: false
   container_configs: false
+  files_exist:
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-crepas_logo_light.png
+    - conf/modules.config
+    - docs/images/nf-core-crepas_logo_light.png
+    - docs/images/nf-core-crepas_logo_dark.png
   modules_config: false
   multiqc_config: false
   nf_test_content: false
