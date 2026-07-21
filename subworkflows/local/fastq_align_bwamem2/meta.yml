@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
-name: fastq_align_bowtie
-description: Align reads to a reference genome using bowtie (v1) then sort with samtools
+name: fastq_align_bwamem2
+description: Align reads to a reference genome using bwa-mem2 then sort with samtools
 keywords:
   - align
   - fasta
   - genome
   - reference
-  - bowtie
+  - bwamem2
 components:
-  - bowtie/align
+  - bwamem2/mem
   - samtools/sort
   - samtools/index
   - samtools/stats
@@ -23,12 +23,11 @@ input:
         Structure: [ val(meta), [ path(reads) ] ]
   - ch_index:
       description: |
-        Bowtie (v1) genome index files
+        BWA-MEM2 genome index files
         Structure: [ val(meta2), path(index) ]
-  - save_unaligned:
+  - val_sort_bam:
       type: boolean
-      description: |
-        Save reads that do not map to the reference (true) or discard them (false)
+      description: If true, bwa-mem2 sorts the resulting BAM file
       pattern: "true|false"
   - ch_fasta_fai:
       type: file
@@ -38,16 +37,8 @@ input:
 output:
   - bam_orig:
       description: |
-        BAM file produced by bowtie
+        BAM file produced by bwa-mem2
         Structure: [ val(meta), path(bam) ]
-  - log_out:
-      description: |
-        Bowtie alignment log
-        Structure: [ val(meta), path(log) ]
-  - fastq:
-      description: |
-        Unaligned FastQ files, when save_unaligned is true
-        Structure: [ val(meta), path(fastq) ]
   - bam:
       description: |
         BAM file ordered by samtools
@@ -69,7 +60,6 @@ output:
         File containing samtools idxstats output
         Structure: [ val(meta), path(idxstats) ]
 authors:
-  - "@drpatelh"
   - "@samuelruizperez"
 maintainers:
   - "@samuelruizperez"

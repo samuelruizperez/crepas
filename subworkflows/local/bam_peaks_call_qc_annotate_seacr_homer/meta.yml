@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "bam_peaks_call_qc_annotate_seacr_homer"
+description: Call peaks from bedGraph signal with SEACR
+keywords:
+  - seacr
+  - peak-calling
+  - cut-and-run
+components:
+  - seacr/callpeak
+input:
+  - ch_bedgraph:
+      description: |
+        IP bedGraph file(s) and matched input control bedGraph file(s)
+        Structure: [ val(meta), [ path(ip_bedgraph) ], [ path(ipcontrol_bedgraph) ] ]
+  - seacr_peak_threshold:
+      type: float
+      description: SEACR peak calling threshold (numeric threshold, used when no input control is available)
+output:
+  - peaks:
+      description: |
+        SEACR peaks
+        Structure: [ val(meta), path(peaks) ]
+authors:
+  - "@samuelruizperez"
+maintainers:
+  - "@samuelruizperez"

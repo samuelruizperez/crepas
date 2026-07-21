@@ -1,20 +1,18 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
-name: fastq_align_bowtie
-description: Align reads to a reference genome using bowtie (v1) then sort with samtools
+name: fastq_align_minibwa
+description: Align reads to a reference genome using minibwa and run samtools stats, flagstat and idxstats
 keywords:
   - align
   - fasta
   - genome
   - reference
-  - bowtie
+  - minibwa
 components:
-  - bowtie/align
-  - samtools/sort
-  - samtools/index
+  - minibwa/map
   - samtools/stats
   - samtools/idxstats
   - samtools/flagstat
-  - bam_sort_stats_samtools
+  - bam_stats_samtools
 input:
   - ch_reads:
       description: |
@@ -23,12 +21,11 @@ input:
         Structure: [ val(meta), [ path(reads) ] ]
   - ch_index:
       description: |
-        Bowtie (v1) genome index files
+        minibwa genome index files
         Structure: [ val(meta2), path(index) ]
-  - save_unaligned:
+  - val_sort_bam:
       type: boolean
-      description: |
-        Save reads that do not map to the reference (true) or discard them (false)
+      description: If true, minibwa sorts the resulting BAM file; otherwise it is left unsorted
       pattern: "true|false"
   - ch_fasta_fai:
       type: file
@@ -36,25 +33,13 @@ input:
         Reference fasta file and its index
         Structure: [ val(meta3), path(fasta), path(fai) ]
 output:
-  - bam_orig:
-      description: |
-        BAM file produced by bowtie
-        Structure: [ val(meta), path(bam) ]
-  - log_out:
-      description: |
-        Bowtie alignment log
-        Structure: [ val(meta), path(log) ]
-  - fastq:
-      description: |
-        Unaligned FastQ files, when save_unaligned is true
-        Structure: [ val(meta), path(fastq) ]
   - bam:
       description: |
-        BAM file ordered by samtools
+        Aligned BAM/SAM/CRAM file produced by minibwa
         Structure: [ val(meta), path(bam) ]
   - index:
       description: |
-        Index of the ordered BAM file
+        Index of the aligned file, when produced by minibwa
         Structure: [ val(meta), path(index) ]
   - stats:
       description: |
@@ -69,7 +54,6 @@ output:
         File containing samtools idxstats output
         Structure: [ val(meta), path(idxstats) ]
 authors:
-  - "@drpatelh"
   - "@samuelruizperez"
 maintainers:
   - "@samuelruizperez"

@@ -181,8 +181,8 @@ workflow CREPAS {
         params.skip_trimming,
         params.umi_discard_read,
         params.min_trimmed_reads,
-        params.hardtrim5_length,
-        params.hardtrim3_length
+        params.hardtrim3_length,
+        params.hardtrim5_length
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect { it -> it[1] })

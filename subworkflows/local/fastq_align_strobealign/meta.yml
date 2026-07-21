@@ -1,60 +1,47 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
-name: fastq_align_bowtie
-description: Align reads to a reference genome using bowtie (v1) then sort with samtools
+name: fastq_align_strobealign
+description: Align reads to a reference genome using strobealign, index the resulting BAM file with samtools, and run samtools stats, flagstat and idxstats
 keywords:
   - align
   - fasta
   - genome
   - reference
-  - bowtie
+  - strobealign
 components:
-  - bowtie/align
-  - samtools/sort
+  - strobealign
   - samtools/index
   - samtools/stats
   - samtools/idxstats
   - samtools/flagstat
-  - bam_sort_stats_samtools
+  - bam_stats_samtools
 input:
   - ch_reads:
       description: |
         List of input FastQ files of size 1 and 2 for single-end and paired-end data,
         respectively.
         Structure: [ val(meta), [ path(reads) ] ]
-  - ch_index:
+  - ch_strobealign_index:
       description: |
-        Bowtie (v1) genome index files
-        Structure: [ val(meta2), path(index) ]
-  - save_unaligned:
-      type: boolean
-      description: |
-        Save reads that do not map to the reference (true) or discard them (false)
-      pattern: "true|false"
+        Optional pre-built strobealign index. Pass [ [:], [] ] to have strobealign build the
+        index on the fly from the reference fasta.
+        Structure: [ val(meta3), path(index) ]
   - ch_fasta_fai:
       type: file
       description: |
         Reference fasta file and its index
-        Structure: [ val(meta3), path(fasta), path(fai) ]
+        Structure: [ val(meta2), path(fasta), path(fai) ]
+  - sort_bam:
+      type: boolean
+      description: If true, strobealign sorts the resulting BAM file
+      pattern: "true|false"
 output:
-  - bam_orig:
-      description: |
-        BAM file produced by bowtie
-        Structure: [ val(meta), path(bam) ]
-  - log_out:
-      description: |
-        Bowtie alignment log
-        Structure: [ val(meta), path(log) ]
-  - fastq:
-      description: |
-        Unaligned FastQ files, when save_unaligned is true
-        Structure: [ val(meta), path(fastq) ]
   - bam:
       description: |
-        BAM file ordered by samtools
+        Aligned BAM file produced by strobealign
         Structure: [ val(meta), path(bam) ]
   - index:
       description: |
-        Index of the ordered BAM file
+        Samtools index of the aligned BAM file
         Structure: [ val(meta), path(index) ]
   - stats:
       description: |
@@ -69,7 +56,6 @@ output:
         File containing samtools idxstats output
         Structure: [ val(meta), path(idxstats) ]
 authors:
-  - "@drpatelh"
   - "@samuelruizperez"
 maintainers:
   - "@samuelruizperez"

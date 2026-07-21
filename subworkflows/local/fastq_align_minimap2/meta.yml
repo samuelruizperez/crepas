@@ -1,20 +1,18 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
-name: fastq_align_bowtie
-description: Align reads to a reference genome using bowtie (v1) then sort with samtools
+name: fastq_align_minimap2
+description: Align reads to a reference genome using minimap2 and run samtools stats, flagstat and idxstats
 keywords:
   - align
   - fasta
   - genome
   - reference
-  - bowtie
+  - minimap2
 components:
-  - bowtie/align
-  - samtools/sort
-  - samtools/index
+  - minimap2/align
   - samtools/stats
   - samtools/idxstats
   - samtools/flagstat
-  - bam_sort_stats_samtools
+  - bam_stats_samtools
 input:
   - ch_reads:
       description: |
@@ -23,38 +21,36 @@ input:
         Structure: [ val(meta), [ path(reads) ] ]
   - ch_index:
       description: |
-        Bowtie (v1) genome index files
-        Structure: [ val(meta2), path(index) ]
-  - save_unaligned:
-      type: boolean
-      description: |
-        Save reads that do not map to the reference (true) or discard them (false)
-      pattern: "true|false"
+        Reference sequence, either a FASTA file or a pre-built minimap2 (.mmi) index
+        Structure: [ val(meta2), path(reference) ]
   - ch_fasta_fai:
       type: file
       description: |
         Reference fasta file and its index
         Structure: [ val(meta3), path(fasta), path(fai) ]
+  - bam_format:
+      type: boolean
+      description: If true, then produces a BAM file instead of the default PAF format
+      pattern: "true|false"
+  - bam_index_extension:
+      type: string
+      description: The BAM index extension to produce (e.g. 'bai' or 'csi'). Leave empty to skip indexing.
+  - cigar_paf_format:
+      type: boolean
+      description: If true, then output the cigar string in the PAF format
+      pattern: "true|false"
+  - cigar_bam:
+      type: boolean
+      description: If true, then output the cigar string in the BAM file
+      pattern: "true|false"
 output:
-  - bam_orig:
-      description: |
-        BAM file produced by bowtie
-        Structure: [ val(meta), path(bam) ]
-  - log_out:
-      description: |
-        Bowtie alignment log
-        Structure: [ val(meta), path(log) ]
-  - fastq:
-      description: |
-        Unaligned FastQ files, when save_unaligned is true
-        Structure: [ val(meta), path(fastq) ]
   - bam:
       description: |
-        BAM file ordered by samtools
+        Aligned BAM file, when bam_format is true
         Structure: [ val(meta), path(bam) ]
   - index:
       description: |
-        Index of the ordered BAM file
+        Index of the aligned BAM file, when bam_index_extension is set
         Structure: [ val(meta), path(index) ]
   - stats:
       description: |
@@ -69,7 +65,6 @@ output:
         File containing samtools idxstats output
         Structure: [ val(meta), path(idxstats) ]
 authors:
-  - "@drpatelh"
   - "@samuelruizperez"
 maintainers:
   - "@samuelruizperez"
