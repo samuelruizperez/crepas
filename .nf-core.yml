@@ -10,6 +10,7 @@ lint:
     - docs/images/nf-core-crepas_logo_dark.png
   files_unchanged:
     - assets/email_template.html
+    - assets/sendmail_template.txt
     - docs/README.md
   modules_config: false
   multiqc_config: false

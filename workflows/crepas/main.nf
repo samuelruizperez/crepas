@@ -1154,11 +1154,6 @@ workflow CREPAS {
     //
     if (!params.skip_multiqc) {
 
-        // Load MultiQC configuration files
-        ch_multiqc_config = channel.fromPath("${projectDir}/assets/multiqc_config.yml", checkIfExists: true)
-        ch_multiqc_custom_config = params.multiqc_config ? channel.fromPath(params.multiqc_config) : channel.empty()
-        ch_multiqc_logo = params.multiqc_logo ? channel.fromPath(params.multiqc_logo) : channel.empty()
-
         // Prepare the workflow summary
         ch_workflow_summary = channel.value(
                 paramsSummaryMultiqc(
@@ -1168,20 +1163,20 @@ workflow CREPAS {
             .collectFile(name: 'workflow_summary_mqc.yaml')
 
         // Prepare the methods section
-        // ch_methods_description = channel.value(
-        //     methodsDescriptionText(
-        //         params.multiqc_methods_description
-        //             ? file(params.multiqc_methods_description)
-        //             : file("$projectDir/workflows/assets/multiqc/methods_description_template.yml", checkIfExists: true)
-        //     )
-        // ).collectFile(name: 'methods_description_mqc.yaml')
+        ch_methods_description = channel.value(
+                methodsDescriptionText(
+                    params.multiqc_methods_description
+                        ? file(params.multiqc_methods_description, checkIfExists: true)
+                        : file("${projectDir}/assets/methods_description_template.yml", checkIfExists: true)
+                )
+            )
+            .collectFile(name: 'methods_description_mqc.yaml', sort: true)
 
         // Add summary, versions, and methods to the MultiQC input file list
         ch_multiqc_files = ch_multiqc_files
             .mix(ch_workflow_summary)
             .mix(ch_collated_versions)
-        // .mix(ch_methods_description)
-
+            .mix(ch_methods_description)
 
         //
         // MODULE: MultiQC
