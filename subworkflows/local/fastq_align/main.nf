@@ -31,7 +31,7 @@ workflow FASTQ_ALIGN {
     ch_gtf
     ch_splicesites
     save_unaligned
-    sort_bam
+    val_sort_bam        // boolean: always false -> aligners emit unsorted BAM, sorted downstream by BAM_SORT_STATS_SAMTOOLS
 
     main:
 
@@ -58,7 +58,7 @@ workflow FASTQ_ALIGN {
         FASTQ_ALIGN_BWAMEM2 (
             ch_reads,
             ch_bwamem2_index,
-            false,
+            val_sort_bam,
             ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_BWAMEM2.out.bam
@@ -73,7 +73,7 @@ workflow FASTQ_ALIGN {
         FASTQ_ALIGN_MINIBWA (
             ch_reads,
             ch_minibwa_index,
-            true,
+            val_sort_bam,
             ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_MINIBWA.out.bam
@@ -111,7 +111,7 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_bowtie2_index,
             save_unaligned,
-            sort_bam,
+            val_sort_bam,
             ch_fasta_fai
         )
         ch_genome_bam = FASTQ_ALIGN_BOWTIE2.out.bam
@@ -130,7 +130,7 @@ workflow FASTQ_ALIGN {
             ch_reads,
             ch_strobealign_index,
             ch_fasta_fai,
-            true
+            val_sort_bam
         )
         ch_genome_bam = FASTQ_ALIGN_STROBEALIGN.out.bam
         ch_genome_bam_index = FASTQ_ALIGN_STROBEALIGN.out.index

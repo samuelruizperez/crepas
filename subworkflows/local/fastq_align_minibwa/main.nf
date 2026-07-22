@@ -2,8 +2,8 @@
 // Alignment with minibwa
 //
 
-include { MINIBWA_MAP         } from '../../../modules/nf-core/minibwa/map/main'
-include { BAM_STATS_SAMTOOLS  } from '../../../subworkflows/nf-core/bam_stats_samtools/main'
+include { MINIBWA_MAP             } from '../../../modules/nf-core/minibwa/map/main'
+include { BAM_SORT_STATS_SAMTOOLS } from '../../../subworkflows/nf-core/bam_sort_stats_samtools/main'
 
 workflow FASTQ_ALIGN_MINIBWA {
     take:
@@ -15,26 +15,23 @@ workflow FASTQ_ALIGN_MINIBWA {
     main:
 
     //
-    // Map reads with MINIBWA_MAP (sorted BAM + index, when val_sort_bam is true)
+    // MODULE: Map reads with MINIBWA_MAP (unsorted BAM when val_sort_bam is false)
     //
     ch_fasta = ch_fasta_fai.map { meta, fasta, _fai -> [ meta, fasta ] }
 
     MINIBWA_MAP ( ch_reads, ch_index, ch_fasta, val_sort_bam )
 
-    MINIBWA_MAP.out.aligned
-        .join(MINIBWA_MAP.out.index, by: 0)
-        .set { ch_bam_index }
-
     //
-    // Run samtools stats, flagstat and idxstats
+    // SUBWORKFLOW: Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
-    BAM_STATS_SAMTOOLS ( ch_bam_index, ch_fasta_fai )
+    BAM_SORT_STATS_SAMTOOLS ( MINIBWA_MAP.out.aligned, ch_fasta_fai )
 
     emit:
-    bam      = MINIBWA_MAP.out.aligned         // channel: [ val(meta), path(bam) ]
-    index    = MINIBWA_MAP.out.index           // channel: [ val(meta), path(index) ]
-    stats    = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), path(stats) ]
-    flagstat = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
-    idxstats = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
+    bam_orig = MINIBWA_MAP.out.aligned              // channel: [ val(meta), path(bam) ]
+    bam      = BAM_SORT_STATS_SAMTOOLS.out.bam      // channel: [ val(meta), path(bam) ]
+    index    = BAM_SORT_STATS_SAMTOOLS.out.index    // channel: [ val(meta), path(index) ]
+    stats    = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), path(stats) ]
+    flagstat = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), path(flagstat) ]
+    idxstats = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), path(idxstats) ]
 
 }

@@ -2,16 +2,15 @@
 // Alignment with strobealign
 //
 
-include { STROBEALIGN           } from "../../../modules/nf-core/strobealign/main"
-include { SAMTOOLS_INDEX        } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_STATS_SAMTOOLS    } from '../../nf-core/bam_stats_samtools/main'
+include { STROBEALIGN             } from "../../../modules/nf-core/strobealign/main"
+include { BAM_SORT_STATS_SAMTOOLS } from '../../nf-core/bam_sort_stats_samtools/main'
 
 workflow FASTQ_ALIGN_STROBEALIGN {
     take:
     ch_reads          // channel: [ val(meta), [ reads ] ]
     ch_strobealign_index
     ch_fasta_fai      // channel: [ val(meta), path(fasta), path(fai) ]
-    sort_bam          // val
+    val_sort_bam    // boolean (mandatory): true or false
 
     main:
 
@@ -24,27 +23,19 @@ workflow FASTQ_ALIGN_STROBEALIGN {
         ch_reads,
         ch_fasta,
         ch_strobealign_index,
-        sort_bam
+        val_sort_bam
     )
-    ch_bam = STROBEALIGN.out.bam
 
     //
-    // MODULE: Index BAM file with samtools
+    // SUBWORKFLOW: Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
-    SAMTOOLS_INDEX ( ch_bam )
-
-    ch_bam_index = ch_bam.join(SAMTOOLS_INDEX.out.index, by: 0)
-
-
-    //
-    // MODULE: Run samtools stats, flagstat and idxstats
-    //
-    BAM_STATS_SAMTOOLS ( ch_bam_index, ch_fasta_fai )
+    BAM_SORT_STATS_SAMTOOLS ( STROBEALIGN.out.bam, ch_fasta_fai )
 
     emit:
-    bam              = ch_bam      // channel: [ val(meta), [ bam ] ]
-    index            = SAMTOOLS_INDEX.out.index    // channel: [ val(meta), [ index ] ]
-    stats            = BAM_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
-    flagstat         = BAM_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
-    idxstats         = BAM_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
+    bam_orig         = STROBEALIGN.out.bam                  // channel: [ val(meta), [ bam ] ]
+    bam              = BAM_SORT_STATS_SAMTOOLS.out.bam      // channel: [ val(meta), [ bam ] ]
+    index            = BAM_SORT_STATS_SAMTOOLS.out.index    // channel: [ val(meta), [ index ] ]
+    stats            = BAM_SORT_STATS_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
+    flagstat         = BAM_SORT_STATS_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
+    idxstats         = BAM_SORT_STATS_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
 }

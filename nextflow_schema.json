@@ -516,12 +516,6 @@
                     "description": "Don't output BWAMEM2 alignments with score lower than this parameter.",
                     "fa_icon": "fas fa-hand-paper"
                 },
-                "sort_bam": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Should the BAM files be sorted by coordinate? Only relevant if Bowtie2 or BWA are used as aligners.",
-                    "fa_icon": "fas fa-sort-numeric-down"
-                },
                 "save_align_intermeds": {
                     "type": "boolean",
                     "description": "Save the intermediate BAM files from the alignment step.",

@@ -212,7 +212,7 @@ workflow CREPAS {
         ch_gtf,
         ch_splicesites,
         params.save_unaligned,
-        params.sort_bam
+        false
 
     )
     ch_genome_bam = FASTQ_ALIGN.out.bam
