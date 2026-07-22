@@ -8,16 +8,16 @@ markdownPlugin: checklist
 Hi there!
 Thanks for taking an interest in improving grothlab/crepas.
 
-This page describes the recommended nf-core way to contribute to both grothlab/crepas and nf-core pipelines in general, including:
+This page describes the recommended way to contribute to grothlab/crepas, including:
 
-- [General contribution guidelines](#general-contribution-guidelines): common procedures or guides across all nf-core pipelines.
+- [General contribution guidelines](#general-contribution-guidelines): common procedures inspired by nf-core guidelines.
 - [Pipeline-specific contribution guidelines](#pipeline-specific-contribution-guidelines): procedures or guides specific to the development conventions of grothlab/crepas.
 
 ## General contribution guidelines
 
 ### Contribution quick start
 
-To contribute code to any nf-core pipeline:
+To contribute code to grothlab/crepas:
 
 - [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions.
 - [ ] Check whether a GitHub [issue](https://github.com/grothlab/crepas/issues) about your idea already exists. If an issue does not exist, create one so that others are aware you are working on it.
@@ -36,7 +36,7 @@ If you are not used to this workflow with Git, see the [GitHub documentation](ht
 You can contribute to grothlab/crepas without installing a local development environment on your machine by using [GitHub Codespaces](https://github.com/codespaces).
 
 [GitHub Codespaces](https://github.com/codespaces) is an online developer environment that runs in your browser, complete with VS Code and a terminal.
-Most nf-core repositories include a devcontainer configuration, which creates a GitHub Codespaces environment specifically for Nextflow development.
+The grothlab/crepas repository includes a devcontainer configuration, which creates a GitHub Codespaces environment specifically for Nextflow development.
 The environment includes pre-installed nf-core tools, Nextflow, and a few other helpful utilities via a Docker container.
 
 To get started, open the repository in [Codespaces](https://github.com/grothlab/crepas/codespaces).
@@ -64,8 +64,7 @@ Two types of tests are typically run:
 
 #### Lint tests
 
-nf-core has a [set of guidelines](https://nf-co.re/docs/specifications/overview) which all pipelines must follow.
-To enforce these, run linting with nf-core/tools:
+grothlab/crepas follows the nf-core [set of guidelines](https://nf-co.re/docs/specifications/overview). To enforce these, run linting with nf-core/tools:
 
 ```bash
 nf-core pipelines lint <pipeline_directory>
@@ -76,7 +75,7 @@ For more information about linting tests, see [nf-core/tools API documentation](
 
 #### Pipeline tests
 
-Each nf-core pipeline should be set up with a minimal set of test data.
+The pipeline must be set up with a minimal set of test data.
 GitHub Actions runs the pipeline on this data to ensure it runs through and exits successfully.
 If there are any failures then the automated tests fail.
 These tests are run with the latest available version of Nextflow and the minimum required version specified in the pipeline code.
@@ -96,7 +95,7 @@ nf-core semi-standardises how you write code and other contributions to make the
 
 #### Add a new pipeline step
 
-To contribute a new step to the pipeline, follow the general nf-core coding procedure.
+To contribute a new step to the pipeline, follow the general coding procedure.
 Please also refer to the [pipeline-specific contribution guidelines](#pipeline-specific-contribution-guidelines):
 
 - [ ] Define the corresponding [input channel](#channel-naming-schemes) into your new process from the expected previous process channel.
@@ -143,7 +142,7 @@ If you write a local module, specify a default set of resource requirements for 
 Sensible defaults for process resource requirements (CPUs, memory, time) should be defined in `conf/base.config`.
 Specify these with generic `withLabel:` selectors, so they can be shared across multiple processes and steps of the pipeline.
 
-nf-core provides a set of standard labels that you should follow where possible, as seen in the [nf-core pipeline template](https://github.com/nf-core/tools/blob/main/nf_core/pipeline-template/conf/base.config).
+grothlab/crepas uses a set of standard labels provided by nf-core that you should follow where possible, as seen in the [nf-core pipeline template](https://github.com/nf-core/tools/blob/main/nf_core/pipeline-template/conf/base.config).
 These labels define resource defaults for single-core processes, modules that require a GPU, and different levels of multi-core configurations with increasing memory requirements.
 
 Values assigned within these labels can be dynamically passed to a tool using the the `${task.cpus}` and `${task.memory}` Nextflow variables in the `script:` block of a module (see an example in the [modules repository](https://github.com/nf-core/modules/blob/bd1b6a40f55933d94b8c9ca94ec8c1ea0eaf4b82/modules/nf-core/samtools/bam2fq/main.nf#L30)).
@@ -158,8 +157,6 @@ nf-core pipelines bump-version --nextflow . <min_nf_version>
 
 #### Images and figures guidelines
 
-If you update images or graphics, follow the nf-core [style guidelines](https://nf-co.re/docs/community/brand/workflow-schematics).
+If you update images or graphics, grothlab/crepas follows the nf-core [style guidelines](https://nf-co.re/docs/community/brand/workflow-schematics).
 
 ## Pipeline specific contribution guidelines
-
-<!-- TODO nf-core: Add any pipeline specific contribution guidelines here, such as coding styles, procedures, checklists etc. -->

@@ -8,10 +8,13 @@ lint:
     - conf/modules.config
     - docs/images/nf-core-crepas_logo_light.png
     - docs/images/nf-core-crepas_logo_dark.png
+    - .github/ISSUE_TEMPLATE/config.yml
   files_unchanged:
     - assets/email_template.html
     - assets/sendmail_template.txt
     - docs/README.md
+    - .github/CONTRIBUTING.md
+    - .github/ISSUE_TEMPLATE/config.yml
   modules_config: false
   multiqc_config: false
   nf_test_content: false
