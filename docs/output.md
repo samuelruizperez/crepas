@@ -120,7 +120,7 @@ The `--save_unaligned` parameter enables to obtain FastQ files containing unmapp
 
 <details markdown="1" open>
     <summary>Output files</summary>
-    
+
 - `<aligner>/library/unmapped/`
   - `*.fastq.gz`: If `--save_unaligned` is specified, FastQ files containing unmapped reads will be placed in this directory.
 

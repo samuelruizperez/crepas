@@ -28,7 +28,7 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
         )
         ch_allocated_bam = ALLO.out.bam
     }
-   
+
     if (allocation_method == 'mmr') {
         MMR (
             SAMTOOLS_SORT.out.bam
@@ -52,5 +52,5 @@ workflow BAM_ALLOCATE_MULTIMAPPERS {
     flagstat    = ch_allocated_flagstat     // channel: [ val(meta), [ flagstat ] ]
     stats       = ch_allocated_stats        // channel: [ val(meta), [ stats ] ]
     idxstats    = ch_allocated_idxstats     // channel: [ val(meta), [ idxstats ] ]
-    
+
 }

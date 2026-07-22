@@ -8,12 +8,12 @@ process DANPOS2_DREGION {
         : 'community.wave.seqera.io/library/danpos:2.2.2--34b9ae5a26a3f9b4'}"
 
     input:
-    tuple val(meta), 
-          path(treatment,       stageAs: "treatment/*"), 
-          path(treatment_input, stageAs: "treatment_input/*"), 
-          val(treatment_count), 
-          path(control,         stageAs: 'control/*'), 
-          path(control_input,   stageAs: 'control_input/*'), 
+    tuple val(meta),
+          path(treatment,       stageAs: "treatment/*"),
+          path(treatment_input, stageAs: "treatment_input/*"),
+          val(treatment_count),
+          path(control,         stageAs: 'control/*'),
+          path(control_input,   stageAs: 'control_input/*'),
           val(control_count)
 
     output:

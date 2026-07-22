@@ -52,24 +52,24 @@ workflow PIPELINE_INITIALISATION {
     //
     def colors = logColours(monochrome_logs)
     def before_text = """
-        
-                                                                ╔██████╗                       
-                                                                ██╔══██║                       
-                               ██████╗               ╔██████╗   ███████║                       
-                     ██████╗   ██╔══██╗              ██╔══██║   ██╔══██║                       
-                    ██╔════╝   ██████╔╝   ╔██████╗   ██████╔╝   ██║_ ██║                       
-                    ██║        ██╔══██╗_  ██╔════╝   ██╔═══╝    ╚═╝ \\╚═╝                       
-                    ██║ _      ██║  ██║ \\ █████╗  /\\ ██║  /\\   ///\\. \\     ╔███████            
-                    ╚██████╗   ╚═╝ ///:. \\██╔══╝ /. \\╚═╝ // \\/////\\:. \\    ██╔════╝            
-             /\\      ╚//: \\╝ _/\\_ /////:. ║██████╗/: \\_ ///.//////\\\\:. \\  /███████╗\\  /\\       
-            //.\\\\    ///:. \\///: \\//////:.╚══════╝/\\.. \\\\/\\///////\\\\\\:. \\//╚════██║ \\/. \\\\     
-           //:.. \\  ///:.. ////:. \\//////:. \\///////:.  \\\\////////\\\\\\::. \\\\███████║ //::. \\\\   
-          ///:... \\/////: /////\\:. \\////\\\\:. \\///////:.. \\////////\\\\\\\\::: \\╚══════╝////:... \\  
-          ───────────────────────────────────────────────────────────────────────────────────  
+
+                                                                ╔██████╗
+                                                                ██╔══██║
+                               ██████╗               ╔██████╗   ███████║
+                     ██████╗   ██╔══██╗              ██╔══██║   ██╔══██║
+                    ██╔════╝   ██████╔╝   ╔██████╗   ██████╔╝   ██║_ ██║
+                    ██║        ██╔══██╗_  ██╔════╝   ██╔═══╝    ╚═╝ \\╚═╝
+                    ██║ _      ██║  ██║ \\ █████╗  /\\ ██║  /\\   ///\\. \\     ╔███████
+                    ╚██████╗   ╚═╝ ///:. \\██╔══╝ /. \\╚═╝ // \\/////\\:. \\    ██╔════╝
+             /\\      ╚//: \\╝ _/\\_ /////:. ║██████╗/: \\_ ///.//////\\\\:. \\  /███████╗\\  /\\
+            //.\\\\    ///:. \\///: \\//////:.╚══════╝/\\.. \\\\/\\///////\\\\\\:. \\//╚════██║ \\/. \\\\
+           //:.. \\  ///:.. ////:. \\//////:. \\///////:.  \\\\////////\\\\\\::. \\\\███████║ //::. \\\\
+          ///:... \\/////: /////\\:. \\////\\\\:. \\///////:.. \\////////\\\\\\\\::: \\╚══════╝////:... \\
+          ───────────────────────────────────────────────────────────────────────────────────
 
 """
     def after_text = """${workflow.manifest.doi ? "\n* The pipeline\n" : ""}${workflow.manifest.doi.tokenize(",").collect { doi -> "    https://doi.org/${doi.trim().replace('https://doi.org/','')}"}.join("\n")}${workflow.manifest.doi ? "\n" : ""}
-* The Epigenome Replication and Maintenance group at the Center for Epigenetic Cell Memory (EpiC), 
+* The Epigenome Replication and Maintenance group at the Center for Epigenetic Cell Memory (EpiC),
     Danish Cancer Institute, Danish Cancer Society:
     https://www.cancer.dk/danish-cancer-institute/research-groups/epigenome-replication-and-maintenance/
 
@@ -147,7 +147,7 @@ workflow INPUT_CHECK {
                 if (!metas.every { it -> it.trep }) {
                     error(
                         """
-                        ERROR: If any technical replicate within a biological replicate is assigned an ID, then all the technical replicates within that biological replicate must have an ID. 
+                        ERROR: If any technical replicate within a biological replicate is assigned an ID, then all the technical replicates within that biological replicate must have an ID.
 
                         Check biological replicate '${brep}' of sample ${id} in the samplesheet.
 
@@ -179,7 +179,7 @@ workflow INPUT_CHECK {
                     """.stripIndent()
                 )
             }
-            
+
             return [ id, brep, new_metas, fastq_lists ]
         }
         .transpose()
@@ -193,7 +193,7 @@ workflow INPUT_CHECK {
     // Count technical replicates per biological replicate to avoid .groupTuple() bottlenecks downstream
     // See: https://nextflow-io.github.io/nf-schema/latest/samplesheets/examples/#combining-a-channel
     ch_fastq
-        .map { meta, fastqs -> 
+        .map { meta, fastqs ->
             def id_brep = "${meta.id}_${meta.brep}"
             [ id_brep ]
         }
@@ -203,7 +203,7 @@ workflow INPUT_CHECK {
             trep_count
         }
         .combine(ch_fastq)
-        .map { trep_count, meta, fastqs -> 
+        .map { trep_count, meta, fastqs ->
             def meta_clone = meta.clone()
             def id_brep = "${meta.id}_${meta.brep}"
             meta_clone.trep_count = trep_count[id_brep]
@@ -233,9 +233,9 @@ workflow INPUT_CHECK {
             meta_clone.read_group = read_group
             [ meta_clone, fastqs ]
         }
-        .set { ch_fastq } 
+        .set { ch_fastq }
 
-    
+
 
     // TODO: print for debugging
     ch_fastq.map { meta, fastqs -> "${meta}\t${fastqs}" }
@@ -271,7 +271,7 @@ workflow INPUT_CHECK {
     // TODO: print for debugging
     ch_fastq.map { meta, fastqs -> "${meta}\t${fastqs}" }
         .collectFile(name: 'ch_fastq_5.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/INPUT_CHECK")
-    
+
     // Create list of samples
     ch_fastq
         .map { meta, fastqs -> meta.id }
@@ -314,8 +314,8 @@ workflow INPUT_CHECK {
     ch_ipcontrols
         .map { ip_control_list -> "${ip_control_list}" }
         .collectFile(name: 'ch_ipcontrols.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/INPUT_CHECK")
-    
-    // filter ch_fastq to only include samples whose meta.input_control is in ch_ipcontrols 
+
+    // filter ch_fastq to only include samples whose meta.input_control is in ch_ipcontrols
     ch_fastq
         .combine(ch_ipcontrols.ifEmpty([[]]))
         .filter { meta, fastqs, ipcontrol_list ->
@@ -572,7 +572,7 @@ def validateInputParameters() {
     if (params.multimap_allocation_method == 'chromap' && params.aligner != 'chromap') {
         error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
     }
-    
+
 }
 
 //

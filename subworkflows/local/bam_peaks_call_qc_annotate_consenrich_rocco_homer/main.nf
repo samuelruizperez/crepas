@@ -77,7 +77,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER {
         ch_active_regions
     )
 
-    
+
     // Create channel: [ val(meta), ch_csr_signal, bamlist_txt ]
     CONSENRICH
         .out

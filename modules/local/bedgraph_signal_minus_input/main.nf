@@ -23,7 +23,7 @@ process BEDGRAPH_SIGNAL_MINUS_INPUT {
     prefix = task.ext.prefix ?: "${meta.id}"
     def norm_factor = args2.contains('--norm_factor ') ? args2.split('--norm_factor ')[1].split(' ')[0] : '1'
     def min_count = args2.contains('--min_count ') ? args2.split('--min_count ')[1].split(' ')[0] : 0
-    min_count = min_count.toInteger() 
+    min_count = min_count.toInteger()
     """
     awk \\
         ${args} \\

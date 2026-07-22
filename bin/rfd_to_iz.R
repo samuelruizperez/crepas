@@ -254,7 +254,7 @@ OK_reduced_gr <- GenomicRanges::reduce(OK_gr,
 
 # For each set of merged bins,
 message("\n[", Sys.time(), "] (", ok_base_name, ") Keeping the OK-seq bin with the highest RFD derivative...")
-filtered_data <- OK_gr[sapply(OK_reduced_gr$revmap, 
+filtered_data <- OK_gr[sapply(OK_reduced_gr$revmap,
                                   function(x) { x[which.max(OK_gr$RFD_deriv[x])] })]
 
 rm(OK_reduced_gr)
@@ -278,13 +278,13 @@ rtracklayer::export.bed(IZ_gr_tmp,
                             con = file.path(opt_outdir, paste0(opt_prefix, ".init_zones.bed")))
 rm(IZ_gr_tmp)
 
-message("\n[", Sys.time(), "] (", ok_base_name, ") Removing overlapping initiation zones (within ", 
+message("\n[", Sys.time(), "] (", ok_base_name, ") Removing overlapping initiation zones (within ",
         opt_iz_limits_kb,
-        " kb upstream and ", 
+        " kb upstream and ",
         opt_iz_limits_kb,
         " kb downstream of another initiation zone)...")
 
-# Get original start coordinate for each initiation zone 
+# Get original start coordinate for each initiation zone
 IZ_gr$break_start <- start(IZ_gr)
 IZ_gr$break_end <- end(IZ_gr)
 
@@ -312,7 +312,7 @@ IZ_gr_tmp <- GRanges(seqnames = seqnames(IZ_gr),
                                         end = IZ_gr$break_end),
                         strand = strand(IZ_gr))
 
-message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps within ", 
+message("\n[", Sys.time(), "] (", ok_base_name, ") The number of initiation zones after removing overlaps within ",
         opt_iz_limits_kb,
         " kb upstream and downstream from the IZ center is: ", length(IZ_gr_tmp), ".")
 

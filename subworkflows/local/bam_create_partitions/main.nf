@@ -76,7 +76,7 @@ workflow BAM_CREATE_PARTITIONS {
                 [ meta_clone, r_bam ]
         }
         .set { ch_r_bam }
-    
+
     // TODO: print for debugging
     ch_r_bam
         .map { meta, r_bam ->
@@ -108,7 +108,7 @@ workflow BAM_CREATE_PARTITIONS {
         ch_fasta_fai
     )
 
-    // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
+    // Creating channel: [ val(meta), [ bam ], [ scale ] ]
     ch_bam
         .map {
             meta, bam ->
@@ -506,7 +506,7 @@ workflow BAM_CREATE_PARTITIONS {
         .mix(ch_part_avg_filtered)
         .filter { it -> it[0].exp_type == 'OK-seq' }
         .set { ch_okseq }
-    
+
     //
     // MODULE: Process OK-seq RFD file to get initiation zones
     //
@@ -581,4 +581,3 @@ workflow BAM_CREATE_PARTITIONS {
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
 }
-

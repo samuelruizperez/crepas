@@ -105,7 +105,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
             ch_ip_control_bam_merged_reps
         )
     }
-    
+
 
     emit:
 

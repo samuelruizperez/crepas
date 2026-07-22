@@ -63,7 +63,7 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
 
     // split ch_umi_reads channel into the ones that have meta.sep_umi_fq and the ones that don't
     ch_reads
-        .branch { meta, read -> 
+        .branch { meta, read ->
             sep_umi_fq: meta.sep_umi_fq
             extract_umi: !meta.sep_umi_fq && meta.extract_umi
             other: true

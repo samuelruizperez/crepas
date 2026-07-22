@@ -27,14 +27,14 @@ process BEDGRAPH_SIGNAL_OVER_INPUT {
     """
     awk \\
         $args \\
-        'NR==FNR {key=\$1 FS \$2 FS \$3; value[key]=\$4; next} 
-            {key=\$1 FS \$2 FS \$3; signal=\$4; input=(key in value ? value[key] : 0); 
-            if (signal >= $min_signal && input >= $min_input) { 
-                ratio = signal / input; 
-            } else { 
-                ratio = "NaN"; 
+        'NR==FNR {key=\$1 FS \$2 FS \$3; value[key]=\$4; next}
+            {key=\$1 FS \$2 FS \$3; signal=\$4; input=(key in value ? value[key] : 0);
+            if (signal >= $min_signal && input >= $min_input) {
+                ratio = signal / input;
+            } else {
+                ratio = "NaN";
             }
-            print \$1, \$2, \$3, ratio 
+            print \$1, \$2, \$3, ratio
             }' OFS="\\t" \\
         $control_bedgraph \\
         $ip_bedgraph \\

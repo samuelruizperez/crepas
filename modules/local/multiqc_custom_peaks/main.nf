@@ -1,6 +1,6 @@
 process MULTIQC_CUSTOM_PEAKS {
     tag "$meta.id"
-    
+
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/48/48492b71efcc81e0c02b7319ed42b67e4cf12db4350838e869157d0305a7c890/data' :

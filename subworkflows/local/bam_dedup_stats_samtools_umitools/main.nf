@@ -47,7 +47,7 @@ workflow BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS {
         //         split_id, chrom ->
         //             "${split_id}\t${chrom}"
         //     }
-        //     .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS" )     
+        //     .collectFile( name: 'ch_chroms.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS" )
 
         // print ch_split_count to file for debugging
         // ch_split_count

@@ -45,7 +45,7 @@ process PARTITION_AVERAGE {
             nfiles = NF / 12
             # Print first three columns once (chromosome, start, end)
             printf "%s\\t%s\\t%s", \$1, \$2, \$3
-            
+
             # For each of the 9 columns to average (4..12)
             for (k = 4; k <= 12; k++) {
                 sum = 0
@@ -64,7 +64,7 @@ process PARTITION_AVERAGE {
             printf "\\n"
         }' \\
         > ${prefix}.tsv
-    
+
     # Create filtered version with rows where either bwaob_fwd_counts or bwaob_rev_counts > 0
     awk '\$4 > 0 || \$5 > 0' ${prefix}.tsv \\
     > ${prefix}.flT_by_counts.tsv
@@ -74,7 +74,7 @@ process PARTITION_AVERAGE {
     #   2. start
     #   3. end
     #   4. RFD_smooth: Smoothed partition or RFD score
-    
+
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
     ${prefix}.flT_by_counts.tsv \\
     > ${prefix}.flT_by_counts.bdg

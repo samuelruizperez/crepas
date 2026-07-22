@@ -24,7 +24,7 @@ process BED_TO_TAGALIGN {
     script:
     def args  = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    
+
     if (meta.single_end) {
         """
         awk \\

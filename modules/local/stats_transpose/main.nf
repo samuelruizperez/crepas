@@ -28,7 +28,7 @@ process STATS_TRANSPOSE {
     basename=\$(basename ${stats} .stats)
 
     grep ${args} ^SN ${stats} | cut -f 2-3 | sed 's/:\\t/\\t/' > ${prefix}.tmp
-    
+
     # transpose
     awk ${args2} '
     BEGIN { FS=OFS="\\t" }

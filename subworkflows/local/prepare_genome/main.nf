@@ -224,7 +224,7 @@ workflow PREPARE_GENOME {
     }
 
     if (!skip_gtf_index) {
-        
+
         //
         // MODULE: Sort GTF file with gff3sort
         //
@@ -278,9 +278,9 @@ workflow PREPARE_GENOME {
         } else {
             ch_rocco_params = channel.value( [ [id:'rocco_params'], file(rocco_params, checkIfExists: true) ] )
         }
-    } 
+    }
 
-    // Create dummy file 
+    // Create dummy file
     // https://github.com/nf-core/sarek/blob/a7679b9b5c178351b1e96a3ffe7ee81ddf9aad06/main.nf#L201
     //ch_dummy_file = file("$baseDir/assets/dummy_file.txt", checkIfExists: true)
 
@@ -561,7 +561,7 @@ workflow PREPARE_GENOME {
         }
     }
 
-    
+
 
     //
     // Uncompress gene GTF for TE counting or use existing gene GTF
@@ -630,7 +630,7 @@ workflow PREPARE_GENOME {
         }
     }
 
-        
+
     emit:
     fasta_to_align         = ch_fasta_to_align
     fai_to_align           = ch_fai_to_align

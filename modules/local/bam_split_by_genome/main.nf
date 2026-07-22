@@ -40,7 +40,7 @@ process BAM_SPLIT_BY_GENOME {
             --bam \\
             ${prefix}.${endo_genome}.sam \\
             > ${prefix}.${endo_genome}.bam
-        
+
         rm ${prefix}.${endo_genome}.sam
         """
     } else if (reads_to_keep == 'exo') {
@@ -60,7 +60,7 @@ process BAM_SPLIT_BY_GENOME {
             --bam \\
             ${prefix}.${exo_genome}.sam \\
             > ${prefix}.${exo_genome}.bam
-        
+
         rm ${prefix}.${exo_genome}.sam
         """
     }

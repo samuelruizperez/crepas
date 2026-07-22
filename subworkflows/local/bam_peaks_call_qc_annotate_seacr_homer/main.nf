@@ -3,10 +3,10 @@
 // Call peaks with SEACR, annotate with HOMER and perform downstream QC
 //
 
-include { SEACR_CALLPEAK } from '../../../modules/nf-core/seacr/callpeak/main'                                                                                                                                                                                                                                                                                  
+include { SEACR_CALLPEAK } from '../../../modules/nf-core/seacr/callpeak/main'
 
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER {
-    
+
     take:
     ch_bedgraph_control                            // channel: [ val(meta), [ ip_bedgraph ], [ ipcontrol_bedgraph ] ]
     seacr_peak_threshold

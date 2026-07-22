@@ -46,7 +46,7 @@ input:
   - rpm_use_flT2_total:
       type: string
       description: |
-        Comma-separated list of antibodies for which to use flT2_total_mapped_reads 
+        Comma-separated list of antibodies for which to use flT2_total_mapped_reads
         instead of flT3_total_mapped_reads for RPM normalization
   - smooth_radius:
       type: integer

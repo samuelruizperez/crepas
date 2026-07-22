@@ -73,7 +73,7 @@ process COLLECT_PARTITIONS {
     #   2. start
     #   3. end
     #   4. RFD_smooth: Smoothed partition or RFD score
-    
+
     awk ${args2} '{ printf "%s\\t%d\\t%d\\t%2.3f\\n", \$1, \$2, \$3, \$9 }' \\
     ${prefix}.flT_by_counts.tsv \\
     > ${prefix}.flT_by_counts.bdg

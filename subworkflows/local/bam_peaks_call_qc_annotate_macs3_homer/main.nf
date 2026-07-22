@@ -162,7 +162,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER {
                         [ meta_new, peaks ]
                 }
                 .set { ch_macs3_peaks_grouped }
-            
+
             //
             // MACS3 QC plots with R
             //

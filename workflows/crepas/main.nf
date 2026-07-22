@@ -81,7 +81,7 @@ workflow CREPAS {
     ch_exo_chromsizes
     ch_gtf                    // channel: path(genome.gtf)
     ch_gene_bed               // channel: path(gene.beds)
-    ch_effective_gsize        
+    ch_effective_gsize
     ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
@@ -347,16 +347,16 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.metrics.collect { it -> it[1] })
-    
+
         ch_dedup_bam = ch_umidedup_bam.mix(ch_mkdup_bam)
         ch_dedup_index = ch_umidedup_index.mix(ch_mkdup_index)
-        
+
     } else {
 
         ch_dedup_bam = ch_umidedup_bam.mix(ch_merged_bam_without_umi)
         ch_dedup_index = ch_umidedup_index.mix(ch_merged_index_without_umi)
     }
-    
+
     //
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
@@ -408,7 +408,7 @@ workflow CREPAS {
         ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
-    
+
     } else {
         // If no spike-in genome add genome to metas
         ch_filtered_bam
@@ -521,7 +521,7 @@ workflow CREPAS {
             //     [meta_clone, bam, index]
             // }
             .set { ch_flt_bam_index_by_genome_exo }
-   
+
         // TODO: print for debugging
         ch_flt_bam_index_by_genome.endo
             .map { it -> "${it}"}
@@ -609,7 +609,7 @@ workflow CREPAS {
         }
         .unique()
         .set { ch_bam_index_ipcontrols }
-    
+
     ch_bam_index_by_type
         .ips_with_ipcontrol
         .map { ipcontrol_id, antibody, meta, bam, index ->
@@ -718,7 +718,7 @@ workflow CREPAS {
 
         if (!params.input_cisrpm_in_plotprofile) {
             ch_bigwigs_genes
-                .filter { meta, bws -> 
+                .filter { meta, bws ->
                     !(meta.is_input_control && meta.norm_factor_type == 'cisrpm')
                 }
                 .set { ch_bigwigs_genes }
@@ -949,7 +949,7 @@ workflow CREPAS {
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_cmp_endo)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
-            .map { meta, bw -> 
+            .map { meta, bw ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                 "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                 "/${meta.exp_type}" +
@@ -967,7 +967,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .edd_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -982,7 +982,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .macs3_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1016,7 +1016,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .genrich_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1032,7 +1032,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .mace_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1047,7 +1047,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .epic2_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1062,7 +1062,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .consenrich_tracks
-            .map { meta, signal -> 
+            .map { meta, signal ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1077,7 +1077,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .rocco_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1115,7 +1115,7 @@ workflow CREPAS {
 
         IGV (
             ch_files_and_outpaths,
-            ch_fasta_outpath            
+            ch_fasta_outpath
         )
     }
 
@@ -1201,7 +1201,7 @@ workflow CREPAS {
         ch_versions = ch_versions.mix(MULTIQC.out.versions)
 
     }
-    
+
     emit:
     multiqc_report  = ch_multiqc_report
     multiqc_publish = ch_multiqc_publish

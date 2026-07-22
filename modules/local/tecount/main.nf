@@ -34,7 +34,7 @@ process TECOUNT {
         --TE ${te_gtf_or_index} \\
         --project ${prefix} \\
         --outdir ./
-    
+
     ${compress_cmd}
     """
 

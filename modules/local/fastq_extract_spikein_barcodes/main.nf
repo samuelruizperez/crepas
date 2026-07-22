@@ -57,7 +57,7 @@ process FASTQ_EXTRACT_SPIKEIN_BARCODES {
 
     printf "barcode_target\\tbarcode_id\\tbarcode_sequence\\tR1_count\\tR2_count\\n" > ${prefix}.tsv
     paste r1_counts.tsv r2_counts.tsv | awk -F'\\t' -v OFS='\\t' '{ print \$1, \$2, \$3, \$4, \$8 }' >> ${prefix}.tsv
-    
+
     rm -f r1_counts.tsv r2_counts.tsv
     """
 

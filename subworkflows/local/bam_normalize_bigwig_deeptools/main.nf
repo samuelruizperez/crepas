@@ -45,10 +45,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             [ meta_clone, bam, bai ]
         }
         .set { ch_bam_bai }
-        
+
 
     if (spikein_genome) {
-        // Copy exogenous total_mapped_reads meta fields to their corresponding endogenous samples    
+        // Copy exogenous total_mapped_reads meta fields to their corresponding endogenous samples
         ch_bam_bai
             .map { meta, bam, bai ->
                 // samples have meta.antibody, while input controls have meta.input_control_of_antibody
@@ -142,7 +142,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         ch_chrom_sizes_endo
     )
     ch_bdg_map_endo = BEDTOOLS_MAP_ENDO.out.mapped
-    
+
     ch_bdg_map = ch_bdg_map_endo
     ch_windows_exo = channel.empty()
     ch_windows_exo_bdg_raw = channel.empty()
@@ -289,7 +289,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
         }
         .collectFile( name: 'ch_bdg_srpm.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_NORMALIZE_BIGWIG_DEEPTOOLS" )
 
-    
+
     // Copy and modify channel meta to add CISRPM normalization factors
     ch_bdg_genome_type = channel.empty()
     ch_bdg_genome_ip = channel.empty()
@@ -334,7 +334,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                     [ endo_ipcontrol_meta.id, endo_ipcontrol_meta.input_control_of_antibody, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ]
                 }
                 .set { ch_bdg_genome_ipcontrol }
-            
+
             // Combine the combined ChIPs with the combined inputs
             ch_bdg_genome_ip
                 .combine(ch_bdg_genome_ipcontrol, by: [0,1])
@@ -651,7 +651,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     }
 
-    
+
     emit:
 
     bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]

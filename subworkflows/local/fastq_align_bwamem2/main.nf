@@ -1,5 +1,5 @@
 //
-// Alignment with BWAMEM2 
+// Alignment with BWAMEM2
 //
 
 include { BWAMEM2_MEM                 } from '../../../modules/nf-core/bwamem2/mem/main'

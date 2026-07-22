@@ -271,7 +271,7 @@ workflow CALL_PEAKS {
                 ipcontrols: !meta.input_control && meta.is_input_control
                     return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
             }
-            .set { ch_bedgraph_by_type }  
+            .set { ch_bedgraph_by_type }
 
         ch_bedgraph_by_type
             .ips_with_ipcontrol
@@ -290,7 +290,7 @@ workflow CALL_PEAKS {
         BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
             ch_all_bdg_ip_and_controls,
             seacr_peak_threshold
-            
+
         )
         ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
     }

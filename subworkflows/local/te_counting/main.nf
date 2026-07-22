@@ -40,10 +40,10 @@ workflow TE_COUNTING {
         .map { meta, bam -> [ meta + [ te_counting_strandedness: 'forward' ], bam ] }
         .set { ch_te_counting_split_fwd }
 
-    ch_te_counting_split 
+    ch_te_counting_split
         .map { meta, bam -> [ meta + [ te_counting_strandedness: 'reverse' ], bam ] }
         .set { ch_te_counting_split_rev }
-    
+
     ch_te_counting_no_split
         .mix(ch_te_counting_split_fwd)
         .mix(ch_te_counting_split_rev)
@@ -77,5 +77,5 @@ workflow TE_COUNTING {
 
     tecount_counts     = TECOUNT.out.counts    // channel: [ te_counts.tsv ]
     telocal_counts     = ch_telocal_counts    // channel: [ te_local_counts.tsv ]
-    
+
 }

@@ -38,4 +38,3 @@ process SAMBAMBA_SORT {
     touch ${prefix}.bam
     """
 }
-

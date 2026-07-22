@@ -66,13 +66,13 @@ if (is.null(opt$endogenous_genome_name)) {
 summary_table <- read_tsv(opt$summary_table, col_names = TRUE)
 
 if (is.null(opt$exogenous_genome_name)) {
-    
+
   tmp <- summary_table %>%
                   # In the column names replace any space or dash with underscore
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
-                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb" 
+                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb"
                   mutate(ID = sub("\\.", "_", ID),
                          ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
@@ -115,7 +115,7 @@ if (is.null(opt$exogenous_genome_name)) {
             flT1_multimapping_reads = flT1_raw_total_sequences - flT3_raw_total_sequences) %>%
           # move flT1_multimapping_reads after last column with flT1 in the name
           relocate(flT1_multimapping_reads, .after = tail(grep("flT1", colnames(.[-which(colnames(.) == "flT1_multimapping_reads")])), n = 1))
-  }                
+  }
 
 } else {
 
@@ -124,7 +124,7 @@ if (is.null(opt$exogenous_genome_name)) {
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
-                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb" 
+                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb"
                   mutate(ID = sub("\\.", "_", ID),
                          ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
@@ -142,7 +142,7 @@ if (is.null(opt$exogenous_genome_name)) {
                                 gsub("\\.allo$", paste0(".", opt$exogenous_genome_name, "_allo"), ID), ID),
                     ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
                                 gsub("\\..shifted$", paste0(".", opt$endogenous_genome_name, "_shifted"), ID), ID),
-                    ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID), 
+                    ID = ifelse(grepl(paste0(".", opt$exogenous_genome_name, "."), ID),
                                 gsub("\\..shifted$", paste0(".", opt$exogenous_genome_name, "_shifted"), ID), ID),
                     ID = ifelse(grepl(paste0(".", opt$endogenous_genome_name, "."), ID),
                                 gsub("\\.flT3$", paste0(".", opt$endogenous_genome_name, "_flT3"), ID), ID),
@@ -176,7 +176,7 @@ if (is.null(opt$exogenous_genome_name)) {
                     pivot_wider(
                       names_from = stat,
                       values_from = value
-                    ) 
+                    )
 
   # If there is flT3_raw_total_sequences column, use it to calculate flT1_multimapping_reads
   if (any(grepl("flT3_raw_total_sequences", colnames(tmp)))) {
@@ -206,14 +206,3 @@ if (is.null(opt$exogenous_genome_name)) {
 write_tsv(tmp, file.path(opt$outdir, paste0(opt$prefix, ".tsv")))
 
 cat("Processing completed on", Sys.time(), "\n")
-
-
-
-
-
-
-
-                
-                
-
-                

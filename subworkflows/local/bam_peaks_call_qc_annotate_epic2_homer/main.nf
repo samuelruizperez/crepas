@@ -169,7 +169,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
             //             [ meta_new, peaks ]
             //     }
             //     .set { ch_epic2_peaks_grouped }
-            
+
             //
             // epic2 QC plots with R
             //
@@ -217,7 +217,7 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER {
     peaks                        = ch_epic2_peaks                   // channel: [ val(meta), [ peaks ] ]
     frip_txt                     = FRIP_SCORE.out.txt               // channel: [ val(meta), [ txt ] ]
     frip_multiqc                 = MULTIQC_CUSTOM_PEAKS.out.frip    // channel: [ val(meta), [ frip ] ]
-    
+
     peak_count_multiqc           = MULTIQC_CUSTOM_PEAKS.out.count   // channel: [ val(meta), [ counts ] ]
     homer_annotatepeaks          = ch_homer_annotatepeaks           // channel: [ val(meta), [ txt ] ]
 

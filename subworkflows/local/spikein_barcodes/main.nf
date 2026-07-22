@@ -67,7 +67,7 @@ workflow SPIKEIN_BARCODES {
         ch_barcode_counts_uniq
     )
 
-  
+
     emit:
     spikein_barcode_summary = SPIKEIN_BARCODE_QC.out.summary // channel: [ val(meta), path(tsv) ]
 }

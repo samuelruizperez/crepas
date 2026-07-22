@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: "bam_normalize_bigwig_deeptools"
 description: |
-  Generate normalised bigWig signal tracks from a BAM file with deepTools bamCoverage (compute 
+  Generate normalised bigWig signal tracks from a BAM file with deepTools bamCoverage (compute
   RPM, SRPM or CISRPM normalisation), optionally comparing signal vs. input and averaging
   bigWigs across replicates, and run deepTools multiBigwigSummary/plotCorrelation/plotPCA QC
 keywords:

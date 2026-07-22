@@ -24,7 +24,7 @@ process BAM_SPLIT_BY_STRAND {
 
     script:
     def prefix            = task.ext.prefix ?: "${meta.id}"
-    
+
     if (meta.strandedness == 'forward') {
     """
         samtools view \\
