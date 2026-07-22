@@ -8,6 +8,9 @@ lint:
     - conf/modules.config
     - docs/images/nf-core-crepas_logo_light.png
     - docs/images/nf-core-crepas_logo_dark.png
+  files_unchanged:
+    - assets/email_template.html
+    - docs/README.md
   modules_config: false
   multiqc_config: false
   nf_test_content: false
@@ -15,8 +18,7 @@ nf_core_version: 4.0.2
 repository_type: pipeline
 template:
   author: "Samuel Ruiz-P\xE9rez, Qian Du, Alva Biran, Anja Groth, Nicolas Alcaraz"
-  description: a reproducible nascent chromatin sequencing analysis pipeline for epigenome
-    replication studies.
+  description: a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies.
   force: false
   is_nfcore: false
   name: crepas

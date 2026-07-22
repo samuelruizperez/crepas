@@ -278,7 +278,7 @@ sbatch project_test1_crepas_sbatch.sh
 
 ## Reference genome files
 
-Reference files for the Groth Lab have been made available by [Nicolás Alcaraz](https://github.com/satroz). If you have any questions, requests, or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicalc@cancer.dk](nicalc@cancer.dk)).
+Reference files for the Groth Lab have been made available by [Nicolas Alcaraz](https://github.com/satroz). If you have any questions, requests, or need help with the reference files, please check these [slides](https://alumni-my.sharepoint.com/:p:/g/personal/ngl887_ku_dk/EXx9wPQ1shlNtnVoafTB5iQBnyYvGUZZf3ckArr0cZqiIQ?e=xQEgKb) or contact him ([nicalc@cancer.dk](nicalc@cancer.dk)).
 
 ### Genome index, FASTA, GTF/GFF and gene BED files
 

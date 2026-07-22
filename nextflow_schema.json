@@ -20,7 +20,7 @@
                     "schema": "assets/schema_input.json",
                     "exists": true,
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "fragment_size": {
@@ -309,7 +309,7 @@
                 },
                 "umitools_extract_method": {
                     "type": "string",
-                    "description": "UMI pattern to use. Can be either `string` (default) or `regex`.",
+                    "description": "UMI pattern to use.",
                     "help_text": "More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).\n",
                     "fa_icon": "fas fa-dna",
                     "default": "string",
@@ -491,7 +491,7 @@
                 "aligner": {
                     "type": "string",
                     "default": "chromap",
-                    "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
+                    "description": "Specifies the alignment algorithm to use.",
                     "fa_icon": "fas fa-map-signs",
                     "enum": [
                         "bwa",
@@ -561,7 +561,7 @@
                 "minibwa_preset": {
                     "type": "string",
                     "default": "sr",
-                    "description": "Preset to use for minibwa alignment (sr, lr or adap for mixed short/long reads). See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "description": "Preset to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
                     "fa_icon": "fas fa-map-signs",
                     "enum": ["sr", "lr", "adap"]
                 },
@@ -605,7 +605,7 @@
             "properties": {
                 "multimap_allocation_method": {
                     "type": "string",
-                    "description": "Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`. Not setting this parameter means that multimappers will not be allocated (the default).",
+                    "description": "Method to allocate multimappers. Not setting this parameter means that multimappers will not be allocated (the default).",
                     "fa_icon": "fas fa-dice-d20",
                     "enum": ["allo", "chromap", "mmr"]
                 },
@@ -923,7 +923,7 @@
                 "peak_cutoff_method": {
                     "type": "string",
                     "default": "qvalue",
-                    "description": "Whether to use q-value or p-value as the cutoff for peak calling.",
+                    "description": "Type of statistical cutoff to use for peak calling.",
                     "fa_icon": "fas fa-sort-amount-down",
                     "enum": ["qvalue", "pvalue"]
                 },
@@ -1212,7 +1212,7 @@
                 },
                 "mace_norm_method": {
                     "type": "string",
-                    "description": "methods (\u201cEM\u201d, \u201cAM\u201d, \u201cGM\u201d, or \u201cSNR\u201d) used to consolidate replicates and reduce noise. \u201cEM\u201d = Entropy weighted mean, \u201cAM\u201d=Arithmetic mean, \u201cGM\u201d=Geometric mean, \u201cSNR\u201d=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "description": "Method used to consolidate replicates and reduce noise. \u201cEM\u201d = Entropy weighted mean, \u201cAM\u201d=Arithmetic mean, \u201cGM\u201d=Geometric mean, \u201cSNR\u201d=Signal-to-noise ratio. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["EM", "AM", "GM", "SNR"]
                 },
