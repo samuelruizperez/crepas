@@ -191,12 +191,13 @@ workflow PREPARE_GENOME {
     ch_hybrid_chromsizes = SAMTOOLS_FAIDX_HYBRID.out.sizes
     ch_hybrid_fai = SAMTOOLS_FAIDX_HYBRID.out.fai
 
-    if (fasta) {
-        ch_fai_to_align = ch_endo_fai
-        ch_chromsizes_to_align = ch_endo_chromsizes
-    } else if (hybrid_fasta) {
+ 
+    if (hybrid_fasta || spikein_fasta) {
         ch_fai_to_align = ch_hybrid_fai
         ch_chromsizes_to_align = ch_hybrid_chromsizes
+    } else if (fasta) {
+        ch_fai_to_align = ch_endo_fai
+        ch_chromsizes_to_align = ch_endo_chromsizes
     }
 
 

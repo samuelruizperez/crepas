@@ -484,7 +484,7 @@ def validateInputParameters() {
     }
 
     if (params.fasta && params.hybrid_fasta) {
-        fastaHybridFastaWarn(log)
+        fastaHybridFastaError()
     }
 
     if (params.spikein_genome && !((params.fasta && params.spikein_fasta) || params.hybrid_fasta)) {
@@ -654,13 +654,13 @@ def methodsDescriptionText(mqc_methods_yaml) {
 }
 
 //
-// Print a warning if both fasta and hybrid_fasta have been provided
+// Exit pipeline if both fasta and hybrid_fasta have been provided
 //
-def fastaHybridFastaWarn(log) {
-    log.warn "=============================================================================\n" +
+def fastaHybridFastaError() {
+    error("=============================================================================\n" +
         "  Both '--fasta' and '--hybrid_fasta' parameters have been provided.\n" +
-        "  Using '--hybrid_fasta' file as priority.\n" +
-        "==================================================================================="
+        "  These parameters are mutually exclusive: provide only one of them.\n" +
+        "===================================================================================")
 }
 
 //

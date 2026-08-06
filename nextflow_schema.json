@@ -71,7 +71,7 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
-            "required": ["genome", "fasta", "gtf"],
+            "required": ["genome", "gtf"],
             "properties": {
                 "genome": {
                     "type": "string",
@@ -84,7 +84,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "exists": true,
-                    "description": "Path to FASTA genome file.",
+                    "description": "Path to FASTA genome file. Required unless `--hybrid_fasta` is provided or the file is supplied by a reference genome config (iGenomes/Refgenie).",
                     "help_text": "If you don't have the appropriate alignment index available this will be generated for you automatically based on this file. Combine with `--save_reference` to save alignment index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
@@ -103,7 +103,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "exists": true,
-                    "description": "Path to a pre-built hybrid (endogenous + spike-in) FASTA genome file, with spike-in contigs named `<chromosome_name>_<spikein_genome>`. If provided, this is used directly instead of generating a hybrid fasta from `--fasta`/`--spikein_fasta`, and takes priority if both `--fasta` and `--hybrid_fasta` are set.",
+                    "description": "Path to a pre-built hybrid (endogenous + spike-in) FASTA genome file, with spike-in contigs named `<chromosome_name>_<spikein_genome>`. If provided, this is used directly instead of generating a hybrid fasta from `--fasta`/`--spikein_fasta`. Mutually exclusive with `--fasta`: providing both raises an error.",
                     "fa_icon": "far fa-file-code"
                 },
                 "gtf": {
