@@ -927,7 +927,8 @@ workflow CREPAS {
         ch_initiation_zones.ifEmpty([[:], [[]]]),
         params.smooth_radius,
         params.derivative_radius,
-        params.zero_crossing_radius
+        params.zero_crossing_radius,
+        params.skip_partition_group_plot
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
 

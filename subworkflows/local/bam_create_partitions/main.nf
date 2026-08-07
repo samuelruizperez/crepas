@@ -32,6 +32,7 @@ workflow BAM_CREATE_PARTITIONS {
     smooth_radius
     derivative_radius
     zero_crossing_radius
+    skip_partition_group_plot // boolean: skip the grouped partition plots
 
     main:
 
