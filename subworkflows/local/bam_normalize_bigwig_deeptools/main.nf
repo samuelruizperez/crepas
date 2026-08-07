@@ -561,6 +561,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 [ meta_clone.id, antibody, meta_clone.genome, meta_clone.norm_factor_type, meta_clone.signal_vs_input, meta_clone, bw ]
             }
             .groupTuple(by: [0, 1, 2, 3, 4])
+            // remove elements where there is only one biological replicate
+            .filter { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
+                bws.size() > 1
+            }
             .map { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
                 // Sort metas and bws by id to ensure consistent order
                 def sorted_metas = metas.sort { meta -> meta.brep }

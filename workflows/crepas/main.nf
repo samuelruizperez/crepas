@@ -745,7 +745,7 @@ workflow CREPAS {
                         (antibody ? antibody : 'no_antibody') +
                         '_' + norm_factor_type +
                         (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
-                        (averaged_brep ? '_' + 'bRep_avg' : '')
+                        (averaged_brep ? '_bRep_avg' : '')
                     meta_new.antibody = antibody
                     meta_new.ids = ids
                     [ meta_new, bws.flatten(), gene_bed ]
