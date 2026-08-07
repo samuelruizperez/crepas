@@ -603,9 +603,8 @@ workflow BAM_CREATE_PARTITIONS {
                 def sorted_minusinput_tsvs = minusinput_tsvs.sort { minusinput_tsv -> minusinput_tsv.name }
                 def meta_clone = sorted_metas[0].clone()
                 meta_clone.id = meta_clone.exp_type + '_' + antibody + (averaged_brep ? '_bRep_avg' : '')
-                [ meta_clone, sorted_scar_tsvs, sorted_input_tsvs, sorted_minusinput_tsvs ]
+                [ meta_clone, sorted_scar_tsvs, sorted_input_tsvs, sorted_minusinput_tsvs, [] ]
             }
-            .combine(ch_okseq_rfd_file.map { it -> it[1] })
             .combine(ch_initiation_zones.map { it -> it[1] })
             .set { ch_part_flt_group_to_plot }
 
