@@ -784,7 +784,7 @@ Now, we will create an **SBATCH script** to submit the job to the cluster queue.
 #SBATCH --output=fetchngs_job.%j.log   # standard output and error log, '%j' gives the job ID
 
 # Load the required modules
-module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+module load java/21.0.7 nextflow/25.10.4 singularity/3.8.7
 
 # Create an output directory for the pipeline's output
 mkdir -p ${HOME}/projects/project1/fetchngs/output/
