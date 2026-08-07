@@ -36,7 +36,7 @@ export NXF_JVM_ARGS='-Xms2g -Xmx4g'
 
 # Load the required modules
 module purge
-module Nextflow/25.10.2
+module load Java/25.36 Nextflow/25.10.2 Apptainer/1.3.6
 
 # Create an output directory for the pipeline run if it does not exist
 mkdir -p <path_to_project_directory>/output/
