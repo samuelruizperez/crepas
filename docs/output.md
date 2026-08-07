@@ -8,37 +8,36 @@
 1. [Introduction](#introduction)
 2. [Pipeline overview](#pipeline-overview)
 3. [Library-level analysis](#library-level-analysis)
-    - [Raw read QC](#raw-read-qc)
-    - [UMI extraction/transfer](#umi-extractiontransfer)
-    - [Adapter trimming](#adapter-trimming)
-    - [Alignment](#alignment)
-        - [Unmapped reads](#unmapped-reads)
-        - [STAR logs](#star-logs)
+   - [Raw read QC](#raw-read-qc)
+   - [UMI extraction/transfer](#umi-extractiontransfer)
+   - [Adapter trimming](#adapter-trimming)
+   - [Alignment](#alignment)
+     - [Unmapped reads](#unmapped-reads)
+     - [STAR logs](#star-logs)
 4. [Merged library-level analysis](#merged-library-level-analysis)
-    - [Alignment merging](#alignment-merging)
-    - [Preseq](#preseq)
-    - [UMI-based alignment deduplication](#umi-based-alignment-deduplication)
-    - [Duplicate marking](#duplicate-marking)
-    - [Filtering](#filtering)
-    - [Splitting alignments by genome (spike-in normalization)](#splitting-alignments-by-genome-spike-in-normalization)
-    - [Allocation of multimapping reads](#allocation-of-multimapping-reads)
-    - [Final filtering of BAM files](#final-filtering-of-bam-files)
-    - [Collection of multiple metrics](#collection-of-multiple-metrics)
-    - [Read shifting (ATAC-seq)](#read-shifting-atac-seq)
-    - [phantompeakqualtools](#phantompeakqualtools)
-    - [Normalized coverage files](#normalized-coverage-files)
-    - [deepTools plots](#deeptools-plots)
-    - [Peak calling](#peak-calling)
-    - [Create and quantify consensus set of peaks](#create-and-quantify-consensus-set-of-peaks)
-    - [ENCODE-ChIP-seq-pipeline-like analysis](#encode-chip-seq-pipeline-like-analysis)
-    - [SCAR-seq analysis](#scar-seq-analysis)
+   - [Alignment merging](#alignment-merging)
+   - [Preseq](#preseq)
+   - [UMI-based alignment deduplication](#umi-based-alignment-deduplication)
+   - [Duplicate marking](#duplicate-marking)
+   - [Filtering](#filtering)
+   - [Splitting alignments by genome (spike-in normalization)](#splitting-alignments-by-genome-spike-in-normalization)
+   - [Allocation of multimapping reads](#allocation-of-multimapping-reads)
+   - [Final filtering of BAM files](#final-filtering-of-bam-files)
+   - [Collection of multiple metrics](#collection-of-multiple-metrics)
+   - [Read shifting (ATAC-seq)](#read-shifting-atac-seq)
+   - [phantompeakqualtools](#phantompeakqualtools)
+   - [Normalized coverage files](#normalized-coverage-files)
+   - [deepTools plots](#deeptools-plots)
+   - [Peak calling](#peak-calling)
+   - [Create and quantify consensus set of peaks](#create-and-quantify-consensus-set-of-peaks)
+   - [ENCODE-ChIP-seq-pipeline-like analysis](#encode-chip-seq-pipeline-like-analysis)
+   - [SCAR-seq analysis](#scar-seq-analysis)
 
-  ---
+   ***
 
 ## Introduction
 
 This document describes the output produced by the pipeline. The directories listed below will be created in the output directory after the pipeline has finished. All paths are relative to the top-level results directory.
-
 
 ## Library-level analysis
 
@@ -121,7 +120,7 @@ The `--save_unaligned` parameter enables to obtain FastQ files containing unmapp
 
 <details markdown="1" open>
     <summary>Output files</summary>
-    
+
 - `<aligner>/library/unmapped/`
   - `*.fastq.gz`: If `--save_unaligned` is specified, FastQ files containing unmapped reads will be placed in this directory.
 
@@ -149,7 +148,6 @@ The library-level alignments associated with the same sample are merged and subs
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/`
-
   - `*.bam`: Merged library-level, coordinate sorted `*.bam` files. The file suffix for the final merged files will be `*.mLb.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted merged files will be present in the directory with the suffix `*.mLb.bam`.
 
   - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the merged alignment files.
@@ -158,11 +156,7 @@ The library-level alignments associated with the same sample are merged and subs
 
 [Picard MergeSamFiles](https://broadinstitute.github.io/picard/command-line-overview.html) is used to merge the alignments. If you only have one library for any given replicate then the merging step is not carried out because the library-level and merged library-level BAM files will be exactly the same.
 
-
-
 ![MultiQC - Picard insert size plot](images/mqc_picard_insert_size_plot.png)
-
-
 
 ### Preseq
 
@@ -170,7 +164,6 @@ The library-level alignments associated with the same sample are merged and subs
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/preseq/`
-
   - `*.lc_extrap.txt`: Preseq expected future yield file.
 
 </details>
@@ -183,25 +176,21 @@ The [Preseq](http://smithlabresearch.org/software/preseq/) package is aimed at p
 
 a
 
-
-
 ### Duplicate marking
 
 <details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/picard_markduplicates/`
-
   - `*.bam`: Merged library-level, coordinate sorted `*.bam` files after the marking of duplicates.
 
   - `*.metrics.txt`: Metrics file from MarkDuplicates.
 
 </details>
 
-For samples for which UMIs have not been provided, UMI-based deduplication is not possible. Thus, the pipeline will automatically use the [Picard MarkDuplicates](https://broadinstitute.github.io/picard/command-line-overview.html) tool to *mark* their duplicate alignments. These samples will then be specifically *filtered* for duplicates in the downstream [filtering step](#filtering) (in addition to the standard filtering criteria). The pipeline will also generate a MultiQC plot showing the percentage of duplicates in each sample.
+For samples for which UMIs have not been provided, UMI-based deduplication is not possible. Thus, the pipeline will automatically use the [Picard MarkDuplicates](https://broadinstitute.github.io/picard/command-line-overview.html) tool to _mark_ their duplicate alignments. These samples will then be specifically _filtered_ for duplicates in the downstream [filtering step](#filtering) (in addition to the standard filtering criteria). The pipeline will also generate a MultiQC plot showing the percentage of duplicates in each sample.
 
 ![MultiQC - Picard deduplication stats plot](images/mqc_picard_deduplication_plot.png)
-
 
 ### Filtering
 
@@ -219,32 +208,29 @@ For samples for which UMIs have not been provided, UMI-based deduplication is no
 
 Alignments are then filtered using [SAMBAMBA](https://github.com/biod/sambamba) to remove:
 
-  - Duplicates (if not already removed with UMI-based deduplication)
+- Duplicates (if not already removed with UMI-based deduplication)
 
-  - Improper pairs (in the case of paired-end samples)
+- Improper pairs (in the case of paired-end samples)
 
-  - Unmapped reads
-  
+- Unmapped reads
+
 ### Splitting alignments by genome (spike-in normalization)
 
 <details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/spikein_split/`
-
   - `*.bam`: Merged library-level, coordinate sorted BAM files split by genome and refiltered. The file suffix for the final filtered files will be `*.<genome>.flT2.sorted.bam` and `*.<spikein_genome>.flT2.sorted.bam`, e.g. `*.mm10.flT2.sorted.bam` and `*.dm6.flT2.sorted.bam`. If you specify the `--save_spikein_intermeds` parameter then the unsorted files will be present in the directory with the suffix `*.flT2.bam`.
-  
   - `*.{bai,csi,crai}`: Index files for the split and refiltered BAM files.
-  
   - SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the split and refiltered files.
 
 </details>
 
 ### Allocation of multimapping reads
 
-Multimapping reads are reads that map to multiple locations in the genome. The `--allocation_method` parameter allows you to choose the method to use for allocating these reads. 
+Multimapping reads are reads that map to multiple locations in the genome. The `--allocation_method` parameter allows you to choose the method to use for allocating these reads.
 
-As with the choice of aligner, the pipeline has been written in a way where all the files generated downstream of the allocation are placed in the same directory as specified by `--allocation_method` e.g. if `--allocation_method 'allo'` is specified then all the downstream results will be placed in the `<aligner>/mergedLibrary/allo/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple allocation methods by simply re-running the pipeline with a different `--allocation_method` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between allocation algorithms if required. 
+As with the choice of aligner, the pipeline has been written in a way where all the files generated downstream of the allocation are placed in the same directory as specified by `--allocation_method` e.g. if `--allocation_method 'allo'` is specified then all the downstream results will be placed in the `<aligner>/mergedLibrary/allo/` directory. This helps with organising the directory structure and more importantly, allows the end-user to get the results from multiple allocation methods by simply re-running the pipeline with a different `--allocation_method` option along the `-resume` parameter. It also means that results won't be overwritten when resuming the pipeline and can be used for benchmarking between allocation algorithms if required.
 
 Thus, `<allocation_method>` in the directory structure below corresponds to the allocation method set when running the pipeline. If multimapper allocation is disabled (by leaving the parameter `--allocate_n_multimappers 0` as it is by default) then the `--allocation_method` parameter will be ignored and the downstream directories will be placed in the `<aligner>/mergedLibrary/` directory.
 
@@ -252,7 +238,6 @@ Thus, `<allocation_method>` in the directory structure below corresponds to the 
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/<allocation_method>/`
-
   - `*.bam`: Merged library-level, coordinate sorted BAM files after the allocation of multimapping reads. The file suffix for the final filtered files will be `*.<allocation_method>.sorted.bam`. If you specify the `--save_align_intermeds` parameter then the unsorted files will be present in the directory with the suffix `*.<allocation_method>.sorted.bam`.
 
   - `*.{bai,csi,crai}`: Index files for the allocated BAM files.
@@ -274,11 +259,9 @@ a
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/*/picard_metrics/`
-
   - `*_metrics`: Alignment QC files from picard CollectMultipleMetrics.
 
 - `<aligner>/mergedLibrary/*/picard_metrics/pdf/`
-
   - `*.pdf`: Alignment QC plot files from picard CollectMultipleMetrics.
 
 </details>
@@ -293,7 +276,6 @@ a
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/phantompeakqualtools/`
-
   - `*.spp.out`, `*.spp.pdf`: phantompeakqualtools output files.
 
   - `*_mqc.tsv`: MultiQC custom content files.
@@ -318,16 +300,15 @@ Coverage tracks are generated for the final filtered BAM files with [deepTools b
 
 Additionally, the following normalization methods (e.g., to account for input control or spike-in reads) are available in the pipeline; note that $\alpha_i$ corresponds to the read count in each bin:
 
-| Method   | Description | Formula | Output | References |
-| -------- | ----------- | -------- | ------ | ---------- |
-| **Raw**     | No normalization | $$\alpha_i \times 1$$ | <ul><li>$$\text{endogenous ChIP } \alpha$$</li><li>$$\text{exogenous ChIP } \alpha$$ </li><li>$$\text{endogenous input } \alpha$$</li><li>$$\text{exogenous input } \alpha$$</li></ul> | - |
-| **RPM**     | **R**eads **P**er **M**illion mapped reads | $$\alpha_i \times \frac{10^6}{\text{total mapped reads}}$$ | <ul><li>$$\text{endogenous ChIP } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous ChIP } \alpha_{\text{RPM}}$$ </li><li>$$\text{endogenous input } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous input } \alpha_{\text{RPM}}$$</li></ul> | - |
-| **SRPM**    | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}}$$  | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul> | [Orlando et al. (2014)](https://doi.org/10.1016/j.celrep.2014.10.018), [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
-| **CISRPM** | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul> | [Fursova et al. (2019)](https://doi.org/10.1016/j.molcel.2019.03.024), [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007) |
-| **CISRPM-SOI** | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput | If $\alpha_{\text{CISRPM ChIP}_i} >$ `--soi_min_count` and $\alpha_{\text{CISRPM input}_i} >$ `--soi_min_count`, then: $$\alpha_{\text{CISRPM-SOI}_i} = \frac{\alpha_{\text{CISRPM ChIP}_i}}{\alpha_{\text{CISRPM input}_i}}$$ Otherwise: $$\alpha_{\text{CISRPM-SOI}_i} = \text{NaN}$$ | $$\alpha_{\text{CISRPM-SOI}}$$ | Qian Du |
+| Method         | Description                                                                               | Formula                                                                                                                                                                                                                                                                                                                                                                                                                                    | Output                                                                                                                                                                                                                                     | References                                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Raw**        | No normalization                                                                          | $$\alpha_i \times 1$$                                                                                                                                                                                                                                                                                                                                                                                                                      | <ul><li>$$\text{endogenous ChIP } \alpha$$</li><li>$$\text{exogenous ChIP } \alpha$$ </li><li>$$\text{endogenous input } \alpha$$</li><li>$$\text{exogenous input } \alpha$$</li></ul>                                                     | -                                                                                                                                         |
+| **RPM**        | **R**eads **P**er **M**illion mapped reads                                                | $$\alpha_i \times \frac{10^6}{\text{total mapped reads}}$$                                                                                                                                                                                                                                                                                                                                                                                 | <ul><li>$$\text{endogenous ChIP } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous ChIP } \alpha_{\text{RPM}}$$ </li><li>$$\text{endogenous input } \alpha_{\text{RPM}}$$</li><li>$$\text{exogenous input } \alpha_{\text{RPM}}$$</li></ul> | -                                                                                                                                         |
+| **SRPM**       | **S**pike-in-normalized **R**eads **P**er **M**illion mapped reads                        | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}}$$                                                                                                                                                                                                         | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{SRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{SRPM}}$$</li></ul>                                                                                                                 | [Orlando et al. (2014)](https://doi.org/10.1016/j.celrep.2014.10.018), [Petryk et al. (2021)](https://doi.org/10.1038/s41596-021-00585-3) |
+| **CISRPM**     | **C**hIP-and-**I**nput-**S**pike-in-normalized **R**eads **P**er **M**illion mapped reads | For the endogenous ChIP: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous ChIP reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ <br><br> For the endogenous input: <br><br> $$\alpha_i \times \frac{10^6}{\text{total mapped exogenous input reads}} \times \frac{\text{total mapped exogenous input reads}}{\text{total mapped endogenous input reads}}$$ | <ul><li>$$\text{endogenous ChIP }\alpha_{\text{CISRPM}}$$</li><li>$$\text{endogenous input }\alpha_{\text{CISRPM}}$$</li></ul>                                                                                                             | [Fursova et al. (2019)](https://doi.org/10.1016/j.molcel.2019.03.024), [Flury et al. (2023)](https://doi.org/10.1016/j.cell.2023.01.007)  |
+| **CISRPM-SOI** | **CISRPM** **S**ignal (ChIP) **O**ver **I**nput                                           | If $\alpha_{\text{CISRPM ChIP}_i} >$ `--soi_min_count` and $\alpha_{\text{CISRPM input}_i} >$ `--soi_min_count`, then: $$\alpha_{\text{CISRPM-SOI}_i} = \frac{\alpha_{\text{CISRPM ChIP}_i}}{\alpha_{\text{CISRPM input}_i}}$$ Otherwise: $$\alpha_{\text{CISRPM-SOI}_i} = \text{NaN}$$                                                                                                                                                    | $$\alpha_{\text{CISRPM-SOI}}$$                                                                                                                                                                                                             | Qian Du                                                                                                                                   |
 
-
-### Calculation of the *total mapped reads* for normalization
+### Calculation of the _total mapped reads_ for normalization
 
 The $\text{total mapped reads}$ values in the normalization formulae above are calculated as follows:
 
@@ -355,62 +336,50 @@ The $\text{total mapped reads}$ values in the normalization formulae above are c
     - If the antibody of the corresponding ChIP is in the list specified with `--cisrpm_use_flT2_total`, the total mapped reads value corresponds to raw total sequences **before** the final filtering step (flT3), which involves filtering of reads based on the mapping quality.
     - If the antibody of the corresponding ChIP is not in the list specified with `--cisrpm_use_flT2_total`, the total mapped reads value corresponds to the number of reads **after** the final filtering step (flT3).
 
-
 ---
-
 
 <details markdown="1" open>
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/*/<exp_type>/coverage`
-
   - `/raw/`
-
     - `*.<bin_size>.raw.bedgraph`: Raw bedgraphs (contiguous bins with the same count are merged).
     - `*.<bin_size>.raw.map.bedgraph`: Raw bedgraphs (all bins of equal size).
     - `*.<bin_size>.raw.map.bigWig`: Raw bigWigs (all bins of equal size).
 
     - `/bRep_avg/`
-
       - `*.<bin_size>.raw.map.bRep_avg.bigWig`: Raw bigWigs where the coverage value per bin is the average across the biological replicates of the same condition.
 
     - `/signal_vs_input/`
-      
       - `/<signal_over_input_operation>/`
-
         - `*.<bin_size>.raw.map.<signal_over_input_operation>.bigWig`: Raw bigWigs where the coverage value per bin is a comparison between signal and input control per bin. The signal vs input can be calculated using one of the following operations, as specified by the `--signal_vs_input_operation` parameter (by default set to `soi`): `soi`, `log2`, `ratio`, `subtract`, `add`, `mean`, `reciprocal_ratio`, `first`, `second`. Note: `soi` is similar to `ratio`, but the `soi` is only calculated for bins where both the ChIP is above the `--min_signal_for_soi` threshold and the input is above the `--min_input_for_soi` threshold, otherwise the value is set to `NaN`.
 
         - `/bRep_avg/`
-
           - `*.<bin_size>.raw.map.<signal_over_input_operation>.bRep_avg.bigWig`: Raw bigWigs where the coverage value per bin is the average of the signal vs input value for that bin across the biological replicates of the same condition.
 
   - `/rpm/`
-
     - `*.<bin_size>.rpm.bigWig`: RPM bigWigs for ChIP samples.
     - `*.<bin_size>.rpm.bedgraph`: RPM bedgraphs for ChIP samples.
     - `*.<bin_size>.rpm.ref_<antibody>.bigWig`: RPM bigWigs for input control samples. `ref_<antibody>` is the name of the corresponding antibody to which each input can be compared, because they are normalized in the same way.
     - `*.<bin_size>.rpm.ref_<antibody>.bedgraph`: RPM bedgraphs for input control samples.
 
   - `/srpm/`
-
     - `*.<bin_size>.srpm.bigWig`: SRPM bigWigs for ChIP samples.
     - `*.<bin_size>.srpm.bedgraph`: SRPM bedgraphs for ChIP samples.
     - `*.<bin_size>.srpm.ref_<antibody>.bigWig`: SRPM bigWigs for input control samples. `ref_<antibody>` is the name of the corresponding antibody to which each input can be compared, because they are normalized in the same way.
     - `*.<bin_size>.srpm.ref_<antibody>.bedgraph`: SRPM bedgraphs for input control samples.
 
   - `/cisrpm/`
-
     - `*.<bin_size>.cisrpm.bigWig`: CISRPM bigWigs for ChIP samples.
     - `*.<bin_size>.cisrpm.ref_<antibody>.bigWig`: CISRPM bigWigs for input control samples. `ref_<antibody>` is the name of the corresponding antibody to which each input can be compared, because they are normalized in the same way.
 
   - `/cisrpm/cisrpm_soi/`
-
     - `*.<bin_size>.cisrpm.soi.bigWig`: CISRPM-SOI bigWigs.
     - `*.<bin_size>.cisrpm.soi.bedgraph`: CISRPM-SOI bedgraphs.
 
 </details>
 
-<!-- 
+<!--
 <details markdown="1" open>
     <summary>Output files</summary>
 
@@ -427,11 +396,9 @@ The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in a
     <summary>Output files</summary>
 
 - `<aligner>/mergedLibrary/deepTools/plotFingerprint/`
-
   - `*.plotFingerprint.pdf`, `*.plotFingerprint.qcmetrics.txt`, `*.plotFingerprint.raw.txt`: plotFingerprint output files.
 
 - `<aligner>/mergedLibrary/deepTools/plotProfile/`
-
   - `*.computeMatrix.mat.gz`, `*.computeMatrix.vals.mat.tab`, `*.plotProfile.pdf`, `*.plotProfile.tab`, `*.plotHeatmap.pdf`, `*.plotHeatmap.mat.tab`: plotProfile output files.
 
 </details>
@@ -542,7 +509,7 @@ BAM files are name-sorted with SAMtools.
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/1_nsort/`
   - `*.nsorted.bam`: Name-sorted BAM files.
   - `*.nsorted.bam.bai`: Index for name-sorted BAM files.
-</details>
+  </details>
 
 ### Converting BAM files to BEDPE format
 
@@ -553,7 +520,7 @@ Name-sorted BAM files are converted to BED format with [BEDTools bamtobed](https
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/2_bamtobed/`
   - `*.bed`: BED files generated from the name-sorted BAM files.
-</details>
+  </details>
 
 ### Converting BED files to tagAlign format
 
@@ -564,7 +531,7 @@ BED/BEDPE files are converted to tagAlign format using awk-based transformations
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/3_bed_to_tagalign/`
   - `*.tagAlign`: tagAlign files generated from BED/BEDPE files.
-</details>
+  </details>
 
 ### Generating self-pseudoreplicates
 
@@ -576,7 +543,7 @@ For IP samples, tagAlign files are shuffled and split into two self-pseudoreplic
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/4_self_pseudoreps/`
   - `*spr1.tagAlign`: First self-pseudoreplicate.
   - `*spr2.tagAlign`: Second self-pseudoreplicate.
-</details>
+  </details>
 
 ### Pooling tagAlign files
 
@@ -587,7 +554,7 @@ Replicates and pseudoreplicates are pooled as required for downstream SPP and ID
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/5_pooled/`
   - `*.pooled.tagAlign`: Pooled tagAlign files.
-</details>
+  </details>
 
 ### Calling peaks with SPP
 
@@ -602,7 +569,7 @@ Peaks are called with phantompeakqualtools (SPP). This step also generates cross
   - `*.Rdata`: SPP R workspace output.
   - `*.narrowPeak.gz`: Compressed narrow peaks (when generated by SPP).
   - `*.regionPeak.gz`: Compressed region peaks (when generated by SPP).
-</details>
+  </details>
 
 ### Filtering SPP peaks
 
@@ -613,7 +580,7 @@ SPP peaks are filtered by blacklist regions and canonical chromosomes, and peak 
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/6_spp/`
   - `*.narrowPeak`, `*.broadPeak`, `*.bed`: Filtered peak files for the selected peak type.
-</details>
+  </details>
 
 ### IDR analysis
 
@@ -626,7 +593,7 @@ IDR is run on replicate/pseudoreplicate comparisons following ENCODE-style pairi
   - `*.idrValues.txt`: IDR values and ranked peaks.
   - `*.log.txt`: IDR log output.
   - `*.png`: IDR diagnostic plot.
-</details>
+  </details>
 
 ### Filtering IDR peaks
 
@@ -637,7 +604,7 @@ IDR outputs are thresholded and then filtered with the same blacklist/chromosome
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/7_idr/<idr_pair_type>/`
   - `*.narrowPeak`, `*.broadPeak`, `*.bed`: IDR-filtered peak files.
-</details>
+  </details>
 
 ### Naive overlap (alternative to IDR)
 
@@ -648,8 +615,7 @@ As an alternative to IDR (particularly useful for broad marks), peaks can be fil
 
 - `<aligner>/mergedLibrary/<exp_type>/<downsampled>/encode3_pipeline/7_naive_overlap/<idr_pair_type>/`
   - `*.narrowPeak`, `*.broadPeak`, `*.bed`: Overlap-thresholded peak files.
-</details>
-
+  </details>
 
 ## SCAR-seq analysis
 
@@ -665,7 +631,7 @@ SCAR-seq BAM files are split by strand based on the corresponding `strandedness`
   - `*.forward.bam.bai`: Index for forward strand alignments.
   - `*.reverse.bam`: Reverse strand alignments.
   - `*.reverse.bam.bai`: Index for reverse strand alignments.
-</details>
+  </details>
 
 ### Genome-wide coverage per strand
 
@@ -684,7 +650,7 @@ Genome-wide coverage in BEDGRAPH format is generated for the forward and reverse
 
 ### Average coverage over windows
 
-Then, the average coverage score (from the bigWigs) over each genomic window is calculated. 
+Then, the average coverage score (from the bigWigs) over each genomic window is calculated.
 
 First, non-overlapping genomic windows are generated. The size of the windows is determined with the `--scar_window_size` parameter. To be able to later parallelize the calculation of the average coverage, the genomic windows are split by chromosome.
 
@@ -700,8 +666,6 @@ First, non-overlapping genomic windows are generated. The size of the windows is
 ### Normalization of the average coverage
 
 ### Substraction of stranded input signal
-
-
 
 ## Aggregate analysis
 
@@ -756,7 +720,6 @@ Once installed, open IGV, go to `File > Open Session` and select the `igv_sessio
   A number of genome-specific files are generated by the pipeline in order to aid in the filtering of the data, and because they are required by standard tools such as BEDTools. These can be found in this directory along with the genome fasta file which is required by IGV.
 
 - `genome/index/`
-
   - `bwa/`: Directory containing BWA indices.
 
   - `bowtie2/`: Directory containing Bowtie2 indices.

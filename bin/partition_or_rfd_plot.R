@@ -30,7 +30,7 @@ options(show.error.locations = TRUE)
 #     install.packages("BiocManager", lib = Sys.getenv("R_LIBS_USER"))
 # }
 
-required.libs <- c("tidyverse","GenomicAlignments","GenomicFeatures", 
+required.libs <- c("tidyverse","GenomicAlignments","GenomicFeatures",
            "RColorBrewer","ggrepel","ggpubr","ggpmisc",
           "hexbin","argparse")
 
@@ -223,7 +223,7 @@ if (num_types_with_files == 0 && !HAS_OKSEQ) {
 if (num_types_with_files > 1) {
   file_counts <- sapply(part_files, length)
   file_counts <- file_counts[file_counts > 0]
-  
+
   if (length(unique(file_counts)) > 1) {
     stop("[", Sys.time(), "] ERROR: All partition types must have the same number of files. ",
          "Current counts: ", paste(names(file_counts), "=", file_counts, collapse = ", "))
@@ -337,7 +337,7 @@ IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
 
 message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
 
-# Get original start coordinate for each initiation zone 
+# Get original start coordinate for each initiation zone
 IZ_gr$break_start <- start(IZ_gr)
 
 # Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
@@ -357,12 +357,12 @@ if (length(overlapping_hits) > 0) {
 } else {
   message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within 100 kb upstream and 100 kb downstream of another initiation zone.")
 }
- 
-message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")  
- 
+
+message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")
+
  # Remove temporary variables
 rm(IZ_dist, overlapping_hits)
- 
+
 
 if (HAS_OKSEQ) {
 
@@ -393,7 +393,7 @@ if (HAS_OKSEQ) {
                                     seqinfo = chrom_sizes,
                                     keep.extra.columns = TRUE,
                                     starts.in.df.are.0based = TRUE)
-  
+
   # We copy the interval now and not before with dplyr because the start
   # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
   OK_gr$interval <- paste0(seqnames(OK_gr), ":", start(OK_gr), "-", end(OK_gr))
@@ -416,13 +416,13 @@ if (HAS_OKSEQ) {
 
   message("\n[", Sys.time(), "] (", ok_base_name, ") Extracting the OK-seq bins that overlap with an initiation zone...")
   RFD_gr <- OK_gr[queryHits(overlap_pairs)]
-  
+
   # Adding to each OK-seq bin the interval of the initiation zone with which it overlaps
   RFD_gr$break_ID <- IZ_gr$interval[subjectHits(overlap_pairs)]
-  
+
   message("\n[", Sys.time(), "] (", ok_base_name, ") Calculating the distance from each OK-seq bin to the initiation zone with which it overlaps...")
   RFD_gr$dist <- start(RFD_gr) - IZ_gr$break_start[subjectHits(overlap_pairs)]
-  
+
   # Remove temporary variables
   rm(OK_gr, overlap_pairs)
 
@@ -443,14 +443,14 @@ partition_df <- tibble()
 for (type in names(part_files)) {
 
   message("\n[", Sys.time(), "] Processing partition files of type: ", type, "...")
-  
+
   for (file in part_files[[type]]) {
 
     base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(file))
 
     message("\n[", Sys.time(), "] (", base_name, ") Reading partition file...")
     SCAR_df <- read_tsv(file, col_names = cls, show_col_types = FALSE)
-    
+
     if (ncol(SCAR_df) != 12) {
       stop("[", Sys.time(), "] ERROR:", base_name, "is not a partition file format (ncol != 12)")
     }
@@ -464,7 +464,7 @@ for (type in names(part_files)) {
              sample = base_name,
              sample_type = type,
              sample_facet = type)
-    
+
     SCAR_gr <- makeGRangesFromDataFrame(SCAR_df,
                                         seqinfo = chrom_sizes,
                                         keep.extra.columns = TRUE,
@@ -472,11 +472,11 @@ for (type in names(part_files)) {
 
     # We copy the interval now and not before with dplyr because the start
     # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
-    SCAR_gr$interval <- paste0(seqnames(SCAR_gr), ":", start(SCAR_gr), "-", end(SCAR_gr))    
-      
+    SCAR_gr$interval <- paste0(seqnames(SCAR_gr), ":", start(SCAR_gr), "-", end(SCAR_gr))
+
     message("\n[", Sys.time(), "] (", base_name, ") Removing partition bins that overlap a blacklisted region...")
     SCAR_gr <- SCAR_gr[!overlapsAny(SCAR_gr, blacklist_gr, minoverlap = 1)]
-      
+
     PART_BIN_SIZE <- width(SCAR_gr)[1]
     message("\n[", Sys.time(), "] (", base_name, ") This partition's bin size is ", PART_BIN_SIZE, " bp.")
 
@@ -489,7 +489,7 @@ for (type in names(part_files)) {
 
   # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
   message("\n[", Sys.time(), "] (", base_name, ") Calculating partition rates around initiation zones (100 kb upstream and 100 kb downstream of each IZ) by averaging values within each bin position...")
-  
+
   # Finding out which initiation zones overlap which partition bins...
   if (opt_only_plot_within_iz) {
     overlap_pairs <- findOverlaps(query = SCAR_gr, subject = IZ_gr, type = "within")
@@ -499,16 +499,16 @@ for (type in names(part_files)) {
 
   message("\n[", Sys.time(), "] (", base_name, ") Extracting the partition bins that overlap with an initiation zone...")
   partition_gr <- SCAR_gr[queryHits(overlap_pairs)]
-  
+
   # Adding to each partition bin the interval of the initiation zone with which it overlaps
   partition_gr$break_ID <- IZ_gr$interval[subjectHits(overlap_pairs)]
-  
+
   message("\n[", Sys.time(), "] (", base_name, ") Calculating the distance from each partition bin to the initiation zone with which it overlaps...")
   partition_gr$dist <- start(partition_gr) - IZ_gr$break_start[subjectHits(overlap_pairs)]
 
   partition_df <- partition_df %>%
     bind_rows(as_tibble(partition_gr))
-  
+
   message("\n[", Sys.time(), "] (", base_name, ") Finished processing partition file.")
 
   }
@@ -524,12 +524,12 @@ if (HAS_OKSEQ) {
   if (length(sample_facets) == 0 || is.null(sample_facets)) {
     sample_facets <- "OK-seq"
   }
-  
+
   expanded_RFD <- tidyr::expand_grid(
     as_tibble(RFD_gr),
     sample_facet = sample_facets
   )
-  
+
   partition_df <- partition_df %>%
     bind_rows(expanded_RFD)
 
@@ -718,22 +718,22 @@ if (HAS_OKSEQ && num_types_with_files > 0) {
     filter(RPM >= opt_rpm_cutoff,
            !is.na(RFD_smooth)) %>%
     dplyr::select(interval, sample, sample_type, sample_facet, RFD_smooth)
-  
+
   # To prevent empty facets in the scatter plot...
   # If there are stranded input samples, replace their sample names with corresponding SCAR sample names
   if (HAS_INPUT && HAS_SCAR) {
     # Get the sample names for SCAR and strandedInput in order
     scar_samples <- unique(partition_df_flt$sample[partition_df_flt$sample_type == "SCAR"])
     input_samples <- unique(partition_df_flt$sample[partition_df_flt$sample_type == "strandedInput"])
-    
+
     # Create a mapping from input sample names to SCAR sample names
     if (length(scar_samples) == length(input_samples)) {
       sample_mapping <- setNames(scar_samples, input_samples)
-      
+
       # Replace strandedInput sample names
       partition_df_flt <- partition_df_flt %>%
-        mutate(sample = ifelse(sample_type == "strandedInput", 
-                               sample_mapping[sample], 
+        mutate(sample = ifelse(sample_type == "strandedInput",
+                               sample_mapping[sample],
                                sample))
     }
   }
@@ -745,7 +745,7 @@ if (HAS_OKSEQ && num_types_with_files > 0) {
     pivot_longer(cols = -c(interval, "OK-seq", sample_facet), names_to = "sample", values_to = "Partition") %>%
     dplyr::rename(RFD = "OK-seq") %>%
     mutate(sample = gsub("^SCAR-seq_", "", sample))
-  
+
   partition_scatter_plot <- RFD_plot_df %>%
     ggplot(aes(x = RFD, y = Partition)) +
     geom_hex(bins = 100) +

@@ -1,0 +1,150 @@
+{
+    "sarscov2 - bam - split by chromosome - no index": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.split_by_chrom.bam:md5,223d6a6efa4503cd5c83761878cafa1e"
+                ]
+            ],
+            {
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_CHROMOSOME",
+                        "samtools",
+                        "1.23.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:19:33.210922647",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - split by chromosome - bai index": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.split_by_chrom.bam:md5,aee0be26c2b27856ff86863266bd1c25"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.split_by_chrom.bam.bai:md5,e179aa6d485e919b408003ff602ebf1f"
+                ]
+            ],
+            {
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_CHROMOSOME",
+                        "samtools",
+                        "1.23.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:19:44.643606523",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - split by chromosome - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.split_by_chrom.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
+                    
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.split_by_chrom.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "6": [
+                    [
+                        "BAM_SPLIT_BY_CHROMOSOME",
+                        "samtools",
+                        "1.23.1"
+                    ]
+                ],
+                "bai": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.split_by_chrom.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.split_by_chrom.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "crai": [
+                    
+                ],
+                "cram": [
+                    
+                ],
+                "csi": [
+                    
+                ],
+                "sam": [
+                    
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_CHROMOSOME",
+                        "samtools",
+                        "1.23.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:19:55.265806672",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

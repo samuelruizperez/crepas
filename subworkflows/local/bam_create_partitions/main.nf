@@ -23,7 +23,7 @@ workflow BAM_CREATE_PARTITIONS {
 
     take:
     ch_bam                  // channel: [ val(meta), [ bam ] ]
-    ch_fasta                // channel: [ val(meta), path(fasta) ]
+    ch_fasta_fai            // channel: [ val(meta), path(fasta), path(fai) ]
     ch_chrom_sizes          // channel: [ bed ]
     ch_blacklist            // channel: [ val(meta), [ bed ] ]
     ch_okseq_rfd_file       // channel: [ val(meta), [ bed ] ]
@@ -33,8 +33,6 @@ workflow BAM_CREATE_PARTITIONS {
     zero_crossing_radius
 
     main:
-
-    ch_versions = channel.empty()
 
     // TODO: print for debugging
     ch_bam
@@ -48,7 +46,6 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Split BAMs by strand (forward and reverse)
     //
     BAM_SPLIT_BY_STRAND ( ch_bam )
-    ch_versions = ch_versions.mix(BAM_SPLIT_BY_STRAND.out.versions.first())
 
     // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
@@ -79,7 +76,7 @@ workflow BAM_CREATE_PARTITIONS {
                 [ meta_clone, r_bam ]
         }
         .set { ch_r_bam }
-    
+
     // TODO: print for debugging
     ch_r_bam
         .map { meta, r_bam ->
@@ -107,11 +104,11 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Run samtools stats, flagstat and idxstats per strand
     //
     BAM_STATS_SAMTOOLS (
-        ch_bam.join(SAMTOOLS_INDEX.out.bai, by: 0),
-        ch_fasta
+        ch_bam.join(SAMTOOLS_INDEX.out.index, by: 0),
+        ch_fasta_fai
     )
 
-    // Creating channel: [ val(meta), [ bam ], [ scale ] ] 
+    // Creating channel: [ val(meta), [ bam ], [ scale ] ]
     ch_bam
         .map {
             meta, bam ->
@@ -143,7 +140,6 @@ workflow BAM_CREATE_PARTITIONS {
         BEDTOOLS_GENOMECOV.out.genomecov,
         'bedGraph'
     )
-    ch_versions = ch_versions.mix(BEDGRAPH_SORT.out.versions.first())
 
     //
     // MODULE: Convert bedgraph to bigwig
@@ -203,7 +199,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_windows_bigwig
     )
     ch_bwaob = UCSC_BIGWIGAVERAGEOVERBED.out.tab
-    ch_versions = ch_versions.mix(UCSC_BIGWIGAVERAGEOVERBED.out.versions.first())
 
     // TODO: print for debugging
     ch_bwaob
@@ -220,9 +215,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_bwaob = BWAOB_SORT.out.sorted
-    ch_versions = ch_versions.mix(BWAOB_SORT.out.versions.first())
-
-
 
     // RPM normalization factors
     // num_windows is used to add a pseudocount to the RPM normalization factor (prevent division by zero in partition_or_rfd_smooth)
@@ -251,7 +243,6 @@ workflow BAM_CREATE_PARTITIONS {
         'tab'
     )
     ch_norm = BWAOB_NORMALIZE.out.normalized
-    ch_versions = ch_versions.mix(BWAOB_NORMALIZE.out.versions.first())
 
     // TODO: print for debugging
     ch_norm
@@ -297,7 +288,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_norm_scar_input
     )
     ch_bdg_smi = BEDGRAPH_SIGNAL_MINUS_INPUT.out.bedgraph
-    ch_versions = ch_versions.mix(BEDGRAPH_SIGNAL_MINUS_INPUT.out.versions.first())
 
     // TODO: print for debugging
     ch_bdg_smi
@@ -356,7 +346,6 @@ workflow BAM_CREATE_PARTITIONS {
         zero_crossing_radius
     )
     ch_rfd = PARTITION_OR_RFD_SMOOTH.out.rfd
-    ch_versions = ch_versions.mix(PARTITION_OR_RFD_SMOOTH.out.versions.first())
 
     // TODO: print for debugging
     ch_rfd
@@ -425,7 +414,6 @@ workflow BAM_CREATE_PARTITIONS {
     COLLECT_PARTITIONS (
         ch_to_collect
     )
-    ch_versions = ch_versions.mix(COLLECT_PARTITIONS.out.versions.first())
 
     //
     // Add meta information to the filtered partitions and bedgraph
@@ -485,7 +473,6 @@ workflow BAM_CREATE_PARTITIONS {
     PARTITION_AVERAGE (
         ch_partitions_brep
     )
-    ch_versions = ch_versions.mix(PARTITION_AVERAGE.out.versions.first())
 
     //
     // Add meta information to the filtered partitions and bedgraph
@@ -519,7 +506,7 @@ workflow BAM_CREATE_PARTITIONS {
         .mix(ch_part_avg_filtered)
         .filter { it -> it[0].exp_type == 'OK-seq' }
         .set { ch_okseq }
-    
+
     //
     // MODULE: Process OK-seq RFD file to get initiation zones
     //
@@ -531,7 +518,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(RFD_TO_IZ.out.versions)
 
     ch_okseq
         .combine(RFD_TO_IZ.out.iz_rm_overlaps_bed, by: 0)
@@ -546,7 +532,6 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(RFD_PLOT.out.versions.first())
 
 
     // Create channel: [ val(meta), [ scar_tsv ], [ input_tsv ], [ minusinput_tsv ] ]
@@ -592,10 +577,7 @@ workflow BAM_CREATE_PARTITIONS {
         ch_blacklist,
         ch_chrom_sizes
     )
-    ch_versions = ch_versions.mix(PARTITION_PLOT.out.versions.first())
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]
-    versions = ch_versions                    // channel: [ versions.yml ]
 }
-

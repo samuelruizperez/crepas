@@ -12,11 +12,11 @@ include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2       } from '
 workflow CALL_PEAKS {
 
     take:
-    ch_bam_bai              // channel: [ val(meta), [ bam ], [ bai ] ]
+    ch_bam_index              // channel: [ val(meta), [ bam ], [ index ] ]
     ch_bigwig_norm
     ch_bedgraph_for_seacr
     peak_caller             // String
-    ch_fasta
+    ch_fasta_fai            // channel: [ val(meta), path(fasta), path(fai) ]
     ch_gtf
     ch_effective_gfraction
     ch_chrom_sizes_endo
@@ -51,10 +51,10 @@ workflow CALL_PEAKS {
 
     main:
 
-    ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
 
-    ch_bam = ch_bam_bai.map { meta, bam, bai -> [meta, bam] }
+    ch_bam = ch_bam_index.map { meta, bam, index -> [meta, bam] }
+    ch_fasta = ch_fasta_fai.map { meta, fasta, _fai -> [ meta, fasta ] }
 
 
     //
@@ -64,7 +64,7 @@ workflow CALL_PEAKS {
     ch_rocco_peaks = channel.empty()
     if (peak_caller == 'consenrich') {
         BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER (
-            ch_bam_bai,
+            ch_bam_index,
             ch_chrom_sizes_endo,
             ch_blacklist,
             ch_sparsebed.ifEmpty([[:], []]),
@@ -76,7 +76,6 @@ workflow CALL_PEAKS {
         ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_residuals)
         ch_consenrich_tracks = ch_consenrich_tracks.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.consenrich_eratio)
         ch_rocco_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.rocco_peaks
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_CONSENRICH_ROCCO_HOMER.out.versions.first())
     }
 
     //
@@ -88,7 +87,7 @@ workflow CALL_PEAKS {
     ch_epic2_plot_homer_annotatepeaks_tsv = channel.empty()
     if (peak_caller == 'epic2') {
         BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER (
-            ch_bam,//.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
+            ch_bam_index,//.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -104,7 +103,6 @@ workflow CALL_PEAKS {
         ch_epic2_frip_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.frip_multiqc
         ch_epic2_peak_count_multiqc = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.peak_count_multiqc
         ch_epic2_plot_homer_annotatepeaks_tsv = BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.plot_homer_annotatepeaks_tsv
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_EPIC2_HOMER.out.versions)
     }
 
     //
@@ -114,7 +112,7 @@ workflow CALL_PEAKS {
     if (peak_caller == 'genrich') {
         BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER (
             ch_bam,//.filter { it -> !(it[0].exp_type in ['ChIP-exo', 'OK-seq']) },
-            ch_fasta,
+            ch_fasta_fai,
             ch_gtf,
             ch_blacklist,
             ".annotatePeaks.txt",
@@ -129,7 +127,6 @@ workflow CALL_PEAKS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.frip_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_GENRICH_HOMER.out.versions)
     }
 
 
@@ -139,7 +136,7 @@ workflow CALL_PEAKS {
     ch_mace_peaks = channel.empty()
     if (peak_caller == 'mace') {
         BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER(
-            ch_bam_bai,//.filter { it -> it[0].exp_type == 'ChIP-exo' },
+            ch_bam_index,//.filter { it -> it[0].exp_type == 'ChIP-exo' },
             ch_fasta,
             ch_gtf,
             ch_chrom_sizes_endo,
@@ -154,52 +151,49 @@ workflow CALL_PEAKS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.frip_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACE_HOMER.out.versions)
     }
 
     //
     // SUBWORKFLOW: Call peaks with DANPOS2
     //
-    if (peak_caller == 'dpeak' || peak_caller == 'dpos' || peak_caller == 'dregion') {
+    if (peak_caller == 'dpeak' || peak_caller == 'dpos' || peak_caller == 'dregion' || peak_caller == 'dtriple') {
         BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER (
-            ch_bam,//.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'ChIP-exo', 'OK-seq']) },
+            ch_bam,
             peak_caller
         )
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER.out.versions)
     }
 
-
     //
-    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
+    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_index, ipcontrol_index ] ]
     // (Excluding ips_wo_ipcontrol as they don't need to be compared to anything)
     //
-    ch_bam_bai
-        .branch { meta, bam, bai ->
+    ch_bam_index
+        .branch { meta, bam, index ->
             ips_with_ipcontrol: meta.input_control
-                return [meta.input_control, meta.antibody, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, index]
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                return [meta, bam, bai]
+                return [meta, bam, index]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, index]
         }
-        .set { ch_bam_bai_by_type }
+        .set { ch_bam_index_by_type }
 
-    ch_bam_bai_by_type
+    ch_bam_index_by_type
         .ips_with_ipcontrol
-        .combine(ch_bam_bai_by_type.ipcontrols, by: [0,1])
-        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
-            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
+        .combine(ch_bam_index_by_type.ipcontrols, by: [0,1])
+        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_index, ipcontrol_meta, ipcontrol_bam, ipcontrol_index ->
+            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_index] + [ipcontrol_index] ]
         }
-        .set { ch_ip_and_ipcontrols_bam_bai }
+        .set { ch_ip_and_ipcontrols_bam_index }
 
     // Create channels: [ meta, ip_bam, ipcontrol_bam ]
     // Including ips_wo_ipcontrol as they will be used for peak calling without control
-    ch_bam_bai_by_type
+    ch_bam_index_by_type
         .ips_wo_ipcontrol
-        .map { meta, bam, bai -> [meta, [bam], [bai]] }
-        .mix(ch_ip_and_ipcontrols_bam_bai)
+        .map { meta, bam, index -> [meta, [bam], [index]] }
+        .mix(ch_ip_and_ipcontrols_bam_index)
         // ips_wo_ipcontrol do not have ipcontrol_bam
-        .map { meta, bams, bais ->
+        .map { meta, bams, indices ->
             [meta, bams[0], (bams[1] ?: [])]
         }
         .set { ch_all_ip_and_controls }
@@ -216,19 +210,21 @@ workflow CALL_PEAKS {
             ch_blacklist
         )
         ch_edd_peaks = EDD.out.peaks
-        ch_versions = ch_versions.mix(EDD.out.versions.first())
     }
 
     ch_denopa_peaks = channel.empty()
     if (peak_caller == 'denopa') {
+
+        ch_bam_index_for_denopa = ch_bam_index
+                .filter { it -> it[0].exp_type in ['ATAC-seq'] }
+
         //
         // MODULE: Call peaks with denopa
         //
         DENOPA (
-            ch_all_ip_and_controls.filter { it -> it[0].exp_type in ['ATAC-seq'] }
+            ch_bam_index_for_denopa
         )
         ch_denopa_peaks = DENOPA.out.arers
-        ch_versions = ch_versions.mix(DENOPA.out.versions.first())
     }
 
     ch_macs3_peaks = channel.empty()
@@ -255,7 +251,6 @@ workflow CALL_PEAKS {
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.frip_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.peak_count_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.plot_homer_annotatepeaks_tsv.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_MACS3_HOMER.out.versions)
     }
 
 
@@ -276,7 +271,7 @@ workflow CALL_PEAKS {
                 ipcontrols: !meta.input_control && meta.is_input_control
                     return [meta.id, meta.input_control_of_antibody, meta.norm_factor_type, meta, bdg]
             }
-            .set { ch_bedgraph_by_type }  
+            .set { ch_bedgraph_by_type }
 
         ch_bedgraph_by_type
             .ips_with_ipcontrol
@@ -295,10 +290,9 @@ workflow CALL_PEAKS {
         BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER (
             ch_all_bdg_ip_and_controls,
             seacr_peak_threshold
-            
+
         )
         ch_seacr_peaks = BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.peaks
-        ch_versions = ch_versions.mix(BAM_PEAKS_CALL_QC_ANNOTATE_SEACR_HOMER.out.versions.first())
     }
 
 
@@ -333,7 +327,6 @@ workflow CALL_PEAKS {
         ch_consensus_bed = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_bed
         ch_consensus_txt = BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.consensus_txt
         ch_multiqc_files = ch_multiqc_files.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.multiqc_files)
-        ch_versions = ch_versions.mix(BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2.out.versions)
     }
 
     emit:
@@ -349,5 +342,4 @@ workflow CALL_PEAKS {
     mace_peaks          = ch_mace_peaks             // channel: [ meta, peaks ]
     consenrich_tracks   = ch_consenrich_tracks      // channel: [ meta, consenrich_signal ], [ meta, consenrich_residuals ], [ meta, consenrich_eratio ]
     rocco_peaks         = ch_rocco_peaks            // channel: [ meta,
-    versions            = ch_versions               // channel: [ versions.yml ]
 }

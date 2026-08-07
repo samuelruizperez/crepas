@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/grothlab/crepas/master/nextflow_schema.json",
     "title": "grothlab/crepas pipeline parameters",
-    "description": "grothlab/crepas is a bioinformatics pipeline for the analysis of chromatin sequencing data (ChIP-seq, ATAC-seq, SCAR-seq, ChOR-seq, etc.).",
+    "description": "a reproducible nascent chromatin sequencing analysis pipeline for epigenome replication studies.",
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -20,7 +20,7 @@
                     "schema": "assets/schema_input.json",
                     "exists": true,
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. See [usage docs](https://github.com/grothlab/crepas/blob/main/docs/usage.md).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "fragment_size": {
@@ -44,7 +44,7 @@
                     "description": "Read length used to calculate MACS3 genome size for peak calling if `--macs_gsize` isn't provided.",
                     "fa_icon": "fas fa-chart-area",
                     "enum": [50, 75, 100, 150, 200],
-                    "default": 50
+                    "default": 75
                 },
                 "outdir": {
                     "type": "string",
@@ -71,7 +71,7 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
-            "required": ["genome", "fasta", "gtf"],
+            "required": ["genome", "gtf"],
             "properties": {
                 "genome": {
                     "type": "string",
@@ -84,7 +84,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "exists": true,
-                    "description": "Path to FASTA genome file.",
+                    "description": "Path to FASTA genome file. Required unless `--hybrid_fasta` is provided or the file is supplied by a reference genome config (iGenomes/Refgenie).",
                     "help_text": "If you don't have the appropriate alignment index available this will be generated for you automatically based on this file. Combine with `--save_reference` to save alignment index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
@@ -95,6 +95,15 @@
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "exists": true,
                     "description": "Path to exogenous (spike-in) FASTA genome file. If you provide this, the a hybrid fasta reference file will be generated and used for alignment index building.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "hybrid_fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "exists": true,
+                    "description": "Path to a pre-built hybrid (endogenous + spike-in) FASTA genome file, with spike-in contigs named `<chromosome_name>_<spikein_genome>`. If provided, this is used directly instead of generating a hybrid fasta from `--fasta`/`--spikein_fasta`. Mutually exclusive with `--fasta`: providing both raises an error.",
                     "fa_icon": "far fa-file-code"
                 },
                 "gtf": {
@@ -120,9 +129,14 @@
                     "description": "Path to directory or tar.gz archive for pre-built BWA index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
-                "bwa_mem2_index": {
+                "bwamem2_index": {
                     "type": "string",
                     "description": "Path to directory or tar.gz archive for pre-built BWAMEM2 index.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "minibwa_index": {
+                    "type": "string",
+                    "description": "Path to directory or tar.gz archive for pre-built minibwa index.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "bowtie_index": {
@@ -252,7 +266,6 @@
                 },
                 "skip_gtf_index": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip indexing the GTF file with tabix before processing.",
                     "help_text": "Set this parameter to true to skip indexing the GTF file with tabix. This may be useful if your GTF file is already indexed or if you encounter issues with tabix.",
                     "fa_icon": "fas fa-fast-forward"
@@ -292,12 +305,11 @@
                 "skip_markduplicates": {
                     "type": "boolean",
                     "description": "Skip the MarkDuplicates step with Picard for samples without UMIs.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": false
+                    "fa_icon": "fas fa-fast-forward"
                 },
                 "umitools_extract_method": {
                     "type": "string",
-                    "description": "UMI pattern to use. Can be either `string` (default) or `regex`.",
+                    "description": "UMI pattern to use.",
                     "help_text": "More details can be found in the [UMI-tools documentation](https://umi-tools.readthedocs.io/en/latest/reference/extract.html#extract-method).\n",
                     "fa_icon": "fas fa-dna",
                     "default": "string",
@@ -350,15 +362,14 @@
                 "save_dedup_intermeds": {
                     "type": "boolean",
                     "description": "Save intermediate files from the UMI deduplication step.",
-                    "fa_icon": "fas fa-save",
-                    "default": true
+                    "fa_icon": "fas fa-save"
                 },
                 "skip_split_by_chrom": {
                     "type": "boolean",
                     "description": "Skip splitting the BAM file by chromosome for UMI deduplication.",
                     "fa_icon": "fas fa-fast-forward",
-                    "default": false,
-                    "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."}
+                    "help_text": "BAMs are splitted by chromosome, deduplicated, and then merged back to improve parallelization of the deduplication step. Set this parameter to true to skip this splitting step. This may be useful if you encounter issues with the splitting or merging steps or if your BAM files are small and you don't think that parallelization will speed up the deduplication step."
+                }
             }
         },
         "adapter_trimming_options": {
@@ -480,9 +491,20 @@
                 "aligner": {
                     "type": "string",
                     "default": "chromap",
-                    "description": "Specifies the alignment algorithm to use. The available options are `bwa`, `bowtie2`, `chromap`, `star`, and `hisat2`.",
+                    "description": "Specifies the alignment algorithm to use.",
                     "fa_icon": "fas fa-map-signs",
-                    "enum": ["bwa", "bwamem2", "bowtie", "bowtie2", "chromap", "star", "hisat2", "strobealign", "minimap2"]
+                    "enum": [
+                        "bwa",
+                        "bwamem2",
+                        "minibwa",
+                        "bowtie",
+                        "bowtie2",
+                        "chromap",
+                        "star",
+                        "hisat2",
+                        "strobealign",
+                        "minimap2"
+                    ]
                 },
                 "bwa_min_score": {
                     "type": "integer",
@@ -493,12 +515,6 @@
                     "type": "integer",
                     "description": "Don't output BWAMEM2 alignments with score lower than this parameter.",
                     "fa_icon": "fas fa-hand-paper"
-                },
-                "sort_bam": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Should the BAM files be sorted by coordinate? Only relevant if Bowtie2 or BWA are used as aligners.",
-                    "fa_icon": "fas fa-sort-numeric-down"
                 },
                 "save_align_intermeds": {
                     "type": "boolean",
@@ -541,6 +557,25 @@
                     "default": 11,
                     "description": "Minimizer window size to use for minimap2 indexing and alignment. See the [minimap2 documentation](https://lh3.github.io/minimap2/minimap2.html) for more details.",
                     "fa_icon": "fas fa-map-signs"
+                },
+                "minibwa_preset": {
+                    "type": "string",
+                    "default": "sr",
+                    "description": "Preset to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "fa_icon": "fas fa-map-signs",
+                    "enum": ["sr", "lr", "adap"]
+                },
+                "minibwa_min_seed_length": {
+                    "type": "integer",
+                    "default": 19,
+                    "description": "Minimum seed length to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "minibwa_bandwidth": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Bandwidth to use for minibwa alignment. See the [minibwa documentation](https://github.com/lh3/minibwa) for more details.",
+                    "fa_icon": "fas fa-map-signs"
                 }
             }
         },
@@ -557,7 +592,6 @@
                 },
                 "save_spikein_intermeds": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Save intermediate files during spike-in splitting and filtering of BAMs. These include the split and filtered BAM files before coordinate-sorting.",
                     "fa_icon": "fas fa-save"
                 }
@@ -571,7 +605,7 @@
             "properties": {
                 "multimap_allocation_method": {
                     "type": "string",
-                    "description": "Method to allocate multimappers. Options are `allo`, `chromap`, and `mmr`. Not setting this parameter means that multimappers will not be allocated (the default).",
+                    "description": "Method to allocate multimappers. Not setting this parameter means that multimappers will not be allocated (the default).",
                     "fa_icon": "fas fa-dice-d20",
                     "enum": ["allo", "chromap", "mmr"]
                 },
@@ -583,7 +617,6 @@
                 },
                 "save_allocation_intermeds": {
                     "type": "boolean",
-                    "default": true,
                     "description": "Save the intermediate BAM files from the multimapper allocation step.",
                     "fa_icon": "fas fa-save"
                 }
@@ -597,7 +630,6 @@
             "properties": {
                 "save_shifting_intermeds": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to save the intermediate files from the alignment shifting (only done on ATAC-seq data).",
                     "fa_icon": "fas fa-save"
                 }
@@ -611,13 +643,11 @@
             "properties": {
                 "skip_flT3": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the flT3 filtering step (filtering by mapping quality, which also removes multimapping reads in most cases).",
                     "fa_icon": "fas fa-filter"
                 },
                 "skip_flTbl": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the blacklist filtering step. This serves to skip the removal of blacklisted regions from the BAM files even if a blacklist BED file is provided.",
                     "fa_icon": "fas fa-filter"
                 }
@@ -631,13 +661,11 @@
             "properties": {
                 "skip_srpm": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the SRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_cisrpm": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the CISRPM normalization step. See the [output documentation](https://github.com/grothlab/crepas/blob/dev/docs/output.md#normalized-bigwig-files) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -656,13 +684,11 @@
                 },
                 "coverage_skip_nas": {
                     "type": "boolean",
-                    "default": false,
                     "description": "This parameter determines if non-covered regions (regions without overlapping reads) should be skipped. The default is to treat those regions as having a value of zero. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html#read-coverage-normalization-options) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "skip_signal_vs_input": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the signal vs input comparison step.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -687,7 +713,7 @@
                 },
                 "bw_compare_pseudocount": {
                     "type": "number",
-                    "default": 1,
+                    "default": 0,
                     "description": "A small number to avoid x/0. Only useful together with `--operation log2` or `--operation ratio`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/bigwigCompare.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -705,7 +731,6 @@
                 },
                 "save_coverage_intermeds": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to save the intermediate files from the coverage calculation step. These include the coverage files in bedGraph format.",
                     "fa_icon": "fas fa-save"
                 },
@@ -717,7 +742,6 @@
                 },
                 "skip_bw_average": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the generation of average bigWig files across replicates for each sample group.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -729,7 +753,6 @@
                 },
                 "skip_multibigwigsummary": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip the generation of a table with the bin value for all the samples.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -813,13 +836,11 @@
                 },
                 "skip_tecount_gz": {
                     "type": "boolean",
-                    "default": true,
                     "description": "Skip gzip compression of TEcount output files.",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_telocal_gz": {
                     "type": "boolean",
-                    "default": true,
                     "description": "Skip gzip compression of TElocal output files.",
                     "fa_icon": "fas fa-fast-forward"
                 },
@@ -879,18 +900,30 @@
                     "default": "macs3",
                     "description": "Specifies the peak calling algorithm to use.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": ["macs3", "genrich", "consenrich", "epic2", "mace", "dpeak", "dpos", "dregion", "edd", "denopa", "seacr"]
+                    "enum": [
+                        "macs3",
+                        "genrich",
+                        "consenrich",
+                        "epic2",
+                        "mace",
+                        "dpeak",
+                        "dpos",
+                        "dregion",
+                        "dtriple",
+                        "edd",
+                        "denopa",
+                        "seacr"
+                    ]
                 },
                 "narrow_peak": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to call narrow peaks with MACS3 and Genrich. Default is to call broad peaks.",
                     "fa_icon": "fas fa-arrows-alt-h"
                 },
                 "peak_cutoff_method": {
                     "type": "string",
                     "default": "qvalue",
-                    "description": "Whether to use q-value or p-value as the cutoff for peak calling.",
+                    "description": "Type of statistical cutoff to use for peak calling.",
                     "fa_icon": "fas fa-sort-amount-down",
                     "enum": ["qvalue", "pvalue"]
                 },
@@ -1008,9 +1041,8 @@
                     "description": "Whether to plot all samples in a group together in the consensus peak profile plot. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/plotProfile.html#per-group) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
-                "input_cisrpm_in_plotprofile" : {
+                "input_cisrpm_in_plotprofile": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to include the input CISRPM signal in the gene or consensus peak profile plots.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -1021,7 +1053,9 @@
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "save_macs_bdgcmp_intermeds": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Save intermediate bedGraph/bigWig files generated by the MACS3 bdgcmp step.",
+                    "fa_icon": "fas fa-save"
                 },
                 "edd_bin_size": {
                     "type": "string",
@@ -1178,7 +1212,7 @@
                 },
                 "mace_norm_method": {
                     "type": "string",
-                    "description": "methods (\u201cEM\u201d, \u201cAM\u201d, \u201cGM\u201d, or \u201cSNR\u201d) used to consolidate replicates and reduce noise. \u201cEM\u201d = Entropy weighted mean, \u201cAM\u201d=Arithmetic mean, \u201cGM\u201d=Geometric mean, \u201cSNR\u201d=Signal-to-noise ratio. default=EM. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
+                    "description": "Method used to consolidate replicates and reduce noise. \u201cEM\u201d = Entropy weighted mean, \u201cAM\u201d=Arithmetic mean, \u201cGM\u201d=Geometric mean, \u201cSNR\u201d=Signal-to-noise ratio. See the [MACE documentation](https://chipexo.sourceforge.net/) for more details.",
                     "fa_icon": "fas fa-dna",
                     "enum": ["EM", "AM", "GM", "SNR"]
                 },
@@ -1209,7 +1243,6 @@
                 },
                 "save_mace_intermeds": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to save the intermediate files from the MACE peak calling step. These include the MACE peak files in bedGraph format.",
                     "fa_icon": "fas fa-save"
                 }
@@ -1259,8 +1292,7 @@
                 "skip_genes_plotprofile": {
                     "type": "boolean",
                     "description": "Skip deepTools plotProfile.",
-                    "fa_icon": "fas fa-fast-forward",
-                    "default": false
+                    "fa_icon": "fas fa-fast-forward"
                 },
                 "genes_plotprofile_mode": {
                     "type": "string",
@@ -1278,25 +1310,24 @@
                 },
                 "genes_plotprofile_region_body_length": {
                     "type": "integer",
-                    "default": 3000,
+                    "default": 1000,
                     "description": "Region body length (in bp) for deepTools plotProfile when `--genes_plotprofile_mode` is `scale_regions`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "genes_plotprofile_upstream": {
                     "type": "integer",
-                    "default": 3000,
+                    "default": 2000,
                     "description": "Upstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "genes_plotprofile_downstream": {
                     "type": "integer",
-                    "default": 3000,
+                    "default": 2000,
                     "description": "Downstream distance (in bp) from the reference point for deepTools plotProfile when `--genes_plotprofile_mode` is `reference_point`. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "genes_plotprofile_skip_zeros": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to skip regions with zero coverage in all samples when computing the matrix for deepTools plotProfile. This is determined BEFORE any applicable pseudocount is added. See the [deepTools documentation](https://deeptools.readthedocs.io/en/develop/content/tools/computeMatrix.html#named-arguments) for more details.",
                     "fa_icon": "fas fa-chart-area"
                 },
@@ -1397,7 +1428,6 @@
                 },
                 "save_partition_intermeds": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Whether to save the intermediate files from the partition/RFD analysis step.",
                     "fa_icon": "fas fa-save"
                 }
@@ -1520,6 +1550,50 @@
                     "default": true,
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full detailed help message."
+                },
+                "show_hidden": {
+                    "type": "boolean",
+                    "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
+                },
+                "version": {
+                    "type": "boolean",
+                    "description": "Display version and exit.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": true
+                },
+                "multiqc_logo": {
+                    "type": "string",
+                    "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
+                    "fa_icon": "fas fa-image",
+                    "hidden": true
+                },
+                "multiqc_methods_description": {
+                    "type": "string",
+                    "description": "Custom MultiQC yaml file containing HTML including a methods description.",
+                    "fa_icon": "fas fa-cog"
+                },
+                "pipelines_testdata_base_path": {
+                    "type": "string",
+                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/",
+                    "description": "Base URL or local path to location of pipeline test dataset files",
+                    "fa_icon": "far fa-check-circle",
+                    "hidden": true
+                },
+                "crepas_testdata_base_path": {
+                    "type": "string",
+                    "description": "Base URL or local path to location of grothlab/crepas-specific test dataset files.",
+                    "fa_icon": "far fa-check-circle",
+                    "hidden": true
+                },
+                "trace_report_suffix": {
+                    "type": "string",
+                    "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
+                    "fa_icon": "far fa-clock",
+                    "hidden": true
                 }
             }
         }
@@ -1579,30 +1653,5 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ],
-    "properties": {
-        "multiqc_logo": {
-            "type": "string"
-        },
-        "multiqc_methods_description": {
-            "type": "string"
-        },
-        "hook_url": {
-            "type": "string"
-        },
-        "version": {
-            "type": "boolean"
-        },
-        "pipelines_testdata_base_path": {
-            "type": "string",
-            "default": "https://raw.githubusercontent.com/nf-core/test-datasets/"
-        },
-        "crepas_testdata_base_path": {
-            "type": "string"
-        },
-        "trace_report_suffix": {
-            "type": "string",
-            "default": "2025-08-03_12-45-27"
-        }
-    }
+    ]
 }

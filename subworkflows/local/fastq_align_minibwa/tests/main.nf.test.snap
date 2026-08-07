@@ -1,0 +1,139 @@
+{
+    "fastq_align_minibwa_single_end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": true
+                    },
+                    "test.stats:md5,7c10668cdb0921c83fe9bd2dc43bcf4f"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": true
+                    },
+                    "test.flagstat:md5,2191911d72575a2358b08b1df64ccb53"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": true
+                    },
+                    "test.idxstats:md5,613e048487662c694aa4a2f73ca96a20"
+                ]
+            ]
+        ],
+        "timestamp": "2026-07-21T13:49:19.219597394",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "fastq_align_minibwa_paired_end - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.Lb.sorted.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.Lb.sorted.csi:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.stats:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.flagstat:md5,67394650dbae96d1a4fcc70484822159"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.idxstats:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.Lb.sorted.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "flagstat": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.flagstat:md5,67394650dbae96d1a4fcc70484822159"
+                    ]
+                ],
+                "idxstats": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.idxstats:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "index": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.Lb.sorted.csi:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.stats:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-21T13:28:27.362119365",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

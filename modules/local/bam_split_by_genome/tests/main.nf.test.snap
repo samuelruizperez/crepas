@@ -1,0 +1,99 @@
+{
+    "sarscov2 - bam - keep endo - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test_endo.endo.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "BAM_SPLIT_BY_GENOME",
+                        "samtools",
+                        "1.21"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test_endo.endo.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_GENOME",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:20:28.680469179",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - keep endo": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test_endo.sarscov2.bam:md5,8523fc9cfaa273422362ed4e17f94b08"
+                ]
+            ],
+            {
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_GENOME",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:20:06.369559613",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - keep exo": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test_exo.spikein.bam:md5,6caac6389315157a3eab1821d67dea60"
+                ]
+            ],
+            {
+                "versions_samtools": [
+                    [
+                        "BAM_SPLIT_BY_GENOME",
+                        "samtools",
+                        "1.21"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-09T13:20:17.196720217",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

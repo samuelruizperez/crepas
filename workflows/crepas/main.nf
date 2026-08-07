@@ -51,7 +51,7 @@ include { SAMTOOLS_INDEX                                                    } fr
 include { PICARD_MERGESAMFILES                                              } from '../../modules/nf-core/picard/mergesamfiles/main'
 include { PICARD_COLLECTMULTIPLEMETRICS                                     } from '../../modules/nf-core/picard/collectmultiplemetrics/main'
 include { PRESEQ_LCEXTRAP                                                   } from '../../modules/nf-core/preseq/lcextrap/main'
-include { PHANTOMPEAKQUALTOOLS                                              } from '../../modules/nf-core/phantompeakqualtools/main'
+include { PHANTOMPEAKQUALTOOLS                                              } from '../../modules/local/phantompeakqualtools/main'
 include { DEEPTOOLS_COMPUTEMATRIX as DEEPTOOLS_COMPUTEMATRIX_GENES          } from '../../modules/nf-core/deeptools/computematrix/main'
 include { DEEPTOOLS_PLOTPROFILE as DEEPTOOLS_PLOTPROFILE_GENES              } from '../../modules/nf-core/deeptools/plotprofile/main'
 include { DEEPTOOLS_PLOTHEATMAP as DEEPTOOLS_PLOTHEATMAP_GENES              } from '../../modules/nf-core/deeptools/plotheatmap/main'
@@ -76,12 +76,12 @@ workflow CREPAS {
     ch_versions               // channel: [ path(versions.yml) ]
     ch_fasta                  // channel: path(genome.fa)
     ch_fai                    // channel: path(genome.fai)
+    ch_chrom_sizes
+    ch_endo_chromsizes       // path(chrom.sizes.endo)
+    ch_exo_chromsizes
     ch_gtf                    // channel: path(genome.gtf)
     ch_gene_bed               // channel: path(gene.beds)
-    ch_chrom_sizes
-    ch_chrom_sizes_endo       // path(chrom.sizes.endo)
-    ch_chrom_sizes_exo
-    ch_effective_gsize        
+    ch_effective_gsize
     ch_effective_gfraction
     ch_whitelist           // channel: path(filtered.bed)
     ch_blacklist              // channel: path(blacklist.bed)
@@ -93,12 +93,14 @@ workflow CREPAS {
     ch_initiation_zones       // channel: path(initiation_zones)
     ch_bwa_index              // channel: path(bwa/index/)
     ch_bwamem2_index        // channel: path(bwamem2/index/)
+    ch_minibwa_index        // channel: path(minibwa/index/)
     ch_bowtie_index            // channel: path(bowtie/index/)
     ch_bowtie2_index          // channel: path(bowtie2/index)
     ch_chromap_index          // channel: path(chromap.index)
     ch_star_index             // channel: path(star/index/)
     ch_hisat2_index           // channel: path(hisat2/index)
     ch_minimap2_index         // channel: path(minimap2/index/)
+    ch_strobealign_index      // channel: path(strobealign/index)
     ch_splicesites            // channel: path(splicesites)
     ch_tecount_gene_index // channel: val(meta), path(tecount_gene_index.Ind)
     ch_telocal_gene_index // channel: val(meta), path(telocal_gene_index.Ind)
@@ -167,7 +169,6 @@ workflow CREPAS {
         ch_fastq,
         params.seq_center
     )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     //
     // SUBWORKFLOW: Read QC and trim adapters
@@ -180,13 +181,15 @@ workflow CREPAS {
         params.skip_trimming,
         params.umi_discard_read,
         params.min_trimmed_reads,
-        params.hardtrim5_length,
-        params.hardtrim3_length
+        params.hardtrim3_length,
+        params.hardtrim5_length
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_log.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.versions)
+
+
+    ch_fasta_fai = ch_fasta.combine(ch_fai.map { meta, fai -> fai }).first()
 
     //
     // SUBWORKFLOW: Alignment
@@ -194,28 +197,27 @@ workflow CREPAS {
     ch_genome_bam = channel.empty()
     FASTQ_ALIGN (
         FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.reads,
-        ch_fasta,
+        ch_fasta_fai,
         params.aligner,
         ch_bwa_index,
         ch_bwamem2_index,
+        ch_minibwa_index,
         ch_bowtie_index,
         ch_bowtie2_index,
         ch_chromap_index,
         ch_star_index,
         ch_hisat2_index,
         ch_minimap2_index,
+        ch_strobealign_index,
         ch_gtf,
         ch_splicesites,
         params.save_unaligned,
-        params.seq_platform,
-        params.seq_center,
-        params.sort_bam
+        false
 
     )
     ch_genome_bam = FASTQ_ALIGN.out.bam
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(FASTQ_ALIGN.out.samtools_stats_summary)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN.out.multiqc_files)
-    ch_versions = ch_versions.mix(FASTQ_ALIGN.out.versions)
 
     //
     // MODULE: Merge resequenced BAM files
@@ -254,17 +256,16 @@ workflow CREPAS {
         ch_sort_bam
     )
     ch_merged_bam = PICARD_MERGESAMFILES.out.bam
-    ch_versions = ch_versions.mix(PICARD_MERGESAMFILES.out.versions.first())
 
     SAMTOOLS_INDEX (
         ch_merged_bam
     )
-    ch_merged_bai = SAMTOOLS_INDEX.out.bai
-    ch_merged_bam_bai = ch_merged_bam.join(ch_merged_bai, by: 0)
+    ch_merged_index = SAMTOOLS_INDEX.out.index
+    ch_merged_bam_index = ch_merged_bam.join(ch_merged_index, by: 0)
 
     BAM_STATS_SAMTOOLS (
-        ch_merged_bam_bai,
-        ch_fasta
+        ch_merged_bam_index,
+        ch_fasta_fai
     )
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_STATS_SAMTOOLS.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_STATS_SAMTOOLS.out.stats.collect { it -> it[1] })
@@ -278,17 +279,16 @@ workflow CREPAS {
     if (params.multimap_allocation_method && params.multimap_allocation_method != 'chromap') {
         BAM_ALLOCATE_MULTIMAPPERS (
             ch_merged_bam,
-            ch_fasta,
+            ch_fasta_fai,
             params.multimap_allocation_method
         )
         ch_merged_bam = BAM_ALLOCATE_MULTIMAPPERS.out.bam
-        ch_merged_bai = BAM_ALLOCATE_MULTIMAPPERS.out.bai
-        ch_merged_bam_bai = ch_merged_bam.join(ch_merged_bai, by: 0)
+        ch_merged_index = BAM_ALLOCATE_MULTIMAPPERS.out.index
+        ch_merged_bam_index = ch_merged_bam.join(ch_merged_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_ALLOCATE_MULTIMAPPERS.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_ALLOCATE_MULTIMAPPERS.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_ALLOCATE_MULTIMAPPERS.out.versions)
 
     }
 
@@ -301,11 +301,10 @@ workflow CREPAS {
             ch_merged_bam
         )
         ch_multiqc_files = ch_multiqc_files.mix(PRESEQ_LCEXTRAP.out.lc_extrap.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PRESEQ_LCEXTRAP.out.versions.first())
     }
 
-    ch_merged_bam_bai_with_umi = ch_merged_bam_bai.filter { meta, bam, bai -> meta.with_umi }
-    ch_merged_bai_without_umi = ch_merged_bai.filter { meta, bai -> !meta.with_umi }
+    ch_merged_bam_index_with_umi = ch_merged_bam_index.filter { meta, bam, index -> meta.with_umi }
+    ch_merged_index_without_umi = ch_merged_index.filter { meta, index -> !meta.with_umi }
     ch_merged_bam_without_umi = ch_merged_bam.filter { meta, bam -> !meta.with_umi }
 
     //
@@ -316,18 +315,17 @@ workflow CREPAS {
     ch_umidedup_bam = channel.empty()
     ch_umidedup_index = channel.empty()
     BAM_DEDUP_UMI (
-        ch_merged_bam_bai_with_umi,
+        ch_merged_bam_index_with_umi,
         ch_chrom_sizes,
         [],
         params.umi_dedup_tool,
         params.get_dedup_stats,
-        false,
         ch_transcriptome_bam,
         ch_transcriptome_fasta,
         params.skip_split_by_chrom
     )
     ch_umidedup_bam = BAM_DEDUP_UMI.out.bam
-    ch_umidedup_index = BAM_DEDUP_UMI.out.bai
+    ch_umidedup_index = BAM_DEDUP_UMI.out.index
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DEDUP_UMI.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_DEDUP_UMI.out.multiqc_files)
 
@@ -340,45 +338,42 @@ workflow CREPAS {
         ch_mkdup_index = channel.empty()
         BAM_MARKDUPLICATES_PICARD (
             ch_merged_bam_without_umi,
-            ch_fasta,
-            ch_fai
+            ch_fasta_fai
         )
         ch_mkdup_bam = BAM_MARKDUPLICATES_PICARD.out.bam
-        ch_mkdup_index = BAM_MARKDUPLICATES_PICARD.out.bai
+        ch_mkdup_index = BAM_MARKDUPLICATES_PICARD.out.index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_MARKDUPLICATES_PICARD.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.idxstats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_MARKDUPLICATES_PICARD.out.metrics.collect { it -> it[1] })
-    
+
         ch_dedup_bam = ch_umidedup_bam.mix(ch_mkdup_bam)
         ch_dedup_index = ch_umidedup_index.mix(ch_mkdup_index)
-        
+
     } else {
 
         ch_dedup_bam = ch_umidedup_bam.mix(ch_merged_bam_without_umi)
-        ch_dedup_index = ch_umidedup_index.mix(ch_merged_bai_without_umi)
+        ch_dedup_index = ch_umidedup_index.mix(ch_merged_index_without_umi)
     }
-    
+
     //
     // SUBWORKFLOW: Filter BAM file with SAMBAMBA
     //
     BAM_FILTER_SAMBAMBA_FLT1 (
         ch_dedup_bam.join(ch_dedup_index, by: 0),
         channel.value([[:], []]),
-        ch_fasta,
+        ch_fasta_fai,
         true, // skip orphan removal
         'flT1_total_mapped_reads'
     )
     ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT1.out.bam
-    ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.bai
+    ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT1.out.index
     ch_flT1_total = BAM_FILTER_SAMBAMBA_FLT1.out.total_reads
     ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats)
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.stats.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.flagstat.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT1.out.idxstats.collect { it -> it[1] })
-    ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT1.out.versions)
-
 
     if (!params.skip_spikein_barcode_extract) {
 
@@ -389,7 +384,6 @@ workflow CREPAS {
             FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.barcode_counts,
             ch_flT1_total
         )
-        ch_versions = ch_versions.mix(SPIKEIN_BARCODES.out.versions.first())
 
     }
 
@@ -403,32 +397,31 @@ workflow CREPAS {
     if (params.spikein_genome) {
         BAM_SPIKEIN_SPLIT (
             ch_filtered_bam,
-            ch_fasta,
+            ch_fasta_fai,
             params.genome,
             params.spikein_genome,
             'flT2_total_mapped_reads'
         )
         ch_filtered_bam = BAM_SPIKEIN_SPLIT.out.endo_bam
         ch_filtered_exo_bam = BAM_SPIKEIN_SPLIT.out.exo_bam
-        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.endo_bai
-        ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_bai
+        ch_filtered_index = BAM_SPIKEIN_SPLIT.out.endo_index
+        ch_filtered_exo_index = BAM_SPIKEIN_SPLIT.out.exo_index
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_SPIKEIN_SPLIT.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_SPIKEIN_SPLIT.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_SPIKEIN_SPLIT.out.versions.first())
-    
+
     } else {
         // If no spike-in genome add genome to metas
         ch_filtered_bam
             .join(ch_filtered_index, by: 0)
-            .map { meta, bam, bai ->
+            .map { meta, bam, index ->
                 def meta_clone = meta.clone()
                 meta_clone.genome = params.genome
-                [meta_clone, bam, bai]
+                [meta_clone, bam, index]
             }
-            .set { ch_filtered_bam_bai }
+            .set { ch_filtered_bam_index }
 
-        ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
-        ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
+        ch_filtered_bam = ch_filtered_bam_index.map { meta, bam, index -> [meta, bam] }
+        ch_filtered_index = ch_filtered_bam_index.map { meta, bam, index -> [meta, index] }
     }
 
 
@@ -473,12 +466,11 @@ workflow CREPAS {
     //
     BAM_SHIFT_READS (
         ch_filtered_bam.atacseq.join(ch_filtered_index.atacseq, by: 0),
-        ch_fasta
+        ch_fasta_fai
     )
     ch_filtered_bam = ch_filtered_bam.other.mix(BAM_SHIFT_READS.out.bam)
-    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.bai)
-    ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
-    ch_versions = ch_versions.mix(BAM_SHIFT_READS.out.versions)
+    ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
+    ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
 
     if (!params.skip_flT3) {
         //
@@ -487,19 +479,18 @@ workflow CREPAS {
         BAM_FILTER_SAMBAMBA_FLT3 (
             ch_filtered_bam.join(ch_filtered_index, by: 0),
             channel.value([[:], []]),
-            ch_fasta,
-            !params.skip_flTbl, // do orphan removal if flTbl is skipped downstream
+            ch_fasta_fai,
+            params.skip_te_counting, // do orphan removal if TE counting downstream
             'flT3_total_mapped_reads'
 
         )
         ch_filtered_bam = BAM_FILTER_SAMBAMBA_FLT3.out.bam
-        ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.bai
-        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_filtered_index = BAM_FILTER_SAMBAMBA_FLT3.out.index
+        ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_FLT3.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_FLT3.out.versions)
 
     }
 
@@ -514,53 +505,52 @@ workflow CREPAS {
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
         // for exogenous samples instead of skipping them
-        ch_filtered_bam_bai
-            .branch { meta, bam, bai ->
+        ch_filtered_bam_index
+            .branch { meta, bam, index ->
                 endo: meta.genome == params.genome
                 exo: meta.genome == params.spikein_genome
             }
-            .set { ch_flt_bam_bai_by_genome }
+            .set { ch_flt_bam_index_by_genome }
 
-        ch_flt_bam_bai_by_genome
+        ch_flt_bam_index_by_genome
             .exo
-            // .map { meta, bam, bai ->
+            // .map { meta, bam, index ->
             //     def meta_clone = meta.clone()
             //     meta_clone.flTbl_total_mapped_reads = meta[meta.ref_total_mapped_reads_key]
             //     meta_clone.ref_total_mapped_reads_key = 'flTbl_total_mapped_reads'
-            //     [meta_clone, bam, bai]
+            //     [meta_clone, bam, index]
             // }
-            .set { ch_flt_bam_bai_by_genome_exo }
-   
+            .set { ch_flt_bam_index_by_genome_exo }
+
         // TODO: print for debugging
-        ch_flt_bam_bai_by_genome.endo
+        ch_flt_bam_index_by_genome.endo
             .map { it -> "${it}"}
-            .collectFile(name: 'ch_flt_bam_bai_by_genome_endo_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+            .collectFile(name: 'ch_flt_bam_index_by_genome_endo_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
         //
         // SUBWORKFLOW: Filter BAM file with SAMBAMBA using blacklist (whitelist)
         //
         BAM_FILTER_SAMBAMBA_BLACKLIST (
-            ch_flt_bam_bai_by_genome.endo,
+            ch_flt_bam_index_by_genome.endo,
             ch_whitelist,
-            ch_fasta,
+            ch_fasta_fai,
             false, // do not skip orphan removal
             'flTbl_total_mapped_reads'
         )
-        ch_filtered_bam = BAM_FILTER_SAMBAMBA_BLACKLIST.out.bam.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bam] })
-        ch_filtered_index = BAM_FILTER_SAMBAMBA_BLACKLIST.out.bai.mix(ch_flt_bam_bai_by_genome_exo.map { meta, bam, bai -> [meta, bai] })
-        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_filtered_bam = BAM_FILTER_SAMBAMBA_BLACKLIST.out.bam.mix(ch_flt_bam_index_by_genome_exo.map { meta, bam, index -> [meta, bam] })
+        ch_filtered_index = BAM_FILTER_SAMBAMBA_BLACKLIST.out.index.mix(ch_flt_bam_index_by_genome_exo.map { meta, bam, index -> [meta, index] })
+        ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.multiqc_files)
-        ch_versions = ch_versions.mix(BAM_FILTER_SAMBAMBA_BLACKLIST.out.versions)
 
     }
 
     // TODO: print for debugging
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
-            "${meta}\t${bam}\t${bai}"
+    ch_filtered_bam_index
+        .map { meta, bam, index ->
+            "${meta}\t${bam}\t${index}"
         }
-        .collectFile(name: 'ch_filtered_bam_bai_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+        .collectFile(name: 'ch_filtered_bam_index_flTbl.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
 
     //
@@ -580,7 +570,6 @@ workflow CREPAS {
             ch_filtered_bam_for_spp
         )
         ch_multiqc_files = ch_multiqc_files.mix(PHANTOMPEAKQUALTOOLS.out.ccscores.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(PHANTOMPEAKQUALTOOLS.out.versions.first())
 
         //
         // MODULE: MultiQC custom content for Phantompeaktools
@@ -594,42 +583,41 @@ workflow CREPAS {
         ch_multiqc_files = ch_multiqc_files.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.nsc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.rsc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.correlation.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(MULTIQC_CUSTOM_PHANTOMPEAKQUALTOOLS.out.versions.first())
     }
 
     //
     // Duplicate input controls for each antibody
     // This is done for the cases where one input control is used for multiple IPs
     //
-    ch_filtered_bam_bai
-        .branch { meta, bam, bai ->
+    ch_filtered_bam_index
+        .branch { meta, bam, index ->
             ips_with_ipcontrol: meta.input_control
-                return [meta.input_control, meta.antibody, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, index]
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                    return [meta, bam, bai]
+                    return [meta, bam, index]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta, bam, bai]
+                return [meta.id, meta, bam, index]
         }
-        .set { ch_bam_bai_by_type }
+        .set { ch_bam_index_by_type }
 
-    ch_bam_bai_by_type.ipcontrols
-        .combine(ch_bam_bai_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
-        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai, ip_antibody, ip_meta, ip_bam, ip_bai ->
+    ch_bam_index_by_type.ipcontrols
+        .combine(ch_bam_index_by_type.ips_with_ipcontrol, by: 0) // combine by control id only
+        .map { ipcontrol_id, ipcontrol_meta, ipcontrol_bam, ipcontrol_index, ip_antibody, ip_meta, ip_bam, ip_index ->
             def meta_clone = ipcontrol_meta.clone()
             meta_clone.input_control_of_antibody = ip_antibody
-            [ meta_clone, ipcontrol_bam, ipcontrol_bai ]
+            [ meta_clone, ipcontrol_bam, ipcontrol_index ]
         }
         .unique()
-        .set { ch_bam_bai_ipcontrols }
-    
-    ch_bam_bai_by_type
+        .set { ch_bam_index_ipcontrols }
+
+    ch_bam_index_by_type
         .ips_with_ipcontrol
-        .map { ipcontrol_id, antibody, meta, bam, bai ->
-            [ meta, bam, bai ]
+        .map { ipcontrol_id, antibody, meta, bam, index ->
+            [ meta, bam, index ]
         }
-        .mix(ch_bam_bai_by_type.ips_wo_ipcontrol)
-        .mix(ch_bam_bai_ipcontrols)
-        .set { ch_filtered_bam_bai }
+        .mix(ch_bam_index_by_type.ips_wo_ipcontrol)
+        .mix(ch_bam_index_ipcontrols)
+        .set { ch_filtered_bam_index }
 
     //
     // Define the reference total mapped reads key to be used for downsampling, normalization, etc.
@@ -637,8 +625,8 @@ workflow CREPAS {
     // For example: if one wants to prefer flT2 for downsampling, but not for normalization,
     // then change definition of meta.ref_total_mapped_reads_for_dSp_key here:
     //
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
+    ch_filtered_bam_index
+        .map { meta, bam, index ->
             def meta_clone = meta.clone()
             // samples have meta.antibody, while input controls have meta.input_control_of_antibody
             def antibody = meta.antibody ?: meta.input_control_of_antibody
@@ -658,28 +646,27 @@ workflow CREPAS {
             meta_clone.ref_total_mapped_reads_for_rpm_key = norm_key
             meta_clone.ref_total_mapped_reads_for_srpm_key = norm_key
             meta_clone.ref_total_mapped_reads_for_cisrpm_key = norm_key
-            [meta_clone, bam, bai]
+            [meta_clone, bam, index]
         }
-        .set { ch_filtered_bam_bai }
+        .set { ch_filtered_bam_index }
 
-    ch_filtered_bam = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bam] }
-    ch_filtered_index = ch_filtered_bam_bai.map { meta, bam, bai -> [meta, bai] }
+    ch_filtered_bam = ch_filtered_bam_index.map { meta, bam, index -> [meta, bam] }
+    ch_filtered_index = ch_filtered_bam_index.map { meta, bam, index -> [meta, index] }
 
     // TODO: print for debugging
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
-            "${meta}\t${bam}\t${bai}"
+    ch_filtered_bam_index
+        .map { meta, bam, index ->
+            "${meta}\t${bam}\t${index}"
         }
-        .collectFile(name: 'ch_filtered_bam_bai_before_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+        .collectFile(name: 'ch_filtered_bam_index_before_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     if (params.bam_downsampling_method) {
         //
         // SUBWORKFLOW: Downsample IP and input control BAM files
         //
         BAM_DOWNSAMPLE (
-            ch_filtered_bam_bai,
-            ch_fasta,
-            ch_fai,
+            ch_filtered_bam_index,
+            ch_fasta_fai,
             params.genome,
             params.spikein_genome,
             params.bam_downsampling_method,
@@ -687,30 +674,29 @@ workflow CREPAS {
             params.downsampling_exo_threshold
         )
         ch_filtered_bam = BAM_DOWNSAMPLE.out.bam
-        ch_filtered_index = BAM_DOWNSAMPLE.out.bai
-        ch_filtered_bam_bai = ch_filtered_bam.join(ch_filtered_index, by: 0)
+        ch_filtered_index = BAM_DOWNSAMPLE.out.index
+        ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
         ch_samtools_stats_summary = ch_samtools_stats_summary.mix(BAM_DOWNSAMPLE.out.stats)
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.stats.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.flagstat.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(BAM_DOWNSAMPLE.out.idxstats.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(BAM_DOWNSAMPLE.out.versions.first())
 
     }
 
     // TODO: print for debugging
-    ch_filtered_bam_bai
-        .map { meta, bam, bai ->
-            "${meta}\t${bam}\t${bai}"
+    ch_filtered_bam_index
+        .map { meta, bam, index ->
+            "${meta}\t${bam}\t${index}"
         }
-        .collectFile(name: 'ch_filtered_bam_bai_after_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
+        .collectFile(name: 'ch_filtered_bam_index_after_dSp.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/")
 
     //
     // SUBWORKFLOW: Generate normalized bigWig coverage tracks
     //
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS (
-        ch_filtered_bam_bai,
-        ch_chrom_sizes_endo,
-        ch_chrom_sizes_exo,
+        ch_filtered_bam_index,
+        ch_endo_chromsizes,
+        ch_exo_chromsizes,
         params.genome,
         params.spikein_genome,
         params.min_reads_for_norm,
@@ -724,7 +710,6 @@ workflow CREPAS {
         params.skip_plotcorrelation,
         params.skip_plotpca
     )
-    ch_versions = ch_versions.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.versions)
 
 
     if (!params.skip_genes_plotprofile) {
@@ -733,7 +718,7 @@ workflow CREPAS {
 
         if (!params.input_cisrpm_in_plotprofile) {
             ch_bigwigs_genes
-                .filter { meta, bws -> 
+                .filter { meta, bws ->
                     !(meta.is_input_control && meta.norm_factor_type == 'cisrpm')
                 }
                 .set { ch_bigwigs_genes }
@@ -782,7 +767,6 @@ workflow CREPAS {
             DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.table.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTPROFILE_GENES.out.versions.first())
 
         //
         // MODULE: deepTools heatmaps
@@ -790,13 +774,12 @@ workflow CREPAS {
         DEEPTOOLS_PLOTHEATMAP_GENES (
             DEEPTOOLS_COMPUTEMATRIX_GENES.out.matrix
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP_GENES.out.versions.first())
     }
 
-    // Removing the exogenous samples from the filtered_bam_bai channel
+    // Removing the exogenous samples from the filtered_bam_index channel
     ch_filtered_bam = ch_filtered_bam.filter { it -> it[0].genome == params.genome }
     ch_filtered_index = ch_filtered_index.filter { it -> it[0].genome == params.genome }
-    ch_filtered_bam_bai = ch_filtered_bam_bai.filter { it -> it[0].genome == params.genome }
+    ch_filtered_bam_index = ch_filtered_bam_index.filter { it -> it[0].genome == params.genome }
 
     //
     // SUBWORKFLOW: Counting reads in transposable elements
@@ -806,7 +789,7 @@ workflow CREPAS {
         TE_COUNTING (
             // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
             ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it -> it[0].genome == params.genome }),
-            ch_fasta,
+            ch_fasta_fai,
             false,
             ch_tecount_gene_index,
             ch_tecount_te_index,
@@ -829,14 +812,14 @@ workflow CREPAS {
     // SUBWORKFLOW: Call peaks
     //
     CALL_PEAKS (
-        ch_filtered_bam_bai,
+        ch_filtered_bam_index,
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
         ch_bedgraph_endo_for_seacr,
         params.peak_caller,
-        ch_fasta,
+        ch_fasta_fai,
         ch_gtf,
         ch_effective_gfraction,
-        ch_chrom_sizes_endo,
+        ch_endo_chromsizes,
         ch_blacklist.ifEmpty([[:], []]),
         ch_sparsebed.ifEmpty([[:], []]),
         ch_active_regions.ifEmpty([[:], []]),
@@ -868,37 +851,36 @@ workflow CREPAS {
     )
 
     //
-    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_bai, ipcontrol_bai ] ]
+    // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_index, ipcontrol_index ] ]
     // (Excluding ips_wo_ipcontrol as they don't need to be compared to anything)
     //
-    ch_filtered_bam_bai
-        .branch { meta, bam, bai ->
+    ch_filtered_bam_index
+        .branch { meta, bam, index ->
             ips_with_ipcontrol: meta.input_control
-                return [meta.input_control, meta.antibody, meta, bam, bai]
+                return [meta.input_control, meta.antibody, meta, bam, index]
             ips_wo_ipcontrol: !meta.input_control && !meta.is_input_control
-                return [meta, bam, bai]
+                return [meta, bam, index]
             ipcontrols: !meta.input_control && meta.is_input_control
-                return [meta.id, meta.input_control_of_antibody, meta, bam, bai]
+                return [meta.id, meta.input_control_of_antibody, meta, bam, index]
         }
-        .set { ch_bam_bai_by_type }
+        .set { ch_bam_index_by_type }
 
-    ch_bam_bai_by_type
+    ch_bam_index_by_type
         .ips_with_ipcontrol
-        .combine(ch_bam_bai_by_type.ipcontrols, by: [0,1])
-        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_bai, ipcontrol_meta, ipcontrol_bam, ipcontrol_bai ->
-            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_bai] + [ipcontrol_bai] ]
+        .combine(ch_bam_index_by_type.ipcontrols, by: [0,1])
+        .map { ipcontrol_id, antibody, ip_meta, ip_bam, ip_index, ipcontrol_meta, ipcontrol_bam, ipcontrol_index ->
+            [ ip_meta, [ip_bam] + [ipcontrol_bam], [ip_index] + [ipcontrol_index] ]
         }
-        .set { ch_ip_and_ipcontrols_bam_bai }
+        .set { ch_ip_and_ipcontrols_bam_index }
 
     //
     // MODULE: deepTools plotFingerprint joint QC for IP and control
     //
     if (!params.skip_plot_fingerprint) {
         DEEPTOOLS_PLOTFINGERPRINT(
-            ch_ip_and_ipcontrols_bam_bai
+            ch_ip_and_ipcontrols_bam_index
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.matrix.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTFINGERPRINT.out.versions.first())
     }
 
     //
@@ -907,15 +889,14 @@ workflow CREPAS {
     if (!params.skip_encode_pipeline) {
         BAM_ENCODE_PIPELINE (
             ch_filtered_bam,
-            ch_fasta,
-            ch_chrom_sizes_endo,
+            ch_fasta_fai,
+            ch_endo_chromsizes,
             params.ctl_depth_ratio_threshold,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
             ch_blacklist.ifEmpty([[:], []]),
             params.idr_filtering_threshold,
             params.encode_peak_max_score
         )
-        ch_versions = ch_versions.mix(BAM_ENCODE_PIPELINE.out.versions.first())
 
     }
 
@@ -923,15 +904,15 @@ workflow CREPAS {
     ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
-    // Make ch_chrom_sizes_endo empty if there are no SCAR-seq samples
+    // Make ch_endo_chromsizes empty if there are no SCAR-seq samples
     // This is to avoid unnecessarily running modules in the BAM_CREATE_PARTITIONS
-    ch_chrom_sizes_endo
+    ch_endo_chromsizes
         .combine(ch_filtered_bam_ss)
         .first()
         .map { sizes_meta, sizes, ss_meta, ss_bam ->
             [sizes_meta, sizes]
         }
-        .set { ch_chrom_sizes_endo_ss }
+        .set { ch_endo_chromsizes_ss }
 
     //
     // SUBWORKFLOW: SCAR-seq and OK-seq analysis: partitioning of reads
@@ -939,8 +920,8 @@ workflow CREPAS {
     ch_partition_smooth = channel.empty()
     BAM_CREATE_PARTITIONS (
         ch_filtered_bam_ss,
-        ch_fasta,
-        ch_chrom_sizes_endo_ss,
+        ch_fasta_fai,
+        ch_endo_chromsizes_ss,
         ch_blacklist.ifEmpty([[:], []]),
         ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
         ch_initiation_zones.ifEmpty([[:], [[]]]),
@@ -949,7 +930,6 @@ workflow CREPAS {
         params.zero_crossing_radius
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
-    ch_versions = ch_versions.mix(BAM_CREATE_PARTITIONS.out.versions)
 
     //
     // SUBWORKFLOW: Create SAMtools summary table
@@ -959,7 +939,6 @@ workflow CREPAS {
         params.genome,
         params.spikein_genome ?: channel.value([])
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_STATS_SUMMARY.out.versions)
 
     //
     // MODULE: Create IGV session
@@ -970,7 +949,7 @@ workflow CREPAS {
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_endo
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_cmp_endo)
         .mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_avg_endo)
-            .map { meta, bw -> 
+            .map { meta, bw ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                 "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                 "/${meta.exp_type}" +
@@ -988,7 +967,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .edd_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1003,7 +982,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .macs3_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1037,7 +1016,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .genrich_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1053,7 +1032,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .mace_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1068,7 +1047,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .epic2_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1083,7 +1062,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .consenrich_tracks
-            .map { meta, signal -> 
+            .map { meta, signal ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1098,7 +1077,7 @@ workflow CREPAS {
         CALL_PEAKS
             .out
             .rocco_peaks
-            .map { meta, peak -> 
+            .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
                     "/${meta.exp_type}" +
@@ -1136,9 +1115,8 @@ workflow CREPAS {
 
         IGV (
             ch_files_and_outpaths,
-            ch_fasta_outpath            
+            ch_fasta_outpath
         )
-        ch_versions = ch_versions.mix(IGV.out.versions)
     }
 
     //
@@ -1176,11 +1154,6 @@ workflow CREPAS {
     //
     if (!params.skip_multiqc) {
 
-        // Load MultiQC configuration files
-        ch_multiqc_config = channel.fromPath("${projectDir}/assets/multiqc_config.yml", checkIfExists: true)
-        ch_multiqc_custom_config = params.multiqc_config ? channel.fromPath(params.multiqc_config) : channel.empty()
-        ch_multiqc_logo = params.multiqc_logo ? channel.fromPath(params.multiqc_logo) : channel.empty()
-
         // Prepare the workflow summary
         ch_workflow_summary = channel.value(
                 paramsSummaryMultiqc(
@@ -1190,33 +1163,47 @@ workflow CREPAS {
             .collectFile(name: 'workflow_summary_mqc.yaml')
 
         // Prepare the methods section
-        // ch_methods_description = channel.value(
-        //     methodsDescriptionText(
-        //         params.multiqc_methods_description
-        //             ? file(params.multiqc_methods_description)
-        //             : file("$projectDir/workflows/assets/multiqc/methods_description_template.yml", checkIfExists: true)
-        //     )
-        // ).collectFile(name: 'methods_description_mqc.yaml')
+        ch_methods_description = channel.value(
+                methodsDescriptionText(
+                    params.multiqc_methods_description
+                        ? file(params.multiqc_methods_description, checkIfExists: true)
+                        : file("${projectDir}/assets/methods_description_template.yml", checkIfExists: true)
+                )
+            )
+            .collectFile(name: 'methods_description_mqc.yaml', sort: true)
 
         // Add summary, versions, and methods to the MultiQC input file list
         ch_multiqc_files = ch_multiqc_files
             .mix(ch_workflow_summary)
             .mix(ch_collated_versions)
-        // .mix(ch_methods_description)
+            .mix(ch_methods_description)
 
+        //
+        // MODULE: MultiQC
+        //
         MULTIQC (
-            ch_multiqc_files.collect(),
-            ch_multiqc_config.toList(),
-            ch_multiqc_custom_config.toList(),
-            ch_multiqc_logo.toList(),
-            [],
-            []
+            ch_multiqc_files.flatten().collect().map { files ->
+                [
+                    [id: 'crepas'],
+                    files,
+                    params.multiqc_config
+                        ? file(params.multiqc_config, checkIfExists: true)
+                        : file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true),
+                    params.multiqc_logo ? file(params.multiqc_logo, checkIfExists: true) : [],
+                    [],
+                    [],
+                ]
+            }
         )
-        ch_multiqc_report = MULTIQC.out.report
+
+        ch_multiqc_report  = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
+        ch_multiqc_publish = MULTIQC.out.data.mix(MULTIQC.out.plots, MULTIQC.out.report)
         ch_versions = ch_versions.mix(MULTIQC.out.versions)
+
     }
 
     emit:
-    multiqc_report = ch_multiqc_report // channel: /path/to/multiqc_report.html
-    versions       = ch_versions // channel: [ path(versions.yml) ]
+    multiqc_report  = ch_multiqc_report
+    multiqc_publish = ch_multiqc_publish
+    versions        = ch_versions // channel: [ path(versions.yml) ]
 }

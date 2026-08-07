@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - bioconda::bedtools=2.30.0
   - conda-forge::biopython=1.85
   - conda-forge::r-optparse=1.7.1
   - conda-forge::r-upsetr=1.4.0
-  - bioconda::bedtools=2.30.0

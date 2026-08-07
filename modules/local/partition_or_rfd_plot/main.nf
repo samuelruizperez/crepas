@@ -3,7 +3,7 @@ process PARTITION_OR_RFD_PLOT {
     label 'process_medium_memory'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/99/99b2a7149c1943265175ef013ca8c247c9847b14a0d2e802d0cbdda4a58458a5/data' :
         'community.wave.seqera.io/library/bioconductor-genomicalignments_bioconductor-genomicfeatures_r-argparse_r-ggpmisc_pruned:2c7c689513df97b4' }"
 
@@ -20,7 +20,7 @@ process PARTITION_OR_RFD_PLOT {
     tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
     tuple val(meta), path("*.scatter_plot.pdf"),   emit: scatter_pdf, optional:true
     tuple val(meta), path("*.scatter_plot.png"),   emit: scatter_png, optional:true
-    path "versions.yml",                           emit: versions
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^R version //; s/ .*\$//'"), topic: versions, emit: versions_rbase
 
     when:
     task.ext.when == null || task.ext.when
@@ -47,11 +47,6 @@ process PARTITION_OR_RFD_PLOT {
         --prefix ${prefix} \\
         --outdir ./ \\
         ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -59,14 +54,10 @@ process PARTITION_OR_RFD_PLOT {
     """
     touch  ${prefix}.scatter_plot.pdf
     touch  ${prefix}.scatter_plot.png
-    touch  ${prefix}.plot_raw.pdf
-    touch  ${prefix}.plot_raw.png
-    touch  ${prefix}.plot_smoothed.pdf
-    touch  ${prefix}.plot_smoothed.png
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-    END_VERSIONS
+    touch  ${prefix}_plot_raw.pdf
+    touch  ${prefix}_plot_raw.png
+    touch  ${prefix}_plot_smoothed.pdf
+    touch  ${prefix}_plot_smoothed.png
+    touch  ${prefix}_mean_values.tsv
     """
 }

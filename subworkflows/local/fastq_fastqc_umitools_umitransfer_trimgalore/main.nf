@@ -38,7 +38,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
 
 
     main:
-    ch_versions = channel.empty()
     fastqc_html = channel.empty()
     fastqc_zip  = channel.empty()
     if (!skip_fastqc) {
@@ -59,13 +58,12 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
             ch_spikein_barcode_table
         )
         ch_barcode_counts = FASTQ_EXTRACT_SPIKEIN_BARCODES.out.counts
-        ch_versions = ch_versions.mix(FASTQ_EXTRACT_SPIKEIN_BARCODES.out.versions.first())
     }
 
 
     // split ch_umi_reads channel into the ones that have meta.sep_umi_fq and the ones that don't
     ch_reads
-        .branch { meta, read -> 
+        .branch { meta, read ->
             sep_umi_fq: meta.sep_umi_fq
             extract_umi: !meta.sep_umi_fq && meta.extract_umi
             other: true
@@ -75,7 +73,6 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     UMITRANSFER (ch_reads.sep_umi_fq)
     ch_sep_umi_fq   = UMITRANSFER.out.reads
     sep_umi_fq_log  = UMITRANSFER.out.log
-    ch_versions     = ch_versions.mix(UMITRANSFER.out.versions.first())
 
     UMITOOLS_EXTRACT (ch_reads.extract_umi)
     ch_extract_umi    = UMITOOLS_EXTRACT.out.reads
@@ -174,5 +171,4 @@ workflow FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE {
     htrim_zip         // channel: [ val(meta), [ zip ] ]
     htrim_log         // channel: [ val(meta), [ txt ] ]
 
-    versions = ch_versions // channel: [ versions.yml ]
 }

@@ -9,7 +9,7 @@ workflow TE_COUNTING {
 
     take:
     ch_bam
-    ch_fasta
+    ch_fasta_fai
     skip_name_sort // boolean: skip name sorting of BAM files
     ch_tecount_gene_index
     ch_tecount_te_index
@@ -27,7 +27,7 @@ workflow TE_COUNTING {
         //
         SAMTOOLS_SORT (
             ch_bam,
-            ch_fasta,
+            ch_fasta_fai,
             ''
         )
         ch_bam = SAMTOOLS_SORT.out.bam
@@ -40,10 +40,10 @@ workflow TE_COUNTING {
         .map { meta, bam -> [ meta + [ te_counting_strandedness: 'forward' ], bam ] }
         .set { ch_te_counting_split_fwd }
 
-    ch_te_counting_split 
+    ch_te_counting_split
         .map { meta, bam -> [ meta + [ te_counting_strandedness: 'reverse' ], bam ] }
         .set { ch_te_counting_split_rev }
-    
+
     ch_te_counting_no_split
         .mix(ch_te_counting_split_fwd)
         .mix(ch_te_counting_split_rev)
@@ -77,5 +77,5 @@ workflow TE_COUNTING {
 
     tecount_counts     = TECOUNT.out.counts    // channel: [ te_counts.tsv ]
     telocal_counts     = ch_telocal_counts    // channel: [ te_local_counts.tsv ]
-    
+
 }

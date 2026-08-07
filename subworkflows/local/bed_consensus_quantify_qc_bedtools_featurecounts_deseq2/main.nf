@@ -32,7 +32,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
 
     main:
 
-    ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
 
     //TODO: print to fiule for debugging
@@ -117,7 +116,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         ch_antibody_peaks,
         is_narrow_peak
     )
-    ch_versions = ch_versions.mix(MACS3_CONSENSUS.out.versions)
 
     //
     // Annotate consensus peaks
@@ -128,7 +126,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             ch_fasta,
             ch_gtf
         )
-        ch_versions = ch_versions.mix(HOMER_ANNOTATEPEAKS.out.versions)
 
         //
         // MODULE: Add boolean fields to annotated consensus peaks to aid filtering
@@ -136,7 +133,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         ANNOTATE_BOOLEAN_PEAKS (
             MACS3_CONSENSUS.out.boolean_txt.join(HOMER_ANNOTATEPEAKS.out.txt, by: [0])
         )
-        ch_versions = ch_versions.mix(ANNOTATE_BOOLEAN_PEAKS.out.versions)
     }
 
     // Create channels: [ meta, [ ip_bams ], saf ]
@@ -187,7 +183,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         ch_deseq2_qc_size_factors  = DESEQ2_QC.out.size_factors
         ch_multiqc_files = ch_multiqc_files.mix(DESEQ2_QC.out.pca_multiqc.collect { it -> it[1] })
         ch_multiqc_files = ch_multiqc_files.mix(DESEQ2_QC.out.dists_multiqc.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DESEQ2_QC.out.versions)
     }
 
     if (!skip_consensus_plotprofile) {
@@ -245,7 +240,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             DEEPTOOLS_COMPUTEMATRIX_PEAKS.out.matrix
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPROFILE_PEAKS.out.table.collect { it -> it[1] })
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTPROFILE_PEAKS.out.versions.first())
 
         //
         // MODULE: deepTools heatmaps
@@ -253,7 +247,6 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
         DEEPTOOLS_PLOTHEATMAP_PEAKS (
             DEEPTOOLS_COMPUTEMATRIX_PEAKS.out.matrix
         )
-        ch_versions = ch_versions.mix(DEEPTOOLS_PLOTHEATMAP_PEAKS.out.versions.first())
     }
 
 
@@ -277,5 +270,4 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     deseq2_qc_size_factors  = ch_deseq2_qc_size_factors         // channel: [ txt ]
 
     multiqc_files           = ch_multiqc_files                   // channel: [ multiqc_files ]
-    versions                = ch_versions                       // channel: [ versions.yml ]
 }

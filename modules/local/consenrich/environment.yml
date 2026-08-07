@@ -16,5 +16,5 @@ dependencies:
   - conda-forge::scipy=1.15.2
   - pip
   - pip:
-    - consenrich==0.1.7b1
-    - ortools==9.12.4544
+      - consenrich==0.1.7b1
+      - ortools==9.12.4544

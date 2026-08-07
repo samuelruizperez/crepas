@@ -1,0 +1,99 @@
+{
+    "sarscov2 - bam - single_end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test_se",
+                        "single_end": true
+                    },
+                    "test_se.bam:md5,96038a1120f63dd535e5f856e8e5616a"
+                ]
+            ],
+            {
+                "versions_mmr": [
+                    [
+                        "MMR",
+                        "mmr",
+                        "c5ce80a"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T11:44:23.579119522",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - bam - paired_end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.bam:md5,0195ac3e6d01119e4446c6cd86d77759"
+                ]
+            ],
+            {
+                "versions_mmr": [
+                    [
+                        "MMR",
+                        "mmr",
+                        "c5ce80a"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T11:44:09.794080122",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - bam - paired_end - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "MMR",
+                        "mmr",
+                        "c5ce80a"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_mmr": [
+                    [
+                        "MMR",
+                        "mmr",
+                        "c5ce80a"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T11:44:35.640354682",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    }
+}

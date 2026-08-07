@@ -21,7 +21,7 @@ report_section_order:
     order: 4003
   rsc_coefficient:
     order: 4002
-    
+
   # Peak calling
   peak_count:
     order: 2005
@@ -86,7 +86,6 @@ report_section_order:
   "grothlab-crepas-summary":
     order: -4002
 
-
 export_plots: true
 #exclude_modules:
 #  - "general_stats"
@@ -116,13 +115,13 @@ module_order:
       name: "LIB: SAMTools stats (aligned)"
       info: "This section of the report shows SAMTools stats for individual libraries."
       # path_filters:
-        # - "./alignment/library/*"
+      # - "./alignment/library/*"
   - samtools:
       anchor: "samtools_unfiltered"
       name: "MERGED LIB: SAMTools stats (unfiltered)"
       info: "This section of the report shows SAMTools stats after merging libraries (technical replicates) and before filtering."
       # path_filters:
-        # - "./alignment/mergedLibrary/*"
+      # - "./alignment/mergedLibrary/*"
   # - picard:
   #     name: "MERGED LIB: Picard (unfiltered)"
   #     info: "This section of the report shows picard results after merging libraries and before filtering."
@@ -148,7 +147,7 @@ module_order:
       name: "MERGED LIB: Picard MarkDuplicates (unfiltered)"
       info: "This section of the report shows Picard MarkDuplicates metrics after merging libraries and before filtering."
       # path_filters:
-      #   - "./alignment/mergedLibrary/picard_markduplicates/*"  
+      #   - "./alignment/mergedLibrary/picard_markduplicates/*"
   - samtools:
       anchor: "samtools_markduplicates"
       name: "MERGED LIB: SAMTools stats (marked duplicates)"
@@ -209,7 +208,6 @@ extra_fn_clean_exts:
   - "_spp"
   - ".spp"
   - "lc_extrap"
-
 
 # Customise the module search patterns to speed up execution time
 #  - Skip module sub-tools that we are not interested in

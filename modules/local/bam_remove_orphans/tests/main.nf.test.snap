@@ -1,0 +1,161 @@
+{
+    "sarscov2 - bam - paired-end - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "pysam",
+                        "0.19.0"
+                    ]
+                ],
+                "2": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "samtools",
+                        "1.15.1"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "pysam",
+                        "0.19.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "samtools",
+                        "1.15.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T15:26:06.451587771",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - paired-end - name sort skipped": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.bam:md5,c2af8f4213ea71e9d19ae9158e65153d"
+                ]
+            ],
+            {
+                "versions_pysam": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "pysam",
+                        "0.19.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "samtools",
+                        "1.15.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T15:44:06.837652174",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - paired-end - name sort": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test.bam:md5,c1c2dc595306a90a6e9d9f38698641d8"
+                ]
+            ],
+            {
+                "versions_pysam": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "pysam",
+                        "0.19.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "samtools",
+                        "1.15.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T15:43:54.52739586",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "sarscov2 - bam - single-end": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": true
+                    },
+                    "test.bam:md5,21afed4c3e007de5e007cc5cbaebede7"
+                ]
+            ],
+            {
+                "versions_pysam": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "pysam",
+                        "0.19.0"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BAM_REMOVE_ORPHANS",
+                        "samtools",
+                        "1.15.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-07-06T15:44:18.4471866",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
