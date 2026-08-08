@@ -7,7 +7,7 @@ process STATS_CAT {
         : 'community.wave.seqera.io/library/coreutils_gawk_sed:e167f5dd848b5ae9'}"
 
     input:
-    file t_stats
+    path t_stats
 
     output:
     path "*.tsv", emit: cat
