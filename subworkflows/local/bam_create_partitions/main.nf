@@ -47,7 +47,9 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // MODULE: Split BAMs by strand (forward and reverse)
     //
-    BAM_SPLIT_BY_STRAND ( ch_bam )
+    BAM_SPLIT_BY_STRAND (
+        ch_bam.map { meta, bam -> [ meta, bam, meta.exp_type, meta.strandedness ] }
+    )
 
     // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
@@ -332,8 +334,8 @@ workflow BAM_CREATE_PARTITIONS {
     // Create channel: [ val(meta), val(partition_or_rfd), [ f_tab ], [ r_tab ] ]
     ch_norm_and_smi
         .map { meta, bdg_fwd, bdg_rev ->
-            // 'partition' is for SCAR-seq and 'RFD' for OK-seq
-            def partition_or_rfd = meta.exp_type == 'SCAR-seq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
+            // 'partition' is for SCAR-seq and eSPAN, and 'RFD' for OK-seq
+            def partition_or_rfd = meta.exp_type in ['SCAR-seq', 'eSPAN'] ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
             [ meta, partition_or_rfd, bdg_fwd, bdg_rev ]
         }
         .set { ch_part_norm_and_smi }

@@ -901,7 +901,7 @@ workflow CREPAS {
     }
 
     ch_filtered_bam_ss = channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq', 'eSPAN'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
     // Make ch_endo_chromsizes empty if there are no SCAR-seq samples
