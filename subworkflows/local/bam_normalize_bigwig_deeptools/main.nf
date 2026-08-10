@@ -341,7 +341,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 .filter { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
                     def exo_ip_denom = exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm_key]
                     def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
-                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                    def exo_ipcontrol_denom = exo_ipcontrol_meta[exo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom || !exo_ipcontrol_denom) {
                         log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
                         return false
                     }
@@ -376,7 +377,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 .filter { ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
                     def exo_ip_denom = endo_ip_meta[endo_ip_meta.exo_ref_total_mapped_reads_for_cisrpm_key]
                     def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
-                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                    def exo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.exo_ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom || !exo_ipcontrol_denom) {
                         log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
                         return false
                     }
@@ -561,6 +563,10 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 [ meta_clone.id, antibody, meta_clone.genome, meta_clone.norm_factor_type, meta_clone.signal_vs_input, meta_clone, bw ]
             }
             .groupTuple(by: [0, 1, 2, 3, 4])
+            // remove elements where there is only one biological replicate
+            .filter { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
+                bws.size() > 1
+            }
             .map { id, antibody, meta_genome, norm_factor_type, signal_vs_input, metas, bws ->
                 // Sort metas and bws by id to ensure consistent order
                 def sorted_metas = metas.sort { meta -> meta.brep }

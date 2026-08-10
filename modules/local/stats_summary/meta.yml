@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "stats_summary"
-description: Reshape the concatenated samtools stats summary table (from STATS_CAT) with an R/tidyverse script into a per-sample, per-processing-step wide table, deriving multimapping-read counts where the relevant columns are present
+description: Reshape the concatenated samtools stats summary table (from STATS_CAT) with an R/tidyverse script into a per-sample, per-processing-step wide table, deriving the read counts removed between filtering steps where the relevant columns are present
 keywords:
   - r
   - samtools
@@ -14,7 +14,8 @@ tools:
         bundled script `process_stats_summary.R` (dplyr/tidyr/forcats/readr) cleans the
         concatenated stats table: it normalises sample IDs, drops pre-merge rows, pivots the
         table into one row per sample with columns keyed by processing step, and — when the
-        expected columns are present — derives multimapping-read counts. Endogenous and
+        expected columns are present — derives the read counts removed between filtering
+        steps. Endogenous and
         exogenous (spike-in) genomes are handled separately when a spike-in genome is given.
       homepage: https://www.r-project.org/
       documentation: https://www.r-project.org/other-docs.html
@@ -35,10 +36,17 @@ input:
         description: Name of the exogenous (spike-in) genome; when empty the table is processed without spike-in-specific handling
 output:
   tsv:
-    - - "*.tsv":
+    - - "*.all.tsv":
           type: file
           description: Reshaped per-sample summary table (one row per sample, columns keyed by processing step and metric)
-          pattern: "*.tsv"
+          pattern: "*.all.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  totals_tsv:
+    - - "*.totals.tsv":
+          type: file
+          description: Reduced summary table with only the read-count columns, i.e. the raw_total_sequences of every processing step plus the reads removed between filtering steps (`<step>_minus_<step>`)
+          pattern: "*.totals.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
   versions_r:

@@ -12,7 +12,8 @@ process STATS_SUMMARY {
     val exogenous_genome_name
 
     output:
-    path "*.tsv", emit: tsv
+    path "*.all.tsv", emit: tsv
+    path "*.totals.tsv", emit: totals_tsv
     tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | head -1 | sed 's/^R version //; s/ .*\$//'"), emit: versions_r, topic: versions
 
     when:
@@ -35,6 +36,7 @@ process STATS_SUMMARY {
     stub:
     def prefix = task.ext.prefix ?: 'final_samtools_stats_summary'
     """
-    touch ${prefix}.tsv
+    touch ${prefix}.all.tsv
+    touch ${prefix}.totals.tsv
     """
 }

@@ -745,7 +745,7 @@ workflow CREPAS {
                         (antibody ? antibody : 'no_antibody') +
                         '_' + norm_factor_type +
                         (signal_vs_input_op ? '_' + signal_vs_input_op : '') +
-                        (averaged_brep ? '_' + 'bRep_avg' : '')
+                        (averaged_brep ? '_bRep_avg' : '')
                     meta_new.antibody = antibody
                     meta_new.ids = ids
                     [ meta_new, bws.flatten(), gene_bed ]
@@ -901,7 +901,7 @@ workflow CREPAS {
     }
 
     ch_filtered_bam_ss = channel.empty()
-    ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
+    ch_filtered_bam_ss = ch_filtered_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq', 'eSPAN'] }
 
     // TODO: remove when optional inputs to subworkflows are implemented
     // Make ch_endo_chromsizes empty if there are no SCAR-seq samples
@@ -927,7 +927,8 @@ workflow CREPAS {
         ch_initiation_zones.ifEmpty([[:], [[]]]),
         params.smooth_radius,
         params.derivative_radius,
-        params.zero_crossing_radius
+        params.zero_crossing_radius,
+        params.skip_partition_group_plot
     )
     ch_partition_smooth = BAM_CREATE_PARTITIONS.out.tab
 

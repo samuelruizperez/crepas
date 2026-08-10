@@ -12,7 +12,13 @@ Development version of grothlab/crepas.
 - Full `meta.yml` documentation, `nf-test` tests, and topic-based version reporting for the local modules that previously lacked them.
 - Comprehensive stubs for all local modules, enabling end-to-end dry-runs of the pipeline (`-stub`) ([#61](https://github.com/grothlab/crepas/issues/61)).
 - [`minibwa`](https://github.com/lh3/minibwa) as an additional read-alignment option.
+- `hybrid_fasta` parameter and improved spike-in genome handling.
+- Per-run provenance / RO-Crate ([WRROC](https://www.researchobject.org/workflow-run-crate/)) generation via the [`nf-prov`](https://github.com/nextflow-io/nf-prov) plugin.
 - GEFION HPC configuration profile.
+- Support for the `eSPAN` experiment type ([#28](https://github.com/grothlab/crepas/issues/28)). Includes a `test_espan` profile and test samplesheet.
+- Grouped partition plots, combining all samples sharing an antibody into a single plot, with a `skip_partition_group_plot` parameter to disable them.
+- A reduced `*.totals.tsv` summary table emitted alongside the full samtools stats summary, holding only the per-processing-step read counts.
+- Experiment-type-specific alignment settings for CUT&RUN, CUT&Tag, TIP-seq and eSPAN, applied to every aligner that exposes the corresponding options (bowtie2, bowtie, HISAT2, Chromap and minimap2).
 
 ### `Changed`
 
@@ -20,7 +26,15 @@ Development version of grothlab/crepas.
 - Migrated version reporting from per-module `versions.yml` files to the `versions` topic channel.
 - Replaced several local modules with their nf-core equivalents (`gtf2bed` now uses ea-utils, plus `SAMTOOLS_REHEADER` and `BEDTOOLS_GENOMECOV`).
 - Updated the Chromap nf-core module and reworked `fasta`/`fai` input-channel handling.
-- Updated the pipeline to the nf-core tools 4.0.2 template.
+- Removed the pipeline-wide `sort_bam` parameter; alignment sorting, indexing and stats are now always handled by `BAM_SORT_STATS_SAMTOOLS`, with the aligners emitting an unsorted BAM.
+- Updated numerous nf-core modules (aligners, deepTools, MACS3, HOMER, bedtools, MultiQC, FastQC, …) to their latest versions.
+- Added Apptainer container definitions to the local modules.
+- Updated the pipeline to the nf-core tools 4.0.2 template, bumped `nf-schema` to 2.7.3 and `nf-prov` to 1.7.0, and regenerated the parameter documentation from the schema.
+- `BAM_SPLIT_BY_STRAND` now takes `exp_type` and `strandedness` as explicit inputs and selects reads with `samtools view --expr` filter expressions, excluding unmapped records from every output.
+- Renamed the samtools stats summary outputs to `*.all.tsv` (every column) and `*.totals.tsv` (read counts only), so that the two tables can be matched separately.
+- Renamed the multimapping-reads column of the samtools stats summary to `<column>_minus_<column>`, since the filtering step it is derived from removes more than just multimapping reads.
+- The GEFION profile now prepends to the container `PATH` instead of replacing it, so images that install elsewhere (e.g. Wave/pixi images) keep working.
+- Expanded `CITATIONS.md.
 
 ### `Fixed`
 
@@ -29,6 +43,17 @@ Development version of grothlab/crepas.
 - TEtranscripts and TElocal container definitions.
 - `test_cutandrun` was mapped against the wrong genome.
 - Missing `versions` workflow output parameter.
+- Incorrect `fasta`/chromsizes selection when both `hybrid_fasta` and `fasta` were provided.
+- `strobealign` ignoring the spike-in genome index.
+- Division-by-zero when a sample had no spike-in reads (now guarded and logged).
+- Endogenous BAM normalization incorrectly skipped when the exogenous/spike-in BAM had no reads.
+- `params.seq_platform` not being applied to the BAM read group.
+- Parameter validation guards that tested `params.containsKey()` on parameters declared with a `null` default, so they were unreachable (blacklist, initiation zones / OK-seq RFD file, GTF/GFF and TE index checks). As a result, enabling blacklist filtering without a blacklist silently emptied every downstream channel while the run still reported success.
+- CISRPM normalization crashing with `Cannot invoke method div() on null object` when the input control had no spike-in reads: the filter guarded the input control's endogenous total but the normalization factor used its exogenous one.
+- Duplicated `--maxins` in the bowtie2 arguments, which silently overrode the CUT&RUN, CUT&Tag and TIP-seq insert-size limit with the default value.
+- Bugs in `process_stats_summary.R`.
+- An empty `final_samtools_stats_summary` table, and a stale `meta` reference in `STATS_CAT`.
+- Add missing `skip_flTbl` param in profiles to avoid.
 
 ## [[1.0.0](https://github.com/grothlab/crepas/releases/tag/1.0.0)] - Mercurian Cinnabar - 2026-06-21
 

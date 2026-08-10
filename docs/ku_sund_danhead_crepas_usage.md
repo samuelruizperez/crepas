@@ -153,7 +153,7 @@ The recommended way to run the pipeline on the DAN System is through an _SBATCH_
     ```bash
     #!/bin/bash
 
-    #SBATCH --job-name=CREPAS_JOB        # specify a name for the job
+    #SBATCH --job-name=crepas        # specify a name for the job
     #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
     #SBATCH --mail-user=NONE            # email address to receive the notifications
     #SBATCH -c 1                        # number of requested cores for the Nextflow head job
@@ -165,7 +165,7 @@ The recommended way to run the pipeline on the DAN System is through an _SBATCH_
     source ~/.bashrc
 
     # Load the required modules
-    module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+    module load java/21.0.7 nextflow/26.04.6 singularity/3.8.7
 
     # Create an output directory for the pipeline run if it does not exist
     mkdir -p <path_to_project_directory>/output/
@@ -255,7 +255,7 @@ Then create an SBATCH script to submit the job to the DAN System queue. Use the 
 source ~/.bashrc
 
 # Load the required modules
-module load openjdk/20.0.0 nextflow/25.04.4 singularity/3.8.7
+module load java/21.0.7 nextflow/26.04.6 singularity/3.8.7
 
 # Create an output directory for the pipeline run if it does not exist
 mkdir -p <path_to_test_project_directory>/crepas/output/

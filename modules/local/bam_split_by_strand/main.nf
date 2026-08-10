@@ -1,6 +1,5 @@
 /*
  * Split a BAM file by strand
- * It uses SAM FLAG 16: read reverse strand (0x10)
  */
 process BAM_SPLIT_BY_STRAND {
     tag "$meta.id"
@@ -12,7 +11,7 @@ process BAM_SPLIT_BY_STRAND {
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(bam), val(exp_type), val(strandedness)
 
     output:
     tuple val(meta), path("*.forward.bam"), emit: f_bam
@@ -25,37 +24,90 @@ process BAM_SPLIT_BY_STRAND {
     script:
     def prefix            = task.ext.prefix ?: "${meta.id}"
 
-    if (meta.strandedness == 'forward') {
+    if (exp_type == 'eSPAN' && !meta.single_end) {
     """
+        # Forward strand: both mates of every pair whose READ2 aligns in the forward orientation
+        # Equivalent to: !4 && 1 && ((128 && !16) || (64 && !32))
         samtools view \\
             --threads ${task.cpus-1} \\
-            --exclude-flags 20 \\
+            --expr '!flag.unmap && flag.paired && ((flag.read2 && !flag.reverse) || (flag.read1 && !flag.mreverse))' \\
             --with-header \\
             --bam \\
             --output ${prefix}.forward.bam \\
             ${bam}
 
+        # Reverse strand: both mates of every pair whose READ2 aligns in the reverse orientation
+        # Equivalent to: !4 && 1 && ((128 && 16) || (64 && 32))
         samtools view \\
             --threads ${task.cpus-1} \\
-            --require-flags 16 \\
+            --expr '!flag.unmap && flag.paired && ((flag.read2 && flag.reverse) || (flag.read1 && flag.mreverse))' \\
             --with-header \\
             --bam \\
             --output ${prefix}.reverse.bam \\
             ${bam}
         """
-    } else if (meta.strandedness == 'reverse') {
+    } else if (exp_type == 'eSPAN' && meta.single_end) {
     """
+        # Single-end eSPAN reads are READ1-equivalent, so the nascent strand is the opposite
+        # of the alignment orientation
+        # Equivalent to: !4 && !1 && 16
         samtools view \\
             --threads ${task.cpus-1} \\
-            --exclude-flags 20 \\
+            --expr '!flag.unmap && !flag.paired && flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
+
+        # Equivalent to: !4 && !1 && !16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && !flag.paired && !flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
+        """
+    } else if (exp_type in ['SCAR-seq', 'OK-seq'] && strandedness == 'forward') {
+    """
+        # Forward strand: reads aligned in the forward orientation
+        # Equivalent to: !4 && !16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && !flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
+
+        # Reverse strand: reads aligned in the reverse orientation
+        # Equivalent to: !4 && 16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
+        """
+    } else if (exp_type in ['SCAR-seq', 'OK-seq'] && strandedness == 'reverse') {
+    """
+        # Reverse strand: the insert strandedness is flipped, so reads aligned in the forward
+        # orientation correspond to the reverse strand
+        # Equivalent to: !4 && !16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && !flag.reverse' \\
             --with-header \\
             --bam \\
             --output ${prefix}.reverse.bam \\
             ${bam}
 
+        # Forward strand: reads aligned in the reverse orientation
+        # Equivalent to: !4 && 16
         samtools view \\
             --threads ${task.cpus-1} \\
-            --require-flags 16 \\
+            --expr '!flag.unmap && flag.reverse' \\
             --with-header \\
             --bam \\
             --output ${prefix}.forward.bam \\

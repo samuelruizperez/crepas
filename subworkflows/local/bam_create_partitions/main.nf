@@ -15,7 +15,8 @@ include { PARTITION_AVERAGE                                         } from '../.
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_WINDOWS    } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { UCSC_BEDGRAPHTOBIGWIG as UCSC_BEDGRAPHTOBIGWIG_PARTITIONS } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { RFD_TO_IZ                                                 } from '../../../modules/local/rfd_to_iz/main'
-include { PARTITION_OR_RFD_PLOT as PARTITION_PLOT                   } from '../../../modules/local/partition_or_rfd_plot/main'
+include { PARTITION_OR_RFD_PLOT as PARTITION_PLOT_SAMPLE            } from '../../../modules/local/partition_or_rfd_plot/main'
+include { PARTITION_OR_RFD_PLOT as PARTITION_PLOT_GROUP             } from '../../../modules/local/partition_or_rfd_plot/main'
 include { PARTITION_OR_RFD_PLOT as RFD_PLOT                         } from '../../../modules/local/partition_or_rfd_plot/main'
 
 
@@ -31,6 +32,7 @@ workflow BAM_CREATE_PARTITIONS {
     smooth_radius
     derivative_radius
     zero_crossing_radius
+    skip_partition_group_plot // boolean: skip the grouped partition plots
 
     main:
 
@@ -45,7 +47,9 @@ workflow BAM_CREATE_PARTITIONS {
     //
     // MODULE: Split BAMs by strand (forward and reverse)
     //
-    BAM_SPLIT_BY_STRAND ( ch_bam )
+    BAM_SPLIT_BY_STRAND (
+        ch_bam.map { meta, bam -> [ meta, bam, meta.exp_type, meta.strandedness ] }
+    )
 
     // Add strand to the meta information
     BAM_SPLIT_BY_STRAND
@@ -330,8 +334,8 @@ workflow BAM_CREATE_PARTITIONS {
     // Create channel: [ val(meta), val(partition_or_rfd), [ f_tab ], [ r_tab ] ]
     ch_norm_and_smi
         .map { meta, bdg_fwd, bdg_rev ->
-            // 'partition' is for SCAR-seq and 'RFD' for OK-seq
-            def partition_or_rfd = meta.exp_type == 'SCAR-seq' ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
+            // 'partition' is for SCAR-seq and eSPAN, and 'RFD' for OK-seq
+            def partition_or_rfd = meta.exp_type in ['SCAR-seq', 'eSPAN'] ? 'partition' : meta.exp_type == 'OK-seq' ? 'RFD' : null
             [ meta, partition_or_rfd, bdg_fwd, bdg_rev ]
         }
         .set { ch_part_norm_and_smi }
@@ -557,6 +561,9 @@ workflow BAM_CREATE_PARTITIONS {
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             [ meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         }
+        .set { ch_part_flt }
+    
+    ch_part_flt
         .combine(ch_okseq_rfd_file.map { it -> it[1] })
         .combine(ch_initiation_zones.map { it -> it[1] })
         .set { ch_part_flt_to_plot }
@@ -569,14 +576,58 @@ workflow BAM_CREATE_PARTITIONS {
         }
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
-    //
-    // MODULE: Plot the final partition
-    //
-    PARTITION_PLOT (
-        ch_part_flt_to_plot,
-        ch_blacklist,
-        ch_chrom_sizes
-    )
+
+        //
+        // MODULE: Plot the final partition
+        //
+        PARTITION_PLOT_SAMPLE (
+            ch_part_flt_to_plot,
+            ch_blacklist,
+            ch_chrom_sizes
+        )
+
+    if (!skip_partition_group_plot) {
+
+        ch_part_flt
+            .map { meta, scar_tsv, input_tsv, minusinput_tsv ->
+                [ meta.antibody, meta.averaged_brep, meta, scar_tsv, input_tsv, minusinput_tsv ]
+            }
+            .groupTuple(by: [0, 1])
+            // remove elements where there is only one biological replicate
+            .filter { antibody, averaged_brep, metas, scar_tsvs, input_tsvs, minusinput_tsvs ->
+                scar_tsvs.size() > 1
+            }
+            .map { antibody, averaged_brep, metas, scar_tsvs, input_tsvs, minusinput_tsvs ->
+                // Sort metas and tsvs to ensure consistent order
+                def sorted_metas = metas.sort { meta -> meta.id }
+                def sorted_scar_tsvs = scar_tsvs.sort { scar_tsv -> scar_tsv.name }
+                def sorted_input_tsvs = input_tsvs.sort { input_tsv -> input_tsv.name }
+                def sorted_minusinput_tsvs = minusinput_tsvs.sort { minusinput_tsv -> minusinput_tsv.name }
+                def meta_clone = sorted_metas[0].clone()
+                meta_clone.id = meta_clone.exp_type + '_' + antibody + (averaged_brep ? '_bRep_avg' : '')
+                [ meta_clone, sorted_scar_tsvs, sorted_input_tsvs, sorted_minusinput_tsvs, [] ]
+            }
+            .combine(ch_initiation_zones.map { it -> it[1] })
+            .set { ch_part_flt_group_to_plot }
+
+        // TODO: print for debugging
+        ch_part_flt_group_to_plot
+            .map { meta, scar_tsvs, input_tsvs, minusinput_tsvs, okseq_rfd_file, initiation_zones ->
+                "${meta}\t${scar_tsvs}\t${input_tsvs}\t${minusinput_tsvs}\t${okseq_rfd_file}\t${initiation_zones}"
+            }
+            .collectFile( name: '18_ch_part_flt_group_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
+
+
+        //
+        // MODULE: Plot all the samples of the same antibody together
+        //
+        PARTITION_PLOT_GROUP (
+            ch_part_flt_group_to_plot,
+            ch_blacklist,
+            ch_chrom_sizes
+        )
+
+    }
 
     emit:
     tab      = PARTITION_OR_RFD_SMOOTH.out.rfd       // channel: [ val(meta), [ tab ] ]

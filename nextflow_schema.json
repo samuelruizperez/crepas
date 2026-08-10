@@ -1426,6 +1426,11 @@
                     "description": "Comma-separated list of chromosomes to exclude from partition analysis. Typically sex chromosomes and mitochondrial chromosomes are excluded. See [this reference](https://www.science.org/doi/10.1126/science.aau0294#supplementary-materials) for more details.",
                     "fa_icon": "fas fa-ban"
                 },
+                "skip_partition_group_plot": {
+                    "type": "boolean",
+                    "description": "Whether to skip the grouped partition plots, which combine all samples of the same antibody in a single plot. Per-sample partition plots are still generated.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
                 "save_partition_intermeds": {
                     "type": "boolean",
                     "description": "Whether to save the intermediate files from the partition/RFD analysis step.",

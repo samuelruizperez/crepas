@@ -332,29 +332,28 @@ workflow INPUT_CHECK {
                     error("ERROR: `strandedness` must be specified for SCAR-seq and OK-seq samples. Check sample: ${meta.id}")
                 }
                 if (meta.exp_type == 'SCAR-seq') {
-                    if (!(params.containsKey('initiation_zones') || params.containsKey('okseq_rfd_file'))) {
+                    if (!params.initiation_zones && !params.okseq_rfd_file) {
                         if (params.refgenie_ignore && params.igenomes_ignore) {
                             error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should provide either an initiation zones file or an OK-seq RFD file.")
                         } else if (!getGenomeAttribute('initiation_zones') && !getGenomeAttribute('okseq_rfd_file')) {
                             error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been found among reference genomes (iGenomes or Refgenie). You should provide either an initiation zones file or an OK-seq RFD file.")
                         }
-                    error("ERROR: a SCAR-seq sample has been inputted, but neither `--initiation_zones` nor `--okseq_rfd_file` have been provided. You should provide either an initiation zones file or an OK-seq RFD file.")
                     }
                 }
             } else if (meta.strandedness) {
                 error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
             }
             // Antibody checks
-            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
+            if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'eSPAN', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
                 if (!meta.antibody && !meta.is_input_control) {
-                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUTandTag, CUTandRUN, and TIP-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
+                    log.warn("`antibody` should be specified for non-input ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, eSPAN, CUTandTag, CUTandRUN, and TIP-seq samples. Check sample: ${meta.id}. Ignore this warning if the sample is an input control but you are not actually using it as the input control of another sample.")
                 }
                 if (meta.antibody && meta.is_input_control) {
                     error("ERROR: `antibody` must not be specified for input control samples. Check sample: ${meta.id}")
                 }
             } else {
                 if (meta.antibody) {
-                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, CUT&Tag, CUT&RUN, and TIP-seq. Check sample: ${meta.id}")
+                    error("ERROR: `antibody` must not be specified for samples other than ChIP-seq, ChIP-exo, ChOR-seq, SCAR-seq, eSPAN, CUT&Tag, CUT&RUN, and TIP-seq. Check sample: ${meta.id}")
                 }
             }
             return [ meta, fastqs ]
@@ -495,27 +494,30 @@ def validateInputParameters() {
         error("A pre-built strobealign index (`--strobealign_index`) has been provided along with a spike-in genome (`--spikein_genome`). `--hybrid_fasta` must also be provided in this case.")
     }
 
-    if (!params.gtf && !params.containsKey('gff')) {
-        error("No GTF or GFF3 annotation specified! The pipeline requires at least one of these files.")
+    if (!params.gtf && !params.gff) {
+        if (params.refgenie_ignore && params.igenomes_ignore) {
+            error("No GTF (`--gtf`) or GFF3 (`--gff`) annotation has been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). The pipeline requires at least one of these files.")
+        } else if (!getGenomeAttribute('gtf') && !getGenomeAttribute('gff')) {
+            error("No GTF or GFF3 annotation has been provided and no valid annotation file has been found among reference genomes (iGenomes or Refgenie). The pipeline requires at least one of these files.")
+        }
     }
 
-    if (params.gtf && params.containsKey('gff')) {
+    if (params.gtf && params.gff) {
         gtfGffWarn(log)
     }
 
     if (!params.skip_flTbl) {
-        if (!params.containsKey('blacklist')) {
+        if (!params.blacklist) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
                 error("Blacklist filtering is enabled (`--skip_flTbl false`), a blacklist file (`--blacklist`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip blacklist filtering (`--skip_flTbl`) or provide a blacklist.")
             } else if (!getGenomeAttribute('blacklist')) {
                 error("Blacklist filtering is enabled (`--skip_flTbl false`) but no valid blacklist file has been found among reference genomes (iGenomes or Refgenie). You should set the pipeline to skip blacklist filtering (`--skip_flTbl`) or provide a blacklist.")
             }
-        error("Blacklist filtering is enabled (`--skip_flTbl false`) but no valid blacklist file has been provided. You should set the pipeline to skip blacklist filtering (`--skip_flTbl`) or provide a blacklist.")
         }
     }
 
     if (!params.skip_te_counting) {
-        if (!params.containsKey('tecount_te_index') && !params.containsKey('te_gtf')) {
+        if (!params.tecount_te_index && !params.te_gtf) {
             if (params.refgenie_ignore && params.igenomes_ignore) {
                 error("TE counting is enabled (`--skip_te_counting false`), a TEcount TE index file (`--tecount_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE counting (`--skip_te_counting`) or provide a TEcount TE index.")
             } else if (!getGenomeAttribute('tecount_te_index') && !getGenomeAttribute('te_gtf')) {
@@ -523,7 +525,7 @@ def validateInputParameters() {
             }
         }
         if (!params.skip_telocal) {
-            if (!params.containsKey('telocal_te_index') && !params.containsKey('te_gtf')) {
+            if (!params.telocal_te_index && !params.te_gtf) {
                 if (params.refgenie_ignore && params.igenomes_ignore) {
                     error("TElocal counting is enabled (`--skip_telocal false`), a TElocal TE index file (`--telocal_te_index`) has not been provided, and reference genomes are being ignored (`--refgenie_ignore true` and `--igenomes_ignore true`). You should set the pipeline to skip TE local counting (`--skip_telocal`) or provide a TElocal TE index.")
                 } else if (!getGenomeAttribute('telocal_te_index') && !getGenomeAttribute('te_gtf')) {
