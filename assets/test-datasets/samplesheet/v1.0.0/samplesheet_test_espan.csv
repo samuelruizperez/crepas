@@ -1,4 +1,4 @@
-sample,biological_replicate,exp_type,antibody,fastq_1
+sample,biological_replicate,exp_type,antibody,fastq_1,fastq_2
 WT_H3K27me3_0h,1,eSPAN,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/016/SRR16201116/SRR16201116_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/016/SRR16201116/SRR16201116_2.fastq.gz
 WT_H3K27me3_8h,1,eSPAN,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/015/SRR16201115/SRR16201115_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/015/SRR16201115/SRR16201115_2.fastq.gz
 WT_H3K27me3_24h,1,eSPAN,H3K27me3,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/014/SRR16201114/SRR16201114_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR162/014/SRR16201114/SRR16201114_2.fastq.gz
