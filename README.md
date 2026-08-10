@@ -14,7 +14,7 @@
 
 ## Introduction
 
-**crepas** is a bioinformatics pipeline for comprehensive analysis of bulk chromatin sequencing data. It supports multiple experimental techniques, including [ChIP-seq](https://doi.org/10.1038/nmeth1068), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChIP-exo](https://doi.org/10.1016/j.cell.2011.11.013), [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [OK-seq](https://doi.org/10.1038/ncomms10208), [ATAC-seq](https://doi.org/10.1002/0471142727.mb2129s109), [CUT&RUN](https://doi.org/10.7554/eLife.46314), [CUT&Tag](https://doi.org/10.1038/s41467-019-09982-5) and [TIP-seq](https://doi.org/10.1083/jcb.202103078):
+**crepas** is a bioinformatics pipeline for comprehensive analysis of bulk chromatin sequencing data. It supports multiple experimental techniques, including [ChIP-seq](https://doi.org/10.1038/nmeth1068), [ChOR-seq](https://doi.org/10.1038/s41596-021-00585-3), [ChIP-exo](https://doi.org/10.1016/j.cell.2011.11.013), [SCAR-seq](https://doi.org/10.1038/s41596-021-00585-3), [eSPAN](https://doi.org/10.1038/s41596-021-00520-6), [OK-seq](https://doi.org/10.1038/ncomms10208), [ATAC-seq](https://doi.org/10.1002/0471142727.mb2129s109), [CUT&RUN](https://doi.org/10.7554/eLife.46314), [CUT&Tag](https://doi.org/10.1038/s41467-019-09982-5) and [TIP-seq](https://doi.org/10.1083/jcb.202103078):
 
 ![crepas metro map](./docs/images/grothlab_crepas_metro_map.png)
 
