@@ -341,7 +341,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 .filter { id, antibody, endo_ip_meta, endo_ip_bdg, exo_ip_meta, exo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg, exo_ipcontrol_meta, exo_ipcontrol_bdg ->
                     def exo_ip_denom = exo_ip_meta[exo_ip_meta.ref_total_mapped_reads_for_cisrpm_key]
                     def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
-                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                    def exo_ipcontrol_denom = exo_ipcontrol_meta[exo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom || !exo_ipcontrol_denom) {
                         log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
                         return false
                     }
@@ -376,7 +377,8 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 .filter { ipcontrol_id, ip_antibody, endo_ip_meta, endo_ip_bdg, endo_ipcontrol_meta, endo_ipcontrol_bdg ->
                     def exo_ip_denom = endo_ip_meta[endo_ip_meta.exo_ref_total_mapped_reads_for_cisrpm_key]
                     def endo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.ref_total_mapped_reads_for_cisrpm_key]
-                    if (!exo_ip_denom || !endo_ipcontrol_denom) {
+                    def exo_ipcontrol_denom = endo_ipcontrol_meta[endo_ipcontrol_meta.exo_ref_total_mapped_reads_for_cisrpm_key]
+                    if (!exo_ip_denom || !endo_ipcontrol_denom || !exo_ipcontrol_denom) {
                         log.warn "Skipping CISRPM normalization for sample '${endo_ip_meta.id}': spike-in or input control total mapped reads is missing or zero."
                         return false
                     }
