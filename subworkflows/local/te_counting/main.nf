@@ -33,8 +33,8 @@ workflow TE_COUNTING {
         ch_bam = SAMTOOLS_SORT.out.bam
     }
 
-    ch_te_counting_no_split = ch_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'OK-seq']) }
-    ch_te_counting_split = ch_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq'] }
+    ch_te_counting_no_split = ch_bam.filter { it -> !(it[0].exp_type in ['SCAR-seq', 'OK-seq', 'eSPAN']) }
+    ch_te_counting_split = ch_bam.filter { it -> it[0].exp_type in ['SCAR-seq', 'OK-seq', 'eSPAN'] }
 
     ch_te_counting_split
         .map { meta, bam -> [ meta + [ te_counting_strandedness: 'forward' ], bam ] }
