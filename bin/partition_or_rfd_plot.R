@@ -53,6 +53,22 @@ message("[", Sys.time(), "] All libraries loaded successfully.")
 
 
 # ===============================================================================
+# Helper functions
+# ===============================================================================
+
+# Derive the sample name from a file name. Sample ids can themselves contain dots (e.g., H3.3).
+# TODO: This function handles crepas extension conventions. Perhaps a separate sample_id argument would be better.
+sample_name_from_file <- function(path) {
+  name <- basename(path)
+  stripped <- sub("\\.(?:[0-9]+bp_[35]prime|cm_allo|allo|mLb|Lb)\\..*$", "", name, perl = TRUE)
+  if (identical(stripped, name)) {
+    stripped <- sub("\\.(bed|tsv|txt|bw|bigWig)(\\.gz)?$", "", name)
+  }
+  stripped
+}
+
+
+# ===============================================================================
 # Argument parsing
 # ===============================================================================
 
@@ -315,7 +331,7 @@ message("\n# ===================================================================
 message("# STEP 1. Extracting initiation zones from provided BED file...")
 message("# ===============================================================================")
 
-iz_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_initiation_zones))
+iz_base_name <- sample_name_from_file(opt_initiation_zones)
 message("\n[", Sys.time(), "] (", iz_base_name, ") Reading initiation zones file...")
 IZ_df <- read_tsv(opt_initiation_zones,
                   col_select = c(1:3),
@@ -371,7 +387,7 @@ if (HAS_OKSEQ) {
   message("# ===============================================================================")
 
 
-  ok_base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(opt_okseq_rfd_file))
+  ok_base_name <- sample_name_from_file(opt_okseq_rfd_file)
   message("\n[", Sys.time(), "] (", ok_base_name, ") Reading OK-seq RFD file...")
   OK_df <- read_tsv(opt_okseq_rfd_file, col_names = cls, show_col_types = FALSE)
 
@@ -446,7 +462,7 @@ for (type in names(part_files)) {
 
   for (file in part_files[[type]]) {
 
-    base_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(file))
+    base_name <- sample_name_from_file(file)
 
     message("\n[", Sys.time(), "] (", base_name, ") Reading partition file...")
     SCAR_df <- read_tsv(file, col_names = cls, show_col_types = FALSE)
