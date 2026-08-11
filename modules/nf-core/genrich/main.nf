@@ -8,7 +8,7 @@ process GENRICH {
         'quay.io/biocontainers/genrich:0.6.1--h5bf99c6_1' }"
 
     input:
-    tuple val(meta), path(treatment_bam), path(control_bam)
+    tuple val(meta), path(treatment_bam, stageAs: "t?/*"), path(control_bam, stageAs: "c?/*")
     path  blacklist_bed
 
     output:
