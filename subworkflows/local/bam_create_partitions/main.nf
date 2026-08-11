@@ -542,8 +542,10 @@ workflow BAM_CREATE_PARTITIONS {
     ch_partitions_filtered
         .mix(ch_part_avg_filtered)
         .branch { meta, tsv ->
-            scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input
+            scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input && meta.input_control
                 return [ meta.input_control, meta, tsv ]
+            scar_wo_ipcontrol: !meta.is_input_control && !meta.signal_minus_input && !meta.input_control
+                return [ meta, tsv, [], [] ]
             ipcontrol: meta.is_input_control
                 return [ meta.id, tsv ]
             minusipcontrol: meta.signal_minus_input
@@ -561,6 +563,7 @@ workflow BAM_CREATE_PARTITIONS {
         .map { scar_id, meta_scar, scar_tsv, input_tsv, minusinput_tsv ->
             [ meta_scar, scar_tsv, input_tsv, minusinput_tsv ]
         }
+        .mix(ch_part_flt_by_type.scar_wo_ipcontrol)
         .set { ch_part_flt }
     
     ch_part_flt
@@ -600,9 +603,10 @@ workflow BAM_CREATE_PARTITIONS {
             .map { antibody, averaged_brep, metas, scar_tsvs, input_tsvs, minusinput_tsvs ->
                 // Sort metas and tsvs to ensure consistent order
                 def sorted_metas = metas.sort { meta -> meta.id }
-                def sorted_scar_tsvs = scar_tsvs.sort { scar_tsv -> scar_tsv.name }
-                def sorted_input_tsvs = input_tsvs.sort { input_tsv -> input_tsv.name }
-                def sorted_minusinput_tsvs = minusinput_tsvs.sort { minusinput_tsv -> minusinput_tsv.name }
+                // .flatten() here prevents the *nested* empty lists caused by saples wo_ipcontrol, which is not a valid path input value
+                def sorted_scar_tsvs = scar_tsvs.flatten().sort { scar_tsv -> scar_tsv.name }
+                def sorted_input_tsvs = input_tsvs.flatten().sort { input_tsv -> input_tsv.name }
+                def sorted_minusinput_tsvs = minusinput_tsvs.flatten().sort { minusinput_tsv -> minusinput_tsv.name }
                 def meta_clone = sorted_metas[0].clone()
                 meta_clone.id = meta_clone.exp_type + '_' + antibody + (averaged_brep ? '_bRep_avg' : '')
                 [ meta_clone, sorted_scar_tsvs, sorted_input_tsvs, sorted_minusinput_tsvs, [] ]
