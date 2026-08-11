@@ -12,7 +12,6 @@ include { DANPOS2_DTRIPLE           } from '../../../modules/local/danpos2/dtrip
 workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     take:
     ch_bam                            // channel: [ val(meta), [ ip_bam ], [ control_bam ] ]
-    peak_caller
 
     main:
 
@@ -22,7 +21,6 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
     BAM_REMOVE_SCAFFOLDS (
         ch_bam
     )
-
 
     // Branch channels based on if input control is present
     BAM_REMOVE_SCAFFOLDS.out.bam
@@ -68,43 +66,36 @@ workflow BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER {
         }
         .collectFile( name: 'ch_ip_control_bam_merged_reps.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_PEAKS_CALL_QC_ANNOTATE_DANPOS2_HOMER" )
 
+
     ch_dpeak_pooled_xls = channel.empty()
-    if (peak_caller == 'dpeak') {
-        //
-        // MODULE: Call peaks with DANPOS2 dpeak
-        //
-        DANPOS2_DPEAK (
-            ch_ip_control_bam_merged_reps
-        )
-        ch_dpeak_pooled_xls = DANPOS2_DPEAK.out.pooled_xls
-    }
+    //
+    // MODULE: Call peaks with DANPOS2 dpeak
+    //
+    DANPOS2_DPEAK (
+        ch_ip_control_bam_merged_reps.filter { it -> it[0].peak_caller == 'dpeak' }
+    )
+    ch_dpeak_pooled_xls = DANPOS2_DPEAK.out.pooled_xls
 
-    if (peak_caller == 'dpos') {
-        //
-        // MODULE: call peaks with DANPOS2 dpos
-        //
-        DANPOS2_DPOS (
-            ch_ip_control_bam_merged_reps
-        )
-    }
+    //
+    // MODULE: call peaks with DANPOS2 dpos
+    //
+    DANPOS2_DPOS (
+        ch_ip_control_bam_merged_reps.filter { it -> it[0].peak_caller == 'dpos' }
+    )
 
-    if (peak_caller == 'dregion') {
-        //
-        // MODULE: call peaks with DANPOS2 dpos
-        //
-        DANPOS2_DREGION (
-            ch_ip_control_bam_merged_reps
-        )
-    }
+    //
+    // MODULE: call peaks with DANPOS2 dregion
+    //
+    DANPOS2_DREGION (
+        ch_ip_control_bam_merged_reps.filter { it -> it[0].peak_caller == 'dregion' }
+    )
 
-    if (peak_caller == 'dtriple') {
-        //
-        // MODULE: call peaks with DANPOS2 dtriple
-        //
-        DANPOS2_DTRIPLE (
-            ch_ip_control_bam_merged_reps
-        )
-    }
+    //
+    // MODULE: call peaks with DANPOS2 dtriple
+    //
+    DANPOS2_DTRIPLE (
+        ch_ip_control_bam_merged_reps.filter { it -> it[0].peak_caller == 'dtriple' }
+    )
 
 
     emit:

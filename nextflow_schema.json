@@ -895,25 +895,13 @@
             "fa_icon": "fas fa-chart-area",
             "description": "Options to adjust peak calling criteria.",
             "properties": {
-                "peak_caller": {
+                "peak_callers": {
                     "type": "string",
                     "default": "macs3",
-                    "description": "Specifies the peak calling algorithm to use.",
+                    "description": "Comma-separated list of peak calling algorithms to use.",
+                    "help_text": "One or more of `macs3`, `genrich`, `consenrich`, `epic2`, `mace`, `dpeak`, `dpos`, `dregion`, `dtriple`, `edd`, `denopa`, `seacr`, given as a comma-separated list without spaces, e.g. `--peak_callers macs3,genrich`. Every listed peak caller is run on all applicable samples.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": [
-                        "macs3",
-                        "genrich",
-                        "consenrich",
-                        "epic2",
-                        "mace",
-                        "dpeak",
-                        "dpos",
-                        "dregion",
-                        "dtriple",
-                        "edd",
-                        "denopa",
-                        "seacr"
-                    ]
+                    "pattern": "^(macs3|genrich|consenrich|epic2|mace|dpeak|dpos|dregion|dtriple|edd|denopa|seacr)(,(macs3|genrich|consenrich|epic2|mace|dpeak|dpos|dregion|dtriple|edd|denopa|seacr))*$"
                 },
                 "narrow_peak": {
                     "type": "boolean",

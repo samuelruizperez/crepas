@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: "call_peaks"
 description: |
-  Wrapper subworkflow that calls peaks with the peak caller selected via peak_caller (MACS3,
-  epic2, Genrich, MACE, SEACR, Consenrich+ROCCO, DANPOS2, EDD or denopa), then, unless
+  Wrapper subworkflow that calls peaks with each of the peak callers selected via peak_callers
+  (MACS3, epic2, Genrich, MACE, SEACR, Consenrich+ROCCO, DANPOS2, EDD or denopa), then, unless
   skip_consensus_peaks is true, builds a consensus peak set across samples from the resulting
   peaks
 keywords:
@@ -31,13 +31,14 @@ input:
         Structure: [ val(meta), path(bigwig) ]
   - ch_bedgraph_for_seacr:
       description: |
-        IP and input-control bedGraph signal, used when peak_caller is 'seacr'
+        IP and input-control bedGraph signal, used when 'seacr' is among peak_callers
         Structure: [ val(meta), path(bedgraph) ]
-  - peak_caller:
-      type: string
+  - ch_peak_callers:
       description: |
-        Peak caller to use. One of: macs3, epic2, genrich, mace, seacr, consenrich,
+        One peak caller name per element; every emitted caller is run on all applicable samples.
+        Each is one of: macs3, epic2, genrich, mace, seacr, consenrich,
         dpeak/dpos/dregion/dtriple (DANPOS2), edd, denopa.
+        Structure: [ val(peak_caller) ]
   - ch_fasta_fai:
       type: file
       description: |
@@ -141,43 +142,43 @@ input:
       pattern: "true|false"
   - seacr_peak_threshold:
       type: float
-      description: SEACR peak calling threshold, used when peak_caller is 'seacr'
+      description: SEACR peak calling threshold, used when 'seacr' is among peak_callers
 output:
   - edd_peaks:
       description: |
-        EDD peaks, when peak_caller is 'edd'
+        EDD peaks, when 'edd' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - macs3_peaks:
       description: |
-        MACS3 peaks, when peak_caller is 'macs3'
+        MACS3 peaks, when 'macs3' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - genrich_peaks:
       description: |
-        Genrich peaks, when peak_caller is 'genrich'
+        Genrich peaks, when 'genrich' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - epic2_peaks:
       description: |
-        epic2 peaks, when peak_caller is 'epic2'
+        epic2 peaks, when 'epic2' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - seacr_peaks:
       description: |
-        SEACR peaks, when peak_caller is 'seacr'
+        SEACR peaks, when 'seacr' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - denopa_peaks:
       description: |
-        denopa peaks, when peak_caller is 'denopa'
+        denopa peaks, when 'denopa' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - mace_peaks:
       description: |
-        MACE border-pair peaks, when peak_caller is 'mace'
+        MACE border-pair peaks, when 'mace' is among peak_callers
         Structure: [ val(meta), path(peaks) ]
   - consenrich_tracks:
       description: |
-        Consenrich signal, residuals and e-ratio tracks, when peak_caller is 'consenrich'
+        Consenrich signal, residuals and e-ratio tracks, when 'consenrich' is among peak_callers
         Structure: [ val(meta), path(bigwig) ]
   - rocco_peaks:
       description: |
-        ROCCO consensus peaks, when peak_caller is 'consenrich'
+        ROCCO consensus peaks, when 'consenrich' is among peak_callers
         Structure: [ val(meta), path(bed) ]
   - consensus_bed:
       description: |

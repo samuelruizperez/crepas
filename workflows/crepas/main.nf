@@ -804,9 +804,11 @@ workflow CREPAS {
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS
         .out
         .bedgraph_endo
-        .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
         .filter { it -> !(it[0].signal_vs_input)}
         .set { ch_bedgraph_endo_for_seacr }
+
+
+    ch_peak_callers = channel.of( "${params.peak_callers}" ).flatMap { callers -> callers.tokenize(',') }
 
     //
     // SUBWORKFLOW: Call peaks
@@ -815,14 +817,14 @@ workflow CREPAS {
         ch_filtered_bam_index,
         BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
         ch_bedgraph_endo_for_seacr,
-        params.peak_caller,
+        ch_peak_callers,
         ch_fasta_fai,
         ch_gtf,
         ch_effective_gfraction,
         ch_endo_chromsizes,
-        ch_blacklist.ifEmpty([[:], []]),
-        ch_sparsebed.ifEmpty([[:], []]),
-        ch_active_regions.ifEmpty([[:], []]),
+        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_sparsebed.ifEmpty([[:], []]).first(),
+        ch_active_regions.ifEmpty([[:], []]).first(),
         ch_rocco_params,
         ch_effective_gsize,
         ch_epic2_peak_count_header,
