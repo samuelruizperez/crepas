@@ -69,7 +69,7 @@ process BAM_SPLIT_BY_STRAND {
             --output ${prefix}.forward.bam \\
             ${bam}
         """
-    if (exp_type == 'eSPAN' && !meta.single_end) {
+    } else if (exp_type == 'eSPAN' && !meta.single_end) {
     """
         # Forward strand: both mates of every pair whose READ2 aligns in the forward orientation
         # Equivalent to: !4 && 1 && ((128 && !16) || (64 && !32))
@@ -113,7 +113,6 @@ process BAM_SPLIT_BY_STRAND {
             --output ${prefix}.forward.bam \\
             ${bam}
         """
-    }
     }
 
     stub:
