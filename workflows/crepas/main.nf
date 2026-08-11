@@ -919,7 +919,7 @@ workflow CREPAS {
             ch_endo_chromsizes,
             params.ctl_depth_ratio_threshold,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
-            ch_blacklist.ifEmpty([[:], []]),
+            ch_blacklist.ifEmpty([[:], []]).first(),
             params.idr_filtering_threshold,
             params.encode_peak_max_score
         )
@@ -948,9 +948,9 @@ workflow CREPAS {
         ch_filtered_bam_ss,
         ch_fasta_fai,
         ch_endo_chromsizes_ss,
-        ch_blacklist.ifEmpty([[:], []]),
-        ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
-        ch_initiation_zones.ifEmpty([[:], [[]]]),
+        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_okseq_rfd_file.ifEmpty([[:], [[]]]).first(),
+        ch_initiation_zones.ifEmpty([[:], [[]]]).first(),
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius,
