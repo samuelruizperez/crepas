@@ -1256,12 +1256,12 @@
                     "type": "string",
                     "format": "file-path",
                     "pattern": "^\\S+\\.tsv(\\.gz)?$",
-                    "description": "Path to a tab-delimited file containing the spike-in barcode targets, ids, and sequences. See the [sc_spikein_barcodes.tsv](https://github.com/grothlab/crepas/assets/barcodes/sc_spikein_barcodes.tsv) for an example. This is only useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA™ Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
+                    "description": "Path to a tab-delimited file containing the spike-in barcode targets, ids, and sequences. See the [sc_spikein_barcodes.tsv](https://github.com/grothlab/crepas/assets/barcodes/sc_spikein_barcodes.tsv) for an example. This is only useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA\u2122 Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
                     "fa_icon": "fas fa-file-alt"
                 },
                 "skip_spikein_barcode_extract": {
                     "type": "boolean",
-                    "description": "Whether to skip the extraction of spike-in barcodes from FASTQ files. This is useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA™ Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
+                    "description": "Whether to skip the extraction of spike-in barcodes from FASTQ files. This is useful for CUT&Tag or CUT&RUN experiments with SNAP-CUTANA\u2122 Spike-ins (See https://support.epicypher.com/v1/docs/analyzing-snap-cutana-spike-in-controls-and-expected-results).",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_picard_metrics": {
@@ -1404,7 +1404,15 @@
                 "partition_plot_range": {
                     "type": "integer",
                     "default": 100,
-                    "description": "Plot range for partition analysis visualization.",
+                    "description": "Distance (kb) up- and downstream of each initiation zone to plot.",
+                    "help_text": "Independent of `partition_iz_rm_overlap_range`: when `partition_plot_range` is the larger of the two, the plotted flanks can reach neighbouring initiation zones and a partition bin may then contribute to more than one profile.",
+                    "fa_icon": "fas fa-chart-area"
+                },
+                "partition_iz_rm_overlap_range": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Distance (kb) around each initiation zone used to discard overlapping ones.",
+                    "help_text": "Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Independent of `partition_plot_range`, so the plotted range can be widened without discarding more initiation zones.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "partition_exclude_scaffolds": {

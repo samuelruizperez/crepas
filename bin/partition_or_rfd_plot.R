@@ -125,7 +125,12 @@ parser$add_argument("-c", "--rpm_cutoff", action = "store",
 parser$add_argument("-r", "--plot_range", action = "store",
                     default = 100,
                     type = "integer",
-                    help = "Distance (KB) surrounding Initation Zones to consider for partition plots [default: 100 KB]")
+                    help = "Distance (kb) up- and downstream of each initiation zone to plot. Independent of --iz_rm_overlap_range: when --plot_range is the larger of the two, the plotted flanks can reach neighbouring initiation zones and a partition bin may then contribute to more than one profile. [default: 100 kb]")
+
+parser$add_argument("-z", "--iz_rm_overlap_range", action = "store",
+                    default = 100,
+                    type = "integer",
+                    help = "Distance (kb) around each initiation zone used to discard overlapping ones. Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Independent of --plot_range, so the plotted range can be widened without discarding more initiation zones. [default: 100 kb]")
 
 parser$add_argument("-e", "--exclude_chromosomes", action = "store",
                     default = "chrX,chrY,chrM",
@@ -155,6 +160,7 @@ opt_prefix <- opt$prefix
 opt_outdir <- opt$outdir
 opt_rpm_cutoff <- opt$rpm_cutoff
 opt_plot_range <- opt$plot_range
+opt_iz_rm_overlap_range <- opt$iz_rm_overlap_range
 opt_exclude_chromosomes <- opt$exclude_chromosomes
 opt_exclude_scaffolds <- opt$exclude_scaffolds
 opt_only_plot_within_iz <- opt$only_plot_wholly_within_iz
@@ -283,7 +289,8 @@ if (!dir.exists(opt_outdir)) {
 }
 
 # Check other parameters
-IZ_LIMITS <- opt_plot_range * 1000
+IZ_PLOT_LIMITS <- opt_plot_range * 1000
+IZ_OVERLAP_LIMITS <- opt_iz_rm_overlap_range * 1000
 
 
 # ===============================================================================
@@ -351,19 +358,18 @@ IZ_gr <- IZ_df %>%
 # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
 IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
 
-message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within 100 kb upstream and 100 kb downstream of another initiation zone)...")
+message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone)...")
 
 # Get original start coordinate for each initiation zone
 IZ_gr$break_start <- start(IZ_gr)
 
-# Resizing initiation zones to cover 100 kb upstream and 100 kb downstream
-IZ_gr <- resize(IZ_gr, IZ_LIMITS * 2, fix = "center")
-
+# Overlapping initiation zones are discarded based on their own radius, which is independent
+# of the plotted range: widening the plot does not discard more initiation zones.
 # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
-IZ_gr <- trim(IZ_gr)
+iz_overlap_gr <- trim(resize(IZ_gr, IZ_OVERLAP_LIMITS * 2, fix = "center"))
 
 # Finding the nearest resized initiation zone to each resized initiation zone
-IZ_dist <- distanceToNearest(IZ_gr)
+IZ_dist <- distanceToNearest(iz_overlap_gr)
 
 # Removing overlapping resized initiation zones
 overlapping_hits <- queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))
@@ -371,8 +377,11 @@ overlapping_hits <- queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance =
 if (length(overlapping_hits) > 0) {
   IZ_gr <- IZ_gr[-overlapping_hits]
 } else {
-  message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within 100 kb upstream and 100 kb downstream of another initiation zone.")
+  message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone.")
 }
+
+# The retained initiation zones are then resized to the plotted range
+IZ_gr <- trim(resize(IZ_gr, IZ_PLOT_LIMITS * 2, fix = "center"))
 
 message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")
 
@@ -504,7 +513,7 @@ for (type in names(part_files)) {
     }
 
   # As in Petryk et al. (2018; https://www-science.org/doi/10.1126/science.aau0294#supplementary-materials):
-  message("\n[", Sys.time(), "] (", base_name, ") Calculating partition rates around initiation zones (100 kb upstream and 100 kb downstream of each IZ) by averaging values within each bin position...")
+  message("\n[", Sys.time(), "] (", base_name, ") Calculating partition rates around initiation zones (", opt_plot_range, " kb upstream and ", opt_plot_range, " kb downstream of each IZ) by averaging values within each bin position...")
 
   # Finding out which initiation zones overlap which partition bins...
   if (opt_only_plot_within_iz) {
@@ -621,17 +630,26 @@ line_colors <- sample_colors
 
 message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
 
-raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
+
+plot_raw <- function(show_sd) {
+
+  p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
               fill = "grey95", inherit.aes = FALSE) +
     geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
-    geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
-    geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
-                    ymax = RFD_smooth_mean + RFD_smooth_sd, fill = sample),
-                linetype = 0,
-                alpha = 0.2) +
+    geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3)
+
+  if (show_sd) {
+    p <- p +
+      geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
+                      ymax = RFD_smooth_mean + RFD_smooth_sd, fill = sample),
+                  linetype = 0,
+                  alpha = 0.2)
+  }
+
+  p +
     geom_line(linewidth = 0.3) +
     scale_color_manual(values = line_colors) +
     scale_fill_manual(values = line_colors) +
@@ -661,6 +679,10 @@ raw_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, 
             vjust = -1.5, size = 2) +
     annotate(geom = 'text', label = 'Leading', x = Inf, y = Inf, hjust = 1.13,
             vjust = 2, size = 2)
+}
+
+raw_plot    <- plot_raw(show_sd = FALSE)
+raw_plot_sd <- plot_raw(show_sd = TRUE)
 
 message("\n[", Sys.time(), "] Saving raw partition plot(s)...")
 ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_raw.pdf")),
@@ -668,6 +690,13 @@ ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plo
 
 ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.png")),
        plot = raw_plot, width = plot_width, height = 2.5, units = "in",
+       dpi = 600)
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.pdf")),
+       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in")
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.png")),
+       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
 

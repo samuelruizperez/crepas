@@ -76,7 +76,7 @@ output:
           description: Groovy Map containing sample information
       - "*_plot_raw.pdf":
           type: file
-          description: Raw partition/RFD profile plot (PDF)
+          description: Raw partition/RFD profile plot, without the standard deviation ribbon (PDF)
           pattern: "*_plot_raw.pdf"
   plot_raw_png:
     - - meta:
@@ -84,8 +84,24 @@ output:
           description: Groovy Map containing sample information
       - "*_plot_raw.png":
           type: file
-          description: Raw partition/RFD profile plot (PNG)
+          description: Raw partition/RFD profile plot, without the standard deviation ribbon (PNG)
           pattern: "*_plot_raw.png"
+  plot_raw_sd_pdf:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.sd.pdf":
+          type: file
+          description: Raw partition/RFD profile plot, with the standard deviation ribbon (PDF)
+          pattern: "*_plot_raw.sd.pdf"
+  plot_raw_sd_png:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.sd.png":
+          type: file
+          description: Raw partition/RFD profile plot, with the standard deviation ribbon (PNG)
+          pattern: "*_plot_raw.sd.png"
   plot_smoothed_pdf:
     - - meta:
           type: map
