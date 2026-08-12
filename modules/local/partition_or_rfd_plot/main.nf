@@ -15,6 +15,8 @@ process PARTITION_OR_RFD_PLOT {
     output:
     tuple val(meta), path("*_plot_raw.pdf"),       emit: plot_raw_pdf
     tuple val(meta), path("*_plot_raw.png"),       emit: plot_raw_png
+    tuple val(meta), path("*_plot_raw.sd.pdf"),    emit: plot_raw_sd_pdf
+    tuple val(meta), path("*_plot_raw.sd.png"),    emit: plot_raw_sd_png
     tuple val(meta), path("*_plot_smoothed.pdf"),  emit: plot_smoothed_pdf
     tuple val(meta), path("*_plot_smoothed.png"),  emit: plot_smoothed_png
     tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
@@ -56,6 +58,8 @@ process PARTITION_OR_RFD_PLOT {
     touch  ${prefix}.scatter_plot.png
     touch  ${prefix}_plot_raw.pdf
     touch  ${prefix}_plot_raw.png
+    touch  ${prefix}_plot_raw.sd.pdf
+    touch  ${prefix}_plot_raw.sd.png
     touch  ${prefix}_plot_smoothed.pdf
     touch  ${prefix}_plot_smoothed.png
     touch  ${prefix}_mean_values.tsv

@@ -150,7 +150,8 @@
                     "genrich": {
                         "branch": "master",
                         "git_sha": "f7ac19bd4c8e6edc98d5e3441998126f21352115",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/genrich/genrich.diff"
                     },
                     "gffread": {
                         "branch": "master",

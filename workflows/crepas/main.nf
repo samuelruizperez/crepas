@@ -804,51 +804,77 @@ workflow CREPAS {
     BAM_NORMALIZE_BIGWIG_DEEPTOOLS
         .out
         .bedgraph_endo
-        .filter { it -> it[0].exp_type in ['CUTandRUN', 'CUTandTag', 'TIP-seq'] }
         .filter { it -> !(it[0].signal_vs_input)}
         .set { ch_bedgraph_endo_for_seacr }
 
-    //
-    // SUBWORKFLOW: Call peaks
-    //
-    CALL_PEAKS (
-        ch_filtered_bam_index,
-        BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
-        ch_bedgraph_endo_for_seacr,
-        params.peak_caller,
-        ch_fasta_fai,
-        ch_gtf,
-        ch_effective_gfraction,
-        ch_endo_chromsizes,
-        ch_blacklist.ifEmpty([[:], []]),
-        ch_sparsebed.ifEmpty([[:], []]),
-        ch_active_regions.ifEmpty([[:], []]),
-        ch_rocco_params,
-        ch_effective_gsize,
-        ch_epic2_peak_count_header,
-        ch_epic2_frip_score_header,
-        ch_epic2_peak_annotation_header,
-        ch_gr_peak_count_header,
-        ch_gr_frip_score_header,
-        ch_gr_peak_annotation_header,
-        ch_mace_peak_count_header,
-        ch_mace_frip_score_header,
-        ch_mace_peak_annotation_header,
-        ch_macs3_peak_count_header,
-        ch_macs3_frip_score_header,
-        ch_macs3_peak_annotation_header,
-        ch_deseq2_pca_header,
-        ch_deseq2_clustering_header,
-        params.narrow_peak,
-        params.skip_peak_annotation,
-        params.skip_peak_qc,
-        params.skip_bdgcmp,
-        params.skip_consensus_peaks,
-        params.skip_deseq2_qc,
-        params.skip_consensus_plotprofile,
-        params.input_cisrpm_in_plotprofile,
-        params.seacr_peak_threshold
-    )
+
+    ch_edd_peaks = channel.empty()
+    ch_macs3_peaks = channel.empty()
+    ch_genrich_peaks = channel.empty()
+    ch_epic2_peaks = channel.empty()
+    ch_mace_peaks = channel.empty()
+    ch_consenrich_tracks = channel.empty()
+    ch_rocco_peaks = channel.empty()
+    ch_consensus_bed = channel.empty()
+    ch_consensus_txt = channel.empty()
+
+    if (!params.skip_peak_calling) {
+
+        ch_peak_callers = channel.of( "${params.peak_callers}" ).flatMap { callers -> callers.tokenize(',') }
+
+        //
+        // SUBWORKFLOW: Call peaks
+        //
+        CALL_PEAKS (
+            ch_filtered_bam_index,
+            BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.bigwig_all_endo,
+            ch_bedgraph_endo_for_seacr,
+            ch_peak_callers,
+            ch_fasta_fai,
+            ch_gtf,
+            ch_effective_gfraction,
+            ch_endo_chromsizes,
+            ch_blacklist.ifEmpty([[:], []]).first(),
+            ch_sparsebed.ifEmpty([[:], []]).first(),
+            ch_active_regions.ifEmpty([[:], []]).first(),
+            ch_rocco_params,
+            ch_effective_gsize,
+            ch_epic2_peak_count_header,
+            ch_epic2_frip_score_header,
+            ch_epic2_peak_annotation_header,
+            ch_gr_peak_count_header,
+            ch_gr_frip_score_header,
+            ch_gr_peak_annotation_header,
+            ch_mace_peak_count_header,
+            ch_mace_frip_score_header,
+            ch_mace_peak_annotation_header,
+            ch_macs3_peak_count_header,
+            ch_macs3_frip_score_header,
+            ch_macs3_peak_annotation_header,
+            ch_deseq2_pca_header,
+            ch_deseq2_clustering_header,
+            params.narrow_peak,
+            params.skip_peak_annotation,
+            params.skip_peak_qc,
+            params.skip_bdgcmp,
+            params.skip_consensus_peaks,
+            params.skip_deseq2_qc,
+            params.skip_consensus_plotprofile,
+            params.input_cisrpm_in_plotprofile,
+            params.seacr_peak_threshold
+        )
+
+        ch_edd_peaks = CALL_PEAKS.out.edd_peaks
+        ch_macs3_peaks = CALL_PEAKS.out.macs3_peaks
+        ch_genrich_peaks = CALL_PEAKS.out.genrich_peaks
+        ch_epic2_peaks = CALL_PEAKS.out.epic2_peaks
+        ch_mace_peaks = CALL_PEAKS.out.mace_peaks
+        ch_consenrich_tracks = CALL_PEAKS.out.consenrich_tracks
+        ch_rocco_peaks = CALL_PEAKS.out.rocco_peaks
+        ch_consensus_bed = CALL_PEAKS.out.consensus_bed
+        ch_consensus_txt = CALL_PEAKS.out.consensus_txt
+
+    }
 
     //
     // Create channel for downstream processes: [ meta, [ ip_bam, ipcontrol_bam ] [ ip_index, ipcontrol_index ] ]
@@ -893,7 +919,7 @@ workflow CREPAS {
             ch_endo_chromsizes,
             params.ctl_depth_ratio_threshold,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
-            ch_blacklist.ifEmpty([[:], []]),
+            ch_blacklist.ifEmpty([[:], []]).first(),
             params.idr_filtering_threshold,
             params.encode_peak_max_score
         )
@@ -922,9 +948,9 @@ workflow CREPAS {
         ch_filtered_bam_ss,
         ch_fasta_fai,
         ch_endo_chromsizes_ss,
-        ch_blacklist.ifEmpty([[:], []]),
-        ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
-        ch_initiation_zones.ifEmpty([[:], [[]]]),
+        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_okseq_rfd_file.ifEmpty([[:], [[]]]).first(),
+        ch_initiation_zones.ifEmpty([[:], [[]]]).first(),
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius,
@@ -965,9 +991,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .edd_peaks
+        ch_edd_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -980,9 +1004,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .macs3_peaks
+        ch_macs3_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -996,10 +1018,8 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .consensus_bed
-            .mix(CALL_PEAKS.out.consensus_txt)
+        ch_consensus_bed
+            .mix(ch_consensus_txt)
             .map { meta, bed ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1014,9 +1034,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .genrich_peaks
+        ch_genrich_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1030,9 +1048,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .mace_peaks
+        ch_mace_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1045,9 +1061,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .epic2_peaks
+        ch_epic2_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1060,9 +1074,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .consenrich_tracks
+        ch_consenrich_tracks
             .map { meta, signal ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +
@@ -1075,9 +1087,7 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
-        CALL_PEAKS
-            .out
-            .rocco_peaks
+        ch_rocco_peaks
             .map { meta, peak ->
                 def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
                     "${params.multimap_allocation_method ? params.multimap_allocation_method == 'chromap' ? 'cm_allo' : params.multimap_allocation_method : ''}" +

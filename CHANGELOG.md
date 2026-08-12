@@ -19,6 +19,9 @@ Development version of grothlab/crepas.
 - Grouped partition plots, combining all samples sharing an antibody into a single plot, with a `skip_partition_group_plot` parameter to disable them.
 - A reduced `*.totals.tsv` summary table emitted alongside the full samtools stats summary, holding only the per-processing-step read counts.
 - Experiment-type-specific alignment settings for CUT&RUN, CUT&Tag, TIP-seq and eSPAN, applied to every aligner that exposes the corresponding options (bowtie2, bowtie, HISAT2, Chromap and minimap2).
+- `peak_callers`, a comma-separated list of peak callers that are all run in the same pipeline run (e.g. `--peak_callers macs3,genrich`), replacing the single-valued `peak_caller`. The requested caller is carried in each sample's `meta`, so the results of different callers no longer overwrite each other.
+- `skip_peak_calling`, to switch peak calling off entirely without changing the `peak_callers` selection.
+- `partition_iz_rm_overlap_range`, which sets the window used to discard overlapping initiation zones independently of `partition_plot_range`, so that the plotted range can be widened without discarding more initiation zones.
 
 ### `Changed`
 
@@ -35,6 +38,9 @@ Development version of grothlab/crepas.
 - Renamed the multimapping-reads column of the samtools stats summary to `<column>_minus_<column>`, since the filtering step it is derived from removes more than just multimapping reads.
 - The GEFION profile now prepends to the container `PATH` instead of replacing it, so images that install elsewhere (e.g. Wave/pixi images) keep working.
 - Expanded `CITATIONS.md.
+- SEACR is no longer restricted to CUT&RUN, CUT&Tag and TIP-seq samples; it now runs on every sample for which it is requested through `peak_callers`.
+- Updated the pipeline metro map.
+- The samplesheet examples in `docs/usage.md` now match the example samplesheets shipped in `assets/test-datasets/`, and the DAN System guide (`docs/ku_sund_danhead_crepas_usage.md`) lists every available test profile.
 
 ### `Fixed`
 
@@ -54,6 +60,10 @@ Development version of grothlab/crepas.
 - Bugs in `process_stats_summary.R`.
 - An empty `final_samtools_stats_summary` table, and a stale `meta` reference in `STATS_CAT`.
 - Add missing `skip_flTbl` param in profiles to avoid.
+- `PARTITION_PLOT` failing for samples without an input control.
+- Partition and RFD plot labels for sample names containing dots (e.g. `H3.3`), which were truncated at the first dot.
+- File name collisions in `GENRICH` when the same input control is shared between several IP samples; treatment and control BAMs are now staged into separate directories.
+- Consensus peak `plotProfile` outputs of different experiment types sharing an antibody being written to the same directory; the output path and file prefix now include the experiment type.
 
 ## [[1.0.0](https://github.com/grothlab/crepas/releases/tag/1.0.0)] - Mercurian Cinnabar - 2026-06-21
 

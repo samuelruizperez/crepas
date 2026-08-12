@@ -24,51 +24,7 @@ process BAM_SPLIT_BY_STRAND {
     script:
     def prefix            = task.ext.prefix ?: "${meta.id}"
 
-    if (exp_type == 'eSPAN' && !meta.single_end) {
-    """
-        # Forward strand: both mates of every pair whose READ2 aligns in the forward orientation
-        # Equivalent to: !4 && 1 && ((128 && !16) || (64 && !32))
-        samtools view \\
-            --threads ${task.cpus-1} \\
-            --expr '!flag.unmap && flag.paired && ((flag.read2 && !flag.reverse) || (flag.read1 && !flag.mreverse))' \\
-            --with-header \\
-            --bam \\
-            --output ${prefix}.forward.bam \\
-            ${bam}
-
-        # Reverse strand: both mates of every pair whose READ2 aligns in the reverse orientation
-        # Equivalent to: !4 && 1 && ((128 && 16) || (64 && 32))
-        samtools view \\
-            --threads ${task.cpus-1} \\
-            --expr '!flag.unmap && flag.paired && ((flag.read2 && flag.reverse) || (flag.read1 && flag.mreverse))' \\
-            --with-header \\
-            --bam \\
-            --output ${prefix}.reverse.bam \\
-            ${bam}
-        """
-    } else if (exp_type == 'eSPAN' && meta.single_end) {
-    """
-        # Single-end eSPAN reads are READ1-equivalent, so the nascent strand is the opposite
-        # of the alignment orientation
-        # Equivalent to: !4 && !1 && 16
-        samtools view \\
-            --threads ${task.cpus-1} \\
-            --expr '!flag.unmap && !flag.paired && flag.reverse' \\
-            --with-header \\
-            --bam \\
-            --output ${prefix}.forward.bam \\
-            ${bam}
-
-        # Equivalent to: !4 && !1 && !16
-        samtools view \\
-            --threads ${task.cpus-1} \\
-            --expr '!flag.unmap && !flag.paired && !flag.reverse' \\
-            --with-header \\
-            --bam \\
-            --output ${prefix}.reverse.bam \\
-            ${bam}
-        """
-    } else if (exp_type in ['SCAR-seq', 'OK-seq'] && strandedness == 'forward') {
+    if (exp_type in ['SCAR-seq', 'OK-seq'] && strandedness == 'forward') {
     """
         # Forward strand: reads aligned in the forward orientation
         # Equivalent to: !4 && !16
@@ -108,6 +64,50 @@ process BAM_SPLIT_BY_STRAND {
         samtools view \\
             --threads ${task.cpus-1} \\
             --expr '!flag.unmap && flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
+        """
+    } else if (exp_type == 'eSPAN' && !meta.single_end) {
+    """
+        # Forward strand: both mates of every pair whose READ2 aligns in the forward orientation
+        # Equivalent to: !4 && 1 && ((128 && !16) || (64 && !32))
+        # NOTE: READ2 aligns forward, but in eSPAN this pair represents the genomic reverse/minus/Crick nascent strand.
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && flag.paired && ((flag.read2 && !flag.reverse) || (flag.read1 && !flag.mreverse))' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
+
+        # Reverse strand: both mates of every pair whose READ2 aligns in the reverse orientation
+        # Equivalent to: !4 && 1 && ((128 && 16) || (64 && 32))
+        # NOTE: READ2 aligns reverse, but in eSPAN this pair represents the genomic forward/plus/Watson nascent strand.
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && flag.paired && ((flag.read2 && flag.reverse) || (flag.read1 && flag.mreverse))' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.forward.bam \\
+            ${bam}
+        """
+    } else if (exp_type == 'eSPAN' && meta.single_end) {
+    """
+        # Equivalent to: !4 && !1 && 16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && !flag.paired && flag.reverse' \\
+            --with-header \\
+            --bam \\
+            --output ${prefix}.reverse.bam \\
+            ${bam}
+
+        # Equivalent to: !4 && !1 && !16
+        samtools view \\
+            --threads ${task.cpus-1} \\
+            --expr '!flag.unmap && !flag.paired && !flag.reverse' \\
             --with-header \\
             --bam \\
             --output ${prefix}.forward.bam \\
