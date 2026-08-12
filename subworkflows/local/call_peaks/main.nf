@@ -15,7 +15,7 @@ workflow CALL_PEAKS {
     ch_bam_index              // channel: [ val(meta), [ bam ], [ index ] ]
     ch_bigwig_norm
     ch_bedgraph_for_seacr
-    ch_peak_callers         // channel: [ 'macs3', 'genrich' ] 
+    ch_peak_callers         // channel: [ 'macs3', 'genrich' ]
     ch_fasta_fai            // channel: [ val(meta), path(fasta), path(fai) ]
     ch_gtf
     ch_effective_gfraction
@@ -57,14 +57,14 @@ workflow CALL_PEAKS {
     ch_bam_index
         .combine(ch_peak_callers)
         .map { meta, bam, index, peak_caller ->
-            [ meta + [ 'peak_caller': peak_caller ], bam, index ]    
+            [ meta + [ 'peak_caller': peak_caller ], bam, index ]
         }
         .set { ch_bam_index }
 
     ch_bedgraph_for_seacr
         .combine(ch_peak_callers)
         .map { meta, bdg, peak_caller ->
-            [ meta + [ 'peak_caller': peak_caller ], bdg ]    
+            [ meta + [ 'peak_caller': peak_caller ], bdg ]
         }
         .filter { it -> it[0].peak_caller == 'seacr' }
         .set { ch_bedgraph_for_seacr }

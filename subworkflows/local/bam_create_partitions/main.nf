@@ -565,7 +565,7 @@ workflow BAM_CREATE_PARTITIONS {
         }
         .mix(ch_part_flt_by_type.scar_wo_ipcontrol)
         .set { ch_part_flt }
-    
+
     ch_part_flt
         .combine(ch_okseq_rfd_file.map { it -> it[1] })
         .combine(ch_initiation_zones.map { it -> it[1] })
