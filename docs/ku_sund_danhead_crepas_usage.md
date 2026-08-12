@@ -134,7 +134,7 @@ The recommended way to run the pipeline on the DAN System is through an _SBATCH_
         ```
 
     > [!TIP]  
-    > This is not mandatory, you can source your FASTQ files from wherever you want (except the UCPH drives) as long as you provide the correct path in the input samplesheet file (see next step).
+    > This is not mandatory, you can source your FASTQ files from wherever you want (except the UCPH drives) as long as you provide the correct full path in the input samplesheet file (see step 4).
 
 3.  Now, create a subdirectory for the pipeline's input and output files:
 
@@ -189,11 +189,11 @@ The recommended way to run the pipeline on the DAN System is through an _SBATCH_
 
     ```console
     ../Groth_group/<your_initials>/project1/        # Project directory
-    ├── fastq/                                      # (Optional) Directory with raw FASTQ files
-    └── crepas/                                      # Directory for the crepas pipeline
-        ├── project1_crepas_samplesheet.csv          # Input samplesheet file (CSV)
-        ├── project1_crepas_params.yaml              # Parameter file (YAML)
-        ├── project1_crepas_sbatch.sh                # SBATCH script to submit the job
+    ├── fastq/                                      # (Optional) Directory with raw FASTQ files (see step 2)
+    └── crepas/                                     # Directory for the crepas pipeline
+        ├── project1_crepas_samplesheet.csv         # Input samplesheet file (CSV)
+        ├── project1_crepas_params.yaml             # Parameter file (YAML)
+        ├── project1_crepas_sbatch.sh               # SBATCH script to submit the job
         └── output/                                 # Output directory for the pipeline
     ```
 
@@ -222,12 +222,17 @@ The recommended way to run the pipeline on the DAN System is through an _SBATCH_
 
 ### Running a pipeline test
 
-You can test the correct functioning of any pipeline version (`-r <version>`) by running one of the following pipeline tests, also under the modified institution profile ([`ku_sund_danhead_mod`](../conf/ku_sund_danhead_mod.config)):
+You can test the correct functioning of any pipeline version (`-r <version>`) by running one of the following pipeline tests:
 
+- `test`
+- `test_full`
 - `test_chipseq`
 - `test_chipexo`
 - `test_chorseq`
 - `test_scarseq`
+- `test_okseq`
+- `test_cutandrun`
+- `test_espan`
 - `test_atacseq`
 
 Now, you should follow similar steps as in the [Running the pipeline through an _SBATCH_ job](#running-the-pipeline-through-an-sbatch-job) section, but this time we do not need to copy any FASTQ files or create an input samplesheet or parameter file, as the test data and parameters are already included in the pipeline profiles.
@@ -243,13 +248,13 @@ Then create an SBATCH script to submit the job to the DAN System queue. Use the 
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=CREPAS_JOB        # specify a name for the job
+#SBATCH --job-name=crepas           # specify a name for the job
 #SBATCH --mail-type=END,FAIL        # mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=NONE            # email address to receive the notifications
 #SBATCH -c 1                        # number of requested cores for the Nextflow head job
 #SBATCH --mem=4gb                   # total requested RAM for the Nextflow head job
 #SBATCH --time=2-00:00:00           # max. running time of the pipeline job, format in D-HH:MM:SS
-#SBATCH --output=crepas_job.%j.log   # standard output and error log, '%j' gives the job ID
+#SBATCH --output=crepas_job.%j.log  # standard output and error log, '%j' gives the job ID
 
 # Source the bashrc file to load the environment variables
 source ~/.bashrc
