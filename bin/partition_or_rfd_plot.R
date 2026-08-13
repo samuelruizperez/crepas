@@ -625,13 +625,13 @@ line_colors <- sample_colors
 
 
 # ===============================================================================
-# Raw partition plot(s)
+# Smoothed partition plot(s)
 # ===============================================================================
 
-message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
+message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
 
 
-plot_raw <- function(show_sd) {
+plot_smoothed <- function(show_sd) {
 
   p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
@@ -681,32 +681,32 @@ plot_raw <- function(show_sd) {
             vjust = 2, size = 2)
 }
 
-raw_plot    <- plot_raw(show_sd = FALSE)
-raw_plot_sd <- plot_raw(show_sd = TRUE)
+smoothed_plot    <- plot_smoothed(show_sd = FALSE)
+smoothed_plot_sd <- plot_smoothed(show_sd = TRUE)
 
-message("\n[", Sys.time(), "] Saving raw partition plot(s)...")
-ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_raw.pdf")),
-       plot = raw_plot, width = plot_width, height = 2.5, units = "in")
+message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
+ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_smoothed.pdf")),
+       plot = smoothed_plot, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.png")),
-       plot = raw_plot, width = plot_width, height = 2.5, units = "in",
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.png")),
+       plot = smoothed_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.pdf")),
-       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in")
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.sd.pdf")),
+       plot = smoothed_plot_sd, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.png")),
-       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in",
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.sd.png")),
+       plot = smoothed_plot_sd, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
 
 # ===============================================================================
-# Smoothed partition plot(s)
+# GAM-fitted smoothed partition plot(s)
 # ===============================================================================
 
-message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
+message("\n[", Sys.time(), "] Creating GAM-fitted partition plot(s)...")
 
-smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
+smoothed_gam_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -743,11 +743,11 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mea
             vjust = 2, size = 2)
 
 message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.pdf")),
-       plot = smooth_plot, width = plot_width, height = 2.5, units = "in")
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.gam.pdf")),
+       plot = smoothed_gam_plot, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.png")),
-       plot = smooth_plot, width = plot_width, height = 2.5, units = "in",
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.gam.png")),
+       plot = smoothed_gam_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
 

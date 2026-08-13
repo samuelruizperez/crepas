@@ -99,16 +99,19 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.plot_raw_pdf.get(0).get(1)).size() > 0 },
-                { assert path(process.out.plot_raw_png.get(0).get(1)).size() > 0 },
                 { assert path(process.out.plot_smoothed_pdf.get(0).get(1)).size() > 0 },
                 { assert path(process.out.plot_smoothed_png.get(0).get(1)).size() > 0 },
+                { assert path(process.out.plot_smoothed_sd_pdf.get(0).get(1)).size() > 0 },
+                { assert path(process.out.plot_smoothed_sd_png.get(0).get(1)).size() > 0 },
+                { assert path(process.out.plot_smoothed_gam_pdf.get(0).get(1)).size() > 0 },
+                { assert path(process.out.plot_smoothed_gam_png.get(0).get(1)).size() > 0 },
                 { assert path(process.out.mean_values.get(0).get(1)).size() > 0 },
                 // PDF/PNG embed timestamps and are not byte-reproducible; snapshot names + the
                 // deterministic mean-values table + versions instead.
                 { assert snapshot(
-                    process.out.plot_raw_pdf.collect { m, f -> file(f).name },
                     process.out.plot_smoothed_pdf.collect { m, f -> file(f).name },
+                    process.out.plot_smoothed_sd_pdf.collect { m, f -> file(f).name },
+                    process.out.plot_smoothed_gam_pdf.collect { m, f -> file(f).name },
                     process.out.mean_values,
                     process.out.findAll { key, val -> key.startsWith('versions') }
                     ).match() }

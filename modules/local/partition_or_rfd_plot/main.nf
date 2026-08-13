@@ -13,12 +13,12 @@ process PARTITION_OR_RFD_PLOT {
     tuple val(meta3), path(chrom_sizes)
 
     output:
-    tuple val(meta), path("*_plot_raw.pdf"),       emit: plot_raw_pdf
-    tuple val(meta), path("*_plot_raw.png"),       emit: plot_raw_png
-    tuple val(meta), path("*_plot_raw.sd.pdf"),    emit: plot_raw_sd_pdf
-    tuple val(meta), path("*_plot_raw.sd.png"),    emit: plot_raw_sd_png
-    tuple val(meta), path("*_plot_smoothed.pdf"),  emit: plot_smoothed_pdf
-    tuple val(meta), path("*_plot_smoothed.png"),  emit: plot_smoothed_png
+    tuple val(meta), path("*_plot_smoothed.pdf"),       emit: plot_smoothed_pdf
+    tuple val(meta), path("*_plot_smoothed.png"),       emit: plot_smoothed_png
+    tuple val(meta), path("*_plot_smoothed.sd.pdf"),    emit: plot_smoothed_sd_pdf
+    tuple val(meta), path("*_plot_smoothed.sd.png"),    emit: plot_smoothed_sd_png
+    tuple val(meta), path("*_plot_smoothed.gam.pdf"),  emit: plot_smoothed_gam_pdf
+    tuple val(meta), path("*_plot_smoothed.gam.png"),  emit: plot_smoothed_gam_png
     tuple val(meta), path("*_mean_values.tsv"),    emit: mean_values
     tuple val(meta), path("*.scatter_plot.pdf"),   emit: scatter_pdf, optional:true
     tuple val(meta), path("*.scatter_plot.png"),   emit: scatter_png, optional:true
@@ -56,12 +56,12 @@ process PARTITION_OR_RFD_PLOT {
     """
     touch  ${prefix}.scatter_plot.pdf
     touch  ${prefix}.scatter_plot.png
-    touch  ${prefix}_plot_raw.pdf
-    touch  ${prefix}_plot_raw.png
-    touch  ${prefix}_plot_raw.sd.pdf
-    touch  ${prefix}_plot_raw.sd.png
     touch  ${prefix}_plot_smoothed.pdf
     touch  ${prefix}_plot_smoothed.png
+    touch  ${prefix}_plot_smoothed.sd.pdf
+    touch  ${prefix}_plot_smoothed.sd.png
+    touch  ${prefix}_plot_smoothed.gam.pdf
+    touch  ${prefix}_plot_smoothed.gam.png
     touch  ${prefix}_mean_values.tsv
     """
 }
