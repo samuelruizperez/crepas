@@ -631,9 +631,9 @@ line_colors <- sample_colors
 message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
 
 
-plot_smoothed <- function(show_sd) {
+plot_partition <- function(mean_col, sd_col, show_sd) {
 
-  p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
+  p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = .data[[mean_col]], color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -643,8 +643,8 @@ plot_smoothed <- function(show_sd) {
 
   if (show_sd) {
     p <- p +
-      geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
-                      ymax = RFD_smooth_mean + RFD_smooth_sd, fill = sample),
+      geom_ribbon(aes(ymin = .data[[mean_col]] - .data[[sd_col]],
+                      ymax = .data[[mean_col]] + .data[[sd_col]], fill = sample),
                   linetype = 0,
                   alpha = 0.2)
   }
@@ -681,8 +681,8 @@ plot_smoothed <- function(show_sd) {
             vjust = 2, size = 2)
 }
 
-smoothed_plot    <- plot_smoothed(show_sd = FALSE)
-smoothed_plot_sd <- plot_smoothed(show_sd = TRUE)
+smoothed_plot    <- plot_partition("RFD_smooth_mean", "RFD_smooth_sd", show_sd = FALSE)
+smoothed_plot_sd <- plot_partition("RFD_smooth_mean", "RFD_smooth_sd", show_sd = TRUE)
 
 message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
 ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_smoothed.pdf")),
@@ -697,6 +697,32 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 
 ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.sd.png")),
        plot = smoothed_plot_sd, width = plot_width, height = 2.5, units = "in",
+       dpi = 600)
+
+
+# ===============================================================================
+# Raw (unsmoothed) partition plot(s)
+# ===============================================================================
+
+message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
+
+raw_plot    <- plot_partition("RFD_raw_mean", "RFD_raw_sd", show_sd = FALSE)
+raw_plot_sd <- plot_partition("RFD_raw_mean", "RFD_raw_sd", show_sd = TRUE)
+
+message("\n[", Sys.time(), "] Saving raw partition plot(s)...")
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.pdf")),
+       plot = raw_plot, width = plot_width, height = 2.5, units = "in")
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.png")),
+       plot = raw_plot, width = plot_width, height = 2.5, units = "in",
+       dpi = 600)
+
+message("\n[", Sys.time(), "] Saving raw partition plot(s) with the standard deviation ribbon...")
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.pdf")),
+       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in")
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.png")),
+       plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
 

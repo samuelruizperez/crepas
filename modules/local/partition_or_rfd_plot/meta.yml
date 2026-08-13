@@ -118,6 +118,38 @@ output:
           type: file
           description: Smoothed partition/RFD profile plot (PNG)
           pattern: "*_plot_smoothed.gam.png"
+  plot_raw_pdf:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.pdf":
+          type: file
+          description: Unsmoothed partition/RFD profile plot, without the standard deviation ribbon (PDF)
+          pattern: "*_plot_raw.pdf"
+  plot_raw_png:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.png":
+          type: file
+          description: Unsmoothed partition/RFD profile plot, without the standard deviation ribbon (PNG)
+          pattern: "*_plot_raw.png"
+  plot_raw_sd_pdf:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.sd.pdf":
+          type: file
+          description: Unsmoothed partition/RFD profile plot, with the standard deviation ribbon (PDF)
+          pattern: "*_plot_raw.sd.pdf"
+  plot_raw_sd_png:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*_plot_raw.sd.png":
+          type: file
+          description: Unsmoothed partition/RFD profile plot, with the standard deviation ribbon (PNG)
+          pattern: "*_plot_raw.sd.png"
   mean_values:
     - - meta:
           type: map
