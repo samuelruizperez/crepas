@@ -462,7 +462,7 @@ Using the consensus peaks it is possible to assess the degree of overlap between
 
 ![R - UpSetR peak intersection plot](images/r_upsetr_intersect_plot.png)
 
-By default, the peak-sets are not filtered, therefore, the consensus peaks will be generated across the union set of peaks from all samples. However, you can increment the `--min_reps_consensus` parameter appropriately if you are confident you have good reproducibility amongst your replicates to create a "reproducible" set of consensus of peaks. In future iterations of the pipeline more formal analyses such as [IDR](https://projecteuclid.org/euclid.aoas/1318514284) may be implemented to obtain reproducible and high confidence peak-sets with which to perform this sort of analysis.
+By default, the peak-sets are not filtered, therefore, the consensus peaks will be generated across the union set of peaks from all samples. However, you can increment the `--consensus_min_replicates_per_sample` parameter appropriately if you are confident you have good reproducibility amongst your replicates to create a "reproducible" set of consensus of peaks.
 
 The [featureCounts](http://bioinf.wehi.edu.au/featureCounts/) tool is used to count the number of reads relative to the consensus peak-set across all of the samples. This essentially generates a file containing a matrix where the rows represent the consensus intervals, the columns represent all of the samples in the experiment, and the values represent the raw read counts.
 

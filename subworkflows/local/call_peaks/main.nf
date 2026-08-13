@@ -299,18 +299,17 @@ workflow CALL_PEAKS {
     ch_consensus_bed = channel.empty()
     ch_consensus_txt = channel.empty()
     if (!skip_consensus_peaks) {
-        // Create channels: [ antibody, [ ip_bams ] ]
+        // Create channels: [ meta, ip_bam ]
         ch_all_ip_and_controls
             .filter { it -> it[0].peak_caller == 'macs3' }
-            .map { meta, ip_bam, ipcontrol_bam ->
-                [meta.antibody, ip_bam]
+            .map { meta, ip_bam, _ipcontrol_bam ->
+                [meta, ip_bam]
             }
-            .groupTuple()
-            .set { ch_antibody_bams }
+            .set { ch_bam_for_consensus }
 
         BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2(
             ch_macs3_peaks,
-            ch_antibody_bams,
+            ch_bam_for_consensus,
             ch_bigwig_norm,
             ch_fasta.map { it -> it[1] },
             ch_gtf.map { it -> it[1] },

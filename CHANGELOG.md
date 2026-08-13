@@ -41,6 +41,8 @@ Development version of grothlab/crepas.
 - SEACR is no longer restricted to CUT&RUN, CUT&Tag and TIP-seq samples; it now runs on every sample for which it is requested through `peak_callers`.
 - Updated the pipeline metro map.
 - The samplesheet examples in `docs/usage.md` now match the example samplesheets shipped in `assets/test-datasets/`, and the DAN System guide (`docs/ku_sund_danhead_crepas_usage.md`) lists every available test profile.
+- Renamed `min_reps_consensus` to `consensus_min_replicates_per_sample`, and the corresponding `macs3_merged_expand.py` argument from `--min_replicates` to `--min_replicates_per_sample`.
+- Removed some channel dumps written to `<outdir>/.debug/BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2/`.
 
 ### `Fixed`
 
@@ -64,6 +66,7 @@ Development version of grothlab/crepas.
 - Partition and RFD plot labels for sample names containing dots (e.g. `H3.3`), which were truncated at the first dot.
 - File name collisions in `GENRICH` when the same input control is shared between several IP samples; treatment and control BAMs are now staged into separate directories.
 - Consensus peak `plotProfile` outputs of different experiment types sharing an antibody being written to the same directory; the output path and file prefix now include the experiment type.
+- `featureCounts` quantification and DESeq2 QC of the consensus peaks not running.
 
 ## [[1.0.0](https://github.com/grothlab/crepas/releases/tag/1.0.0)] - Mercurian Cinnabar - 2026-06-21
 
