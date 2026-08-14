@@ -463,6 +463,8 @@ message("\n# ===================================================================
 message("# STEP 3. Preprocessing of partition files...")
 message("# ===============================================================================")
 
+BIN_SIZES_MATCH <- TRUE
+
 partition_df <- tibble()
 
 for (type in names(part_files)) {
@@ -507,8 +509,10 @@ for (type in names(part_files)) {
 
     if (HAS_OKSEQ) {
       if (OK_BIN_SIZE != PART_BIN_SIZE) {
-        stop("\n[", Sys.time(), "] ERROR: Bin size of ", base_name,
-             "(", PART_BIN_SIZE, " bp) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, " bp).\n")
+        BIN_SIZES_MATCH <- FALSE
+        warning("\n[", Sys.time(), "] WARNING: Bin size of ", base_name,
+                " (", PART_BIN_SIZE, " bp) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, " bp). ",
+                "The scatter plot pairs bins by their coordinates and will be skipped; the profile plots are not affected.\n")
       }
     }
 
@@ -781,7 +785,12 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 # Scatter plots: RFD (OK-seq) vs partition
 # ===============================================================================
 
-if (HAS_OKSEQ && num_types_with_files > 0) {
+if (HAS_OKSEQ && num_types_with_files > 0 && !BIN_SIZES_MATCH) {
+  message("\n[", Sys.time(), "] Skipping the scatter plot(s): the OK-seq and partition bin sizes differ, ",
+          "so their bins cannot be paired by coordinate.")
+}
+
+if (HAS_OKSEQ && num_types_with_files > 0 && BIN_SIZES_MATCH) {
 
   message("\n[", Sys.time(), "] Creating scatter plot(s) (OK-seq vs partitions)...")
 
