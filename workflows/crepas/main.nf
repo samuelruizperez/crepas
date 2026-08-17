@@ -471,7 +471,12 @@ workflow CREPAS {
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
 
+    ch_pre_flT3_endo_bam = channel.empty()
     if (!params.skip_flT3) {
+
+        // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
+        ch_pre_flT3_endo_bam = ch_filtered_bam.filter { it -> it[0].genome == params.genome }
+
         //
         // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
         //
@@ -493,13 +498,11 @@ workflow CREPAS {
 
     }
 
-    ch_pre_flTbl_bam = channel.empty()
-    ch_pre_flTbl_index = channel.empty()
+    ch_pre_flTbl_endo_bam = channel.empty()
     if (!params.skip_flTbl) {
 
         // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
-        ch_pre_flTbl_bam = ch_filtered_bam
-        ch_pre_flTbl_index = ch_filtered_index
+        ch_pre_flTbl_endo_bam = ch_filtered_bam.filter { it -> it[0].genome == params.genome }
 
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
@@ -786,8 +789,8 @@ workflow CREPAS {
     if (!params.skip_te_counting) {
 
         TE_COUNTING (
-            // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
-            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it -> it[0].genome == params.genome }),
+            // Here we run TE counting on both pre- and post flTbl and flT3 BAM files
+            ch_filtered_bam.mix(ch_pre_flTbl_endo_bam).mix(ch_pre_flT3_endo_bam),
             ch_fasta_fai,
             false,
             ch_tecount_gene_index,
