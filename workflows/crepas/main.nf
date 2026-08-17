@@ -873,6 +873,8 @@ workflow CREPAS {
         ch_consensus_bed = CALL_PEAKS.out.consensus_bed
         ch_consensus_txt = CALL_PEAKS.out.consensus_txt
 
+        ch_multiqc_files = ch_multiqc_files.mix(CALL_PEAKS.out.multiqc_files)
+
     }
 
     //

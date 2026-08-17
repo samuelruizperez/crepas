@@ -339,4 +339,5 @@ workflow CALL_PEAKS {
     mace_peaks          = ch_mace_peaks             // channel: [ meta, peaks ]
     consenrich_tracks   = ch_consenrich_tracks      // channel: [ meta, consenrich_signal ], [ meta, consenrich_residuals ], [ meta, consenrich_eratio ]
     rocco_peaks         = ch_rocco_peaks            // channel: [ meta,
+    multiqc_files       = ch_multiqc_files          // channel: [ path(mqc_files) ]
 }
