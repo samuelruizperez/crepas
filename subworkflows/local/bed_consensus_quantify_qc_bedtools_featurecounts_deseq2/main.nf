@@ -108,11 +108,11 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
     ch_bam
         .map {
             meta, bam ->
-                [ meta.antibody, meta.exp_type, bam ]
+                [ meta.antibody, meta.exp_type, meta.single_end, bam ]
         }
-        .groupTuple(by: [0, 1])
+        .groupTuple(by: [0, 1, 2])
         .map {
-            antibody, exp_type, bams ->
+            antibody, exp_type, se, bams ->
             def id
             if (exp_type == 'ATAC-seq') {
                 id = exp_type
@@ -121,7 +121,7 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             } else {
                 id = exp_type + '_no_antibody_'
             }
-            [ id, bams ]
+            [ id, se, bams ]
         }
         .set { ch_antibody_bams }
 
@@ -134,18 +134,37 @@ workflow BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2 {
             meta, saf ->
                 [ meta.id, meta, saf ]
         }
-        .join(ch_antibody_bams)
+        .set { ch_id_saf }
+
+    // Split SE and PE samples that share consensus peaks, since featureCounts cannot handle mixed layouts
+    ch_antibody_bams_se = ch_antibody_bams.filter { id, se, bams -> se }.map { id, se, bams -> [ id, bams ]}
+    ch_antibody_bams_pe = ch_antibody_bams.filter { id, se, bams -> !se }.map { id, se, bams -> [ id, bams ]}
+
+    ch_id_saf
+        .join(ch_antibody_bams_se)
         .map {
             _id, meta, saf, bams ->
-                [ meta, bams.flatten().sort(), saf ]
+                def meta_clone = meta.clone()
+                meta_clone.single_end = true
+                [ meta_clone, bams.flatten().sort(), saf ]
         }
-        .set { ch_bam_saf }
+        .set { ch_bam_saf_se }
+
+    ch_id_saf
+        .join(ch_antibody_bams_pe)
+        .map {
+            _id, meta, saf, bams ->
+                def meta_clone = meta.clone()
+                meta_clone.single_end = false
+                [ meta_clone, bams.flatten().sort(), saf ]
+        }
+        .set { ch_bam_saf_pe }
 
     //
     // Quantify peaks across samples with featureCounts
     //
     SUBREAD_FEATURECOUNTS (
-        ch_bam_saf
+        ch_bam_saf_se.mix(ch_bam_saf_pe)
     )
     ch_multiqc_files = ch_multiqc_files.mix(SUBREAD_FEATURECOUNTS.out.summary.collect { it -> it[1] })
 

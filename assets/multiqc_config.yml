@@ -175,12 +175,19 @@ module_order:
   #
   # Peak calling
   #
+  # Single-end and paired-end libraries are quantified in separate featureCounts runs
   - featurecounts:
-      anchor: "consensus_featurecounts"
-      name: "MERGED LIB: featureCounts (consensus peaks)"
-      info: "This section of the report shows featureCounts results for the number of reads assigned to merged library consensus peaks."
+      anchor: "consensus_featurecounts_se"
+      name: "MERGED LIB: featureCounts (consensus peaks, single-end)"
+      info: "This section of the report shows featureCounts results for the number of reads assigned to merged library consensus peaks, for single-end libraries."
       path_filters:
-        - "*.summary"
+        - "*.consensus_peaks.se.featureCounts.tsv.summary"
+  - featurecounts:
+      anchor: "consensus_featurecounts_pe"
+      name: "MERGED LIB: featureCounts (consensus peaks, paired-end)"
+      info: "This section of the report shows featureCounts results for the number of fragments assigned to merged library consensus peaks, for paired-end libraries."
+      path_filters:
+        - "*.consensus_peaks.pe.featureCounts.tsv.summary"
 
 # Sections are placed with explicit `order` values (higher = earlier) rather than `before:`
 # chains. A chain breaks silently as soon as one link is missing, and whole groups here are
@@ -223,8 +230,10 @@ report_section_order:
   macs3_peak_annotation:
     order: -1420
   # Consensus-peak quantification
-  consensus_featurecounts:
+  consensus_featurecounts_se:
     order: -1500
+  consensus_featurecounts_pe:
+    order: -1510
   # Differential-binding QC, last of the analysis sections
   deseq2_pca_1:
     order: -1600
