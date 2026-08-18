@@ -83,9 +83,6 @@ if (is.null(opt$exogenous_genome_name)) {
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
-                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb"
-                  mutate(ID = sub("\\.", "_", ID),
-                         ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
                   mutate(
                     ID = gsub("\\.sorted\\.bam$", "", ID),
@@ -99,7 +96,7 @@ if (is.null(opt$exogenous_genome_name)) {
                     # split ID by ".", processing_step is the last element
                     processing_step = gsub(".*\\.", "", ID),
                     processing_step = fct_relevel(processing_step, rev(unique(processing_step))),
-                    sample = gsub("\\..*$", "", ID)) %>%
+                    sample = sub("\\.mLb.*$", "", ID)) %>%
                   select(-ID) %>%
                   # First, pivot the data to long format for easier reshaping
                   pivot_longer(
@@ -138,9 +135,6 @@ if (is.null(opt$exogenous_genome_name)) {
                   rename_with(~ gsub("[- ]", "_", .x)) %>%
                   # Remove any row before library merging (containing ".Lb.")
                   filter(!grepl("\\.Lb\\.", ID)) %>%
-                  # replace the first dot in the ID column with underscore, only if it is not followed by "mLb"
-                  mutate(ID = sub("\\.", "_", ID),
-                         ID = gsub("_mLb", ".mLb", ID)) %>%
                   # remove ".sorted" and ".sorted.bam" from the ID column
                   mutate(
                     ID = gsub("\\.sorted\\.bam$", "", ID),
@@ -173,7 +167,7 @@ if (is.null(opt$exogenous_genome_name)) {
                     # split ID by ".", processing_step is the last element
                     processing_step = gsub(".*\\.", "", ID),
                     processing_step = fct_relevel(processing_step, rev(unique(processing_step))),
-                    sample = gsub("\\..*$", "", ID)) %>%
+                    sample = sub("\\.mLb.*$", "", ID)) %>%
                     dplyr::select(-ID) %>%
                     # First, pivot the data to long format for easier reshaping
                     pivot_longer(

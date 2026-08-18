@@ -76,6 +76,7 @@ Development version of grothlab/crepas.
 - Add missing `skip_flTbl` param in profiles to avoid.
 - `PARTITION_PLOT` failing for samples without an input control.
 - Partition and RFD plot labels for sample names containing dots (e.g. `H3.3`), which were truncated at the first dot.
+- The samtools stats summary for sample names containing dots (e.g. `H3.3`), which were truncated at the first dot so that several samples collapsed into one, leaving the summary table with list-columns and failing with `non-numeric argument to binary operator`.
 - File name collisions in `GENRICH` when the same input control is shared between several IP samples; treatment and control BAMs are now staged into separate directories.
 - Consensus peak `plotProfile` outputs of different experiment types sharing an antibody being written to the same directory; the output path and file prefix now include the experiment type.
 - `featureCounts` quantification and DESeq2 QC of the consensus peaks not running.
