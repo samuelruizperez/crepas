@@ -580,6 +580,49 @@ def validateInputParameters() {
         error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
     }
 
+    if (!params.skip_genes_plotprofile) {
+        validatePlotProfileGeometry(
+            'genes',
+            params.genes_plotprofile_mode,
+            params.genes_plotprofile_region_body_length,
+            params.genes_plotprofile_upstream,
+            params.genes_plotprofile_downstream
+        )
+    }
+
+    if (!params.skip_peak_calling && !params.skip_consensus_peaks && !params.skip_consensus_plotprofile) {
+        validatePlotProfileGeometry(
+            'consensus',
+            params.consensus_plotprofile_mode,
+            params.consensus_plotprofile_region_body_length,
+            params.consensus_plotprofile_upstream,
+            params.consensus_plotprofile_downstream
+        )
+    }
+
+}
+
+//
+// Check a plotProfile region geometry against the coverage bin size
+//
+def validatePlotProfileGeometry(profile, mode, body_length, upstream, downstream) {
+
+    def bin_size = params.coverage_bin_size
+    if (!bin_size) {
+        return
+    }
+
+    if (mode == 'scale_regions' && body_length && body_length % bin_size != 0) {
+        error("`--${profile}_plotprofile_region_body_length` (${body_length}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
+
+    if (upstream && upstream % bin_size != 0) {
+        error("`--${profile}_plotprofile_upstream` (${upstream}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
+
+    if (downstream && downstream % bin_size != 0) {
+        error("`--${profile}_plotprofile_downstream` (${downstream}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
 }
 
 //
