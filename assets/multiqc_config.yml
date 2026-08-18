@@ -209,14 +209,13 @@ module_order:
       name: "MERGED LIB: MACS3 peak calling"
       info: "This section of the report shows the peak-calling parameters and redundancy rates reported by MACS3."
       path_filters:
-        - "*.peaks.xls"
+        - "*_peaks.xls"
   - deeptools:
       anchor: "deeptools_fingerprint"
       name: "MERGED LIB: deepTools fingerprint"
       info: "This section of the report shows the signal enrichment fingerprint of the filtered merged libraries."
       path_filters:
         - "*plotFingerprint*"
-  # Single-end and paired-end libraries are quantified in separate featureCounts runs
   - featurecounts:
       anchor: "consensus_featurecounts_se"
       name: "MERGED LIB: featureCounts (consensus peaks, single-end)"
@@ -398,11 +397,6 @@ sp:
     fn: "*.plotPCA.tab"
   deeptools/plotCorrelationData:
     fn: "*.plotCorrelation.mat.tab"
-
-  # The pipeline's `ext.prefix` already ends in `.peaks`, so MACS3 writes `<prefix>.peaks.xls`
-  # rather than the `_peaks.xls` MultiQC looks for by default.
-  macs2:
-    fn: "*.peaks.xls"
 
   # PHANTOMPEAKQUALTOOLS writes the cross-correlation scores to `.ccscores`, not the `.spp.out`
   # name MultiQC looks for by default.
