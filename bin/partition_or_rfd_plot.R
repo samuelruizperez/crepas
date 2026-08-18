@@ -463,6 +463,8 @@ message("\n# ===================================================================
 message("# STEP 3. Preprocessing of partition files...")
 message("# ===============================================================================")
 
+BIN_SIZES_MATCH <- TRUE
+
 partition_df <- tibble()
 
 for (type in names(part_files)) {
@@ -507,8 +509,10 @@ for (type in names(part_files)) {
 
     if (HAS_OKSEQ) {
       if (OK_BIN_SIZE != PART_BIN_SIZE) {
-        stop("\n[", Sys.time(), "] ERROR: Bin size of ", base_name,
-             "(", PART_BIN_SIZE, " bp) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, " bp).\n")
+        BIN_SIZES_MATCH <- FALSE
+        warning("\n[", Sys.time(), "] WARNING: Bin size of ", base_name,
+                " (", PART_BIN_SIZE, " bp) is not the same bin size as in the provided OK-seq partition file (", OK_BIN_SIZE, " bp). ",
+                "The scatter plot pairs bins by their coordinates and will be skipped; the profile plots are not affected.\n")
       }
     }
 
@@ -625,15 +629,15 @@ line_colors <- sample_colors
 
 
 # ===============================================================================
-# Raw partition plot(s)
+# Smoothed partition plot(s)
 # ===============================================================================
 
-message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
+message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
 
 
-plot_raw <- function(show_sd) {
+plot_partition <- function(mean_col, sd_col, show_sd) {
 
-  p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
+  p <- ggplot(partition_mean_df, aes(x = dist / 1000, y = .data[[mean_col]], color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -643,8 +647,8 @@ plot_raw <- function(show_sd) {
 
   if (show_sd) {
     p <- p +
-      geom_ribbon(aes(ymin = RFD_smooth_mean - RFD_smooth_sd,
-                      ymax = RFD_smooth_mean + RFD_smooth_sd, fill = sample),
+      geom_ribbon(aes(ymin = .data[[mean_col]] - .data[[sd_col]],
+                      ymax = .data[[mean_col]] + .data[[sd_col]], fill = sample),
                   linetype = 0,
                   alpha = 0.2)
   }
@@ -681,17 +685,43 @@ plot_raw <- function(show_sd) {
             vjust = 2, size = 2)
 }
 
-raw_plot    <- plot_raw(show_sd = FALSE)
-raw_plot_sd <- plot_raw(show_sd = TRUE)
+smoothed_plot    <- plot_partition("RFD_smooth_mean", "RFD_smooth_sd", show_sd = FALSE)
+smoothed_plot_sd <- plot_partition("RFD_smooth_mean", "RFD_smooth_sd", show_sd = TRUE)
+
+message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
+ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_smoothed.pdf")),
+       plot = smoothed_plot, width = plot_width, height = 2.5, units = "in")
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.png")),
+       plot = smoothed_plot, width = plot_width, height = 2.5, units = "in",
+       dpi = 600)
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.sd.pdf")),
+       plot = smoothed_plot_sd, width = plot_width, height = 2.5, units = "in")
+
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.sd.png")),
+       plot = smoothed_plot_sd, width = plot_width, height = 2.5, units = "in",
+       dpi = 600)
+
+
+# ===============================================================================
+# Raw (unsmoothed) partition plot(s)
+# ===============================================================================
+
+message("\n[", Sys.time(), "] Creating raw partition plot(s)...")
+
+raw_plot    <- plot_partition("RFD_raw_mean", "RFD_raw_sd", show_sd = FALSE)
+raw_plot_sd <- plot_partition("RFD_raw_mean", "RFD_raw_sd", show_sd = TRUE)
 
 message("\n[", Sys.time(), "] Saving raw partition plot(s)...")
-ggsave(filename = file.path(opt_outdir,paste0(opt_prefix,".", plot_suffix, "_plot_raw.pdf")),
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.pdf")),
        plot = raw_plot, width = plot_width, height = 2.5, units = "in")
 
 ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.png")),
        plot = raw_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
+message("\n[", Sys.time(), "] Saving raw partition plot(s) with the standard deviation ribbon...")
 ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_raw.sd.pdf")),
        plot = raw_plot_sd, width = plot_width, height = 2.5, units = "in")
 
@@ -701,12 +731,12 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 
 
 # ===============================================================================
-# Smoothed partition plot(s)
+# GAM-fitted smoothed partition plot(s)
 # ===============================================================================
 
-message("\n[", Sys.time(), "] Creating smoothed partition plot(s)...")
+message("\n[", Sys.time(), "] Creating GAM-fitted partition plot(s)...")
 
-smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
+smoothed_gam_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mean, color = sample)) +
     geom_rect(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = 0,
               fill = "grey95", inherit.aes = FALSE) +
     geom_rect(xmin = 0, xmax = Inf, ymin = 0, ymax = Inf,
@@ -743,11 +773,11 @@ smooth_plot <- ggplot(partition_mean_df, aes(x = dist / 1000, y = RFD_smooth_mea
             vjust = 2, size = 2)
 
 message("\n[", Sys.time(), "] Saving smoothed partition plot(s)...")
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.pdf")),
-       plot = smooth_plot, width = plot_width, height = 2.5, units = "in")
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.gam.pdf")),
+       plot = smoothed_gam_plot, width = plot_width, height = 2.5, units = "in")
 
-ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.png")),
-       plot = smooth_plot, width = plot_width, height = 2.5, units = "in",
+ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_plot_smoothed.gam.png")),
+       plot = smoothed_gam_plot, width = plot_width, height = 2.5, units = "in",
        dpi = 600)
 
 
@@ -755,7 +785,12 @@ ggsave(filename = file.path(opt_outdir, paste0(opt_prefix, ".", plot_suffix, "_p
 # Scatter plots: RFD (OK-seq) vs partition
 # ===============================================================================
 
-if (HAS_OKSEQ && num_types_with_files > 0) {
+if (HAS_OKSEQ && num_types_with_files > 0 && !BIN_SIZES_MATCH) {
+  message("\n[", Sys.time(), "] Skipping the scatter plot(s): the OK-seq and partition bin sizes differ, ",
+          "so their bins cannot be paired by coordinate.")
+}
+
+if (HAS_OKSEQ && num_types_with_files > 0 && BIN_SIZES_MATCH) {
 
   message("\n[", Sys.time(), "] Creating scatter plot(s) (OK-seq vs partitions)...")
 

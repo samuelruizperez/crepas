@@ -48,7 +48,7 @@ workflow BAM_CREATE_PARTITIONS {
     // MODULE: Split BAMs by strand (forward and reverse)
     //
     BAM_SPLIT_BY_STRAND (
-        ch_bam.map { meta, bam -> [ meta, bam, meta.exp_type, meta.strandedness ] }
+        ch_bam.map { meta, bam -> [ meta, bam, meta.strandedness ] }
     )
 
     // Add strand to the meta information

@@ -23,6 +23,11 @@ Development version of grothlab/crepas.
 - `skip_peak_calling`, to switch peak calling off entirely without changing the `peak_callers` selection.
 - `partition_iz_rm_overlap_range`, which sets the window used to discard overlapping initiation zones independently of `partition_plot_range`, so that the plotted range can be widened without discarding more initiation zones.
 
+- Raw, unsmoothed partition/RFD plots drawn from the `RFD_raw_mean`/`RFD_raw_sd` columns, in both plain and SD-ribbon variants, alongside the smoothed plots.
+- GPU support in the GEFION profile.
+- MultiQC report sections for: per-stage SAMTools stats (library, merged, multimapper-allocated, deduplicated, filtered, blacklist-filtered and downsampled), Picard MarkDuplicates and CollectMultipleMetrics, phantompeakqualtools, MACS3 peak calling, UMI-tools extract/dedup, UMICollapse, and the deepTools plotPCA, plotCorrelation, fingerprint and gene-body/consensus-peak profile outputs.
+- A parameter check that the `plotProfile` region lengths are multiples of `--coverage_bin_size`, which deepTools' `computeMatrix` requires; the mismatch previously surfaced only as a `computeMatrix` failure part-way through a run.
+
 ### `Changed`
 
 - Replaced generic `ubuntu:22.04` module containers with purpose-built Wave / BioContainers images.
@@ -41,6 +46,14 @@ Development version of grothlab/crepas.
 - SEACR is no longer restricted to CUT&RUN, CUT&Tag and TIP-seq samples; it now runs on every sample for which it is requested through `peak_callers`.
 - Updated the pipeline metro map.
 - The samplesheet examples in `docs/usage.md` now match the example samplesheets shipped in `assets/test-datasets/`, and the DAN System guide (`docs/ku_sund_danhead_crepas_usage.md`) lists every available test profile.
+- Renamed `min_reps_consensus` to `consensus_min_replicates_per_sample`, and the corresponding `macs3_merged_expand.py` argument from `--min_replicates` to `--min_replicates_per_sample`.
+- Removed some channel dumps written to `<outdir>/.debug/BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2/`.
+
+- Renamed the partition plot outputs: the previous `*_plot_raw` files are now `*_plot_smoothed`, and the previous `*_plot_smoothed` files are now `*_plot_smoothed.gam`.
+- `strandedness` is now optional for eSPAN samples and defaults to `forward`, with a warning when it is left unset. The column descriptions in `assets/schema_input.json` and `docs/usage.md` were unified.
+- TE counting now also runs on pre-flT3 BAMs, in addition to the pre- and post-blacklist-filtering ones.
+- `featureCounts` over the consensus peaks now runs separately for single- and paired-end libraries, because `-p` applies to a whole run and changes the unit counted (reads vs fragments). The quantification and DESeq2 QC outputs gain a `.se`/`.pe` suffix accordingly.
+- `--gtf` is no longer a required parameter, so an annotation can be supplied through `--gff` alone, which the pipeline already converted with `gffread`.
 
 ### `Fixed`
 
@@ -64,6 +77,13 @@ Development version of grothlab/crepas.
 - Partition and RFD plot labels for sample names containing dots (e.g. `H3.3`), which were truncated at the first dot.
 - File name collisions in `GENRICH` when the same input control is shared between several IP samples; treatment and control BAMs are now staged into separate directories.
 - Consensus peak `plotProfile` outputs of different experiment types sharing an antibody being written to the same directory; the output path and file prefix now include the experiment type.
+- `featureCounts` quantification and DESeq2 QC of the consensus peaks not running.
+
+- A bin-size mismatch between the initiation zones and the partition table is now a warning that skips only the scatter plot, instead of aborting the whole plotting step.
+- MultiQC `path_filters` that matched directories.
+- `CALL_PEAKS` never emitting its MultiQC channel, so FRiP scores, peak counts, HOMER annotation, consensus `featureCounts` and the DESeq2 QC plots were collected and then discarded.
+- MultiQC search patterns that did not match the pipeline's own file names, so Picard MarkDuplicates metrics and the phantompeakqualtools cross-correlation scores were never parsed, and the five CollectMultipleMetrics programs were skipped.
+- `plotPCA`, `plotCorrelation` and the plotFingerprint quality metrics never reaching MultiQC, and the gene-body and consensus-peak `plotProfile` outputs sharing a single section.
 
 ## [[1.0.0](https://github.com/grothlab/crepas/releases/tag/1.0.0)] - Mercurian Cinnabar - 2026-06-21
 

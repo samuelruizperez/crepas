@@ -26,7 +26,6 @@ include {
 include { BAM_SPIKEIN_SPLIT                                                 } from '../../subworkflows/local/bam_spikein_split/main'
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                      } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_ENCODE_PIPELINE                                               } from '../../subworkflows/local/bam_encode_pipeline/main'
-include { BED_CONSENSUS_QUANTIFY_QC_BEDTOOLS_FEATURECOUNTS_DESEQ2           } from '../../subworkflows/local/bed_consensus_quantify_qc_bedtools_featurecounts_deseq2/main'
 include { BAM_CREATE_PARTITIONS                                             } from '../../subworkflows/local/bam_create_partitions/main'
 include { BAM_ALLOCATE_MULTIMAPPERS                                         } from '../../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS                                                   } from '../../subworkflows/local/bam_shift_reads/main'
@@ -187,6 +186,7 @@ workflow CREPAS {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_log.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.no_sep_umi_fq_log.collect { it -> it[1] })
 
 
     ch_fasta_fai = ch_fasta.combine(ch_fai.map { meta, fai -> fai }).first()
@@ -472,7 +472,12 @@ workflow CREPAS {
     ch_filtered_index = ch_filtered_index.other.mix(BAM_SHIFT_READS.out.index)
     ch_filtered_bam_index = ch_filtered_bam.join(ch_filtered_index, by: 0)
 
+    ch_pre_flT3_endo_bam = channel.empty()
     if (!params.skip_flT3) {
+
+        // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
+        ch_pre_flT3_endo_bam = ch_filtered_bam.filter { it -> it[0].genome == params.genome }
+
         //
         // MODULE: Final filtering of BAM file with SAMBAMBA (quality filtering)
         //
@@ -494,13 +499,11 @@ workflow CREPAS {
 
     }
 
-    ch_pre_flTbl_bam = channel.empty()
-    ch_pre_flTbl_index = channel.empty()
+    ch_pre_flTbl_endo_bam = channel.empty()
     if (!params.skip_flTbl) {
 
         // These are to later run TE counting on both pre- and post-blacklist-filtering BAM files
-        ch_pre_flTbl_bam = ch_filtered_bam
-        ch_pre_flTbl_index = ch_filtered_index
+        ch_pre_flTbl_endo_bam = ch_filtered_bam.filter { it -> it[0].genome == params.genome }
 
         // Separating endogenous and exogenous samples
         // TODO: could add a param "exo_blacklist" to use a different blacklist
@@ -710,6 +713,7 @@ workflow CREPAS {
         params.skip_plotcorrelation,
         params.skip_plotpca
     )
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.multiqc_files)
 
 
     if (!params.skip_genes_plotprofile) {
@@ -787,8 +791,8 @@ workflow CREPAS {
     if (!params.skip_te_counting) {
 
         TE_COUNTING (
-            // Here we run TE counting on both pre- and post-blacklist-filtering BAM files
-            ch_filtered_bam.mix(ch_pre_flTbl_bam.filter { it -> it[0].genome == params.genome }),
+            // Here we run TE counting on both pre- and post flTbl and flT3 BAM files
+            ch_filtered_bam.mix(ch_pre_flTbl_endo_bam).mix(ch_pre_flT3_endo_bam),
             ch_fasta_fai,
             false,
             ch_tecount_gene_index,
@@ -874,6 +878,8 @@ workflow CREPAS {
         ch_consensus_bed = CALL_PEAKS.out.consensus_bed
         ch_consensus_txt = CALL_PEAKS.out.consensus_txt
 
+        ch_multiqc_files = ch_multiqc_files.mix(CALL_PEAKS.out.multiqc_files)
+
     }
 
     //
@@ -907,6 +913,7 @@ workflow CREPAS {
             ch_ip_and_ipcontrols_bam_index
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.matrix.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.metrics.collect { it -> it[1] })
     }
 
     //

@@ -71,7 +71,7 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
-            "required": ["genome", "gtf"],
+            "required": ["genome"],
             "properties": {
                 "genome": {
                     "type": "string",
@@ -932,7 +932,7 @@
                     "description": "Specifies broad cutoff value (p-value or q-value) for MACS3 and Genrich peak calling.",
                     "fa_icon": "fas fa-hand-scissors"
                 },
-                "min_reps_consensus": {
+                "consensus_min_replicates_per_sample": {
                     "type": "number",
                     "default": 1,
                     "description": "Number of biological replicates required from a given condition for a peak to contribute to a consensus peak.",

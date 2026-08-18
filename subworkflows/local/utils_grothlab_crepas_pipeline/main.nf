@@ -119,7 +119,7 @@ workflow PIPELINE_INITIALISATION {
 // List of cases to handle
 
 // 1. Value in `input_control` column must be present in the `sample` column
-// 2. strandedness must be specified for SCAR-seq and OK-seq samples and must not be specified for other exp_types
+// 2. strandedness must be specified for SCAR-seq and OK-seq samples, is optional for eSPAN (defaulting to 'forward'), and must not be specified for other exp_types
 // 3. Antibody must be specified for ChIP-seq and ChIP-exo samples, but must not be specified if input_control is set or if exp_type is not ChIP-seq or ChIP-exo
 // 4. TODO: check that technical replicate is not duplicated within a biological replicate
 
@@ -340,8 +340,13 @@ workflow INPUT_CHECK {
                         }
                     }
                 }
+            } else if (meta.exp_type == 'eSPAN') {
+                if (!meta.strandedness) {
+                    log.warn("`strandedness` has not been specified for the eSPAN sample: ${meta.id}. Defaulting to 'forward'. Set it explicitly in the samplesheet if the library is 'reverse'.")
+                    meta = meta + [ strandedness: 'forward' ]
+                }
             } else if (meta.strandedness) {
-                error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq and OK-seq. Check sample: ${meta.id}")
+                error("ERROR: `strandedness` must not be specified for samples other than SCAR-seq, OK-seq and eSPAN. Check sample: ${meta.id}")
             }
             // Antibody checks
             if (['ChIP-seq', 'ChIP-exo', 'ChOR-seq', 'SCAR-seq', 'eSPAN', 'CUTandTag', 'CUTandRUN', 'TIP-seq'].contains(meta.exp_type)) {
@@ -575,6 +580,49 @@ def validateInputParameters() {
         error("Allocating multimapping reads with 'chromap' requires the aligner to be set to 'chromap'.")
     }
 
+    if (!params.skip_genes_plotprofile) {
+        validatePlotProfileGeometry(
+            'genes',
+            params.genes_plotprofile_mode,
+            params.genes_plotprofile_region_body_length,
+            params.genes_plotprofile_upstream,
+            params.genes_plotprofile_downstream
+        )
+    }
+
+    if (!params.skip_peak_calling && !params.skip_consensus_peaks && !params.skip_consensus_plotprofile) {
+        validatePlotProfileGeometry(
+            'consensus',
+            params.consensus_plotprofile_mode,
+            params.consensus_plotprofile_region_body_length,
+            params.consensus_plotprofile_upstream,
+            params.consensus_plotprofile_downstream
+        )
+    }
+
+}
+
+//
+// Check a plotProfile region geometry against the coverage bin size
+//
+def validatePlotProfileGeometry(profile, mode, body_length, upstream, downstream) {
+
+    def bin_size = params.coverage_bin_size
+    if (!bin_size) {
+        return
+    }
+
+    if (mode == 'scale_regions' && body_length && body_length % bin_size != 0) {
+        error("`--${profile}_plotprofile_region_body_length` (${body_length}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
+
+    if (upstream && upstream % bin_size != 0) {
+        error("`--${profile}_plotprofile_upstream` (${upstream}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
+
+    if (downstream && downstream % bin_size != 0) {
+        error("`--${profile}_plotprofile_downstream` (${downstream}) must be a multiple of `--coverage_bin_size` (${bin_size}), otherwise deepTools computeMatrix fails.")
+    }
 }
 
 //
