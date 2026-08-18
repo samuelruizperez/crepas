@@ -186,6 +186,7 @@ workflow CREPAS {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.fastqc_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_zip.collect { it -> it[1] })
     ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.trim_log.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE.out.no_sep_umi_fq_log.collect { it -> it[1] })
 
 
     ch_fasta_fai = ch_fasta.combine(ch_fai.map { meta, fai -> fai }).first()
@@ -712,6 +713,7 @@ workflow CREPAS {
         params.skip_plotcorrelation,
         params.skip_plotpca
     )
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_NORMALIZE_BIGWIG_DEEPTOOLS.out.multiqc_files)
 
 
     if (!params.skip_genes_plotprofile) {
@@ -911,6 +913,7 @@ workflow CREPAS {
             ch_ip_and_ipcontrols_bam_index
         )
         ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.matrix.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTFINGERPRINT.out.metrics.collect { it -> it[1] })
     }
 
     //

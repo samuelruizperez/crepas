@@ -36,6 +36,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     main:
 
+    ch_multiqc_files = channel.empty()
 
     ch_bam_bai
         .map { meta, bam, bai ->
@@ -595,7 +596,6 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
     ch_bigwig_all_endo  = ch_bw_all.filter { it -> it[0].genome == genome }
 
 
-
     if (!skip_multibigwigsummary) {
 
        ch_bigwig_all_endo
@@ -644,6 +644,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
                 "spearman",
                 "heatmap"
             )
+            ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTCORRELATION.out.matrix.collect { it -> it[1] })
         }
 
         if (!skip_plotpca) {
@@ -653,6 +654,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
             DEEPTOOLS_PLOTPCA (
                 DEEPTOOLS_MULTIBIGWIGSUMMARY.out.matrix
             )
+            ch_multiqc_files = ch_multiqc_files.mix(DEEPTOOLS_PLOTPCA.out.tab.collect { it -> it[1] })
         }
 
     }
@@ -660,6 +662,7 @@ workflow BAM_NORMALIZE_BIGWIG_DEEPTOOLS {
 
     emit:
 
+    multiqc_files    = ch_multiqc_files                         // channel: [ path(mqc_files) ]
     bedgraph_endo    = ch_bdg_all.filter { it -> it[0].genome == genome }      // channel: [ val(meta), [ bedgraph ] ]
     bigwig_endo      = UCSC_BEDGRAPHTOBIGWIG_ENDO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
     bigwig_exo       = UCSC_BEDGRAPHTOBIGWIG_EXO.out.bigwig    // channel: [ val(meta), [ bigwig ] ]
