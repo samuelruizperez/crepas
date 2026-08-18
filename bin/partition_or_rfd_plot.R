@@ -130,7 +130,7 @@ parser$add_argument("-r", "--plot_range", action = "store",
 parser$add_argument("-z", "--iz_rm_overlap_range", action = "store",
                     default = 100,
                     type = "integer",
-                    help = "Distance (kb) around each initiation zone used to discard overlapping ones. Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Independent of --plot_range, so the plotted range can be widened without discarding more initiation zones. [default: 100 kb]")
+                    help = "Distance (kb) around each initiation zone used to discard overlapping ones. Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Set to 0 to skip the removal of overlapping initiation zones entirely and keep them all. Independent of --plot_range, so the plotted range can be widened without discarding more initiation zones. [default: 100 kb]")
 
 parser$add_argument("-e", "--exclude_chromosomes", action = "store",
                     default = "chrX,chrY,chrM",
@@ -358,35 +358,42 @@ IZ_gr <- IZ_df %>%
 # coordinates are now 1-based thanks to starts.in.df.are.0based = TRUE
 IZ_gr$interval <- paste0(seqnames(IZ_gr), ":", start(IZ_gr), "-", end(IZ_gr))
 
-message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone)...")
-
 # Get original start coordinate for each initiation zone
 IZ_gr$break_start <- start(IZ_gr)
 
-# Overlapping initiation zones are discarded based on their own radius, which is independent
-# of the plotted range: widening the plot does not discard more initiation zones.
-# Resizing can generate bins with negative start positions (out-of-bound), so we trim them
-iz_overlap_gr <- trim(resize(IZ_gr, IZ_OVERLAP_LIMITS * 2, fix = "center"))
+# A radius of 0 switches overlap removal off, keeping every initiation zone
+if (opt_iz_rm_overlap_range > 0) {
 
-# Finding the nearest resized initiation zone to each resized initiation zone
-IZ_dist <- distanceToNearest(iz_overlap_gr)
+  message("\n[", Sys.time(), "] (", iz_base_name, ") Removing overlapping initiation zones (within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone)...")
 
-# Removing overlapping resized initiation zones
-overlapping_hits <- queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))
-# The following line removes overlapping IZs, and catches the case when there are no overlaps
-if (length(overlapping_hits) > 0) {
-  IZ_gr <- IZ_gr[-overlapping_hits]
+  # Overlapping initiation zones are discarded based on their own radius, which is independent
+  # of the plotted range: widening the plot does not discard more initiation zones.
+  # Resizing can generate bins with negative start positions (out-of-bound), so we trim them
+  iz_overlap_gr <- trim(resize(IZ_gr, IZ_OVERLAP_LIMITS * 2, fix = "center"))
+
+  # Finding the nearest resized initiation zone to each resized initiation zone
+  IZ_dist <- distanceToNearest(iz_overlap_gr)
+
+  # Removing overlapping resized initiation zones
+  overlapping_hits <- queryHits(subset(IZ_dist, IZ_dist@elementMetadata$distance == 0))
+  # The following line removes overlapping IZs, and catches the case when there are no overlaps
+  if (length(overlapping_hits) > 0) {
+    IZ_gr <- IZ_gr[-overlapping_hits]
+  } else {
+    message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone.")
+  }
+
+  # Remove temporary variables
+  rm(iz_overlap_gr, IZ_dist, overlapping_hits)
+
 } else {
-  message("\n[", Sys.time(), "] (", iz_base_name, ") No overlapping initiation zones found within ", opt_iz_rm_overlap_range, " kb upstream and ", opt_iz_rm_overlap_range, " kb downstream of another initiation zone.")
+  message("\n[", Sys.time(), "] (", iz_base_name, ") --iz_rm_overlap_range is 0, so overlapping initiation zones are not removed.")
 }
 
 # The retained initiation zones are then resized to the plotted range
 IZ_gr <- trim(resize(IZ_gr, IZ_PLOT_LIMITS * 2, fix = "center"))
 
-message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones after removing overlaps is: ", length(IZ_gr), ".")
-
- # Remove temporary variables
-rm(IZ_dist, overlapping_hits)
+message("\n[", Sys.time(), "] (", iz_base_name, ") The number of initiation zones retained is: ", length(IZ_gr), ".")
 
 
 if (HAS_OKSEQ) {

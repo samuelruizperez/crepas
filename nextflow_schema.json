@@ -1412,7 +1412,7 @@
                     "type": "integer",
                     "default": 100,
                     "description": "Distance (kb) around each initiation zone used to discard overlapping ones.",
-                    "help_text": "Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Independent of `partition_plot_range`, so the plotted range can be widened without discarding more initiation zones.",
+                    "help_text": "Any initiation zone whose window of this radius overlaps another one is discarded before plotting. Set to 0 to skip the removal of overlapping initiation zones entirely and keep them all. Independent of `partition_plot_range`, so the plotted range can be widened without discarding more initiation zones.",
                     "fa_icon": "fas fa-chart-area"
                 },
                 "partition_exclude_scaffolds": {

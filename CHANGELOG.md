@@ -54,6 +54,7 @@ Development version of grothlab/crepas.
 - TE counting now also runs on pre-flT3 BAMs, in addition to the pre- and post-blacklist-filtering ones.
 - `featureCounts` over the consensus peaks now runs separately for single- and paired-end libraries, because `-p` applies to a whole run and changes the unit counted (reads vs fragments). The quantification and DESeq2 QC outputs gain a `.se`/`.pe` suffix accordingly.
 - `--gtf` is no longer a required parameter, so an annotation can be supplied through `--gff` alone, which the pipeline already converted with `gffread`.
+- `--partition_iz_rm_overlap_range 0` now skips the removal of overlapping initiation zones entirely, keeping every initiation zone, instead of being treated as a zero-width window.
 
 ### `Fixed`
 
