@@ -68,6 +68,27 @@ sample_name_from_file <- function(path) {
 }
 
 
+# Beyond 12 colors, the other qualitative Brewer palettes are appended
+sample_palette <- function(n) {
+  pool <- unique(c(
+    RColorBrewer::brewer.pal(12, "Paired"),
+    RColorBrewer::brewer.pal(8, "Dark2"),
+    RColorBrewer::brewer.pal(9, "Set1"),
+    RColorBrewer::brewer.pal(8, "Set2"),
+    RColorBrewer::brewer.pal(12, "Set3")
+  ))
+  n_hues <- n
+  while (length(pool) < n) {
+    hues <- seq(15, 375, length.out = n_hues + 1)[seq_len(n_hues)]
+    pool <- unique(c(pool,
+                     grDevices::hcl(h = hues, c = 100,
+                                    l = rep(c(65, 45, 80), length.out = n_hues))))
+    n_hues <- n_hues * 2
+  }
+  pool[seq_len(n)]
+}
+
+
 # ===============================================================================
 # Argument parsing
 # ===============================================================================
@@ -228,16 +249,16 @@ if (num_types_with_files == 0 && !HAS_OKSEQ) {
   stop("[", Sys.time(), "] ERROR: Please provide at least one partition file or OK-seq file to create plots.")
 } else if (num_types_with_files == 0 && HAS_OKSEQ) {
   # OK-seq only
-  plot_width <- 6
+  plot_width <- 6.2
   plot_suffix <- "RFD"
 } else if (num_types_with_files == 1) {
-  plot_width <- 6
+  plot_width <- 6.2
   plot_suffix <- "partition"
 } else if (num_types_with_files == 2) {
-  plot_width <- 7
+  plot_width <- 7.2
   plot_suffix <- "partition"
 } else if (num_types_with_files == 3) {
-  plot_width <- 8
+  plot_width <- 8.2
   plot_suffix <- "partition"
 }
 
@@ -624,10 +645,14 @@ if (num_types_with_files > 0) {
   sample_labels <- c("OK-seq" = "OK-seq")
 }
 
-# set a color in Dark2 palette for each sample, but set OK-seq to dark gray
-dark2_colors <- RColorBrewer::brewer.pal(length(unique(partition_mean_df$sample)), "Paired")
+# set a color for each sample, but set OK-seq to dark gray
 sample_names <- unique(partition_mean_df$sample)
-sample_colors <- setNames(dark2_colors[seq_along(sample_names)], sample_names)
+sample_colors <- setNames(sample_palette(length(sample_names)), sample_names)
+
+# A legend with many samples takes up more of the figure, so widen it to keep the panel readable
+if (length(sample_names) > 15) {
+  plot_width <- plot_width + 3
+}
 # Only set OK-seq to grey if there are partition files
 if (num_types_with_files > 0) {
   sample_colors["OK-seq"] <- "grey60"

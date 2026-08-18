@@ -55,6 +55,7 @@ Development version of grothlab/crepas.
 - `featureCounts` over the consensus peaks now runs separately for single- and paired-end libraries, because `-p` applies to a whole run and changes the unit counted (reads vs fragments). The quantification and DESeq2 QC outputs gain a `.se`/`.pe` suffix accordingly.
 - `--gtf` is no longer a required parameter, so an annotation can be supplied through `--gff` alone, which the pipeline already converted with `gffread`.
 - `--partition_iz_rm_overlap_range 0` now skips the removal of overlapping initiation zones entirely, keeping every initiation zone, instead of being treated as a zero-width window.
+- The partition and RFD plots now assign every sample its own color when there are more samples than the 12-colour palette they previously used. Plots with more than 15 samples are also drawn 3 inches wider, so that a long legend does not squeeze the panel.
 
 ### `Fixed`
 
