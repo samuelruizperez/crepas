@@ -71,7 +71,7 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
-            "required": ["genome", "gtf"],
+            "required": ["genome"],
             "properties": {
                 "genome": {
                     "type": "string",
