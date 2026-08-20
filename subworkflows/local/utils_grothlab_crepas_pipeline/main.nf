@@ -130,6 +130,14 @@ workflow INPUT_CHECK {
 
     main:
 
+    ch_fastq = ch_fastq.map { meta, fastqs ->
+        def meta_clone = meta.clone()
+        if (meta.rt_phase) {
+            meta_clone.rt_condition = meta.id
+            meta_clone.id = "${meta.id}_${meta.rt_phase}"
+        }
+        [ meta_clone, fastqs ]
+    }
 
     // TODO: print for debugging
     ch_fastq.map { meta, fastqs -> "${meta}\t${fastqs}" }
@@ -351,7 +359,7 @@ workflow INPUT_CHECK {
             // Repli-seq checks
             if (meta.exp_type == 'Repli-seq') {
                 if (!meta.rt_phase) {
-                    error("ERROR: `rt_phase` must be specified ('early' or 'late') for Repli-seq samples. Check sample: ${meta.id}")
+                    error("ERROR: `rt_phase` must be specified ('early', 'mid' or 'late') for Repli-seq samples. Check sample: ${meta.id}")
                 }
             } else if (meta.rt_phase) {
                 error("ERROR: `rt_phase` must not be specified for samples other than Repli-seq. Check sample: ${meta.id}")

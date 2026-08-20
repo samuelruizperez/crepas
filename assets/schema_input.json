@@ -51,14 +51,27 @@
             },
             "exp_type": {
                 "type": "string",
-                "enum": ["ChIP-seq", "ChOR-seq", "SCAR-seq", "ChIP-exo", "ATAC-seq", "OK-seq", "CUTandRUN", "CUTandTag", "TIP-seq"],
-                "errorMessage": "Sequencing experiment type must be provided and be one of: 'ChIP-seq', 'ChOR-seq', 'SCAR-seq', 'ChIP-exo', 'ATAC-seq', 'OK-seq', 'Repli-seq', 'CUTandRUN', 'CUTandTag', 'TIP-seq'",
+                "enum": [
+                    "ChIP-seq",
+                    "ChOR-seq",
+                    "SCAR-seq",
+                    "eSPAN",
+                    "ChIP-exo",
+                    "ATAC-seq",
+                    "OK-seq",
+                    "Repli-seq",
+                    "CUTandRUN",
+                    "CUTandTag",
+                    "TIP-seq"
+                ],
+                "description": "One of `ChIP-seq`, `ChOR-seq`, `SCAR-seq`, `eSPAN`, `ChIP-exo`, `ATAC-seq`, `OK-seq`, `Repli-seq`, `CUTandRUN`, `CUTandTag` or `TIP-seq`.",
+                "errorMessage": "Sequencing experiment type must be provided and be one of: 'ChIP-seq', 'ChOR-seq', 'SCAR-seq', 'eSPAN', 'ChIP-exo', 'ATAC-seq', 'OK-seq', 'Repli-seq', 'CUTandRUN', 'CUTandTag', 'TIP-seq'",
                 "meta": ["exp_type"]
             },
             "rt_phase": {
                 "type": "string",
-                "enum": ["early", "late"],
-                "errorMessage": "Replication timing phase must be 'early' or 'late'. Required for 'Repli-seq' samples: all early and late fraction rows sharing the same `sample` are pooled to calculate one E/L replication-timing track per sample.",
+                "enum": ["early", "mid", "late"],
+                "errorMessage": "Replication timing phase must be 'early', 'mid' or 'late'. Required for 'Repli-seq' samples: all early and late fraction rows sharing the same `sample` are pooled to calculate one E/L replication-timing track per sample. Intermediate ('mid') fractions are processed like any other sample but do not contribute to the RT track.",
                 "meta": ["rt_phase"]
             },
             "strandedness": {

@@ -2,26 +2,29 @@ include { DEEPTOOLS_MULTIBAMSUMMARY } from '../../../modules/nf-core/deeptools/m
 include { REPLISEQ_RTNORMALIZE      } from '../../../modules/local/repliseq_rtnormalize/main'
 include { FILE_SORT                 } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
+include { FIND_CONCATENATE as REPLISEQ_RT_MULTIQC } from '../../../modules/nf-core/find/concatenate/main'
 
 workflow BAM_REPLISEQ_RT_TRACKS {
 
     take:
-    ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ] filtered/deduped BAMs for exp_type == 'Repli-seq', meta.rt_phase == 'early'|'late'
+    ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ] filtered/deduped BAMs for exp_type == 'Repli-seq', meta.rt_phase == 'early'|'mid'|'late'
     ch_chrom_sizes_endo // channel: [ val(meta), path(chrom_sizes) ]
     ch_blacklist        // channel: [ val(meta), path(blacklist) ]
+    ch_rt_header        // channel: path(repliseq_rt_header.txt)
 
     main:
 
-    ch_versions = channel.empty()
+    ch_bam_bai_el = ch_bam_bai.filter { it -> it[0].rt_phase in ['early', 'late'] }
 
     //
     // Group all replicates (both phases) of the same condition together, sorted
     // deterministically by (rt_phase, brep) so bams/bais/phases/breps stay aligned.
     //
-    ch_bam_bai
+    ch_bam_bai_el
         .map { meta, bam, bai ->
             def meta_clone = meta.clone()
-            meta_clone.id = meta_clone.id - ~/_bRep_.*$/
+            // The id at this point is "<exp_type>_<sample>_<rt_phase>_bRep_<n>"
+            meta_clone.id = "${meta_clone.exp_type}_${meta_clone.rt_condition}"
             [ meta_clone.id, meta_clone, bam, bai ]
         }
         .groupTuple(by: 0)
@@ -52,7 +55,7 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     //
     DEEPTOOLS_MULTIBAMSUMMARY (
         ch_for_multibamsummary,
-        ch_blacklist.ifEmpty([[:], []])
+        ch_blacklist
     )
 
     ch_phases_breps = ch_condition_bam_bai.map { meta, bams, bais, phases, breps -> [ meta, phases, breps ] }
@@ -60,8 +63,8 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
     DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts
         .join(ch_phases_breps, by: 0)
-        .map { meta, counts, phases, breps -> 
-            [ meta, counts, phases, breps ] 
+        .map { meta, counts, phases, breps ->
+            [ meta, counts, phases, breps ]
         }
         .set { ch_phases_breps_for_rtnormalize }
 
@@ -71,6 +74,22 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     //
     REPLISEQ_RTNORMALIZE (
         ch_phases_breps_for_rtnormalize
+    )
+
+    //
+    // MODULE: Prepend the MultiQC custom-content header to each sample's summary row.
+    // FIND_CONCATENATE concatenates its inputs in filename order rather than in the order given
+    // here, so the two names have to sort the right way round: "repliseq_rt_header.txt" before
+    // "rt_summary.tsv". Renaming either file without preserving that would silently put the data
+    // row above the header and MultiQC would stop recognising the section.
+    //
+    REPLISEQ_RTNORMALIZE.out.summary
+        .combine(ch_rt_header)
+        .map { meta, summary, header -> [ meta, [ header, summary ] ] }
+        .set { ch_rt_mqc }
+
+    REPLISEQ_RT_MULTIQC (
+        ch_rt_mqc
     )
 
     ch_rt_raw = REPLISEQ_RTNORMALIZE.out.raw.map { meta, bdg ->
@@ -92,7 +111,6 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         ch_rt_raw.mix(ch_rt_smooth),
         'bedGraph'
     )
-    ch_versions = ch_versions.mix(FILE_SORT.out.versions.first())
 
     //
     // MODULE: Convert RT tracks (raw + smoothed) to bigWig
@@ -106,5 +124,5 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     bedgraph = FILE_SORT.out.sorted             // channel: [ val(meta), path(bedgraph) ]
     bigwig   = UCSC_BEDGRAPHTOBIGWIG.out.bigwig // channel: [ val(meta), path(bigwig) ]
     qc       = REPLISEQ_RTNORMALIZE.out.qc      // channel: [ val(meta), path(qc.txt) ]
-    versions = ch_versions                      // channel: [ path(versions.yml) ]
+    mqc      = REPLISEQ_RT_MULTIQC.out.file_out // channel: [ val(meta), path(rt_mqc.tsv) ]
 }

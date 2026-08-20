@@ -9,16 +9,15 @@ keywords:
   - cpm
   - bedgraph
 tools:
-  - "preprocessCore":
+  - "R":
       description: |
-        A library of core preprocessing routines for microarray/high-throughput data, including
-        quantile normalization. Used here (`normalize.quantiles()`) to optionally quantile
-        normalize between replicates, on top of CPM normalization.
-      homepage: https://bioconductor.org/packages/release/bioc/html/preprocessCore.html
-      documentation: https://bioconductor.org/packages/release/bioc/html/preprocessCore.html
-      tool_dev_url: https://github.com/bmbolstad/preprocessCore
-      licence: ["GPL-2.0-only"]
-      identifier: "biotools:preprocesscore"
+        The R environment for statistical computing. `repliseq_rtnormalize.R` uses only base R
+        (`loess()` for smoothing, and a direct implementation of quantile normalization),
+        data.table to hold the binned counts, and zoo for rolling-mean smoothing.
+      homepage: https://www.r-project.org/
+      documentation: https://www.r-project.org/other-docs.html
+      licence: ["GPL-2.0-or-later"]
+      identifier: "biotools:R"
 input:
   - - meta:
         type: map
@@ -84,6 +83,22 @@ output:
           pattern: "*.qc.txt"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # textual format
+  summary:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "rt_summary.tsv":
+          type: file
+          description: |
+            The same summary as `*.qc.txt` as a two-line TSV (column names, then one row for this
+            sample), ready to have a MultiQC custom-content header concatenated on top of it. The
+            filename is deliberately not prefixed with the sample name, so that it sorts after the
+            header file when the two are concatenated in filename order
+          pattern: "rt_summary.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
   versions_r:
     - - "${task.process}":
           type: string

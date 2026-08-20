@@ -1447,20 +1447,20 @@
             "properties": {
                 "repliseq_bin_size": {
                     "type": "integer",
-                    "default": 5000,
+                    "default": 50000,
                     "description": "Bin size (in bp) used by deepTools `multiBamSummary` when counting reads per window for Repli-seq replication-timing (RT) tracks (e.g. 5000, 10000, 20000, 50000, 100000 for 5/10/20/50/100 kb resolution).",
                     "fa_icon": "fas fa-ruler-horizontal"
                 },
                 "repliseq_replicate_method": {
                     "type": "string",
-                    "default": "auto",
+                    "default": "pooled",
                     "enum": ["auto", "paired", "pooled"],
                     "description": "How to combine early/late biological replicates when calculating the Repli-seq RT ratio. `paired` computes the ratio per matched early/late biological-replicate pair (matched by `biological_replicate`) and averages; `pooled` averages replicates within each phase first, then computes one ratio; `auto` chooses between the two via a correlation heuristic (see `--repliseq_pairing_threshold`).",
                     "fa_icon": "fas fa-random"
                 },
                 "repliseq_normalization": {
                     "type": "string",
-                    "default": "cpm",
+                    "default": "qn",
                     "enum": ["cpm", "qn"],
                     "description": "`cpm` only CPM-normalizes each Repli-seq replicate; `qn` additionally quantile-normalizes between replicates, on top of CPM.",
                     "fa_icon": "fas fa-balance-scale"
@@ -1472,10 +1472,49 @@
                     "description": "Smoothing strategy applied to the raw Repli-seq RT track.",
                     "fa_icon": "fas fa-chart-line"
                 },
+                "repliseq_smooth_stage": {
+                    "type": "string",
+                    "default": "replicate",
+                    "enum": ["replicate", "ratio"],
+                    "description": "Where smoothing enters the Repli-seq RT calculation. `replicate` smooths each replicate's normalized coverage track and then takes the early/late ratio; `ratio` takes the ratio first and smooths that. Only affects the smoothed track; the raw track is always the unsmoothed ratio.",
+                    "fa_icon": "fas fa-layer-group"
+                },
+                "repliseq_clamp_negative": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Floor smoothed replicate coverage at zero before taking the Repli-seq early/late ratio. Coverage cannot be negative, but a loess fit can undershoot below it. Only applies with `--repliseq_smooth_stage replicate`.",
+                    "fa_icon": "fas fa-hand-paper"
+                },
+                "repliseq_ratio_direction": {
+                    "type": "string",
+                    "default": "early_over_late",
+                    "enum": ["early_over_late", "late_over_early"],
+                    "description": "Orientation of the Repli-seq log2 ratio. `early_over_late` makes high values early-replicating, which is the usual convention; `late_over_early` inverts it.",
+                    "fa_icon": "fas fa-exchange-alt"
+                },
+                "repliseq_loess_degree": {
+                    "type": "integer",
+                    "default": 2,
+                    "enum": [1, 2],
+                    "description": "Degree of the local polynomial fitted by loess when smoothing Repli-seq RT tracks.",
+                    "fa_icon": "fas fa-chart-line"
+                },
+                "repliseq_loess_family": {
+                    "type": "string",
+                    "default": "gaussian",
+                    "enum": ["gaussian", "symmetric"],
+                    "description": "Loess fitting family used when smoothing Repli-seq RT tracks. `symmetric` reweights to resist outliers, but is undefined on sequences where over half the residuals are exactly zero, in which case it falls back to `gaussian` for that sequence.",
+                    "fa_icon": "fas fa-chart-line"
+                },
+                "repliseq_loess_window": {
+                    "type": "integer",
+                    "default": 500000,
+                    "description": "Width (in bp) of the loess smoothing window used when `--repliseq_smooth loess`. It is converted to a per-sequence span, so the same genomic scale is smoothed over on every sequence regardless of its length.",
+                    "fa_icon": "fas fa-chart-line"
+                },
                 "repliseq_loess_span": {
                     "type": "number",
-                    "default": 0.002,
-                    "description": "Loess smoothing span, as a fraction of points per chromosome, used when `--repliseq_smooth loess`.",
+                    "description": "Loess span given directly, as a fraction of the bins on each sequence, used when `--repliseq_smooth loess`. Overrides `--repliseq_loess_window` when set. Because it is a fraction rather than a fixed width, a long chromosome is smoothed over a proportionally wider stretch of sequence than a short one.",
                     "fa_icon": "fas fa-chart-line"
                 },
                 "repliseq_roll_k": {
@@ -1496,6 +1535,12 @@
                     "default": 0.02,
                     "description": "Under `--repliseq_replicate_method auto`, `paired` is chosen when (matched-replicate-pair average correlation - mismatched-replicate-pair average correlation) is at least this value; otherwise `pooled` is used.",
                     "fa_icon": "fas fa-square-root-alt"
+                },
+                "repliseq_exclude_scaffolds": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Exclude scaffolds and alternate sequences from the Repli-seq RT track. deepTools `multiBamSummary` bins every sequence in the BAM header, and these are short and usually barely covered, which makes their RT values meaningless. A sequence counts as one when its name begins with `chrUn`, ends with `_random`, `_alt` or `_fix`, or contains a dot. They are dropped before CPM normalization, so the normalization reflects primary-chromosome depth only.",
+                    "fa_icon": "fas fa-filter"
                 },
                 "skip_repliseq_rt_tracks": {
                     "type": "boolean",

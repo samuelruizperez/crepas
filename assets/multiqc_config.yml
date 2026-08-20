@@ -255,6 +255,11 @@ report_section_order:
     order: -1045
   deeptools_profile_genes:
     order: -1050
+
+  # Repli-seq replication-timing tracks, built from the same filtered BAMs as the coverage QC
+  # above and independent of peak calling below
+  repliseq_rt:
+    order: -1060
   # Peak calling itself, ahead of the per-caller QC below
   macs3_callpeak:
     order: -1090
