@@ -351,48 +351,61 @@ pc <- opt$pseudocount
 
 matched_breps <- intersect(early_breps, late_breps)
 
-chosen_method <- opt$method
-paired_avg <- NA_real_
-crossed_avg <- NA_real_
-pairing_delta <- NA_real_
+for (id in col_ids) {
+  dt[, (paste0(id, "_logcpm")) := log10(get(paste0(id, "_cpm")) + pc)]
+}
 
-if (opt$method %in% c("auto", "paired")) {
-  if (length(matched_breps) == 0) {
-    if (opt$method == "paired") {
-      warning("--method paired requested, but no biological replicate is shared between early and late phases (early breps: ",
-              paste(early_breps, collapse = ", "), "; late breps: ", paste(late_breps, collapse = ", "),
-              "); falling back to 'pooled'.")
-    }
-    chosen_method <- "pooled"
-  } else {
-    for (id in col_ids) {
-      dt[, (paste0(id, "_logcpm")) := log10(get(paste0(id, "_cpm")) + pc)]
-    }
+correlate_ids <- function(a, b) {
+  safe_cor(dt[[paste0(a, "_logcpm")]], dt[[paste0(b, "_logcpm")]], opt$corr, opt$min_points_for_cor)
+}
 
-    matched_cors <- c()
-    crossed_cors <- c()
-    for (e in seq_along(early_ids)) {
-      for (l in seq_along(late_ids)) {
-        r <- safe_cor(
-          dt[[paste0(early_ids[e], "_logcpm")]],
-          dt[[paste0(late_ids[l], "_logcpm")]],
-          opt$corr, opt$min_points_for_cor
-        )
-        if (early_breps[e] == late_breps[l]) {
-          matched_cors <- c(matched_cors, r)
-        } else {
-          crossed_cors <- c(crossed_cors, r)
-        }
-      }
-    }
-    paired_avg <- mean(matched_cors, na.rm = TRUE)
-    crossed_avg <- if (length(crossed_cors) > 0) mean(crossed_cors, na.rm = TRUE) else NA_real_
-    pairing_delta <- paired_avg - crossed_avg
-
-    if (opt$method == "auto") {
-      chosen_method <- if (is.finite(pairing_delta) && pairing_delta >= opt$pairing_threshold) "paired" else "pooled"
+# Every same-phase replicate pair: replicate concordance
+concordance_pairs <- list()
+for (ids in list(early_ids, late_ids)) {
+  if (length(ids) < 2) {
+    next
+  }
+  for (i in seq_len(length(ids) - 1)) {
+    for (j in seq(i + 1, length(ids))) {
+      concordance_pairs[[length(concordance_pairs) + 1]] <-
+        list(a = ids[i], b = ids[j], r = correlate_ids(ids[i], ids[j]))
     }
   }
+}
+concordance_cors <- vapply(concordance_pairs, function(p) p$r, numeric(1))
+min_concordance <- if (length(concordance_cors) > 0) min(concordance_cors, na.rm = TRUE) else NA_real_
+
+# Every early x late pair, split by whether the two share a biological replicate
+cross_pairs <- list()
+matched_cors <- c()
+crossed_cors <- c()
+for (e in seq_along(early_ids)) {
+  for (l in seq_along(late_ids)) {
+    r <- correlate_ids(early_ids[e], late_ids[l])
+    is_matched <- early_breps[e] == late_breps[l]
+    cross_pairs[[length(cross_pairs) + 1]] <-
+      list(a = early_ids[e], b = late_ids[l], r = r, matched = is_matched)
+    if (is_matched) {
+      matched_cors <- c(matched_cors, r)
+    } else {
+      crossed_cors <- c(crossed_cors, r)
+    }
+  }
+}
+paired_avg <- if (length(matched_cors) > 0) mean(matched_cors, na.rm = TRUE) else NA_real_
+crossed_avg <- if (length(crossed_cors) > 0) mean(crossed_cors, na.rm = TRUE) else NA_real_
+pairing_delta <- paired_avg - crossed_avg
+
+chosen_method <- opt$method
+if (opt$method %in% c("auto", "paired") && length(matched_breps) == 0) {
+  if (opt$method == "paired") {
+    warning("--method paired requested, but no biological replicate is shared between early and late phases (early breps: ",
+            paste(early_breps, collapse = ", "), "; late breps: ", paste(late_breps, collapse = ", "),
+            "); falling back to 'pooled'.")
+  }
+  chosen_method <- "pooled"
+} else if (opt$method == "auto") {
+  chosen_method <- if (is.finite(pairing_delta) && pairing_delta >= opt$pairing_threshold) "paired" else "pooled"
 }
 
 message("[", Sys.time(), "] Replicate-combination method: ", chosen_method)
@@ -514,6 +527,13 @@ qc_lines <- c(
   paste0("requested_method:\t", opt$method),
   paste0("chosen_method:\t", chosen_method),
   paste0("corr_method:\t", opt$corr),
+  vapply(concordance_pairs, function(pair) {
+    paste0("cpm_correlation(", pair$a, " vs ", pair$b, "):\t", pair$r)
+  }, character(1)),
+  paste0("min_replicate_concordance:\t", min_concordance),
+  vapply(cross_pairs, function(pair) {
+    paste0("cpm_correlation(", pair$a, " vs ", pair$b, "):\t", pair$r)
+  }, character(1)),
   paste0("matched_replicate_pairs_avg_corr:\t", paired_avg),
   paste0("mismatched_replicate_pairs_avg_corr:\t", crossed_avg),
   paste0("pairing_delta:\t", pairing_delta),
@@ -540,10 +560,11 @@ format_corr <- function(x) {
 }
 
 summary_lines <- c(
-  paste(c("Sample", "Replicates", "Matched r", "Mismatched r", "Delta", "Bins"), collapse = "\t"),
+  paste(c("Sample", "Replicates", "Min replicate r", "Matched r", "Mismatched r", "Delta", "Bins"), collapse = "\t"),
   paste(c(
     opt$sample_name,
     chosen_method,
+    format_corr(min_concordance),
     format_corr(paired_avg),
     format_corr(crossed_avg),
     format_corr(pairing_delta),

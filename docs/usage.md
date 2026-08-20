@@ -147,9 +147,11 @@ For `Repli-seq` samples, the pipeline calculates and normalizes an early/late (E
 2. Early/late replicates are combined into one E/L ratio either by averaging replicates within
    each phase first (`pooled`, the default), or per matched biological-replicate pair
    (`paired`); `auto` chooses between the two via a correlation heuristic
-   (`--repliseq_replicate_method`, `--repliseq_pairing_threshold`, `--repliseq_corr_method`). The
-   choice made (and the correlations behind it, if `auto`) is reported in a `*.qc.txt` file per
-   sample.
+   (`--repliseq_replicate_method`, `--repliseq_pairing_threshold`, `--repliseq_corr_method`). A
+   `*.qc.txt` file per sample records the choice made along with every pairwise correlation
+   behind it, whichever method was used: between replicates of the same fraction (concordance,
+   expected to be high) and between early and late fractions (expected to be negative, since a
+   region replicating early is depleted in the late fraction).
 3. Replicates are quantile-normalized against each other on top of CPM, which can be turned off
    (`--repliseq_normalization`).
 4. The track is smoothed with loess or a rolling mean, or left unsmoothed
