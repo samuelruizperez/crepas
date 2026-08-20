@@ -13,6 +13,8 @@ process REPLISEQ_RTNORMALIZE {
     output:
     tuple val(meta), path("*.RT.raw.bedGraph")   , emit: raw
     tuple val(meta), path("*.RT.smooth.bedGraph"), emit: smooth
+    tuple val(meta), path("*.RT.raw.covered.bedGraph")   , emit: raw_covered
+    tuple val(meta), path("*.RT.smooth.covered.bedGraph"), emit: smooth_covered
     tuple val(meta), path("*.RT_index.raw.bedGraph")   , emit: rt_index_raw   , optional: true
     tuple val(meta), path("*.RT_index.smooth.bedGraph"), emit: rt_index_smooth, optional: true
     tuple val(meta), path("*.qc.txt")            , emit: qc
@@ -41,6 +43,8 @@ process REPLISEQ_RTNORMALIZE {
     """
     touch ${prefix}.RT.raw.bedGraph
     touch ${prefix}.RT.smooth.bedGraph
+    touch ${prefix}.RT.raw.covered.bedGraph
+    touch ${prefix}.RT.smooth.covered.bedGraph
     touch ${prefix}.qc.txt
     touch rt_summary.tsv
     """

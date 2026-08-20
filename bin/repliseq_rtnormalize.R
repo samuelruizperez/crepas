@@ -124,6 +124,11 @@ parser$add_argument("-g", "--exclude_scaffolds", action = "store",
                     type = "logical",
                     help = "Whether to exclude scaffolds and alternate sequences from the track. A sequence counts as one when its name begins with 'chrUn', ends with '_random', '_alt' or '_fix', or contains a dot ('.') [default: %(default)s]")
 
+parser$add_argument("--min_bin_reads", action = "store",
+                    default = 1,
+                    type = "double",
+                    help = "Fewest reads a bin needs across the early and late fractions combined to appear in the '.covered' copy of the ratio track. Bins below it carry no timing information -- with no reads in either fraction the ratio is log2((0+pseudocount)/(0+pseudocount)) = 0, which is indistinguishable from a genuinely mid-replicating bin. [default: %(default)s]")
+
 parser$add_argument("--pseudocount", action = "store",
                     default = 1,
                     type = "double",
@@ -574,8 +579,18 @@ if (length(index_phases) > 0 && opt$smooth == "none") {
 # Write outputs
 # ===============================================================================
 
+# A bin counts as covered when the fractions that form the ratio have any reads in it at all
+el_count_cols <- c(early_ids, late_ids)
+dt[, el_reads := rowSums(as.matrix(.SD), na.rm = TRUE), .SDcols = el_count_cols]
+covered <- dt[el_reads >= opt$min_bin_reads]
+n_dropped <- nrow(dt) - nrow(covered)
+
 write_bedgraph(dt, "RT_raw", out_path("RT.raw.bedGraph"))
 write_bedgraph(dt, "RT_smooth", out_path("RT.smooth.bedGraph"))
+write_bedgraph(covered, "RT_raw", out_path("RT.raw.covered.bedGraph"))
+write_bedgraph(covered, "RT_smooth", out_path("RT.smooth.covered.bedGraph"))
+message("[", Sys.time(), "] Covered copy of the ratio track drops ", n_dropped, " of ", nrow(dt),
+        " bins with fewer than ", opt$min_bin_reads, " read(s) across early and late")
 if (length(index_phases) > 0) {
   write_bedgraph(dt, "RT_index_raw", out_path("RT_index.raw.bedGraph"))
   write_bedgraph(dt, "RT_index_smooth", out_path("RT_index.smooth.bedGraph"))
@@ -616,7 +631,10 @@ qc_lines <- c(
   if (opt$smooth == "loess") paste0("loess_degree:\t", opt$loess_degree) else "",
   if (opt$smooth == "loess") paste0("loess_family:\t", opt$loess_family) else "",
   if (opt$smooth == "roll") paste0("roll_k:\t", opt$roll_k) else "",
-  paste0("n_bins:\t", nrow(dt))
+  paste0("n_bins:\t", nrow(dt)),
+  paste0("min_bin_reads:\t", opt$min_bin_reads),
+  paste0("n_bins_covered:\t", nrow(covered)),
+  paste0("n_bins_uncovered:\t", n_dropped)
 )
 qc_lines <- qc_lines[nzchar(qc_lines)]
 writeLines(qc_lines, con = out_path("qc.txt"))

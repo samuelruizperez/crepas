@@ -1542,6 +1542,68 @@
                     "description": "Exclude scaffolds and alternate sequences from the Repli-seq RT track. deepTools `multiBamSummary` bins every sequence in the BAM header, and these are short and usually barely covered, which makes their RT values meaningless. A sequence counts as one when its name begins with `chrUn`, ends with `_random`, `_alt` or `_fix`, or contains a dot. They are dropped before CPM normalization, so the normalization reflects primary-chromosome depth only.",
                     "fa_icon": "fas fa-filter"
                 },
+                "repliseq_min_bin_reads": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Fewest reads a bin needs across the early and late fractions combined to appear in the `.covered` copy of the Repli-seq ratio track. A bin with no reads in either fraction still gets a ratio of exactly log2(1/1) = 0, which is indistinguishable from a genuinely mid-replicating bin, so replication-timing domains are called on the covered copy while the unfiltered track keeps every bin.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "skip_repliseq_domains": {
+                    "type": "boolean",
+                    "description": "Skip calling domains of constant replication timing from the Repli-seq ratio track.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "repliseq_domain_track": {
+                    "type": "string",
+                    "default": "smooth",
+                    "enum": ["smooth", "raw", "both"],
+                    "description": "Which Repli-seq ratio track to segment into replication-timing domains. `both` segments the raw and the smoothed track, which is useful for checking how much the smoothing changes the domain boundaries.",
+                    "fa_icon": "fas fa-layer-group"
+                },
+                "repliseq_domain_classification": {
+                    "type": "string",
+                    "default": "three_way",
+                    "enum": ["three_way", "binary"],
+                    "description": "How to call each replication-timing domain. `binary` calls every domain early or late from the sign of its segment mean; `three_way` additionally calls domains whose mean sits within `--repliseq_domain_threshold` of zero as intermediate, i.e. replicating throughout S phase.",
+                    "fa_icon": "fas fa-tags"
+                },
+                "repliseq_domain_threshold": {
+                    "type": "number",
+                    "default": 0.1,
+                    "description": "Half-width of the intermediate band around a segment mean of zero, in log2 ratio units. Only used with `--repliseq_domain_classification three_way`.",
+                    "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "repliseq_domain_alpha": {
+                    "type": "number",
+                    "default": 0.01,
+                    "description": "Significance level for accepting a change point in DNAcopy's circular binary segmentation of the Repli-seq ratio track.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "repliseq_domain_min_width": {
+                    "type": "integer",
+                    "default": 2,
+                    "enum": [2, 3, 4, 5],
+                    "description": "Smallest number of bins a replication-timing domain may contain. DNAcopy's `segment()` accepts 2 to 5.",
+                    "fa_icon": "fas fa-ruler-horizontal"
+                },
+                "repliseq_domain_undo_sd": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "Merge adjacent replication-timing domains whose segment means differ by fewer than this many standard deviations. Zero or less turns the merging off.",
+                    "fa_icon": "fas fa-compress-arrows-alt"
+                },
+                "repliseq_domain_smooth_outliers": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run DNAcopy's `smooth.CNA()` before segmenting, which pulls single-bin outliers towards their neighbours so that one noisy bin does not become its own domain.",
+                    "fa_icon": "fas fa-chart-line"
+                },
+                "repliseq_domain_seed": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Random seed for replication-timing domain calling. DNAcopy locates change points with a permutation test, so without a fixed seed the same track segments slightly differently on every run.",
+                    "fa_icon": "fas fa-dice"
+                },
                 "skip_repliseq_rt_tracks": {
                     "type": "boolean",
                     "description": "Skip calculation and normalization of Repli-seq replication-timing (RT) tracks.",

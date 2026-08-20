@@ -3,6 +3,7 @@ include { REPLISEQ_RTNORMALIZE      } from '../../../modules/local/repliseq_rtno
 include { FILE_SORT                 } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { FIND_CONCATENATE as REPLISEQ_RT_MULTIQC } from '../../../modules/nf-core/find/concatenate/main'
+include { REPLISEQ_RT_DOMAINS      } from '../../../modules/local/repliseq_rt_domains/main'
 
 workflow BAM_REPLISEQ_RT_TRACKS {
 
@@ -16,7 +17,7 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
     //
     // Group all replicates (every fraction) of the same condition together, sorted
-    // deterministically by (rt_phase, brep) so bams/bais/phases/breps stay aligned.
+    // by (rt_phase, brep) so bams/bais/phases/breps stay aligned.
     //
     ch_bam_bai
         .map { meta, bam, bai ->
@@ -119,11 +120,34 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         [ meta_clone, bdg ]
     }
 
+    ch_rt_raw_covered = REPLISEQ_RTNORMALIZE.out.raw_covered.map { meta, bdg ->
+        def meta_clone = meta.clone()
+        meta_clone.rt_measure = 'ratio'
+        meta_clone.rt_track_type = 'raw'
+        meta_clone.rt_covered = true
+        [ meta_clone, bdg ]
+    }
+
+    ch_rt_smooth_covered = REPLISEQ_RTNORMALIZE.out.smooth_covered.map { meta, bdg ->
+        def meta_clone = meta.clone()
+        meta_clone.rt_measure = 'ratio'
+        meta_clone.rt_track_type = 'smooth'
+        meta_clone.rt_covered = true
+        [ meta_clone, bdg ]
+    }
+
+    //
+    // MODULE: Call domains of constant replication timing, on both the raw and the smoothed track
+    //
+    REPLISEQ_RT_DOMAINS (
+        ch_rt_raw_covered.mix(ch_rt_smooth_covered)
+    )
+
     //
     // MODULE: Lexicographically sort the RT tracks (required by UCSC_BEDGRAPHTOBIGWIG)
     //
     FILE_SORT (
-        ch_rt_raw.mix(ch_rt_smooth).mix(ch_rt_index_raw).mix(ch_rt_index_smooth),
+        ch_rt_raw.mix(ch_rt_smooth).mix(ch_rt_raw_covered).mix(ch_rt_smooth_covered).mix(ch_rt_index_raw).mix(ch_rt_index_smooth),
         'bedGraph'
     )
 
@@ -139,5 +163,7 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     bedgraph = FILE_SORT.out.sorted             // channel: [ val(meta), path(bedgraph) ]
     bigwig   = UCSC_BEDGRAPHTOBIGWIG.out.bigwig // channel: [ val(meta), path(bigwig) ]
     qc       = REPLISEQ_RTNORMALIZE.out.qc      // channel: [ val(meta), path(qc.txt) ]
+    domains  = REPLISEQ_RT_DOMAINS.out.domains  // channel: [ val(meta), path(RT_domains.bed) ]
+    domain_qc = REPLISEQ_RT_DOMAINS.out.qc      // channel: [ val(meta), path(RT_domains.qc.txt) ]
     mqc      = REPLISEQ_RT_MULTIQC.out.file_out // channel: [ val(meta), path(rt_mqc.tsv) ]
 }
