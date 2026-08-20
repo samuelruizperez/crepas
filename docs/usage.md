@@ -167,7 +167,14 @@ For `Repli-seq` samples, the pipeline calculates and normalizes an early/late (E
    plain unsmoothed ratio.
 5. The ratio is written as log2(early/late), so that high values are early-replicating;
    `--repliseq_ratio_direction late_over_early` inverts it.
-6. Both the raw and smoothed bedGraph tracks are converted to bigWig.
+6. When a sample has three or more fractions, a replication-timing index track is written
+   alongside the ratio. For each bin it takes the proportion of signal in each fraction, then the
+   weighted-mean fraction number rescaled to 0 (replicating entirely in the earliest fraction) to
+   1 (entirely in the latest). Unlike the ratio, which only uses early and late, the index uses
+   every fraction, so a bin replicating in mid S-phase is placed in the middle rather than looking
+   like no signal at all. The ratio is computed from the early and late fractions alone and is
+   unaffected by whether intermediate fractions are present.
+7. Every bedGraph track, raw and smoothed, is converted to bigWig.
 
 See the [Repli-seq analysis options](#repli-seq-analysis-options) below for all of the above, or to
 skip this analysis entirely (`--skip_repliseq_rt_tracks`).

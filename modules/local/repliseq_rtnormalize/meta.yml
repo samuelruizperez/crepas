@@ -35,7 +35,10 @@ input:
           - edam: "http://edamontology.org/format_3475" # TSV
     - phases:
         type: list
-        description: Phase ('early' or 'late') of each count column, in the same order as `counts`
+        description: |
+          Fraction ('early', 'mid' or 'late') of each count column, in the same order as `counts`.
+          Intermediate fractions take no part in the early/late ratio and are used only by the
+          replication-timing index.
     - breps:
         type: list
         description: |
@@ -66,6 +69,36 @@ output:
             Smoothed replication-timing track (loess or rolling-mean, per `task.ext.args`
             `--smooth`; identical to the raw track when `--smooth none`)
           pattern: "*.RT.smooth.bedGraph"
+          ontologies:
+            - edam: "http://edamontology.org/format_3583" # bedGraph
+  index_raw:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.RT.index.raw.bedGraph":
+          type: file
+          description: |
+            Raw (unsmoothed) replication-timing index: per bin, the weighted-mean S-phase fraction
+            rescaled to 0 (replicating entirely in the earliest fraction) .. 1 (entirely in the
+            latest). Only emitted when at least three fractions were supplied, since with only
+            early and late it carries nothing the ratio does not
+          pattern: "*.RT.index.raw.bedGraph"
+          ontologies:
+            - edam: "http://edamontology.org/format_3583" # bedGraph
+  index_smooth:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.RT.index.smooth.bedGraph":
+          type: file
+          description: |
+            Smoothed replication-timing index, smoothed consistently with `--smooth_stage`. Only
+            emitted when at least three fractions were supplied
+          pattern: "*.RT.index.smooth.bedGraph"
           ontologies:
             - edam: "http://edamontology.org/format_3583" # bedGraph
   qc:

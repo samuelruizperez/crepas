@@ -1,4 +1,125 @@
 {
+    "homo_sapiens - 3 fractions - replication-timing index": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.smooth.bedGraph:md5,4b959a182bdccc20bb953fa9621e7b3e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.qc.txt:md5,c3e5dd2d8fec9c78dce22f5a9ec9137a"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "rt_summary.tsv:md5,fb7fd3a4f786510557ea3b38def8e0ff"
+                    ]
+                ],
+                "6": [
+                    [
+                        "REPLISEQ_RTNORMALIZE",
+                        "r-base",
+                        "4.5.3"
+                    ]
+                ],
+                "index_raw": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
+                    ]
+                ],
+                "index_smooth": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
+                    ]
+                ],
+                "qc": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.qc.txt:md5,c3e5dd2d8fec9c78dce22f5a9ec9137a"
+                    ]
+                ],
+                "raw": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
+                    ]
+                ],
+                "smooth": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT.smooth.bedGraph:md5,4b959a182bdccc20bb953fa9621e7b3e"
+                    ]
+                ],
+                "summary": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "rt_summary.tsv:md5,fb7fd3a4f786510557ea3b38def8e0ff"
+                    ]
+                ],
+                "versions_r": [
+                    [
+                        "REPLISEQ_RTNORMALIZE",
+                        "r-base",
+                        "4.5.3"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-08-20T10:12:27.202881827",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "homo_sapiens - 4 replicates - pooled, quantile-normalized, rolling-mean smoothed": {
         "content": [
             {
@@ -19,14 +140,20 @@
                     ]
                 ],
                 "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,cff1ad71713f8083d8771aa52c8a4526"
+                        "test.qc.txt:md5,3981304b149bd9fb64f306c3ba8b165e"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -34,19 +161,25 @@
                         "rt_summary.tsv:md5,fb7fd3a4f786510557ea3b38def8e0ff"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "REPLISEQ_RTNORMALIZE",
                         "r-base",
                         "4.5.3"
                     ]
                 ],
+                "index_raw": [
+                    
+                ],
+                "index_smooth": [
+                    
+                ],
                 "qc": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,cff1ad71713f8083d8771aa52c8a4526"
+                        "test.qc.txt:md5,3981304b149bd9fb64f306c3ba8b165e"
                     ]
                 ],
                 "raw": [
@@ -82,7 +215,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T09:39:00.568690299",
+        "timestamp": "2026-08-20T10:10:46.249491991",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -108,6 +241,12 @@
                     ]
                 ],
                 "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
                     [
                         {
                             "id": "test"
@@ -115,7 +254,7 @@
                         "test.qc.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -123,12 +262,18 @@
                         "rt_summary.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "REPLISEQ_RTNORMALIZE",
                         "r-base",
                         "4.5.3"
                     ]
+                ],
+                "index_raw": [
+                    
+                ],
+                "index_smooth": [
+                    
                 ],
                 "qc": [
                     [
@@ -171,7 +316,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T09:40:01.834012432",
+        "timestamp": "2026-08-20T10:12:41.500985714",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -197,14 +342,20 @@
                     ]
                 ],
                 "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,8f5da0be429cb0da1f41f395e5b94986"
+                        "test.qc.txt:md5,47f46558ea456edf59adf45d02fd34fb"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -212,19 +363,25 @@
                         "rt_summary.tsv:md5,fb7fd3a4f786510557ea3b38def8e0ff"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "REPLISEQ_RTNORMALIZE",
                         "r-base",
                         "4.5.3"
                     ]
                 ],
+                "index_raw": [
+                    
+                ],
+                "index_smooth": [
+                    
+                ],
                 "qc": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,8f5da0be429cb0da1f41f395e5b94986"
+                        "test.qc.txt:md5,47f46558ea456edf59adf45d02fd34fb"
                     ]
                 ],
                 "raw": [
@@ -260,7 +417,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T09:38:38.027845903",
+        "timestamp": "2026-08-20T10:10:21.551076111",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -286,14 +443,20 @@
                     ]
                 ],
                 "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,813eb149bd91c6d582650a14798137cf"
+                        "test.qc.txt:md5,a6c31d38f17ae1deb7b80acff404225d"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -301,19 +464,25 @@
                         "rt_summary.tsv:md5,fb7fd3a4f786510557ea3b38def8e0ff"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "REPLISEQ_RTNORMALIZE",
                         "r-base",
                         "4.5.3"
                     ]
                 ],
+                "index_raw": [
+                    
+                ],
+                "index_smooth": [
+                    
+                ],
                 "qc": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,813eb149bd91c6d582650a14798137cf"
+                        "test.qc.txt:md5,a6c31d38f17ae1deb7b80acff404225d"
                     ]
                 ],
                 "raw": [
@@ -349,7 +518,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T09:37:57.484380179",
+        "timestamp": "2026-08-20T10:09:37.642925701",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -375,14 +544,20 @@
                     ]
                 ],
                 "2": [
+                    
+                ],
+                "3": [
+                    
+                ],
+                "4": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,2c90c25ec30616eb400f83f552cc1b04"
+                        "test.qc.txt:md5,9ff505bb1befab0b25b39ce749dea1d1"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -390,19 +565,25 @@
                         "rt_summary.tsv:md5,467b880845a910cf606b7d835fdb3833"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "REPLISEQ_RTNORMALIZE",
                         "r-base",
                         "4.5.3"
                     ]
                 ],
+                "index_raw": [
+                    
+                ],
+                "index_smooth": [
+                    
+                ],
                 "qc": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.qc.txt:md5,2c90c25ec30616eb400f83f552cc1b04"
+                        "test.qc.txt:md5,9ff505bb1befab0b25b39ce749dea1d1"
                     ]
                 ],
                 "raw": [
@@ -438,7 +619,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T09:39:48.694556837",
+        "timestamp": "2026-08-20T10:11:35.153344063",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -7,20 +7,18 @@ include { FIND_CONCATENATE as REPLISEQ_RT_MULTIQC } from '../../../modules/nf-co
 workflow BAM_REPLISEQ_RT_TRACKS {
 
     take:
-    ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ] filtered/deduped BAMs for exp_type == 'Repli-seq', meta.rt_phase == 'early'|'mid'|'late'
+    ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ]
     ch_chrom_sizes_endo // channel: [ val(meta), path(chrom_sizes) ]
     ch_blacklist        // channel: [ val(meta), path(blacklist) ]
     ch_rt_header        // channel: path(repliseq_rt_header.txt)
 
     main:
 
-    ch_bam_bai_el = ch_bam_bai.filter { it -> it[0].rt_phase in ['early', 'late'] }
-
     //
-    // Group all replicates (both phases) of the same condition together, sorted
+    // Group all replicates (every fraction) of the same condition together, sorted
     // deterministically by (rt_phase, brep) so bams/bais/phases/breps stay aligned.
     //
-    ch_bam_bai_el
+    ch_bam_bai
         .map { meta, bam, bai ->
             def meta_clone = meta.clone()
             // The id at this point is "<exp_type>_<sample>_<rt_phase>_bRep_<n>"
@@ -104,11 +102,24 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         [ meta_clone, bdg ]
     }
 
+    // Only emitted when a third fraction was supplied, so these channels are empty when only early/late are inputted
+    ch_rt_index_raw = REPLISEQ_RTNORMALIZE.out.index_raw.map { meta, bdg ->
+        def meta_clone = meta.clone()
+        meta_clone.rt_track_type = 'index_raw'
+        [ meta_clone, bdg ]
+    }
+
+    ch_rt_index_smooth = REPLISEQ_RTNORMALIZE.out.index_smooth.map { meta, bdg ->
+        def meta_clone = meta.clone()
+        meta_clone.rt_track_type = 'index_smooth'
+        [ meta_clone, bdg ]
+    }
+
     //
     // MODULE: Lexicographically sort the RT tracks (required by UCSC_BEDGRAPHTOBIGWIG)
     //
     FILE_SORT (
-        ch_rt_raw.mix(ch_rt_smooth),
+        ch_rt_raw.mix(ch_rt_smooth).mix(ch_rt_index_raw).mix(ch_rt_index_smooth),
         'bedGraph'
     )
 

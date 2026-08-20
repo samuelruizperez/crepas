@@ -135,6 +135,32 @@ nextflow_process {
 
     }
 
+    test("homo_sapiens - 3 fractions - replication-timing index") {
+
+        // Same four count columns, reinterpreted as three fractions, so that the index path runs
+        // over real data. The index needs at least three fractions; with only early and late it
+        // is not emitted.
+        when {
+            process {
+                """
+                input[0] = DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts.map { meta, counts ->
+                    [ meta, counts, [ 'early', 'early', 'mid', 'late' ], [ '1', '2', '1', '1' ] ]
+                }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.index_raw },
+                { assert process.out.index_smooth },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
     test("homo_sapiens - 4 replicates - stub") {
 
         options "-stub"

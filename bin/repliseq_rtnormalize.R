@@ -27,6 +27,10 @@ suppressPackageStartupMessages({
 # points its local neighbourhood is allowed to span
 MIN_BINS_FOR_LOESS <- 10
 
+# S-phase fractions, earliest first. The order is what gives the replication-timing index its
+# meaning; the early/late ratio only ever uses the first and last of these.
+PHASE_ORDER <- c("early", "mid", "late")
+
 # ===============================================================================
 # Argument parsing
 # ===============================================================================
@@ -154,8 +158,8 @@ if (!nzchar(opt$sample_name)) {
 if (length(opt$phases) != length(opt$breps)) {
   stop("--phases and --breps must have the same length")
 }
-if (!all(opt$phases %in% c("early", "late"))) {
-  stop("--phases values must be 'early' or 'late'")
+if (!all(opt$phases %in% PHASE_ORDER)) {
+  stop("--phases values must be one of: ", paste(PHASE_ORDER, collapse = ", "))
 }
 
 if (!dir.exists(opt$outdir)) {
@@ -207,6 +211,24 @@ qn_matrix <- function(mat) {
     out[ok_rows, ] <- apply(sub, 2, function(x) {
       approx(seq_along(target), target, xout = rank(x, ties.method = "average"), rule = 2)$y
     })
+  }
+  out
+}
+
+# Replication-timing index: per bin, what proportion of the signal sits in each fraction, then the
+# weighted-mean fraction number rescaled to 0..1 -- 0 replicating entirely in the earliest
+# fraction, 1 entirely in the latest.
+# Bins with no coverage in any fraction have no defined index and are left NA.
+rt_index <- function(mat) {
+  mat <- as.matrix(mat)
+  n_fractions <- ncol(mat)
+  out <- rep(NA_real_, nrow(mat))
+  total <- rowSums(mat)
+  ok <- is.finite(total) & total > 0 & stats::complete.cases(mat)
+  if (any(ok)) {
+    proportions <- mat[ok, , drop = FALSE] / total[ok]
+    weighted_mean_fraction <- as.vector(proportions %*% seq_len(n_fractions))
+    out[ok] <- (weighted_mean_fraction - 1) / (n_fractions - 1)
   }
   out
 }
@@ -324,7 +346,7 @@ if (opt$exclude_scaffolds) {
 }
 
 setorder(dt, chr, start)
-dt[, mid := (start + end) / 2]
+dt[, bin_mid := (start + end) / 2]
 
 early_ids <- col_ids[opt$phases == "early"]
 late_ids <- col_ids[opt$phases == "late"]
@@ -333,6 +355,15 @@ late_breps <- opt$breps[opt$phases == "late"]
 
 if (length(early_ids) < 1 || length(late_ids) < 1) {
   stop("At least one 'early' and one 'late' replicate are required")
+}
+
+# Fractions actually supplied, earliest first. Intermediate fractions take no part in the
+# early/late ratio; they are only used by the replication-timing index below.
+present_phases <- PHASE_ORDER[PHASE_ORDER %in% opt$phases]
+index_phases <- if (length(present_phases) >= 3) present_phases else character(0)
+if (length(index_phases) > 0) {
+  message("[", Sys.time(), "] Replication-timing index will be calculated over ",
+          length(index_phases), " fractions: ", paste(index_phases, collapse = " < "))
 }
 
 # ===============================================================================
@@ -453,7 +484,7 @@ combine_replicates <- function(suffix, apply_qn) {
 # Smooth one per-bin vector, per sequence, with whichever smoother was asked for
 smooth_by_chr <- function(col_in, col_out) {
   if (opt$smooth == "loess") {
-    dt[, (col_out) := smooth_loess_chr(get(col_in), mid, window = opt$loess_window,
+    dt[, (col_out) := smooth_loess_chr(get(col_in), bin_mid, window = opt$loess_window,
                                        span = opt$loess_span, degree = opt$loess_degree,
                                        family = opt$loess_family, chr_label = .BY$chr), by = chr]
   } else if (opt$smooth == "roll") {
@@ -465,8 +496,23 @@ smooth_by_chr <- function(col_in, col_out) {
 
 qn_wanted <- opt$normalization == "qn"
 
+# One column per fraction, earliest first, each the mean of that fraction's replicates.
+fraction_means <- function(suffix, apply_qn) {
+  vapply(index_phases, function(phase) {
+    phase_ids <- col_ids[opt$phases == phase]
+    phase_mat <- as.matrix(dt[, paste0(phase_ids, suffix), with = FALSE])
+    if (apply_qn) {
+      phase_mat <- qn_matrix(phase_mat)
+    }
+    rowMeans(phase_mat, na.rm = TRUE)
+  }, numeric(nrow(dt)))
+}
+
 # The raw track is always the plain unsmoothed ratio, whatever --smooth_stage says
 dt[, RT_raw := combine_replicates("_cpm", apply_qn = qn_wanted)]
+if (length(index_phases) > 0) {
+  dt[, RT_index_raw := rt_index(fraction_means("_cpm", apply_qn = qn_wanted))]
+}
 
 # ===============================================================================
 # Smoothing
@@ -486,14 +532,18 @@ if (opt$smooth == "none") {
 
   if (opt$smooth_stage == "ratio") {
     smooth_by_chr("RT_raw", "RT_smooth")
+    if (length(index_phases) > 0) {
+      smooth_by_chr("RT_index_raw", "RT_index_smooth")
+    }
   } else {
     # Smooth each replicate's coverage, then combine. Quantile normalization comes first here,
     # so that replicates are put on a common distribution before being smoothed.
     if (qn_wanted) {
-      early_cpm <- paste0(early_ids, "_cpm")
-      late_cpm <- paste0(late_ids, "_cpm")
-      dt[, (paste0(early_ids, "_norm")) := as.data.table(qn_matrix(dt[, ..early_cpm]))]
-      dt[, (paste0(late_ids, "_norm")) := as.data.table(qn_matrix(dt[, ..late_cpm]))]
+      for (phase in present_phases) {
+        phase_ids <- col_ids[opt$phases == phase]
+        phase_cpm <- paste0(phase_ids, "_cpm")
+        dt[, (paste0(phase_ids, "_norm")) := as.data.table(qn_matrix(dt[, ..phase_cpm]))]
+      }
     } else {
       for (id in col_ids) {
         dt[, (paste0(id, "_norm")) := get(paste0(id, "_cpm"))]
@@ -510,7 +560,14 @@ if (opt$smooth == "none") {
 
     # QN has already been applied above, so it must not be applied again to the ratios
     dt[, RT_smooth := combine_replicates("_sm", apply_qn = FALSE)]
+    if (length(index_phases) > 0) {
+      dt[, RT_index_smooth := rt_index(fraction_means("_sm", apply_qn = FALSE))]
+    }
   }
+}
+
+if (length(index_phases) > 0 && opt$smooth == "none") {
+  dt[, RT_index_smooth := RT_index_raw]
 }
 
 # ===============================================================================
@@ -519,11 +576,21 @@ if (opt$smooth == "none") {
 
 write_bedgraph(dt, "RT_raw", out_path("RT.raw.bedGraph"))
 write_bedgraph(dt, "RT_smooth", out_path("RT.smooth.bedGraph"))
+if (length(index_phases) > 0) {
+  write_bedgraph(dt, "RT_index_raw", out_path("RT.index.raw.bedGraph"))
+  write_bedgraph(dt, "RT_index_smooth", out_path("RT.index.smooth.bedGraph"))
+}
 
 qc_lines <- c(
   paste0("counts:\t", opt$counts),
+  paste0("fractions:\t", paste(present_phases, collapse = " < ")),
   paste0("early_replicates:\t", paste(early_ids, collapse = ", ")),
   paste0("late_replicates:\t", paste(late_ids, collapse = ", ")),
+  if (length(index_phases) > 0) {
+    paste0("rt_index_fractions:\t", paste(index_phases, collapse = " < "))
+  } else {
+    paste0("rt_index:\tnot calculated (needs at least 3 fractions, found ", length(present_phases), ")")
+  },
   paste0("requested_method:\t", opt$method),
   paste0("chosen_method:\t", chosen_method),
   paste0("corr_method:\t", opt$corr),
