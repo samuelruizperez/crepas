@@ -577,8 +577,8 @@ if (length(index_phases) > 0 && opt$smooth == "none") {
 write_bedgraph(dt, "RT_raw", out_path("RT.raw.bedGraph"))
 write_bedgraph(dt, "RT_smooth", out_path("RT.smooth.bedGraph"))
 if (length(index_phases) > 0) {
-  write_bedgraph(dt, "RT_index_raw", out_path("RT.index.raw.bedGraph"))
-  write_bedgraph(dt, "RT_index_smooth", out_path("RT.index.smooth.bedGraph"))
+  write_bedgraph(dt, "RT_index_raw", out_path("RT_index.raw.bedGraph"))
+  write_bedgraph(dt, "RT_index_smooth", out_path("RT_index.smooth.bedGraph"))
 }
 
 qc_lines <- c(

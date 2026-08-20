@@ -13,8 +13,8 @@ process REPLISEQ_RTNORMALIZE {
     output:
     tuple val(meta), path("*.RT.raw.bedGraph")   , emit: raw
     tuple val(meta), path("*.RT.smooth.bedGraph"), emit: smooth
-    tuple val(meta), path("*.RT.index.raw.bedGraph")   , emit: index_raw   , optional: true
-    tuple val(meta), path("*.RT.index.smooth.bedGraph"), emit: index_smooth, optional: true
+    tuple val(meta), path("*.RT_index.raw.bedGraph")   , emit: rt_index_raw   , optional: true
+    tuple val(meta), path("*.RT_index.smooth.bedGraph"), emit: rt_index_smooth, optional: true
     tuple val(meta), path("*.qc.txt")            , emit: qc
     tuple val(meta), path("rt_summary.tsv")      , emit: summary
     tuple val("${task.process}"), val('r-base'), eval("R --version | head -1 | sed 's/R version //; s/ .*//'"), emit: versions_r, topic: versions

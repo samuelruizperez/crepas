@@ -23,7 +23,7 @@
                         {
                             "id": "test"
                         },
-                        "test.RT.index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
+                        "test.RT_index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
                     ]
                 ],
                 "3": [
@@ -31,7 +31,7 @@
                         {
                             "id": "test"
                         },
-                        "test.RT.index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
+                        "test.RT_index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
                     ]
                 ],
                 "4": [
@@ -57,22 +57,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT.index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
-                    ]
-                ],
-                "index_smooth": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT.index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
-                    ]
-                ],
                 "qc": [
                     [
                         {
@@ -87,6 +71,22 @@
                             "id": "test"
                         },
                         "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
+                    ]
+                ],
+                "rt_index_raw": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT_index.raw.bedGraph:md5,5d9c9c1757bff6650787293e52ce4b5c"
+                    ]
+                ],
+                "rt_index_smooth": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.RT_index.smooth.bedGraph:md5,642de0400f4cc9601ce7e543f33ff6cf"
                     ]
                 ],
                 "smooth": [
@@ -114,7 +114,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:12:27.202881827",
+        "timestamp": "2026-08-20T11:28:48.038901224",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -168,12 +168,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    
-                ],
-                "index_smooth": [
-                    
-                ],
                 "qc": [
                     [
                         {
@@ -189,6 +183,12 @@
                         },
                         "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
                     ]
+                ],
+                "rt_index_raw": [
+                    
+                ],
+                "rt_index_smooth": [
+                    
                 ],
                 "smooth": [
                     [
@@ -215,7 +215,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:10:46.249491991",
+        "timestamp": "2026-08-20T11:27:05.13025759",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -269,12 +269,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    
-                ],
-                "index_smooth": [
-                    
-                ],
                 "qc": [
                     [
                         {
@@ -290,6 +284,12 @@
                         },
                         "test.RT.raw.bedGraph:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
+                ],
+                "rt_index_raw": [
+                    
+                ],
+                "rt_index_smooth": [
+                    
                 ],
                 "smooth": [
                     [
@@ -316,7 +316,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:12:41.500985714",
+        "timestamp": "2026-08-20T11:29:03.467827887",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -370,12 +370,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    
-                ],
-                "index_smooth": [
-                    
-                ],
                 "qc": [
                     [
                         {
@@ -391,6 +385,12 @@
                         },
                         "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
                     ]
+                ],
+                "rt_index_raw": [
+                    
+                ],
+                "rt_index_smooth": [
+                    
                 ],
                 "smooth": [
                     [
@@ -417,7 +417,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:10:21.551076111",
+        "timestamp": "2026-08-20T11:26:39.557991348",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -471,12 +471,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    
-                ],
-                "index_smooth": [
-                    
-                ],
                 "qc": [
                     [
                         {
@@ -492,6 +486,12 @@
                         },
                         "test.RT.raw.bedGraph:md5,899c0eb7093e130802b21f279068bf2b"
                     ]
+                ],
+                "rt_index_raw": [
+                    
+                ],
+                "rt_index_smooth": [
+                    
                 ],
                 "smooth": [
                     [
@@ -518,7 +518,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:09:37.642925701",
+        "timestamp": "2026-08-20T11:25:53.7358723",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -572,12 +572,6 @@
                         "4.5.3"
                     ]
                 ],
-                "index_raw": [
-                    
-                ],
-                "index_smooth": [
-                    
-                ],
                 "qc": [
                     [
                         {
@@ -593,6 +587,12 @@
                         },
                         "test.RT.raw.bedGraph:md5,02d1e0e2f8447ef27d4c2c1f5caca1d7"
                     ]
+                ],
+                "rt_index_raw": [
+                    
+                ],
+                "rt_index_smooth": [
+                    
                 ],
                 "smooth": [
                     [
@@ -619,7 +619,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T10:11:35.153344063",
+        "timestamp": "2026-08-20T11:27:54.90336209",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

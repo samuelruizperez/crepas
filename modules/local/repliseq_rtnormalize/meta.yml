@@ -71,34 +71,34 @@ output:
           pattern: "*.RT.smooth.bedGraph"
           ontologies:
             - edam: "http://edamontology.org/format_3583" # bedGraph
-  index_raw:
+  rt_index_raw:
     - - meta:
           type: map
           description: |
             Groovy Map containing sample (condition) information
             e.g. [ id:'test' ]
-      - "*.RT.index.raw.bedGraph":
+      - "*.RT_index.raw.bedGraph":
           type: file
           description: |
             Raw (unsmoothed) replication-timing index: per bin, the weighted-mean S-phase fraction
             rescaled to 0 (replicating entirely in the earliest fraction) .. 1 (entirely in the
             latest). Only emitted when at least three fractions were supplied, since with only
             early and late it carries nothing the ratio does not
-          pattern: "*.RT.index.raw.bedGraph"
+          pattern: "*.RT_index.raw.bedGraph"
           ontologies:
             - edam: "http://edamontology.org/format_3583" # bedGraph
-  index_smooth:
+  rt_index_smooth:
     - - meta:
           type: map
           description: |
             Groovy Map containing sample (condition) information
             e.g. [ id:'test' ]
-      - "*.RT.index.smooth.bedGraph":
+      - "*.RT_index.smooth.bedGraph":
           type: file
           description: |
             Smoothed replication-timing index, smoothed consistently with `--smooth_stage`. Only
             emitted when at least three fractions were supplied
-          pattern: "*.RT.index.smooth.bedGraph"
+          pattern: "*.RT_index.smooth.bedGraph"
           ontologies:
             - edam: "http://edamontology.org/format_3583" # bedGraph
   qc:

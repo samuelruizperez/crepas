@@ -92,26 +92,30 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
     ch_rt_raw = REPLISEQ_RTNORMALIZE.out.raw.map { meta, bdg ->
         def meta_clone = meta.clone()
+        meta_clone.rt_measure = 'ratio'
         meta_clone.rt_track_type = 'raw'
         [ meta_clone, bdg ]
     }
 
     ch_rt_smooth = REPLISEQ_RTNORMALIZE.out.smooth.map { meta, bdg ->
         def meta_clone = meta.clone()
+        meta_clone.rt_measure = 'ratio'
         meta_clone.rt_track_type = 'smooth'
         [ meta_clone, bdg ]
     }
 
     // Only emitted when a third fraction was supplied, so these channels are empty when only early/late are inputted
-    ch_rt_index_raw = REPLISEQ_RTNORMALIZE.out.index_raw.map { meta, bdg ->
+    ch_rt_index_raw = REPLISEQ_RTNORMALIZE.out.rt_index_raw.map { meta, bdg ->
         def meta_clone = meta.clone()
-        meta_clone.rt_track_type = 'index_raw'
+        meta_clone.rt_measure = 'rt_index'
+        meta_clone.rt_track_type = 'raw'
         [ meta_clone, bdg ]
     }
 
-    ch_rt_index_smooth = REPLISEQ_RTNORMALIZE.out.index_smooth.map { meta, bdg ->
+    ch_rt_index_smooth = REPLISEQ_RTNORMALIZE.out.rt_index_smooth.map { meta, bdg ->
         def meta_clone = meta.clone()
-        meta_clone.rt_track_type = 'index_smooth'
+        meta_clone.rt_measure = 'rt_index'
+        meta_clone.rt_track_type = 'smooth'
         [ meta_clone, bdg ]
     }
 
