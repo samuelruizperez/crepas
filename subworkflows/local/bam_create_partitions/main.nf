@@ -541,6 +541,7 @@ workflow BAM_CREATE_PARTITIONS {
     // Create channel: [ val(meta), [ scar_tsv ], [ input_tsv ], [ minusinput_tsv ] ]
     ch_partitions_filtered
         .mix(ch_part_avg_filtered)
+        .filter { it -> !it[0].exp_type == 'OK-seq' }
         .branch { meta, tsv ->
             scar_with_ipcontrol: !meta.is_input_control && !meta.signal_minus_input && meta.input_control
                 return [ meta.input_control, meta, tsv ]
@@ -580,14 +581,14 @@ workflow BAM_CREATE_PARTITIONS {
         .collectFile( name: '17_scar_ch_partitions_to_plot.txt', newLine: true, sort: false, storeDir: "${params.outdir}/.debug/BAM_CREATE_PARTITIONS")
 
 
-        //
-        // MODULE: Plot the final partition
-        //
-        PARTITION_PLOT_SAMPLE (
-            ch_part_flt_to_plot,
-            ch_blacklist,
-            ch_chrom_sizes
-        )
+    //
+    // MODULE: Plot the final partition
+    //
+    PARTITION_PLOT_SAMPLE (
+        ch_part_flt_to_plot,
+        ch_blacklist,
+        ch_chrom_sizes
+    )
 
     if (!skip_partition_group_plot) {
 
