@@ -131,6 +131,7 @@ workflow CREPAS {
     ch_epic2_peak_annotation_header = file("${projectDir}/assets/multiqc/epic2_peak_annotation_header.txt", checkIfExists: true)
     ch_deseq2_pca_header = channel.value(file("${projectDir}/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
     ch_repliseq_rt_header = channel.value(file("${projectDir}/assets/multiqc/repliseq_rt_header.txt", checkIfExists: true))
+    ch_repliseq_gene_class_header = channel.value(file("${projectDir}/assets/multiqc/repliseq_gene_class_header.txt", checkIfExists: true))
     ch_deseq2_clustering_header = channel.value(file("${projectDir}/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
     //
@@ -987,9 +988,15 @@ workflow CREPAS {
             ch_filtered_bam_index_repliseq,
             ch_endo_chromsizes_repliseq,
             ch_blacklist.ifEmpty([[:], []]).first(),
-            ch_repliseq_rt_header
+            ch_repliseq_rt_header,
+            ch_repliseq_gene_class_header,
+            ch_gene_bed
         )
         ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.mqc.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.featurecounts_summary.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.gene_class_mqc.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.gene_class_box.collect { it -> it[1] })
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.domain_box.collect { it -> it[1] })
     }
 
     //

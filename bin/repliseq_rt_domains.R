@@ -18,6 +18,7 @@ suppressPackageStartupMessages({
   library(argparse)
   library(data.table)
   library(DNAcopy)
+  library(ggplot2)
 })
 
 parser <- ArgumentParser()
@@ -66,6 +67,26 @@ parser$add_argument("--sample_name", action = "store",
                     default = "sample",
                     type = "character",
                     help = "Name to report this sample under [default: %(default)s]")
+
+parser$add_argument("--skip_plots", action = "store",
+                    default = FALSE,
+                    type = "logical",
+                    help = "Whether to skip the diagnostic plots [default: %(default)s]")
+
+parser$add_argument("--mqc_max_points", action = "store",
+                    default = 5000,
+                    type = "integer",
+                    help = "Most domains per class to put in the MultiQC box plot. Every value is embedded in the report, so larger classes are thinned to a random sample of this size [default: %(default)s]")
+
+parser$add_argument("--plot_width", action = "store",
+                    default = 7,
+                    type = "double",
+                    help = "Width of each plot, in inches [default: %(default)s]")
+
+parser$add_argument("--plot_height", action = "store",
+                    default = 5,
+                    type = "double",
+                    help = "Height of each plot, in inches [default: %(default)s]")
 
 parser$add_argument("-o", "--outdir", action = "store",
                     default = ".",
@@ -182,6 +203,45 @@ for (cls in classes) {
 # QC
 # ===============================================================================
 
+# Domain sizes are strongly right-skewed, so compare them with rank-based tests rather than
+# anything assuming normality. Kruskal-Wallis asks whether size differs across the classes at all;
+# the pairwise Wilcoxon tests say which pairs differ, with Benjamini-Hochberg correction over the
+# pairs actually tested.
+size_test <- list(method = NA_character_, statistic = NA_real_, p_value = NA_real_, pairs = NULL)
+testable <- seg[domain %in% classes]
+testable[, domain := factor(domain, levels = classes)]
+group_sizes <- testable[, .N, by = domain]
+if (nrow(group_sizes[N >= 3]) >= 2) {
+  usable <- testable[domain %in% group_sizes[N >= 3, domain]]
+  usable[, domain := droplevels(domain)]
+  if (nlevels(usable$domain) == 2) {
+    tt <- suppressWarnings(wilcox.test(length ~ domain, data = usable))
+    size_test$method <- "Wilcoxon rank-sum"
+  } else {
+    tt <- suppressWarnings(kruskal.test(length ~ domain, data = usable))
+    size_test$method <- "Kruskal-Wallis"
+  }
+  size_test$statistic <- unname(tt$statistic)
+  size_test$p_value <- tt$p.value
+
+  combos <- combn(levels(usable$domain), 2, simplify = FALSE)
+  if (length(combos) > 1) {
+    raw_p <- vapply(combos, function(pair) {
+      suppressWarnings(wilcox.test(usable[domain == pair[1], length],
+                                   usable[domain == pair[2], length])$p.value)
+    }, numeric(1))
+    size_test$pairs <- data.table(
+      comparison = vapply(combos, function(pair) paste(pair, collapse = " vs "), character(1)),
+      p_value = raw_p,
+      p_adjusted = p.adjust(raw_p, method = "BH")
+    )
+  }
+}
+
+format_p <- function(p) {
+  if (!is.finite(p)) "NA" else if (p < 2.2e-16) "< 2.2e-16" else format.pval(p, digits = 3)
+}
+
 total_bp <- sum(seg$length)
 qc_lines <- c(
   paste0("track:\t", opt$bedgraph),
@@ -206,7 +266,121 @@ for (cls in classes) {
                 paste0(cls, "_bp:\t", format(bp, scientific = FALSE)),
                 paste0(cls, "_fraction_of_bp:\t", sprintf("%.4f", if (total_bp > 0) bp / total_bp else NA_real_)))
 }
+qc_lines <- c(qc_lines,
+              paste0("size_test:\t", size_test$method),
+              paste0("size_test_statistic:\t", if (is.finite(size_test$statistic)) sprintf("%.4f", size_test$statistic) else "NA"),
+              paste0("size_test_p_value:\t", format_p(size_test$p_value)))
+if (!is.null(size_test$pairs)) {
+  for (i in seq_len(nrow(size_test$pairs))) {
+    qc_lines <- c(qc_lines,
+                  paste0("size_test_pair(", size_test$pairs$comparison[i], ")_p_adjusted:\t",
+                         format_p(size_test$pairs$p_adjusted[i])))
+  }
+}
+for (cls in classes) {
+  lengths_cls <- seg[domain == cls, length]
+  qc_lines <- c(qc_lines,
+                paste0(cls, "_median_length:\t",
+                       if (length(lengths_cls) > 0) as.integer(median(lengths_cls)) else "NA"))
+}
 writeLines(qc_lines, con = out_path("RT_domains.qc.txt"))
+
+# ===============================================================================
+# Plots
+# ===============================================================================
+
+if (!opt$skip_plots) {
+  message("[", Sys.time(), "] Drawing plots...")
+
+  seg[, domain := factor(domain, levels = classes)]
+  class_colours <- setNames(
+    if (length(classes) == 2) c("#2166AC", "#B2182B")
+    else c("#2166AC", "#B2ABD2", "#B2182B"),
+    classes
+  )
+  base_theme <- theme_bw(base_size = 11) +
+    theme(panel.grid.minor = element_blank(), legend.position = "none")
+
+  # How much of the genome each class covers, which is the headline number
+  bp_by_class <- seg[, .(bp = sum(length), n = .N), by = domain]
+  bp_by_class[, fraction := bp / sum(bp)]
+  p_bp <- ggplot(bp_by_class, aes(x = domain, y = fraction, fill = domain)) +
+    geom_col() +
+    geom_text(aes(label = sprintf("%.1f%%\n(%d domains)", 100 * fraction, n)), vjust = -0.3, size = 3) +
+    scale_fill_manual(values = class_colours) +
+    scale_y_continuous(labels = function(x) paste0(100 * x, "%"),
+                       expand = expansion(mult = c(0, 0.15))) +
+    labs(title = paste0(opt$sample_name, ": genome covered by each class"),
+         subtitle = paste0(nrow(seg), " domains from ", nrow(bins), " bins"),
+         x = NULL, y = "Fraction of segmented base pairs") +
+    base_theme
+
+  # Domain size by class, with the test result stated on the plot
+  size_subtitle <- if (is.finite(size_test$p_value)) {
+    paste0(size_test$method, ", p = ", format_p(size_test$p_value))
+  } else {
+    "not enough domains to test for a size difference"
+  }
+  p_size <- ggplot(seg, aes(x = domain, y = length, fill = domain)) +
+    geom_violin(colour = NA, alpha = 0.5, scale = "width") +
+    geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white") +
+    scale_fill_manual(values = class_colours) +
+    scale_y_log10(labels = function(x) paste0(x / 1000, " kb")) +
+    labs(title = paste0(opt$sample_name, ": domain size by class"),
+         subtitle = size_subtitle, x = NULL, y = "Domain size") +
+    base_theme
+
+  # The values the classes were cut from, as a check that the threshold sits where intended
+  p_mean <- ggplot(seg, aes(x = domain, y = seg_mean, fill = domain)) +
+    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+    geom_violin(colour = NA, alpha = 0.5, scale = "width") +
+    geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white") +
+    scale_fill_manual(values = class_colours) +
+    labs(title = paste0(opt$sample_name, ": segment mean by class"),
+         subtitle = if (opt$classification == "three_way") {
+           paste0("Intermediate band is +/- ", opt$threshold, " around zero")
+         } else {
+           "Split on the sign of the segment mean"
+         },
+         x = NULL, y = expression(log[2] * "(early / late)")) +
+    base_theme
+
+  pdf(out_path("RT_domains.plots.pdf"), width = opt$plot_width, height = opt$plot_height)
+  print(p_bp)
+  print(p_size)
+  print(p_mean)
+  invisible(dev.off())
+
+  # Domain sizes for MultiQC as an interactive box plot. MultiQC's violin plot type takes one
+  # value per sample rather than a distribution, so a box plot is what raw sizes can be drawn as.
+  set.seed(opt$seed)
+  box_data <- lapply(classes, function(cls) {
+    values <- seg[domain == cls, length]
+    if (length(values) > opt$mqc_max_points) {
+      values <- sample(values, opt$mqc_max_points)
+    }
+    as.integer(values)
+  })
+  names(box_data) <- classes
+  box_data <- box_data[lengths(box_data) > 0]
+
+  if (length(box_data) > 0) {
+    json_values <- vapply(names(box_data), function(cls) {
+      paste0('"', cls, '": [', paste(box_data[[cls]], collapse = ","), ']')
+    }, character(1))
+    writeLines(paste0(
+      '{"id": "repliseq_domain_size",',
+      ' "section_name": "MERGED LIB: Repli-seq domain size by class",',
+      ' "description": "size of each replication-timing domain, grouped by the class it was',
+      ' called as. ', gsub('"', "'", size_subtitle), '.",',
+      ' "plot_type": "box",',
+      ' "pconfig": {"id": "repliseq_domain_size_plot",',
+      ' "title": "Repli-seq: domain size by class",',
+      ' "xlab": "Domain size (bp)"},',
+      ' "data": {', paste(json_values, collapse = ","), '}}'
+    ), con = out_path("RT_domains_size_mqc.json"))
+  }
+}
 
 message("[", Sys.time(), "] ", nrow(seg), " segments: ",
         paste(sprintf("%s=%d", classes, vapply(classes, function(c) sum(seg$domain == c), integer(1))),

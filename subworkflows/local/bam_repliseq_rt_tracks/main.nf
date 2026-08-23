@@ -3,7 +3,11 @@ include { REPLISEQ_RTNORMALIZE      } from '../../../modules/local/repliseq_rtno
 include { FILE_SORT                 } from '../../../modules/local/file_sort/main'
 include { UCSC_BEDGRAPHTOBIGWIG     } from '../../../modules/nf-core/ucsc/bedgraphtobigwig/main'
 include { FIND_CONCATENATE as REPLISEQ_RT_MULTIQC } from '../../../modules/nf-core/find/concatenate/main'
+include { FIND_CONCATENATE as REPLISEQ_GENE_CLASS_MULTIQC } from '../../../modules/nf-core/find/concatenate/main'
 include { REPLISEQ_RT_DOMAINS      } from '../../../modules/local/repliseq_rt_domains/main'
+include { BED_TO_SAF               } from '../../../modules/local/bed_to_saf/main'
+include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENES } from '../../../modules/nf-core/subread/featurecounts/main'
+include { REPLISEQ_CLASSIFY_GENES  } from '../../../modules/local/repliseq_classify_genes/main'
 
 workflow BAM_REPLISEQ_RT_TRACKS {
 
@@ -12,6 +16,8 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     ch_chrom_sizes_endo // channel: [ val(meta), path(chrom_sizes) ]
     ch_blacklist        // channel: [ val(meta), path(blacklist) ]
     ch_rt_header        // channel: path(repliseq_rt_header.txt)
+    ch_gene_class_header // channel: path(repliseq_gene_class_header.txt)
+    ch_gene_bed         // channel: [ val(meta), path(gene.bed) ]
 
     main:
 
@@ -77,10 +83,6 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
     //
     // MODULE: Prepend the MultiQC custom-content header to each sample's summary row.
-    // FIND_CONCATENATE concatenates its inputs in filename order rather than in the order given
-    // here, so the two names have to sort the right way round: "repliseq_rt_header.txt" before
-    // "rt_summary.tsv". Renaming either file without preserving that would silently put the data
-    // row above the header and MultiQC would stop recognising the section.
     //
     REPLISEQ_RTNORMALIZE.out.summary
         .combine(ch_rt_header)
@@ -136,12 +138,77 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         [ meta_clone, bdg ]
     }
 
+    ch_domains = channel.empty()
+    ch_domain_qc = channel.empty()
+    ch_domain_box = channel.empty()
+    ch_gene_classes = channel.empty()
+    ch_gene_class_qc = channel.empty()
+    ch_featurecounts_summary = channel.empty()
+    ch_gene_class_mqc = channel.empty()
+    ch_gene_class_box = channel.empty()
+
     //
-    // MODULE: Call domains of constant replication timing, on both the raw and the smoothed track
+    // MODULE: Call domains of constant replication timing. Which track they are called on is a
+    // parameter, since smoothing changes where the boundaries fall.
     //
-    REPLISEQ_RT_DOMAINS (
-        ch_rt_raw_covered.mix(ch_rt_smooth_covered)
-    )
+    if (!params.skip_repliseq_domains) {
+        ch_rt_raw_covered
+            .mix(ch_rt_smooth_covered)
+            .filter { meta, _bdg ->
+                params.repliseq_domain_track == 'both' || meta.rt_track_type == params.repliseq_domain_track
+            }
+            .set { ch_for_domains }
+
+        REPLISEQ_RT_DOMAINS (
+            ch_for_domains
+        )
+        ch_domains = REPLISEQ_RT_DOMAINS.out.domains
+        ch_domain_qc = REPLISEQ_RT_DOMAINS.out.qc
+        ch_domain_box = REPLISEQ_RT_DOMAINS.out.mqc_box
+    }
+
+    //
+    // MODULE: Classify each gene by the S-phase fraction with the highest read density over its
+    // gene body.
+    //
+    if (!params.skip_repliseq_gene_classification) {
+        BED_TO_SAF (
+            ch_gene_bed
+        )
+
+        ch_condition_bam_bai
+            .combine(BED_TO_SAF.out.saf.map { it -> it[1] })
+            .map { meta, bams, _bais, _phases, _breps, saf -> [ meta, bams, saf ] }
+            .set { ch_genes_for_featurecounts }
+
+        SUBREAD_FEATURECOUNTS_GENES (
+            ch_genes_for_featurecounts
+        )
+
+        SUBREAD_FEATURECOUNTS_GENES.out.counts
+            .join(ch_phases_breps, by: 0)
+            .set { ch_gene_counts_for_classify }
+
+        REPLISEQ_CLASSIFY_GENES (
+            ch_gene_counts_for_classify
+        )
+        ch_gene_classes = REPLISEQ_CLASSIFY_GENES.out.classes
+        ch_gene_class_qc = REPLISEQ_CLASSIFY_GENES.out.qc
+        ch_featurecounts_summary = SUBREAD_FEATURECOUNTS_GENES.out.summary
+        ch_gene_class_box = REPLISEQ_CLASSIFY_GENES.out.mqc_box
+
+        // Same filename-order constraint as the track summary above:
+        // "repliseq_gene_class_header.txt" sorts before "rt_gene_class_counts.tsv".
+        REPLISEQ_CLASSIFY_GENES.out.summary
+            .combine(ch_gene_class_header)
+            .map { meta, summary, header -> [ meta, [ header, summary ] ] }
+            .set { ch_gene_class_for_mqc }
+
+        REPLISEQ_GENE_CLASS_MULTIQC (
+            ch_gene_class_for_mqc
+        )
+        ch_gene_class_mqc = REPLISEQ_GENE_CLASS_MULTIQC.out.file_out
+    }
 
     //
     // MODULE: Lexicographically sort the RT tracks (required by UCSC_BEDGRAPHTOBIGWIG)
@@ -163,7 +230,13 @@ workflow BAM_REPLISEQ_RT_TRACKS {
     bedgraph = FILE_SORT.out.sorted             // channel: [ val(meta), path(bedgraph) ]
     bigwig   = UCSC_BEDGRAPHTOBIGWIG.out.bigwig // channel: [ val(meta), path(bigwig) ]
     qc       = REPLISEQ_RTNORMALIZE.out.qc      // channel: [ val(meta), path(qc.txt) ]
-    domains  = REPLISEQ_RT_DOMAINS.out.domains  // channel: [ val(meta), path(RT_domains.bed) ]
-    domain_qc = REPLISEQ_RT_DOMAINS.out.qc      // channel: [ val(meta), path(RT_domains.qc.txt) ]
+    domains  = ch_domains                       // channel: [ val(meta), path(RT_domains.bed) ]
+    domain_qc = ch_domain_qc                    // channel: [ val(meta), path(RT_domains.qc.txt) ]
+    domain_box = ch_domain_box                  // channel: [ val(meta), path(*_mqc.json) ]
+    gene_classes = ch_gene_classes              // channel: [ val(meta), path(gene_RT_class.tsv) ]
+    gene_class_qc = ch_gene_class_qc            // channel: [ val(meta), path(gene_RT_class.qc.txt) ]
+    featurecounts_summary = ch_featurecounts_summary // channel: [ val(meta), path(summary) ]
+    gene_class_mqc = ch_gene_class_mqc          // channel: [ val(meta), path(gene_class_mqc.tsv) ]
+    gene_class_box = ch_gene_class_box          // channel: [ val(meta), path(*_mqc.json) ]
     mqc      = REPLISEQ_RT_MULTIQC.out.file_out // channel: [ val(meta), path(rt_mqc.tsv) ]
 }

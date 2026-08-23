@@ -260,6 +260,12 @@ report_section_order:
   # above and independent of peak calling below
   repliseq_rt:
     order: -1060
+  repliseq_gene_class:
+    order: -1065
+  repliseq_gene_class_el:
+    order: -1070
+  repliseq_domain_size:
+    order: -1075
   # Peak calling itself, ahead of the per-caller QC below
   macs3_callpeak:
     order: -1090

@@ -4,8 +4,8 @@ process REPLISEQ_RT_DOMAINS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_r-data.table:7ea9e7520dc0c602' :
-        'community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_r-data.table:98d866fb7b5bf7a7' }"
+        'oras://community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_pruned:1eba02bed1cfce5f' :
+        'community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_pruned:979f7a7b8c7daeaf' }"
 
     input:
     tuple val(meta), path(bedgraph)
@@ -16,6 +16,8 @@ process REPLISEQ_RT_DOMAINS {
     tuple val(meta), path("*.RT_domains.late.bed")       , emit: late
     tuple val(meta), path("*.RT_domains.mid.bed")        , emit: mid, optional: true
     tuple val(meta), path("*.RT_domains.qc.txt")         , emit: qc
+    tuple val(meta), path("*.RT_domains.plots.pdf")      , emit: plots, optional: true
+    tuple val(meta), path("*_mqc.json")                  , emit: mqc_box, optional: true
     tuple val("${task.process}"), val('r-base'), eval("R --version | head -1 | sed 's/R version //; s/ .*//'"), emit: versions_r, topic: versions
     tuple val("${task.process}"), val('bioconductor-dnacopy'), eval("Rscript -e 'cat(as.character(packageVersion(\"DNAcopy\")))'"), emit: versions_dnacopy, topic: versions
 

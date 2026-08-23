@@ -1604,6 +1604,33 @@
                     "description": "Random seed for replication-timing domain calling. DNAcopy locates change points with a permutation test, so without a fixed seed the same track segments slightly differently on every run.",
                     "fa_icon": "fas fa-dice"
                 },
+                "skip_repliseq_gene_classification": {
+                    "type": "boolean",
+                    "description": "Skip classifying genes by the S-phase fraction with the highest read density over their gene body.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "repliseq_min_gene_reads": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "Fewest reads a gene needs summed over every S-phase fraction before it is classified. Genes below it are reported as `unclassified`, because with only a handful of reads the fraction with the highest density is decided by sampling noise.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "repliseq_gene_min_margin": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Fewest CPM by which the winning S-phase fraction must exceed the runner-up for a gene to be classified. Zero accepts any winner.",
+                    "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "repliseq_skip_gene_plots": {
+                    "type": "boolean",
+                    "description": "Skip the diagnostic plots of the Repli-seq gene classification. The classification table and BEDs are still written.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "repliseq_skip_domain_plots": {
+                    "type": "boolean",
+                    "description": "Skip the diagnostic plots of the Repli-seq replication-timing domains. The domain BEDs and QC are still written.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
                 "skip_repliseq_rt_tracks": {
                     "type": "boolean",
                     "description": "Skip calculation and normalization of Repli-seq replication-timing (RT) tracks.",
