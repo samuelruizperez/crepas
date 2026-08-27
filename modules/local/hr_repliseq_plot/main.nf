@@ -4,7 +4,7 @@ process HR_REPLISEQ_PLOT {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/matplotlib-base_numpy_pandas_python:35d07e2b5f454dda' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b2/b29c6de0ed5b02fcfa32795a17dff4aca14501adafcf995e272722d44a4722c9/data' :
         'community.wave.seqera.io/library/matplotlib-base_numpy_pandas_python:c233ff6bba50fb28' }"
 
     input:

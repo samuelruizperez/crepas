@@ -4,7 +4,7 @@ process REPLISEQ_CLASSIFY_GENES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/r-argparse_r-base_r-data.table_r-ggplot2_libblas:d544fb0c717f11b5' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c8/c8a9ad3c9a315b68403d671ecb126c853d599880e51e3a34d22a638eeb5cf9c5/data' :
         'community.wave.seqera.io/library/r-argparse_r-base_r-data.table_r-ggplot2_libblas:4a3be68aad9e7bbe' }"
 
     input:

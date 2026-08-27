@@ -4,7 +4,7 @@ process REPLISEQ_RTNORMALIZE {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/r-argparse_r-base_r-data.table_r-zoo:f466df11c579e203' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/7a/7a975bc28eee9e1375f221718022201e184d119495b209b0b133da55d7e3e7c2/data' :
         'community.wave.seqera.io/library/r-argparse_r-base_r-data.table_r-zoo:a9a33411d1a10128' }"
 
     input:

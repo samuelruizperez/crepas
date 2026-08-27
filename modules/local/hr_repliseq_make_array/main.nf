@@ -4,7 +4,7 @@ process HR_REPLISEQ_MAKE_ARRAY {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/numpy_pandas_python_scikit-learn:89311e24ad590a8e' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e3/e37d089fd2a5e75a8b4baf061893d10ce5744a799786cd752ce74586a8bb24ba/data' :
         'community.wave.seqera.io/library/numpy_pandas_python_scikit-learn:7c7a45cf53383448' }"
 
     input:

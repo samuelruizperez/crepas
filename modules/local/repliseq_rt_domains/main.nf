@@ -4,7 +4,7 @@ process REPLISEQ_RT_DOMAINS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_pruned:1eba02bed1cfce5f' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/2f/2f552061e675d909879ccaa1f1a93ba18aea3a92277a0e41c996cf8a3fdb8ce4/data' :
         'community.wave.seqera.io/library/bioconductor-dnacopy_libblas_r-argparse_r-base_pruned:979f7a7b8c7daeaf' }"
 
     input:
