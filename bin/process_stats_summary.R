@@ -93,6 +93,9 @@ if (is.null(opt$exogenous_genome_name)) {
                     # ID = gsub("\\.flT3$", "_flT3", ID),
                     # ID = gsub("\\..shifted$", "_shifted", ID),
                     # ID = gsub("\\.dSp$", "_dSp", ID),
+                    # Merge "rmO" with the preceding step so the two
+                    # branches don't collapse onto the same processing_step
+                    ID = gsub("\\.([^.]+)\\.([^.]*rmO)$", ".\\1_\\2", ID),
                     # split ID by ".", processing_step is the last element
                     processing_step = gsub(".*\\.", "", ID),
                     processing_step = fct_relevel(processing_step, rev(unique(processing_step))),
@@ -164,6 +167,11 @@ if (is.null(opt$exogenous_genome_name)) {
                           gsub("\\.dSp(.*)$", paste0(".", opt$endogenous_genome_name, "_dSp\\1"), ID), ID),
                     ID = ifelse(grepl(paste0("\\.", opt$exogenous_genome_name, "\\."), ID),
                           gsub("\\.dSp(.*)$", paste0(".", opt$exogenous_genome_name, "_dSp\\1"), ID), ID),
+                    # "rmO" (remove-orphans) can follow either flT3 directly
+                    # (TE-counting branch) or flTbl (blacklist-filtered
+                    # branch); merge it with the preceding step so the two
+                    # branches don't collapse onto the same processing_step
+                    ID = gsub("\\.([^.]+)\\.([^.]*rmO)$", ".\\1_\\2", ID),
                     # split ID by ".", processing_step is the last element
                     processing_step = gsub(".*\\.", "", ID),
                     processing_step = fct_relevel(processing_step, rev(unique(processing_step))),

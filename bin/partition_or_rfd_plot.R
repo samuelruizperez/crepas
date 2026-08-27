@@ -161,7 +161,7 @@ parser$add_argument("-e", "--exclude_chromosomes", action = "store",
 parser$add_argument("-g", "--exclude_scaffolds", action = "store",
                     default = TRUE,
                     type = "logical",
-                    help = "Whether to exclude scaffolds from analyses. Chromosomes whose name begins with 'chrUn' or contains a dot ('.') are considered scaffolds [default: FALSE]")
+                    help = "Whether to exclude scaffolds from analyses. Chromosomes whose name begins with 'chrUn', ends with '_random', '_alt' or '_fix', or contains a dot ('.') are considered scaffolds [default: TRUE]")
 
 parser$add_argument("-w", "--only_plot_wholly_within_iz", action = "store",
                     default = FALSE,
@@ -345,8 +345,7 @@ if (HAS_CHROM_SIZES) {
   # Remove scaffolds from chrom_sizes if needed
   if (opt_exclude_scaffolds) {
     message("\n[", Sys.time(), "] Removing scaffolds from chromosome sizes...")
-    chrom_sizes_df <- chrom_sizes_df[!grepl("\\.", chrom_sizes_df$chr), ]
-    chrom_sizes_df <- chrom_sizes_df[!grepl("^chrUn", chrom_sizes_df$chr), ]
+    chrom_sizes_df <- chrom_sizes_df[!grepl("^chrUn|_random$|_alt$|_fix$|\\.", chrom_sizes_df$chr), ]
   }
 
   chrom_sizes <- deframe(chrom_sizes_df)
