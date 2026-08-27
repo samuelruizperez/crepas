@@ -1555,9 +1555,9 @@
                 },
                 "repliseq_domain_track": {
                     "type": "string",
-                    "default": "smooth",
+                    "default": "both",
                     "enum": ["smooth", "raw", "both"],
-                    "description": "Which Repli-seq ratio track to segment into replication-timing domains. `both` segments the raw and the smoothed track, which is useful for checking how much the smoothing changes the domain boundaries.",
+                    "description": "Which Repli-seq ratio track to segment into replication-timing domains. The default `both` segments the raw and the smoothed track. Set `smooth` or `raw` to segment only one.",
                     "fa_icon": "fas fa-layer-group"
                 },
                 "repliseq_domain_classification": {

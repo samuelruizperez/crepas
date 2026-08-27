@@ -182,9 +182,10 @@ For `Repli-seq` samples, the pipeline calculates and normalizes an early/late (E
    DNAcopy's circular binary segmentation, and each domain is called from its segment mean:
    `binary` calls every domain early or late, `three_way` additionally calls domains within
    `--repliseq_domain_threshold` of zero as intermediate. `--repliseq_domain_track` chooses
-   whether to segment the raw track, the smoothed one, or `both`, which is useful for checking
-   how much the smoothing moves the boundaries. Results are written as one BED per class plus a
-   combined BED carrying the segment means (`--skip_repliseq_domains` turns this off).
+   which track to segment; it defaults to `both`, the raw and the smoothed one. Every domain output is then written twice,
+   distinguished by `.raw.` or `.smooth.` in its name; set `smooth` or `raw` to segment only one.
+   Results are written as one BED per class plus a combined BED carrying the segment means
+   (`--skip_repliseq_domains` turns this off).
 9. Every bedGraph track, raw and smoothed, is converted to bigWig.
 10. Each gene is classified by the S-phase fraction with the highest read density over its gene
     body, counted with featureCounts. Genes with fewer than `--repliseq_min_gene_reads` reads
@@ -278,7 +279,6 @@ its own output directory.
    `bin/hr_repliseq_plot.py` runs standalone against the published files, so a region can be
    redrawn by hand: it takes `--region chrom:start-end` to restrict to one window, which the
    pipeline itself never sets.
-
 
 ## Running the pipeline
 
@@ -676,7 +676,7 @@ Options to adjust Repli-seq replication-timing (RT) track analysis.
 | `repliseq_exclude_scaffolds`        | Exclude scaffolds and alternate sequences from the Repli-seq RT track. deepTools `multiBamSummary` bins every sequence in the BAM header, and these are short and usually barely covered, which makes their RT values meaningless. A sequence counts as one when its name begins with `chrUn`, ends with `_random`, `_alt` or `_fix`, or contains a dot. They are dropped before CPM normalization, so the normalization reflects primary-chromosome depth only. | `boolean` | True            |          |        |
 | `repliseq_min_bin_reads`            | Fewest reads a bin needs across the early and late fractions combined to appear in the `.covered` copy of the Repli-seq ratio track. A bin with no reads in either fraction still gets a ratio of exactly log2(1/1) = 0, which is indistinguishable from a genuinely mid-replicating bin, so replication-timing domains are called on the covered copy while the unfiltered track keeps every bin.                                                               | `integer` | 1               |          |        |
 | `skip_repliseq_domains`             | Skip calling domains of constant replication timing from the Repli-seq ratio track.                                                                                                                                                                                                                                                                                                                                                                              | `boolean` | false           |          |        |
-| `repliseq_domain_track`             | Which Repli-seq ratio track to segment into replication-timing domains. `both` segments the raw and the smoothed track, which is useful for checking how much the smoothing changes the domain boundaries. (accepted: `smooth`\|`raw`\|`both`)                                                                                                                                                                                                                   | `string`  | smooth          |          |        |
+| `repliseq_domain_track`             | Which Repli-seq ratio track to segment into replication-timing domains. The default `both` segments the raw and the smoothed track, so the effect of smoothing on the domain boundaries is visible; every domain output is then written twice, distinguished by `.raw.` or `.smooth.` in its name. Set `smooth` or `raw` to segment only one. (accepted: `smooth`\|`raw`\|`both`)                                                                                | `string`  | both            |          |        |
 | `repliseq_domain_classification`    | How to call each replication-timing domain. `binary` calls every domain early or late from the sign of its segment mean; `three_way` additionally calls domains whose mean sits within `--repliseq_domain_threshold` of zero as intermediate, i.e. replicating throughout S phase. (accepted: `three_way`\|`binary`)                                                                                                                                             | `string`  | three_way       |          |        |
 | `repliseq_domain_threshold`         | Half-width of the intermediate band around a segment mean of zero, in log2 ratio units. Only used with `--repliseq_domain_classification three_way`.                                                                                                                                                                                                                                                                                                             | `number`  | 0.1             |          |        |
 | `repliseq_domain_alpha`             | Significance level for accepting a change point in DNAcopy's circular binary segmentation of the Repli-seq ratio track.                                                                                                                                                                                                                                                                                                                                          | `number`  | 0.01            |          |        |

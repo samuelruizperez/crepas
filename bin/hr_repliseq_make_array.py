@@ -97,7 +97,7 @@ def to_rpm(df):
 def g1_filter(df, g1_label, min_rpm):
     """Drop bins the G1 control does not cover, keeping fractions as RPM.
 
-    This is the mappability correction of Zhao, Sasaki & Gilbert (2020): 
+    This is the mappability correction of Zhao, Sasaki & Gilbert (2020):
     bins "filtered out as a result of mappability normalisation".
     A region the G1 control cannot sequence cannot be measured in the pull-down libraries
     either, so it is removed; the fractions that remain keep their own depth-normalized

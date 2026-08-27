@@ -250,7 +250,7 @@ PARTITION_PRIORITY = ['TTR', 'breakage', 'CTR', 'termination', 'IZ']
 # Shortest run of adjacent bins that can hold a feature
 MIN_BLOCK_BINS = 3
 
-# 'overlap' calls every qualifying plateau, so a breakage may sit inside a TTR. 
+# 'overlap' calls every qualifying plateau, so a breakage may sit inside a TTR.
 # 'disjoint' keeps breakages out of bins that are part of a called TTR
 # 'flanked': the plateau is the seam between two different TTRs
 PARTITION_VIEWS = ('overlap', 'disjoint', 'flanked')
