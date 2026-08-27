@@ -845,9 +845,9 @@ workflow CREPAS {
             ch_gtf,
             ch_effective_gfraction,
             ch_endo_chromsizes,
-            ch_blacklist.ifEmpty([[:], []]).first(),
-            ch_sparsebed.ifEmpty([[:], []]).first(),
-            ch_active_regions.ifEmpty([[:], []]).first(),
+            ch_blacklist.ifEmpty([[:], []]),
+            ch_sparsebed.ifEmpty([[:], []]),
+            ch_active_regions.ifEmpty([[:], []]),
             ch_rocco_params,
             ch_effective_gsize,
             ch_epic2_peak_count_header,
@@ -933,7 +933,7 @@ workflow CREPAS {
             ch_endo_chromsizes,
             params.ctl_depth_ratio_threshold,
             params.narrow_peak ? 'narrowPeak' : 'broadPeak',
-            ch_blacklist.ifEmpty([[:], []]).first(),
+            ch_blacklist.ifEmpty([[:], []]),
             params.idr_filtering_threshold,
             params.encode_peak_max_score
         )
@@ -962,9 +962,9 @@ workflow CREPAS {
         ch_filtered_bam_ss,
         ch_fasta_fai,
         ch_endo_chromsizes_ss,
-        ch_blacklist.ifEmpty([[:], []]).first(),
-        ch_okseq_rfd_file.ifEmpty([[:], [[]]]).first(),
-        ch_initiation_zones.ifEmpty([[:], [[]]]).first(),
+        ch_blacklist.ifEmpty([[:], []]),
+        ch_okseq_rfd_file.ifEmpty([[:], [[]]]),
+        ch_initiation_zones.ifEmpty([[:], [[]]]),
         params.smooth_radius,
         params.derivative_radius,
         params.zero_crossing_radius,
@@ -983,7 +983,7 @@ workflow CREPAS {
     BAM_EL_REPLISEQ (
         ch_filtered_bam_index_repliseq,
         ch_endo_chromsizes,
-        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_blacklist.ifEmpty([[:], []]),
         ch_repliseq_rt_header,
         ch_repliseq_gene_class_header,
         ch_gene_bed
@@ -1009,7 +1009,7 @@ workflow CREPAS {
 
     BAM_HR_REPLISEQ (
         ch_filtered_bam_index_hr_repliseq,
-        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_blacklist.ifEmpty([[:], []]),
         ch_hr_repliseq_features_header,
         ch_el_track_for_hr
     )
