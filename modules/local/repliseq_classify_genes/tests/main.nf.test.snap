@@ -64,7 +64,7 @@
                         "id": "test",
                         "single_end": false
                     },
-                    "test.gene_RT_class_el_by_class_mqc.png:md5,5feb3a002bf55e26bd26315758aba1ac"
+                    "test.gene_RT_class_el_mqc.json:md5,e406930e50de9fbefcb8afdfe29a61e2"
                 ]
             ],
             [
@@ -78,7 +78,7 @@
                 "test.gene_RT_class.plots.pdf"
             ]
         ],
-        "timestamp": "2026-08-21T14:12:12.052279055",
+        "timestamp": "2026-08-23T17:01:44.200478327",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -187,7 +187,7 @@
                 "mid": [
                     
                 ],
-                "mqc_png": [
+                "mqc_box": [
                     
                 ],
                 "plots": [
@@ -229,7 +229,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-21T14:12:23.81703183",
+        "timestamp": "2026-08-23T15:12:23.474354068",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -306,7 +306,7 @@
                         "id": "test",
                         "single_end": false
                     },
-                    "test.gene_RT_class_el_by_class_mqc.png:md5,5feb3a002bf55e26bd26315758aba1ac"
+                    "test.gene_RT_class_el_mqc.json:md5,e406930e50de9fbefcb8afdfe29a61e2"
                 ]
             ],
             [
@@ -320,7 +320,7 @@
                 "test.gene_RT_class.plots.pdf"
             ]
         ],
-        "timestamp": "2026-08-21T14:11:57.308269307",
+        "timestamp": "2026-08-23T17:01:30.622254588",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -1,14 +1,15 @@
 nextflow_process {
 
-    name "Test Process REPLISEQ_RT_DOMAINS"
+    name "Test Process HR_REPLISEQ_PLOT"
     script "../main.nf"
-    process "REPLISEQ_RT_DOMAINS"
+    process "HR_REPLISEQ_PLOT"
     config "./nextflow.config"
 
     tag "modules"
     tag "modules_local"
-    tag "repliseq_rt_domains"
-    tag "repliseq_rtnormalize"
+    tag "hr_repliseq_plot"
+    tag "hr_repliseq_call_features"
+    tag "hr_repliseq_make_array"
     tag "deeptools/multibamsummary"
 
     setup {
@@ -31,32 +32,55 @@ nextflow_process {
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.markduplicates.sorted.bam.bai', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.recalibrated.sorted.bam.bai', checkIfExists: true)
                     ],
-                    [ 'early_1', 'early_2', 'late_1', 'late_2' ]
+                    [ 'S1_1', 'S2_1', 'S3_1', 'S4_1' ]
                 ]
                 input[1] = [ [:], [] ]
                 """
             }
         }
 
-        run("REPLISEQ_RTNORMALIZE") {
-            script "../../repliseq_rtnormalize/main.nf"
+        run("HR_REPLISEQ_MAKE_ARRAY") {
+            script "../../hr_repliseq_make_array/main.nf"
             process {
                 """
                 input[0] = DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts.map { meta, counts ->
-                    [ meta, counts, [ 'early', 'early', 'late', 'late' ], [ '1', '2', '1', '2' ] ]
+                    [ meta, counts, [ 'S1', 'S2', 'S3', 'S4' ] ]
                 }
                 """
             }
         }
 
+        run("HR_REPLISEQ_CALL_FEATURES") {
+            script "../../hr_repliseq_call_features/main.nf"
+            process {
+                """
+                input[0] = HR_REPLISEQ_MAKE_ARRAY.out.array
+                """
+            }
+        }
+
     }
 
-    test("homo_sapiens - smoothed ratio - three-way classification") {
+    test("homo_sapiens - 4 fractions - heatmap and feature summary") {
 
         when {
             process {
                 """
-                input[0] = REPLISEQ_RTNORMALIZE.out.smooth_covered
+                input[0] = HR_REPLISEQ_MAKE_ARRAY.out.array
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition_disjoint)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition_flanked)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.ttr_speed)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.cluster_rank)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.iz)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.ttr)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.breakage)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.termination)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.ctr)
+                    .map { meta, array, partition, partition_disjoint, partition_flanked, speeds, cluster_rank, iz, ttr, breakage, termination, ctr ->
+                        [ meta, array, partition, partition_disjoint, partition_flanked, speeds,
+                          cluster_rank, [], [ iz, ttr, breakage, termination, ctr ] ]
+                    }
                 """
             }
         }
@@ -65,61 +89,31 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    process.out.domains,
-                    process.out.early,
-                    process.out.late,
-                    process.out.mid,
-                    process.out.qc,
-                    process.out.mqc_box,
-                    process.out.versions_r,
-                    process.out.versions_dnacopy,
-                    process.out.plots.collect { entry -> file(entry[1]).name }
+                    process.out.plots.collect { meta, pdf -> [ meta, file(pdf).name ] },
+                    process.out.mqc_heatmap,
+                    process.out.mqc_sizes
                 ).match() }
             )
         }
 
     }
 
-    test("homo_sapiens - raw ratio - binary classification, no segment merging") {
-
-        config "./nextflow_binary.config"
-
-        when {
-            process {
-                """
-                input[0] = REPLISEQ_RTNORMALIZE.out.raw_covered
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert process.success },
-                { assert process.out.mid.size() == 0 },
-                { assert snapshot(
-                    process.out.domains,
-                    process.out.early,
-                    process.out.late,
-                    process.out.mid,
-                    process.out.qc,
-                    process.out.mqc_box,
-                    process.out.versions_r,
-                    process.out.versions_dnacopy,
-                    process.out.plots.collect { entry -> file(entry[1]).name }
-                ).match() }
-            )
-        }
-
-    }
-
-    test("homo_sapiens - smoothed ratio - stub") {
+    test("homo_sapiens - 4 fractions - stub") {
 
         options "-stub"
 
         when {
             process {
                 """
-                input[0] = REPLISEQ_RTNORMALIZE.out.smooth_covered
+                input[0] = HR_REPLISEQ_MAKE_ARRAY.out.array
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition_disjoint)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.partition_flanked)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.ttr_speed)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.cluster_rank)
+                    .join(HR_REPLISEQ_CALL_FEATURES.out.iz)
+                    .map { meta, array, partition, partition_disjoint, partition_flanked, speeds, cluster_rank, iz ->
+                        [ meta, array, partition, partition_disjoint, partition_flanked, speeds, cluster_rank, [], [ iz ] ] }
                 """
             }
         }

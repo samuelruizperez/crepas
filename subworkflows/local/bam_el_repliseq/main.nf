@@ -8,8 +8,9 @@ include { REPLISEQ_RT_DOMAINS      } from '../../../modules/local/repliseq_rt_do
 include { BED_TO_SAF               } from '../../../modules/local/bed_to_saf/main'
 include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENES } from '../../../modules/nf-core/subread/featurecounts/main'
 include { REPLISEQ_CLASSIFY_GENES  } from '../../../modules/local/repliseq_classify_genes/main'
+include { rtFractionOrder             } from '../utils_grothlab_crepas_pipeline'
 
-workflow BAM_REPLISEQ_RT_TRACKS {
+workflow BAM_EL_REPLISEQ {
 
     take:
     ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ]
@@ -23,33 +24,35 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
     //
     // Group all replicates (every fraction) of the same condition together, sorted
-    // by (rt_phase, brep) so bams/bais/phases/breps stay aligned.
+    // by (rt_fraction, brep) so bams/bais/fractions/breps stay aligned.
     //
     ch_bam_bai
         .map { meta, bam, bai ->
             def meta_clone = meta.clone()
-            // The id at this point is "<exp_type>_<sample>_<rt_phase>_bRep_<n>"
+            // The id at this point is "<exp_type>_<sample>_<rt_fraction>_bRep_<n>"
             meta_clone.id = "${meta_clone.exp_type}_${meta_clone.rt_condition}"
             [ meta_clone.id, meta_clone, bam, bai ]
         }
         .groupTuple(by: 0)
-        .map { id, metas, bams, bais ->
-            def replicates = [metas, bams, bais].transpose().sort { it -> "${it[0].rt_phase}_${it[0].brep}" }
+        .map { _id, metas, bams, bais ->
+            def replicates = [metas, bams, bais].transpose().sort { a, b ->
+                rtFractionOrder(a[0].rt_fraction) <=> rtFractionOrder(b[0].rt_fraction) ?: a[0].brep <=> b[0].brep
+            }
             def sorted_metas = replicates.collect { it -> it[0] }
             def meta_clone = sorted_metas[0].clone()
             def sorted_bams = replicates.collect { it -> it[1] }
             def sorted_bais = replicates.collect { it -> it[2] }
-            def sorted_phases = sorted_metas.collect { meta -> meta.rt_phase }
+            def sorted_fractions = sorted_metas.collect { meta -> meta.rt_fraction }
             def sorted_breps = sorted_metas.collect { meta -> meta.brep }
             meta_clone.remove('brep')
-            meta_clone.remove('rt_phase')
-            [ meta_clone, sorted_bams, sorted_bais, sorted_phases, sorted_breps ]
+            meta_clone.remove('rt_fraction')
+            [ meta_clone, sorted_bams, sorted_bais, sorted_fractions, sorted_breps ]
         }
         .set { ch_condition_bam_bai }
 
     ch_condition_bam_bai
-        .map { meta, bams, bais, phases, breps ->
-            def labels = [phases, breps].transpose().collect { phase, brep -> "${phase}_${brep}" }
+        .map { meta, bams, bais, fractions, breps ->
+            def labels = [fractions, breps].transpose().collect { fraction, brep -> "${fraction}_${brep}" }
             [ meta, bams, bais, labels ]
         }
         .set { ch_for_multibamsummary }
@@ -63,22 +66,22 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         ch_blacklist
     )
 
-    ch_phases_breps = ch_condition_bam_bai.map { meta, bams, bais, phases, breps -> [ meta, phases, breps ] }
+    ch_fractions_breps = ch_condition_bam_bai.map { meta, _bams, _bais, fractions, breps -> [ meta, fractions, breps ] }
 
 
     DEEPTOOLS_MULTIBAMSUMMARY.out.raw_counts
-        .join(ch_phases_breps, by: 0)
-        .map { meta, counts, phases, breps ->
-            [ meta, counts, phases, breps ]
+        .join(ch_fractions_breps, by: 0)
+        .map { meta, counts, fractions, breps ->
+            [ meta, counts, fractions, breps ]
         }
-        .set { ch_phases_breps_for_rtnormalize }
+        .set { ch_counts_for_rtnormalize }
 
     //
     // MODULE: Calculate and normalize the RT track: CPM, paired/pooled/auto replicate
     // combination, optional quantile normalization between replicates, loess/roll smoothing
     //
     REPLISEQ_RTNORMALIZE (
-        ch_phases_breps_for_rtnormalize
+        ch_counts_for_rtnormalize
     )
 
     //
@@ -178,7 +181,7 @@ workflow BAM_REPLISEQ_RT_TRACKS {
 
         ch_condition_bam_bai
             .combine(BED_TO_SAF.out.saf.map { it -> it[1] })
-            .map { meta, bams, _bais, _phases, _breps, saf -> [ meta, bams, saf ] }
+            .map { meta, bams, _bais, _fractions, _breps, saf -> [ meta, bams, saf ] }
             .set { ch_genes_for_featurecounts }
 
         SUBREAD_FEATURECOUNTS_GENES (
@@ -186,7 +189,7 @@ workflow BAM_REPLISEQ_RT_TRACKS {
         )
 
         SUBREAD_FEATURECOUNTS_GENES.out.counts
-            .join(ch_phases_breps, by: 0)
+            .join(ch_fractions_breps, by: 0)
             .set { ch_gene_counts_for_classify }
 
         REPLISEQ_CLASSIFY_GENES (

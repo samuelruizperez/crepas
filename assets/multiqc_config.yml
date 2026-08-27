@@ -266,6 +266,12 @@ report_section_order:
     order: -1070
   repliseq_domain_size:
     order: -1075
+  hr_repliseq_features:
+    order: -1080
+  hr_repliseq_feature_sizes:
+    order: -1082
+  hr_repliseq_heatmap:
+    order: -1084
   # Peak calling itself, ahead of the per-caller QC below
   macs3_callpeak:
     order: -1090

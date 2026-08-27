@@ -127,7 +127,7 @@ parser$add_argument("-g", "--exclude_scaffolds", action = "store",
 parser$add_argument("--min_bin_reads", action = "store",
                     default = 1,
                     type = "double",
-                    help = "Fewest reads a bin needs across the early and late fractions combined to appear in the '.covered' copy of the ratio track. Bins below it carry no timing information -- with no reads in either fraction the ratio is log2((0+pseudocount)/(0+pseudocount)) = 0, which is indistinguishable from a genuinely mid-replicating bin. [default: %(default)s]")
+                    help = "Fewest reads a bin needs across the early and late fractions combined to appear in the '.covered' copy of the ratio track. Bins below it carry no timing information: with no reads in either fraction the ratio is log2((0+pseudocount)/(0+pseudocount)) = 0, which is indistinguishable from a genuinely mid-replicating bin. [default: %(default)s]")
 
 parser$add_argument("--pseudocount", action = "store",
                     default = 1,
@@ -221,7 +221,7 @@ qn_matrix <- function(mat) {
 }
 
 # Replication-timing index: per bin, what proportion of the signal sits in each fraction, then the
-# weighted-mean fraction number rescaled to 0..1 -- 0 replicating entirely in the earliest
+# weighted-mean fraction number rescaled to 0..1, where 0 is replicating entirely in the earliest
 # fraction, 1 entirely in the latest.
 # Bins with no coverage in any fraction have no defined index and are left NA.
 rt_index <- function(mat) {

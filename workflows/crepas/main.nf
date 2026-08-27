@@ -15,6 +15,8 @@ include { paramsSummaryMap                                                  } fr
 include { paramsSummaryMultiqc                                              } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                                            } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                                            } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+include { rtElFractions                                                    } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
+include { rtHrFractions                                                    } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
 include { INPUT_CHECK                                                       } from '../../subworkflows/local/utils_grothlab_crepas_pipeline'
 
 include {
@@ -27,7 +29,8 @@ include { BAM_SPIKEIN_SPLIT                                                 } fr
 include { FASTQ_FASTQC_UMITOOLS_UMITRANSFER_TRIMGALORE                      } from '../../subworkflows/local/fastq_fastqc_umitools_umitransfer_trimgalore/main'
 include { BAM_ENCODE_PIPELINE                                               } from '../../subworkflows/local/bam_encode_pipeline/main'
 include { BAM_CREATE_PARTITIONS                                             } from '../../subworkflows/local/bam_create_partitions/main'
-include { BAM_REPLISEQ_RT_TRACKS                                            } from '../../subworkflows/local/bam_repliseq_rt_tracks/main'
+include { BAM_EL_REPLISEQ                                                   } from '../../subworkflows/local/bam_el_repliseq/main'
+include { BAM_HR_REPLISEQ                                                   } from '../../subworkflows/local/bam_hr_repliseq/main'
 include { BAM_ALLOCATE_MULTIMAPPERS                                         } from '../../subworkflows/local/bam_allocate_multimappers/main'
 include { BAM_SHIFT_READS                                                   } from '../../subworkflows/local/bam_shift_reads/main'
 include { SAMTOOLS_STATS_SUMMARY                                            } from '../../subworkflows/local/samtools_stats_summary/main'
@@ -132,6 +135,7 @@ workflow CREPAS {
     ch_deseq2_pca_header = channel.value(file("${projectDir}/assets/multiqc/deseq2_pca_header.txt", checkIfExists: true))
     ch_repliseq_rt_header = channel.value(file("${projectDir}/assets/multiqc/repliseq_rt_header.txt", checkIfExists: true))
     ch_repliseq_gene_class_header = channel.value(file("${projectDir}/assets/multiqc/repliseq_gene_class_header.txt", checkIfExists: true))
+    ch_hr_repliseq_features_header = channel.value(file("${projectDir}/assets/multiqc/hr_repliseq_features_header.txt", checkIfExists: true))
     ch_deseq2_clustering_header = channel.value(file("${projectDir}/assets/multiqc/deseq2_clustering_header.txt", checkIfExists: true))
 
     //
@@ -971,33 +975,47 @@ workflow CREPAS {
     //
     // SUBWORKFLOW: Repli-seq analysis: E/L ratio replication-timing (RT) tracks
     //
-    if (!params.skip_repliseq_rt_tracks) {
-        ch_filtered_bam_index_repliseq = ch_filtered_bam_index.filter { it -> it[0].exp_type == 'Repli-seq' }
 
-        // TODO: remove when optional inputs to subworkflows are implemented
-        // Make ch_endo_chromsizes empty if there are no Repli-seq samples
-        ch_endo_chromsizes
-            .combine(ch_filtered_bam_index_repliseq)
-            .first()
-            .map { sizes_meta, sizes, repliseq_meta, repliseq_bam, repliseq_bai ->
-                [sizes_meta, sizes]
-            }
-            .set { ch_endo_chromsizes_repliseq }
-
-        BAM_REPLISEQ_RT_TRACKS (
-            ch_filtered_bam_index_repliseq,
-            ch_endo_chromsizes_repliseq,
-            ch_blacklist.ifEmpty([[:], []]).first(),
-            ch_repliseq_rt_header,
-            ch_repliseq_gene_class_header,
-            ch_gene_bed
-        )
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.mqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.featurecounts_summary.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.gene_class_mqc.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.gene_class_box.collect { it -> it[1] })
-        ch_multiqc_files = ch_multiqc_files.mix(BAM_REPLISEQ_RT_TRACKS.out.domain_box.collect { it -> it[1] })
+    ch_filtered_bam_index_repliseq = ch_filtered_bam_index.filter { it ->
+        it[0].exp_type == 'Repli-seq' && it[0].rt_fraction in rtElFractions()
     }
+
+    BAM_EL_REPLISEQ (
+        ch_filtered_bam_index_repliseq,
+        ch_endo_chromsizes,
+        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_repliseq_rt_header,
+        ch_repliseq_gene_class_header,
+        ch_gene_bed
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_EL_REPLISEQ.out.mqc.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_EL_REPLISEQ.out.featurecounts_summary.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_EL_REPLISEQ.out.gene_class_mqc.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_EL_REPLISEQ.out.gene_class_box.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_EL_REPLISEQ.out.domain_box.collect { it -> it[1] })
+
+    //
+    // SUBWORKFLOW: High-resolution (16-fraction) Repli-seq: array and replication features
+    //
+    ch_filtered_bam_index_hr_repliseq = ch_filtered_bam_index.filter { it ->
+        it[0].exp_type == 'Repli-seq' && it[0].rt_fraction in rtHrFractions()
+    }
+
+    ch_el_track_for_hr = BAM_EL_REPLISEQ.out.bedgraph
+        .filter { meta, _bedgraph ->
+            meta.rt_measure == 'ratio' && meta.rt_track_type == 'smooth' && !meta.rt_covered
+        }
+        .map { meta, bedgraph -> [ meta.id, bedgraph ] }
+
+    BAM_HR_REPLISEQ (
+        ch_filtered_bam_index_hr_repliseq,
+        ch_blacklist.ifEmpty([[:], []]).first(),
+        ch_hr_repliseq_features_header,
+        ch_el_track_for_hr
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_HR_REPLISEQ.out.mqc.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_HR_REPLISEQ.out.mqc_heatmap.collect { it -> it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_HR_REPLISEQ.out.mqc_sizes.collect { it -> it[1] })
 
     //
     // SUBWORKFLOW: Create SAMtools summary table

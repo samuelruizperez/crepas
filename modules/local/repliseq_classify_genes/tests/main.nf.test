@@ -70,11 +70,8 @@ nextflow_process {
                     process.out.unclassified,
                     process.out.qc,
                     process.out.summary,
-                    process.out.mqc_png,
+                    process.out.mqc_box,
                     process.out.versions_r,
-                    // A PDF records the moment it was written, so its content hash changes on
-                    // every run even when the plots are identical. The PNG is stable and is
-                    // snapshotted in full above.
                     process.out.plots.collect { entry -> file(entry[1]).name }
                 ).match() }
             )
@@ -97,7 +94,6 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                // with no intermediate fraction supplied there is no mid class to emit
                 { assert process.out.mid.size() == 0 },
                 { assert snapshot(
                     process.out.classes,
@@ -107,11 +103,8 @@ nextflow_process {
                     process.out.unclassified,
                     process.out.qc,
                     process.out.summary,
-                    process.out.mqc_png,
+                    process.out.mqc_box,
                     process.out.versions_r,
-                    // A PDF records the moment it was written, so its content hash changes on
-                    // every run even when the plots are identical. The PNG is stable and is
-                    // snapshotted in full above.
                     process.out.plots.collect { entry -> file(entry[1]).name }
                 ).match() }
             )

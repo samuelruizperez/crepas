@@ -1,108 +1,68 @@
 {
     "homo_sapiens - raw ratio - binary classification, no segment merging": {
         "content": [
-            {
-                "0": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.bed:md5,fa9422d52775360cc022d71b7308013a"
-                    ]
-                ],
-                "1": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.early.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "2": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.late.bed:md5,b86eb7184b21d177470fd3b73f59f7b1"
-                    ]
-                ],
-                "3": [
-                    
-                ],
-                "4": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.qc.txt:md5,f357ce979f51f9824982f34ce7862cc6"
-                    ]
-                ],
-                "5": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "r-base",
-                        "4.5.3"
-                    ]
-                ],
-                "6": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "bioconductor-dnacopy",
-                        "1.86.0"
-                    ]
-                ],
-                "domains": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.bed:md5,fa9422d52775360cc022d71b7308013a"
-                    ]
-                ],
-                "early": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.early.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "late": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.late.bed:md5,b86eb7184b21d177470fd3b73f59f7b1"
-                    ]
-                ],
-                "mid": [
-                    
-                ],
-                "qc": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.qc.txt:md5,f357ce979f51f9824982f34ce7862cc6"
-                    ]
-                ],
-                "versions_dnacopy": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "bioconductor-dnacopy",
-                        "1.86.0"
-                    ]
-                ],
-                "versions_r": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "r-base",
-                        "4.5.3"
-                    ]
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.bed:md5,fa9422d52775360cc022d71b7308013a"
                 ]
-            }
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.early.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.late.bed:md5,b86eb7184b21d177470fd3b73f59f7b1"
+                ]
+            ],
+            [
+                
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.qc.txt:md5,7c7c432720fbaa04763a660613b57499"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains_size_mqc.json:md5,60dbbfa77423b5b12d21aebabea581ac"
+                ]
+            ],
+            [
+                [
+                    "REPLISEQ_RT_DOMAINS",
+                    "r-base",
+                    "4.5.3"
+                ]
+            ],
+            [
+                [
+                    "REPLISEQ_RT_DOMAINS",
+                    "bioconductor-dnacopy",
+                    "1.86.0"
+                ]
+            ],
+            [
+                "test.RT_domains.plots.pdf"
+            ]
         ],
-        "timestamp": "2026-08-20T15:13:27.677989497",
+        "timestamp": "2026-08-23T17:00:40.150542186",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -147,13 +107,19 @@
                     ]
                 ],
                 "5": [
+                    
+                ],
+                "6": [
+                    
+                ],
+                "7": [
                     [
                         "REPLISEQ_RT_DOMAINS",
                         "r-base",
                         "4.5.3"
                     ]
                 ],
-                "6": [
+                "8": [
                     [
                         "REPLISEQ_RT_DOMAINS",
                         "bioconductor-dnacopy",
@@ -187,6 +153,12 @@
                 "mid": [
                     
                 ],
+                "mqc_box": [
+                    
+                ],
+                "plots": [
+                    
+                ],
                 "qc": [
                     [
                         {
@@ -211,7 +183,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-08-20T15:13:42.570058936",
+        "timestamp": "2026-08-23T15:11:18.918986509",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -219,118 +191,73 @@
     },
     "homo_sapiens - smoothed ratio - three-way classification": {
         "content": [
-            {
-                "0": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.bed:md5,9d6f29f877fbf4f099dd0237b4ccd0af"
-                    ]
-                ],
-                "1": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.early.bed:md5,52bb6d8844a641410c61870e420d54a0"
-                    ]
-                ],
-                "2": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.late.bed:md5,f8ddb1370df978b1df723ea3c72331b7"
-                    ]
-                ],
-                "3": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.mid.bed:md5,4daacd8479e60ef21d40df7dde26102f"
-                    ]
-                ],
-                "4": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.qc.txt:md5,68972d5ddda3adfc79577abeb28a1ff2"
-                    ]
-                ],
-                "5": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "r-base",
-                        "4.5.3"
-                    ]
-                ],
-                "6": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "bioconductor-dnacopy",
-                        "1.86.0"
-                    ]
-                ],
-                "domains": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.bed:md5,9d6f29f877fbf4f099dd0237b4ccd0af"
-                    ]
-                ],
-                "early": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.early.bed:md5,52bb6d8844a641410c61870e420d54a0"
-                    ]
-                ],
-                "late": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.late.bed:md5,f8ddb1370df978b1df723ea3c72331b7"
-                    ]
-                ],
-                "mid": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.mid.bed:md5,4daacd8479e60ef21d40df7dde26102f"
-                    ]
-                ],
-                "qc": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.RT_domains.qc.txt:md5,68972d5ddda3adfc79577abeb28a1ff2"
-                    ]
-                ],
-                "versions_dnacopy": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "bioconductor-dnacopy",
-                        "1.86.0"
-                    ]
-                ],
-                "versions_r": [
-                    [
-                        "REPLISEQ_RT_DOMAINS",
-                        "r-base",
-                        "4.5.3"
-                    ]
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.bed:md5,9d6f29f877fbf4f099dd0237b4ccd0af"
                 ]
-            }
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.early.bed:md5,52bb6d8844a641410c61870e420d54a0"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.late.bed:md5,f8ddb1370df978b1df723ea3c72331b7"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.mid.bed:md5,4daacd8479e60ef21d40df7dde26102f"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains.qc.txt:md5,a71806d80653d17280975cbaebf45617"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    "test.RT_domains_size_mqc.json:md5,1882e30b316856d6b55dcd0b66ed64ec"
+                ]
+            ],
+            [
+                [
+                    "REPLISEQ_RT_DOMAINS",
+                    "r-base",
+                    "4.5.3"
+                ]
+            ],
+            [
+                [
+                    "REPLISEQ_RT_DOMAINS",
+                    "bioconductor-dnacopy",
+                    "1.86.0"
+                ]
+            ],
+            [
+                "test.RT_domains.plots.pdf"
+            ]
         ],
-        "timestamp": "2026-08-20T15:12:35.867564727",
+        "timestamp": "2026-08-23T16:59:42.231918868",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
