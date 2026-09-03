@@ -1168,6 +1168,72 @@ workflow CREPAS {
             .mix(ch_files_and_outpaths)
             .set { ch_files_and_outpaths }
 
+        BAM_EL_REPLISEQ.out.bigwig
+            .map { meta, bw ->
+                def measure_label = meta.rt_measure == 'rt_index' ? 'RT_index' :
+                    (meta.rt_measure == 'coverage' ? 'coverage' :
+                    (params.repliseq_ratio_direction == 'late_over_early' ? 'LE_ratio' : 'EL_ratio'))
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? (params.multimap_allocation_method != 'chromap' ? params.multimap_allocation_method : '') : ''}" +
+                    "/${meta.exp_type}" +
+                    "/EL_repliseq/bigwig/${measure_label}/${meta.rt_track_type}/" +
+                    "${bw.getName()}"
+                def color = meta.rt_measure == 'rt_index' ?
+                    (meta.rt_track_type == 'smooth' ? "128,0,128" : "216,191,216") : // purple / thistle
+                    meta.rt_measure == 'coverage' ? "105,105,105" : // dim grey
+                    (meta.rt_track_type == 'smooth' ? "0,100,0" : "144,238,144") // dark green / light green
+                [meta, bw, outpath, color]
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_EL_REPLISEQ.out.domains
+            .map { meta, bed ->
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? (params.multimap_allocation_method != 'chromap' ? params.multimap_allocation_method : '') : ''}" +
+                    "/${meta.exp_type}" +
+                    "/EL_repliseq/domains/" +
+                    "${bed.getName()}"
+                [meta, bed, outpath, "47,79,79"] // dark slate grey
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_EL_REPLISEQ.out.gene_class_bed
+            .map { meta, bed ->
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? (params.multimap_allocation_method != 'chromap' ? params.multimap_allocation_method : '') : ''}" +
+                    "/${meta.exp_type}" +
+                    "/EL_repliseq/gene_classification/" +
+                    "${bed.getName()}"
+                def color = [
+                    early: "33,102,172", // #2166AC
+                    mid: "178,171,210",  // #B2ABD2
+                    late: "178,24,43",   // #B2182B
+                    unclassified: "128,128,128"
+                ][meta.rt_gene_class]
+                [meta, bed, outpath, color]
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
+        BAM_HR_REPLISEQ.out.iz.map { meta, bed -> [meta, bed, "220,20,60"] } // crimson
+            .mix(BAM_HR_REPLISEQ.out.ttr.map { meta, bed -> [meta, bed, "255,165,0"] }) // orange
+            .mix(BAM_HR_REPLISEQ.out.breakage.map { meta, bed -> [meta, bed, "139,0,0"] }) // dark red
+            .mix(BAM_HR_REPLISEQ.out.termination.map { meta, bed -> [meta, bed, "0,0,139"] }) // dark blue
+            .mix(BAM_HR_REPLISEQ.out.ctr.map { meta, bed -> [meta, bed, "0,139,139"] }) // dark cyan
+            .mix(BAM_HR_REPLISEQ.out.partition.map { meta, bed -> [meta, bed, "85,107,47"] }) // dark olive green
+            .map { meta, bed, color ->
+                def outpath = "${params.outdir}/${params.aligner}/mergedLibrary/" +
+                    "${params.multimap_allocation_method ? (params.multimap_allocation_method != 'chromap' ? params.multimap_allocation_method : '') : ''}" +
+                    "/${meta.exp_type}" +
+                    "/hr_repliseq/features/" +
+                    "${bed.getName()}"
+                [meta, bed, outpath, color]
+            }
+            .mix(ch_files_and_outpaths)
+            .set { ch_files_and_outpaths }
+
         // create channel: [ list_of_files, list_of_outpaths ]
         ch_files_and_outpaths
             .map { meta, file, outpath, color -> [1, file, outpath, color]}

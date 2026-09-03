@@ -162,6 +162,7 @@ workflow BAM_EL_REPLISEQ {
     ch_featurecounts_summary = channel.empty()
     ch_gene_class_mqc = channel.empty()
     ch_gene_class_box = channel.empty()
+    ch_gene_class_bed = channel.empty()
 
     //
     // MODULE: Call domains of constant replication timing. Which track they are called on is a
@@ -213,6 +214,16 @@ workflow BAM_EL_REPLISEQ {
         ch_featurecounts_summary = SUBREAD_FEATURECOUNTS_GENES.out.summary
         ch_gene_class_box = REPLISEQ_CLASSIFY_GENES.out.mqc_box
 
+        ch_gene_class_bed = REPLISEQ_CLASSIFY_GENES.out.early.map { meta, bed -> [ meta, bed, 'early' ] }
+            .mix(REPLISEQ_CLASSIFY_GENES.out.mid.map { meta, bed -> [ meta, bed, 'mid' ] })
+            .mix(REPLISEQ_CLASSIFY_GENES.out.late.map { meta, bed -> [ meta, bed, 'late' ] })
+            .mix(REPLISEQ_CLASSIFY_GENES.out.unclassified.map { meta, bed -> [ meta, bed, 'unclassified' ] })
+            .map { meta, bed, cls ->
+                def meta_clone = meta.clone()
+                meta_clone.rt_gene_class = cls
+                [ meta_clone, bed ]
+            }
+
         // Same filename-order constraint as the track summary above:
         // "repliseq_gene_class_header.txt" sorts before "rt_gene_class_counts.tsv".
         REPLISEQ_CLASSIFY_GENES.out.summary
@@ -250,6 +261,7 @@ workflow BAM_EL_REPLISEQ {
     domain_qc = ch_domain_qc                    // channel: [ val(meta), path(RT_domains.qc.txt) ]
     domain_box = ch_domain_box                  // channel: [ val(meta), path(*_mqc.json) ]
     gene_classes = ch_gene_classes              // channel: [ val(meta), path(gene_RT_class.tsv) ]
+    gene_class_bed = ch_gene_class_bed          // channel: [ val(meta), path(gene_RT_class.<class>.bed) ]
     gene_class_qc = ch_gene_class_qc            // channel: [ val(meta), path(gene_RT_class.qc.txt) ]
     featurecounts_summary = ch_featurecounts_summary // channel: [ val(meta), path(summary) ]
     gene_class_mqc = ch_gene_class_mqc          // channel: [ val(meta), path(gene_class_mqc.tsv) ]
