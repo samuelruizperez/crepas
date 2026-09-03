@@ -72,7 +72,7 @@ parser$add_argument("-s", "--smooth", action = "store",
 parser$add_argument("--smooth_stage", action = "store",
                     default = "replicate",
                     choices = c("replicate", "ratio"),
-                    help = "Where smoothing enters the calculation: 'replicate' smooths each replicate's normalized coverage track and then takes the ratio; 'ratio' takes the ratio first and smooths that. Only affects the smoothed output; the raw output is always the unsmoothed ratio [default: %(default)s]")
+                    help = "Where smoothing enters the calculation: 'replicate' smooths each replicate's normalized coverage track and then takes the ratio (writing out the smoothed per-replicate coverage tracks alongside the ratio); 'ratio' takes the ratio first and smooths that. Only affects the smoothed output; the raw output is always the unsmoothed ratio [default: %(default)s]")
 
 parser$add_argument("--ratio_direction", action = "store",
                     default = "early_over_late",
@@ -561,6 +561,7 @@ if (opt$smooth == "none") {
         # Coverage cannot be negative, but the fit can undershoot below zero
         dt[, (paste0(id, "_sm")) := pmax(get(paste0(id, "_sm")), 0)]
       }
+      write_bedgraph(dt, paste0(id, "_sm"), out_path(paste0(id, ".coverage.smooth.bedGraph")))
     }
 
     # QN has already been applied above, so it must not be applied again to the ratios

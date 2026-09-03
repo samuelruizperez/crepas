@@ -17,6 +17,7 @@ process REPLISEQ_RTNORMALIZE {
     tuple val(meta), path("*.RT.smooth.covered.bedGraph"), emit: smooth_covered
     tuple val(meta), path("*.RT_index.raw.bedGraph")   , emit: rt_index_raw   , optional: true
     tuple val(meta), path("*.RT_index.smooth.bedGraph"), emit: rt_index_smooth, optional: true
+    tuple val(meta), path("*.coverage.smooth.bedGraph"), emit: replicate_smooth, optional: true
     tuple val(meta), path("*.qc.txt")            , emit: qc
     tuple val(meta), path("rt_summary.tsv")      , emit: summary
     tuple val("${task.process}"), val('r-base'), eval("R --version | head -1 | sed 's/R version //; s/ .*//'"), emit: versions_r, topic: versions
@@ -45,6 +46,7 @@ process REPLISEQ_RTNORMALIZE {
     touch ${prefix}.RT.smooth.bedGraph
     touch ${prefix}.RT.raw.covered.bedGraph
     touch ${prefix}.RT.smooth.covered.bedGraph
+    touch ${prefix}.coverage.smooth.bedGraph
     touch ${prefix}.qc.txt
     touch rt_summary.tsv
     """

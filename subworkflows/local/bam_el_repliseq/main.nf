@@ -141,6 +141,19 @@ workflow BAM_EL_REPLISEQ {
         [ meta_clone, bdg ]
     }
 
+    // One smoothed coverage bedGraph per input replicate (only emitted under the default --smooth_stage replicate)
+    ch_rt_replicate_smooth = REPLISEQ_RTNORMALIZE.out.replicate_smooth.flatMap { meta, bdg ->
+        bdg.collect { f ->
+            def replicate_id = (f.name =~ /\.([^.]+)\.coverage\.smooth\.bedGraph$/)[0][1]
+            def meta_clone = meta.clone()
+            meta_clone.id = "${meta.id}.${replicate_id}"
+            meta_clone.rt_measure = 'coverage'
+            meta_clone.rt_track_type = 'smooth'
+            meta_clone.rt_replicate = replicate_id
+            [ meta_clone, f ]
+        }
+    }
+
     ch_domains = channel.empty()
     ch_domain_qc = channel.empty()
     ch_domain_box = channel.empty()
@@ -217,12 +230,12 @@ workflow BAM_EL_REPLISEQ {
     // MODULE: Lexicographically sort the RT tracks (required by UCSC_BEDGRAPHTOBIGWIG)
     //
     FILE_SORT (
-        ch_rt_raw.mix(ch_rt_smooth).mix(ch_rt_raw_covered).mix(ch_rt_smooth_covered).mix(ch_rt_index_raw).mix(ch_rt_index_smooth),
+        ch_rt_raw.mix(ch_rt_smooth).mix(ch_rt_raw_covered).mix(ch_rt_smooth_covered).mix(ch_rt_index_raw).mix(ch_rt_index_smooth).mix(ch_rt_replicate_smooth),
         'bedGraph'
     )
 
     //
-    // MODULE: Convert RT tracks (raw + smoothed) to bigWig
+    // MODULE: Convert RT tracks (raw + smoothed, plus per-replicate smoothed coverage) to bigWig
     //
     UCSC_BEDGRAPHTOBIGWIG (
         FILE_SORT.out.sorted,

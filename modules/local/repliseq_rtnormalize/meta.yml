@@ -101,6 +101,24 @@ output:
           pattern: "*.RT_index.smooth.bedGraph"
           ontologies:
             - edam: "http://edamontology.org/format_3583" # bedGraph
+  replicate_smooth:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample (condition) information
+            e.g. [ id:'test' ]
+      - "*.coverage.smooth.bedGraph":
+          type: file
+          description: |
+            Smoothed, normalized coverage track for one input replicate (named
+            `<prefix>.<phase>_<brep>.coverage.smooth.bedGraph`), i.e. the per-replicate track that
+            feeds into `RT.smooth.bedGraph`. Only emitted under `--smooth_stage replicate`
+            (the default) with `--smooth` other than `none`, since that is the only combination
+            where an individual replicate's coverage is itself smoothed rather than the combined
+            ratio
+          pattern: "*.coverage.smooth.bedGraph"
+          ontologies:
+            - edam: "http://edamontology.org/format_3583" # bedGraph
   qc:
     - - meta:
           type: map
