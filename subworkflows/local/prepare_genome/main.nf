@@ -368,7 +368,8 @@ workflow PREPARE_GENOME {
         .combine(ch_effective_gsize)
         .first()
         .map { size, egs ->
-            egs.toDouble() / size.toDouble()
+            // khmer's stub just touches an empty kmers.txt, so egs.toDouble() would throw "empty String" under -stub
+            workflow.stubRun ? 1.0 : egs.toDouble() / size.toDouble()
         }
         .set { ch_effective_gfraction }
 
