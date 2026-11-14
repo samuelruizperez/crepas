@@ -1,0 +1,370 @@
+# ============================================================================
+# grothlab/crepas: Depictio template
+# ============================================================================
+# Turns a crepas --outdir into a Depictio project with an interactive
+# dashboard. Used by the pipeline's completion trigger (conf/depictio.config),
+# or by hand:
+#
+#   depictio ingest <outdir> --template <crepas>/assets/depictio
+#
+# Depictio only runs Python recipes that ship inside its own package, so this
+# template has none: every table is a plain scan of a file the pipeline
+# writes, with the parts of the path that matter (aligner, experiment type,
+# peak caller, library) captured as columns by scan wildcards. The one table
+# the pipeline writes for this purpose is the library hub,
+# pipeline_info/libraries.tsv, which ties every library id to its sample,
+# antibody and control.
+#
+# Everything except the hub is optional: a run without a peak caller, without
+# phantompeakqualtools or without MultiQC still ingests, and the dashboard
+# tiles reading a missing collection (or a MultiQC module the run did not
+# write) are dropped at import.
+#
+# Layouts the scans expect, relative to --outdir:
+#   pipeline_info/libraries.tsv
+#   pipeline_info/params_<timestamp>.json
+#   multiqc/[<peak type>/]multiqc_data/multiqc.parquet
+#   <aligner>/mergedLibrary/samtools_stats_summary/final_samtools_stats_summary.*.totals.tsv
+#   <aligner>/mergedLibrary/phantompeakqualtools/<library>.mLb.*.spp_{nsc,rsc}_mqc.tsv
+#   <aligner>/mergedLibrary/<exp_type>/<caller>/[broad_peak|narrow_peak/]qc/
+#       <library>.mLb.<steps>.peaks.{FRiP,peak_count}_mqc.tsv
+#       *{peak_qc,peaks.qc}.summary.txt
+# ============================================================================
+template:
+  template_id: "grothlab/crepas"
+  description: "grothlab/crepas: library hub, read filtering, strand cross-correlation, peaks and FRiP for every peak caller, and the MultiQC report"
+  # The template's own revision, not the pipeline's. Major: a collection or a
+  # column changes (re-ingest). Minor: dashboards only. Patch: text only.
+  version: "1.0.0"
+  variables:
+    - name: "DATA_ROOT"
+      description: "The crepas --outdir"
+      required: true
+  dashboards:
+    - "dashboards/base.yaml"
+  provenance:
+    sources:
+      - name: "params"
+        glob: "pipeline_info/params*.json"
+        format: "json"
+        pick: "latest"
+        exclude_keys:
+          - "hook_url"
+          - "email*"
+      - name: "software_versions"
+        glob: "pipeline_info/*software*versions*.yml"
+        format: "yaml"
+        pick: "latest"
+        group: "Software versions"
+    groups:
+      - group: "Input and references"
+        key_patterns: ["input", "genome", "fasta", "gtf", "gff", "blacklist", "*_index", "igenomes_*", "spikein_*", "save_reference"]
+      - group: "Alignment and filtering"
+        key_patterns: ["aligner", "keep_*", "min_mapq", "*_filter*", "skip_markduplicates", "fragment_size", "read_length", "umi*", "*multimap*"]
+      - group: "Peak calling"
+        key_patterns: ["peak_callers", "macs_*", "narrow_peak", "broad_cutoff", "seacr_*", "epic2_*", "genrich_*", "mace_*", "edd_*", "danpos*", "consenrich*", "rocco*", "min_reps_consensus", "idr*"]
+      - group: "Normalisation and coverage"
+        key_patterns: ["normalization*", "normalisation*", "*bigwig*", "bin_size", "*downsampl*"]
+      - group: "Run context"
+        key_patterns: ["outdir", "multiqc_*", "config_profile_*", "custom_config_*", "publish_dir_mode", "validate_params", "monochrome_logs", "plaintext_email", "version", "help*", "depictio_*", "trace_report_suffix"]
+      - group: "Skipped steps"
+        key_patterns: ["skip_*"]
+    highlight:
+      - "aligner"
+      - "peak_callers"
+      - "genome"
+      - "macs_gsize"
+
+name: "grothlab/crepas"
+project_type: "advanced"
+# Private: visible to its owner (the account whose token ran the ingestion)
+# and to whoever the owner shares it with on the project's Permissions page.
+is_public: false
+workflows:
+  - name: "crepas"
+    engine:
+      name: "nextflow"
+    repository_url: "https://github.com/grothlab/crepas"
+    data_location:
+      structure: "flat"
+      locations:
+        - "{DATA_ROOT}"
+    data_collections:
+      # ----------------------------------------------------------------
+      # Hub: one row per merged library (ChIPs and controls alike). Every
+      # other per-library collection is linked to it on `library`, so the
+      # library filters narrow every tab.
+      # ----------------------------------------------------------------
+      - data_collection_tag: "libraries"
+        description: "One row per merged library: sample, experiment type, replicate, antibody and control"
+        config:
+          type: "Table"
+          metatype: "Metadata"
+          scan:
+            mode: "single"
+            scan_parameters:
+              filename: "{DATA_ROOT}/pipeline_info/libraries.tsv"
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+              infer_schema_length: 0
+            columns_description:
+              library: "Merged library id, <exp_type>_<sample>_bRep_<n>: the key of every per-library table"
+              sample: "Sample name from the samplesheet"
+              exp_type: "Experiment type (as used in output paths)"
+              biological_replicate: "Biological replicate"
+              technical_replicates: "Sequencing runs merged into the library"
+              antibody: "Antibody; empty for an input control"
+              is_input_control: "true for input / IgG control libraries"
+              input_control: "Control library the peaks of this library were called against"
+              single_end: "true for single-end libraries"
+
+      - data_collection_tag: "multiqc"
+        optional: true
+        description: "The run's MultiQC report (multiqc.parquet)"
+        config:
+          type: "MultiQC"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "multiqc/(?:[^/]+/)?multiqc_data/multiqc\\.parquet$"
+          dc_specific_properties:
+            s3_location: null
+
+      # ----------------------------------------------------------------
+      # Reads left after each merged-library step: mLb (merged), mkD
+      # (duplicates marked), flT1 / flT3 (filters). The columns follow the
+      # steps the run made.
+      # ----------------------------------------------------------------
+      - data_collection_tag: "read_totals"
+        optional: true
+        description: "Reads left after each merged-library processing step, per library"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/samtools_stats_summary/final_samtools_stats_summary\\.[^/]*\\.totals\\.tsv$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+            columns_description:
+              sample: "Merged library id"
+              mLb_raw_total_sequences: "Reads in the merged library"
+              mkD_raw_total_sequences: "Reads after duplicate marking"
+              flT1_raw_total_sequences: "Reads after the first filtering step"
+              flT3_raw_total_sequences: "Reads after the final filtering step"
+              aligner: "Aligner (output directory)"
+
+      # ----------------------------------------------------------------
+      # Strand cross-correlation (phantompeakqualtools), one value per
+      # library and file.
+      # ----------------------------------------------------------------
+      - data_collection_tag: "phantompeak_nsc"
+        optional: true
+        description: "Normalised strand cross-correlation coefficient (NSC) per library"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/phantompeakqualtools/{library}\\.mLb\\.[^/]*\\.spp_nsc_mqc\\.tsv$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+                  - {name: "library", wildcard_regex: "[^/]+?"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+              has_header: false
+              comment_prefix: "#"
+              new_columns: ["nsc_label", "nsc"]
+            columns_description:
+              nsc: "NSC; ENCODE flags values below 1.05"
+
+      - data_collection_tag: "phantompeak_rsc"
+        optional: true
+        description: "Relative strand cross-correlation coefficient (RSC) per library"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/phantompeakqualtools/{library}\\.mLb\\.[^/]*\\.spp_rsc_mqc\\.tsv$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+                  - {name: "library", wildcard_regex: "[^/]+?"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+              has_header: false
+              comment_prefix: "#"
+              new_columns: ["rsc_label", "rsc"]
+            columns_description:
+              rsc: "RSC; ENCODE flags values below 0.8"
+
+      # ----------------------------------------------------------------
+      # Peaks. Every caller writes <library>.mLb.<steps>.peaks.*_mqc.tsv
+      # under <exp_type>/<caller>/[<peak type>/]qc/. `peak_set` is what sits
+      # between the library and `.peaks`: the filtering steps, then the caller
+      # and its variant where it has several (SEACR: threshold and
+      # normalisation, e.g. `mkD.flT1.flT3.seacr.1.raw`).
+      # ----------------------------------------------------------------
+      - data_collection_tag: "frip"
+        optional: true
+        description: "Fraction of reads in peaks, per library and peak set"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/{exp_dir}/{caller}/{peak_dir}qc/{library}\\.mLb\\.{peak_set}\\.peaks\\.FRiP_mqc\\.tsv$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+                  - {name: "exp_dir", wildcard_regex: "[^/]+"}
+                  - {name: "caller", wildcard_regex: "[^/]+"}
+                  - {name: "peak_dir", wildcard_regex: "(?:(?:broad|narrow)_peak/)?"}
+                  - {name: "library", wildcard_regex: "[^/]+?"}
+                  - {name: "peak_set", wildcard_regex: "[^/]*?"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+              has_header: false
+              comment_prefix: "#"
+              new_columns: ["frip_label", "frip"]
+            columns_description:
+              frip: "Fraction of the library's reads inside its peaks"
+              caller: "Peak caller (output directory)"
+              peak_dir: "broad_peak/ or narrow_peak/ for callers with both modes, empty otherwise"
+              peak_set: "Filtering steps, caller and variant of the peak set"
+
+      - data_collection_tag: "peak_count"
+        optional: true
+        description: "Peaks called per library and peak set"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/{exp_dir}/{caller}/{peak_dir}qc/{library}\\.mLb\\.{peak_set}\\.peaks\\.peak_count_mqc\\.tsv$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+                  - {name: "exp_dir", wildcard_regex: "[^/]+"}
+                  - {name: "caller", wildcard_regex: "[^/]+"}
+                  - {name: "peak_dir", wildcard_regex: "(?:(?:broad|narrow)_peak/)?"}
+                  - {name: "library", wildcard_regex: "[^/]+?"}
+                  - {name: "peak_set", wildcard_regex: "[^/]*?"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+              has_header: false
+              comment_prefix: "#"
+              new_columns: ["count_label", "num_peaks"]
+            columns_description:
+              num_peaks: "Peaks called for the library in this peak set"
+
+      # Long table, one row per (library, measure): the R summary() of peak
+      # width, score and significance over that library's peaks.
+      - data_collection_tag: "peak_qc"
+        optional: true
+        description: "Distribution of peak width, score and significance, per library, peak set and measure"
+        config:
+          type: "Table"
+          metatype: "Aggregate"
+          scan:
+            mode: "recursive"
+            scan_parameters:
+              regex_config:
+                pattern: "{aligner}/mergedLibrary/{exp_dir}/{caller}/{peak_dir}qc/[^/]*(?:peak_qc|peaks\\.qc)\\.summary\\.txt$"
+                wildcards:
+                  - {name: "aligner", wildcard_regex: "[^/]+"}
+                  - {name: "exp_dir", wildcard_regex: "[^/]+"}
+                  - {name: "caller", wildcard_regex: "[^/]+"}
+                  - {name: "peak_dir", wildcard_regex: "(?:(?:broad|narrow)_peak/)?"}
+          dc_specific_properties:
+            format: "TSV"
+            polars_kwargs:
+              separator: "\t"
+            columns_description:
+              measure: "What is summarised: length (bp), fold, -log10(pvalue), -log10(qvalue), signal..."
+              sample: "Library and peak set the peaks belong to"
+              num_peaks: "Peaks in the set"
+
+links:
+  # Hub -> per-library tables and MultiQC: the library filters narrow all.
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "read_totals"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "sample"}
+    description: "Read totals of the libraries picked"
+    enabled: true
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "phantompeak_nsc"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "library"}
+    description: "NSC of the libraries picked"
+    enabled: true
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "phantompeak_rsc"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "library"}
+    description: "RSC of the libraries picked"
+    enabled: true
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "frip"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "library"}
+    description: "FRiP of the libraries picked"
+    enabled: true
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "peak_count"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "library"}
+    description: "Peak counts of the libraries picked"
+    enabled: true
+  - source_dc_tag: "libraries"
+    source_column: "library"
+    target_dc_tag: "multiqc"
+    target_type: "multiqc"
+    link_config: {resolver: "sample_mapping", target_field: "sample_name"}
+    description: "MultiQC panels of the libraries picked"
+    enabled: true
+  # Caller filter on the Peaks tab: picked on FRiP, applied to the counts and
+  # the peak-shape summaries too.
+  - source_dc_tag: "frip"
+    source_column: "caller"
+    target_dc_tag: "peak_count"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "caller"}
+    description: "Peak counts of the callers picked"
+    enabled: true
+  - source_dc_tag: "frip"
+    source_column: "caller"
+    target_dc_tag: "peak_qc"
+    target_type: "table"
+    link_config: {resolver: "direct", target_field: "caller"}
+    description: "Peak-shape summaries of the callers picked"
+    enabled: true

@@ -262,6 +262,33 @@ workflow CREPAS {
         }
         .set { ch_sort_bam }
 
+    //
+    // Library hub: one row per merged library, tying the id every per-library
+    // output is named after to its sample, antibody and control. Read by the
+    // Depictio template (assets/depictio) to link and filter all its tables.
+    //
+    ch_sort_bam
+        .map { meta, bams ->
+            [
+                meta.id,
+                meta.original_id,
+                meta.exp_type,
+                meta.brep,
+                meta.trep_count,
+                meta.antibody ?: '',
+                meta.is_input_control ? 'true' : 'false',
+                meta.input_control ?: '',
+                meta.single_end ? 'true' : 'false'
+            ].join('\t')
+        }
+        .collectFile(
+            name: 'libraries.tsv',
+            storeDir: "${params.outdir}/pipeline_info",
+            seed: 'library\tsample\texp_type\tbiological_replicate\ttechnical_replicates\tantibody\tis_input_control\tinput_control\tsingle_end',
+            newLine: true,
+            sort: true
+        )
+
     // TODO: print for debugging
     ch_sort_bam
         .map {

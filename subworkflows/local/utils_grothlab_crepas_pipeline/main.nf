@@ -477,6 +477,7 @@ workflow PIPELINE_COMPLETION {
 
         completionSummary(monochrome_logs)
 
+        gatherDepictioReport(outdir)
     }
 
     workflow.onError {
@@ -489,6 +490,68 @@ workflow PIPELINE_COMPLETION {
     FUNCTIONS
 ========================================================================================
 */
+
+//
+// Copy what the Depictio report reads into <outdir>/depictio/: the template (template/) and the
+// files it scans, at their paths relative to the output directory (data/). A few MB, so it can be
+// copied to another machine and ingested there. Which files is read from the template itself
+// (its scan patterns and provenance globs), so the two cannot drift apart. Never fails the run.
+//
+def gatherDepictioReport(outdir) {
+    // Here, not in the onComplete closure, where `workflow` does not resolve to the run's metadata.
+    if (!workflow.success) {
+        return
+    }
+    try {
+        def templateDir = file("${workflow.projectDir}/assets/depictio")
+        def root = file(outdir.toString())
+        def bundle = root.resolve('depictio')
+        def patterns = depictioReportPatterns(new org.yaml.snakeyaml.Yaml().load(templateDir.resolve('template.yaml').text))
+
+        // Collect before copying, so the walk does not run through the folder being written.
+        def found = []
+        root.eachFileRecurse { f ->
+            def rel = root.relativize(f).toString()
+            if (!rel.startsWith('depictio/') && !f.isDirectory() && patterns.any { p -> p.matcher(rel).matches() }) {
+                found << rel
+            }
+        }
+        // Rebuilt from scratch each run: files left from an earlier run would be ingested too.
+        bundle.deleteDir()
+        bundle.mkdirs()
+        templateDir.copyTo(bundle.resolve('template'))
+        found.each { rel ->
+            def target = bundle.resolve('data').resolve(rel)
+            target.parent.mkdirs()
+            root.resolve(rel).copyTo(target)
+        }
+        log.info("Depictio report: ${found.size()} files and the template copied to ${bundle}")
+    } catch (Exception e) {
+        log.warn("Could not gather the Depictio report files into ${outdir}/depictio: ${e.message}")
+    }
+}
+
+//
+// Regexes, over paths relative to the output directory, for every file the Depictio template reads.
+// Scan wildcards such as {aligner} become `.*?`: this only selects files to copy, so a superset is fine.
+//
+def depictioReportPatterns(template) {
+    // Provenance globs: `*` within one path segment, everything else literal.
+    def regexes = (template.template?.provenance?.sources ?: []).collect { src ->
+        (src.glob as String).split(/\*/, -1).collect { part -> java.util.regex.Pattern.quote(part) }.join('[^/]*')
+    }
+    template.workflows.each { wf ->
+        wf.data_collections.each { dc ->
+            def scan = dc.config.scan
+            if (scan.mode == 'single') {
+                regexes << java.util.regex.Pattern.quote((scan.scan_parameters.filename as String) - '{DATA_ROOT}/')
+            } else {
+                regexes << (scan.scan_parameters.regex_config.pattern as String).replaceAll(/\{[A-Za-z_][A-Za-z0-9_]*\}/, '.*?')
+            }
+        }
+    }
+    return regexes.collect { r -> java.util.regex.Pattern.compile(r.endsWith('$') ? r : r + '$') }
+}
 
 //
 // Get attribute from genome config file e.g. fasta

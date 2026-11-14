@@ -1,0 +1,556 @@
+# grothlab/crepas dashboard. Tags (workflow, data collections) must match
+# ../template.yaml. Tiles reading a collection or a MultiQC module that a run
+# did not produce are dropped at import, so one file serves every route.
+version: 1
+main_dashboard:
+  title: grothlab/crepas
+  subtitle: Chromatin profiling, from library quality to the peaks each caller found
+  project_tag: grothlab/crepas
+  main_tab_name: Overview
+  tab_icon: mdi:compass-outline
+  filter_panel_default: collapsed
+  content_width_default: compact
+  show_tab_header: false
+  category_colors:
+    exp_type: auto
+    caller: auto
+    antibody: auto
+    is_input_control:
+      "true": "#868e96"
+      "false": "#1c7ed6"
+  filter_sections:
+    - name: Library filters
+      icon: mdi:filter-variant
+      color: teal
+      description: Applies to every tab
+      persistent: true
+      pin: top
+  grid_sections:
+    - name: Key figures
+      icon: mdi:counter
+      color: gray
+      appearance: plain
+      card_variant: headline
+      description: The run in four numbers. The library filters narrow them.
+    - name: Findings
+      icon: mdi:star-outline
+      color: gray
+      appearance: plain
+      figure_style: minimal
+      description: Signal-to-noise per library and peak caller.
+    - name: How to read this dashboard
+      icon: mdi:information-outline
+      color: gray
+      appearance: plain
+    - name: Libraries
+      icon: mdi:table-account
+      color: gray
+      description: The libraries behind every tab, narrowed by the library filters
+      collapsed: true
+      persistent: true
+      pin: bottom
+  components:
+    # ── Filters (left panel, every tab) ──────────────────────────────
+    - tag: f-exp-type
+      component_type: interactive
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      interactive_component_type: MultiSelect
+      column_name: exp_type
+      column_type: object
+      section: Library filters
+      title: Experiment type
+    - tag: f-antibody
+      component_type: interactive
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      interactive_component_type: MultiSelect
+      column_name: antibody
+      column_type: object
+      section: Library filters
+      title: Antibody
+    - tag: f-sample
+      component_type: interactive
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      interactive_component_type: MultiSelect
+      column_name: sample
+      column_type: object
+      section: Library filters
+      title: Sample
+    - tag: f-control
+      component_type: interactive
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      interactive_component_type: SegmentedControl
+      column_name: is_input_control
+      column_type: object
+      section: Library filters
+      title: Input control
+    - tag: f-library
+      component_type: interactive
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      interactive_component_type: MultiSelect
+      column_name: library
+      column_type: object
+      section: Library filters
+      title: Library
+
+    # ── Hero ─────────────────────────────────────────────────────────
+    - tag: hero
+      component_type: text
+      title: grothlab/crepas
+      order: 2
+      alignment: left
+      vertical_alignment: top
+      body: |
+        Results of one crepas run: how many reads each library kept through filtering,
+        how strong its signal is, and what every peak caller found in it.
+        [Run parameters](params:)
+      layout: {x: 0, y: 0, w: 5, h: 2}
+    - tag: run-card
+      component_type: text
+      surface: card
+      vertical_alignment: top
+      values:
+        libs: {dc: libraries, column: library, aggregation: nunique, format: integer}
+        samples: {dc: libraries, column: sample, aggregation: nunique, format: integer}
+        callers: {dc: frip, column: caller, aggregation: nunique, format: integer}
+      body: |
+        ### The run
+        - ![](icon:mdi:test-tube) **Libraries** {{libs}} from {{samples}} samples
+        - ![](icon:mdi:dna) **Aligner** {{param:aligner}}, genome {{param:genome}}
+        - ![](icon:mdi:chart-bell-curve) **Peak callers** {{callers}}: {{param:peak_callers}}
+      layout: {x: 5, y: 0, w: 3, h: 2}
+
+    # ── Key figures ──────────────────────────────────────────────────
+    - tag: kf-libraries
+      component_type: card
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      aggregation: nunique
+      column_name: library
+      column_type: object
+      secondary_layout: composition
+      breakdown_col: exp_type
+      section: Key figures
+      title: Libraries
+      description: Merged libraries in view, ChIPs and controls, split by experiment type.
+      layout: {x: 0, y: 0, w: 2, h: 2}
+    - tag: kf-reads
+      component_type: card
+      workflow_tag: crepas
+      data_collection_tag: read_totals
+      aggregation: sum
+      column_name: mLb_raw_total_sequences
+      column_type: int64
+      secondary_layout: attrition
+      attrition_cols: [mkD_raw_total_sequences, flT1_raw_total_sequences, flT3_raw_total_sequences]
+      format: si
+      section: Key figures
+      title: Reads
+      description: Reads in the merged libraries, then after duplicate marking and each filtering step.
+      layout: {x: 2, y: 0, w: 2, h: 2}
+    - tag: kf-peaks
+      component_type: card
+      workflow_tag: crepas
+      data_collection_tag: peak_count
+      aggregation: median
+      column_name: num_peaks
+      column_type: int64
+      aggregations: [box_plot_stats]
+      secondary_layout: box_plot
+      format: si
+      section: Key figures
+      title: Peaks per library
+      description: Median peaks per library over every peak set in view; the box shows the spread.
+      layout: {x: 4, y: 0, w: 2, h: 2}
+    - tag: kf-frip
+      component_type: card
+      workflow_tag: crepas
+      data_collection_tag: frip
+      aggregation: median
+      column_name: frip
+      column_type: float64
+      secondary_layout: threshold
+      threshold_value: 0.01
+      threshold_direction: min
+      format: percent
+      section: Key figures
+      title: FRiP
+      description: Median fraction of reads in peaks. The strip counts peak sets at or above the ENCODE floor of 1%.
+      layout: {x: 6, y: 0, w: 2, h: 2}
+
+    # ── Findings ─────────────────────────────────────────────────────
+    - tag: fig-frip-by-caller
+      component_type: figure
+      workflow_tag: crepas
+      data_collection_tag: frip
+      visu_type: box
+      dict_kwargs: {x: caller, y: frip, color: caller, points: all, hover_data: [library, peak_set]}
+      section: Findings
+      title: FRiP by peak caller
+      description: One point per library and peak set.
+      layout: {x: 0, y: 0, w: 4, h: 4}
+    - tag: fig-nsc
+      component_type: figure
+      workflow_tag: crepas
+      data_collection_tag: phantompeak_nsc
+      visu_type: bar
+      dict_kwargs: {x: library, y: nsc}
+      section: Findings
+      title: Strand cross-correlation (NSC)
+      description: ENCODE flags libraries below 1.05; input controls are expected to be low.
+      layout: {x: 4, y: 0, w: 4, h: 4}
+
+    - tag: how-to-read
+      component_type: text
+      section: How to read this dashboard
+      vertical_alignment: top
+      body: |
+        ### Data & QC
+        - [Reads & filtering](tab:Reads & filtering): how many reads did each library keep, and does it show ChIP-like signal?
+        - [MultiQC](tab:MultiQC): the panels of the run's MultiQC report
+        ### Peaks
+        - [Peaks](tab:Peaks): how many peaks did each caller find, and how much of the signal do they hold?
+
+        The **Library filters** in the left panel apply to every tab.
+      layout: {x: 0, y: 0, w: 8, h: 2}
+
+    - tag: tbl-libraries
+      component_type: table
+      workflow_tag: crepas
+      data_collection_tag: libraries
+      section: Libraries
+      title: Libraries
+      layout: {x: 0, y: 0, w: 8, h: 4}
+
+tabs:
+  # ───────────────────────────────────────────────────────────────────
+  - title: Reads & filtering
+    subtitle: How many reads did each library keep, and is there signal?
+    tab_group: Data & QC
+    tab_order: 1
+    tab_icon: mdi:filter-outline
+    tab_icon_color: teal
+    grid_sections:
+      - {name: Read retention, icon: mdi:filter-outline, color: teal}
+      - {name: Strand cross-correlation, icon: mdi:sine-wave, color: indigo}
+      - {name: Enrichment, icon: mdi:chart-line, color: grape}
+    components:
+      - tag: rf-retention
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: read_totals
+        # Code mode (df is a Polars frame, px and pl are provided, no imports):
+        # one bar per step the run made, whichever those are.
+        mode: code
+        code_content: |
+          df_modified = (
+              df.unpivot(index="sample", on=[c for c in df.columns if c.endswith("_raw_total_sequences") and "_minus_" not in c], variable_name="step", value_name="reads")
+              .with_columns(pl.col("step").str.replace("_raw_total_sequences", ""))
+          )
+          fig = px.bar(df_modified, x="sample", y="reads", color="step", barmode="group", labels={"sample": "", "reads": "reads"})
+        section: Read retention
+        title: Reads after each step
+        description: Merged library (mLb), after duplicate marking (mkD), and after each filtering step (flT1, flT3).
+        layout: {x: 0, y: 0, w: 8, h: 4}
+      - tag: rf-totals-table
+        component_type: table
+        workflow_tag: crepas
+        data_collection_tag: read_totals
+        section: Read retention
+        title: Read totals
+        compact: true
+        layout: {x: 0, y: 4, w: 8, h: 3}
+      - tag: rf-nsc
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: phantompeak_nsc
+        visu_type: bar
+        dict_kwargs: {x: library, y: nsc}
+        section: Strand cross-correlation
+        title: NSC
+        description: Normalised strand coefficient. ENCODE flags values below 1.05.
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: rf-rsc
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: phantompeak_rsc
+        visu_type: bar
+        dict_kwargs: {x: library, y: rsc}
+        section: Strand cross-correlation
+        title: RSC
+        description: Relative strand coefficient. ENCODE flags values below 0.8.
+        layout: {x: 4, y: 0, w: 4, h: 4}
+      - tag: rf-mqc-ssc
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: strand_shift_correlation
+        selected_plot: strand_shift_correlation-section
+        section: Strand cross-correlation
+        title: Strand-shift correlation
+        layout: {x: 0, y: 4, w: 8, h: 4}
+      - tag: rf-mqc-fingerprint
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: deeptools_fingerprint
+        selected_plot: Fingerprint plot
+        section: Enrichment
+        title: deepTools fingerprint
+        description: A ChIP with signal bends away from the diagonal; an input stays close to it.
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: rf-mqc-profile
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: deeptools_profile_genes
+        selected_plot: Read Distribution Profile after Annotation
+        section: Enrichment
+        title: Signal over genes
+        layout: {x: 4, y: 0, w: 4, h: 4}
+
+  # ───────────────────────────────────────────────────────────────────
+  - title: Peaks
+    subtitle: How many peaks did each caller find, and how much signal do they hold?
+    tab_group: Peaks
+    tab_order: 1
+    tab_icon: mdi:chart-bell-curve
+    tab_icon_color: violet
+    filter_sections:
+      - {name: Peak caller, icon: mdi:chart-bell-curve, color: violet, description: Narrows this tab}
+    grid_sections:
+      - {name: Peak calls, icon: mdi:chart-bar, color: violet}
+      - {name: Peak shape, icon: mdi:ruler, color: grape}
+      - {name: Annotation, icon: mdi:map-marker-outline, color: orange}
+      - {name: Peak tables, icon: mdi:table, color: gray, collapsed: true}
+    components:
+      - tag: pk-f-caller
+        component_type: interactive
+        workflow_tag: crepas
+        data_collection_tag: frip
+        interactive_component_type: MultiSelect
+        column_name: caller
+        column_type: object
+        section: Peak caller
+        title: Caller
+      - tag: pk-f-peakset
+        component_type: interactive
+        workflow_tag: crepas
+        data_collection_tag: frip
+        interactive_component_type: MultiSelect
+        column_name: peak_set
+        column_type: object
+        section: Peak caller
+        title: Peak set
+      - tag: pk-frip
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: frip
+        visu_type: bar
+        dict_kwargs: {x: library, y: frip, color: peak_set, barmode: group}
+        section: Peak calls
+        title: FRiP per library
+        description: Fraction of each library's reads inside its peaks, one bar per peak set.
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: pk-count
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: peak_count
+        visu_type: bar
+        dict_kwargs: {x: library, y: num_peaks, color: peak_set, barmode: group}
+        section: Peak calls
+        title: Peaks per library
+        description: Peaks called for each library, one bar per peak set.
+        layout: {x: 4, y: 0, w: 4, h: 4}
+      - tag: pk-width
+        component_type: figure
+        workflow_tag: crepas
+        data_collection_tag: peak_qc
+        mode: code
+        code_content: |
+          df_modified = df.filter(pl.col("measure") == "length")
+          fig = px.box(df_modified, x="caller", y="Median", color="caller", points="all", hover_data=["sample", "Mean", "1st Qu.", "3rd Qu.", "num_peaks"], labels={"Median": "median peak width (bp)", "caller": ""})
+        section: Peak shape
+        title: Peak width
+        description: Median peak width of each library and peak set, by caller. Hover a point for the library and its quartiles.
+        layout: {x: 0, y: 0, w: 8, h: 4}
+      - tag: pk-mqc-annot-macs3
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: macs3_peak_annotation
+        selected_plot: macs3_peak_annotation-section
+        section: Annotation
+        title: MACS3 peaks by genomic feature
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: pk-mqc-annot-seacr
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: seacr_peak_annotation
+        selected_plot: seacr_peak_annotation-section
+        section: Annotation
+        title: SEACR peaks by genomic feature
+        layout: {x: 4, y: 0, w: 4, h: 4}
+      - tag: pk-mqc-annot-epic2
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: epic2_peak_annotation
+        selected_plot: epic2_peak_annotation-section
+        section: Annotation
+        title: epic2 peaks by genomic feature
+        layout: {x: 0, y: 4, w: 4, h: 4}
+      - tag: pk-mqc-annot-genrich
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: genrich_peak_annotation
+        selected_plot: genrich_peak_annotation-section
+        section: Annotation
+        title: Genrich peaks by genomic feature
+        layout: {x: 4, y: 4, w: 4, h: 4}
+      - tag: pk-mqc-annot-mace
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: mace_peak_annotation
+        selected_plot: mace_peak_annotation-section
+        section: Annotation
+        title: MACE peaks by genomic feature
+        layout: {x: 0, y: 8, w: 4, h: 4}
+      - tag: pk-tbl-frip
+        component_type: table
+        workflow_tag: crepas
+        data_collection_tag: frip
+        columns: [library, caller, peak_set, frip, exp_dir, aligner]
+        section: Peak tables
+        title: FRiP
+        compact: true
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: pk-tbl-count
+        component_type: table
+        workflow_tag: crepas
+        data_collection_tag: peak_count
+        columns: [library, caller, peak_set, num_peaks, exp_dir, aligner]
+        section: Peak tables
+        title: Peak counts
+        compact: true
+        layout: {x: 4, y: 0, w: 4, h: 4}
+
+  # ───────────────────────────────────────────────────────────────────
+  - title: MultiQC
+    subtitle: The panels of the run's MultiQC report
+    tab_group: Data & QC
+    tab_order: 2
+    tab_icon: /assets/images/logos/multiqc_icon_color.svg
+    tab_icon_color: orange
+    grid_sections:
+      - {name: Run summary, icon: mdi:table, color: orange}
+      - {name: Reads, icon: mdi:file-document-outline, color: blue}
+      - {name: Alignment, icon: mdi:align-horizontal-left, color: teal}
+      - {name: Consensus peaks, icon: mdi:set-merge, color: violet}
+    components:
+      - tag: mqc-general
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: general_stats
+        selected_plot: general_stats
+        section: Run summary
+        title: General statistics
+        layout: {x: 0, y: 0, w: 8, h: 4}
+      - tag: mqc-fastqc-raw-counts
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: fastqc_raw
+        selected_plot: Sequence Counts
+        section: Reads
+        title: Raw reads
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: mqc-fastqc-raw-quality
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: fastqc_raw
+        selected_plot: Sequence Quality Histograms
+        section: Reads
+        title: Raw read quality
+        layout: {x: 4, y: 0, w: 4, h: 4}
+      - tag: mqc-fastqc-trimmed-counts
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: fastqc_trimmed
+        selected_plot: Sequence Counts
+        section: Reads
+        title: Trimmed reads
+        layout: {x: 0, y: 4, w: 4, h: 4}
+      - tag: mqc-fastqc-trimmed-adapters
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: fastqc_trimmed
+        selected_plot: Adapter Content
+        section: Reads
+        title: Adapter content after trimming
+        layout: {x: 4, y: 4, w: 4, h: 4}
+      - tag: mqc-samtools-library
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: samtools_library
+        selected_plot: Percent mapped
+        section: Alignment
+        title: Mapped reads per sequencing library
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: mqc-picard-dups
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: picard_markduplicates
+        selected_plot: Mark Duplicates
+        section: Alignment
+        title: Duplicates
+        layout: {x: 4, y: 0, w: 4, h: 4}
+      - tag: mqc-samtools-final
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: samtools_flT3
+        selected_plot: Alignment stats
+        section: Alignment
+        title: Final filtered alignments
+        layout: {x: 0, y: 4, w: 4, h: 4}
+      - tag: mqc-insert-size
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: samtools_flT3
+        selected_plot: Insert size distribution
+        section: Alignment
+        title: Fragment sizes
+        layout: {x: 4, y: 4, w: 4, h: 4}
+      - tag: mqc-featurecounts-pe
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: consensus_featurecounts_pe
+        selected_plot: Assignments
+        section: Consensus peaks
+        title: Reads in consensus peaks
+        layout: {x: 0, y: 0, w: 4, h: 4}
+      - tag: mqc-profile-peaks
+        component_type: multiqc
+        workflow_tag: crepas
+        data_collection_tag: multiqc
+        selected_module: deeptools_profile_peaks
+        selected_plot: Read Distribution Profile after Annotation
+        section: Consensus peaks
+        title: Signal over consensus peaks
+        layout: {x: 4, y: 0, w: 4, h: 4}

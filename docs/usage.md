@@ -13,8 +13,9 @@
    3. [Reproducibility](#reproducibility)
    4. [Core Nextflow arguments](#core-nextflow-arguments)
    5. [Custom configuration](#custom-configuration)
-   6. [Running in the background](#running-in-the-background)
-   7. [Nextflow memory requirements](#nextflow-memory-requirements)
+   6. [Interactive report with Depictio](#interactive-report-with-depictio)
+   7. [Running in the background](#running-in-the-background)
+   8. [Nextflow memory requirements](#nextflow-memory-requirements)
 
 ---
 
@@ -744,6 +745,47 @@ In most cases, you will only need to create a custom config as a one-off but if 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
+
+## Interactive report with Depictio
+
+[Depictio](https://depictio.github.io/depictio-docs/stable/) turns the results of a run into an interactive dashboard: library and read-filtering QC, strand cross-correlation, peak counts and FRiP for every peak caller, and the MultiQC panels, with filters by experiment type, antibody, sample and library that apply to every tab. The template for it is part of the pipeline (`assets/depictio/`).
+
+Every successful run copies what the report needs into `<outdir>/depictio/`: the template (`template/`) and the few files it reads, at their usual paths (`data/`), a few MB in all. That folder is all Depictio needs, so you can copy it to your own computer and look at the report there.
+
+### Set it up once
+
+`depictio local up` runs Depictio on your computer, without Docker. It has no logins, so use it on a computer only you use: on a shared machine, such as a cluster node, other users could open it while it runs.
+
+On Linux, macOS or Windows with WSL2:
+
+1. Install the Depictio CLI, e.g. `pipx install "depictio[local,multiqc]==1.20.5"` (or `uv tool install` with the same argument). 1.20.5 is the version the template is tested with.
+2. Save the script below as `crepas-report` somewhere on your `PATH`, and make it executable (`chmod +x crepas-report`).
+
+```bash
+#!/usr/bin/env bash
+# crepas-report: copy the Depictio report files of a crepas run to this computer and open them.
+# Usage: crepas-report [user@host:]<outdir> [name]
+#   crepas-report me@cluster.example.org:/projects/mylab/results/run1
+# Running it again for the same run refreshes the report. Stop Depictio with: depictio local down
+set -euo pipefail
+src=${1:?usage: crepas-report [user@host:]<outdir> [name]}
+src=${src%/}
+name=${2:-$(basename "${src#*:}")}
+dest="${CREPAS_REPORTS:-$HOME/crepas-reports}/$name"
+
+mkdir -p "$dest"
+rsync -a --delete "$src/depictio/" "$dest/"
+depictio local up --no-open --examples none
+depictio ingest "$dest/data" --template "$dest/template" --server local \
+    --project "crepas-$name" --dashboard-name "crepas · $name" --update-config
+depictio local open
+```
+
+### Open the report of a run
+
+For any finished run: `crepas-report <you>@<cluster>:<outdir>`. It copies `<outdir>/depictio/` to `~/crepas-reports/<outdir name>/` (set `CREPAS_REPORTS` to change that), starts Depictio if it is not running (the first start downloads its database programs), creates or refreshes the run's project and opens the dashboards in your browser. Your projects stay between sessions; `depictio local down` stops Depictio.
+
+If your group runs a Depictio server, the same folder can be loaded there instead: `depictio ingest <outdir>/depictio/data --template <outdir>/depictio/template --server <your CLI configuration>`.
 
 ## Running in the background
 
