@@ -271,6 +271,30 @@ const versionLabel = (v: SiteVersion) => (v.isLatest && !v.isDev ? `${v.id} (lat
                 ["day", 24 * 3600],
             ];
             const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+            // A copy button on every code block of the docs.
+            document.querySelectorAll<HTMLPreElement>(".markdown-content pre").forEach((pre) => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "code-block";
+                pre.replaceWith(wrapper);
+                wrapper.append(pre);
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "btn btn-sm btn-link text-body-secondary code-copy";
+                button.title = "Copy";
+                button.setAttribute("aria-label", "Copy code");
+                button.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                button.addEventListener("click", async () => {
+                    try {
+                        await navigator.clipboard.writeText((pre.textContent ?? "").replace(/\n$/, ""));
+                        button.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        setTimeout(() => (button.innerHTML = '<i class="fa-regular fa-copy"></i>'), 1500);
+                    } catch {
+                        // clipboard access denied; the code can still be selected and copied by hand
+                    }
+                });
+                wrapper.append(button);
+            });
+
             document.querySelectorAll<HTMLTimeElement>("time[data-relative]").forEach((el) => {
                 const seconds = (new Date(el.dateTime).getTime() - Date.now()) / 1000;
                 const [unit, size] = units.find(([, s]) => Math.abs(seconds) >= s) ?? ["day", 24 * 3600];

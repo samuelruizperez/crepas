@@ -1,20 +1,35 @@
 ---
 // Every page exists for every version: /<version>/<page>/ for each release and dev, and the
 // latest version (the newest release, or dev if there is none) is also served at the root.
+// The pages under docs/usage/<group>/ are served at /<version>/usage/<group>/<page>/.
 import MarkdownPage from "../components/MarkdownPage.astro";
 import ParametersPage from "../components/ParametersPage.astro";
 import PipelineSidebar from "../components/PipelineSidebar.astro";
 import ReleasesPage from "../components/ReleasesPage.astro";
 import PipelineLayout from "../layouts/PipelineLayout.astro";
 import { renderRepoMarkdown } from "../lib/markdown";
-import { getLatestVersion, getVersion, getVersions, type Page, PAGES } from "../lib/repo";
+import {
+    getLatestVersion,
+    getUsageGroups,
+    getVersion,
+    getVersions,
+    type Page,
+    PAGES,
+    type UsageSubpage,
+} from "../lib/repo";
+
+type Props = { versionId: string; page: Page; subpage?: UsageSubpage };
 
 export function getStaticPaths() {
-    const paths: { params: { path: string | undefined }; props: { versionId: string; page: Page } }[] = [];
+    const paths: { params: { path: string | undefined }; props: Props }[] = [];
     const add = (prefix: string, versionId: string) => {
         for (const page of PAGES) {
             const path = [prefix, page].filter(Boolean).join("/");
             paths.push({ params: { path: path || undefined }, props: { versionId, page } });
+        }
+        for (const subpage of getUsageGroups(getVersion(versionId).ref).flatMap((group) => group.pages)) {
+            const path = [prefix, "usage", subpage.group, subpage.slug].filter(Boolean).join("/");
+            paths.push({ params: { path }, props: { versionId, page: "usage", subpage } });
         }
     };
     add("", getLatestVersion().id);
@@ -22,7 +37,7 @@ export function getStaticPaths() {
     return paths;
 }
 
-const { versionId, page } = Astro.props as { versionId: string; page: Page };
+const { versionId, page, subpage } = Astro.props as Props;
 const version = getVersion(versionId);
 const titles: Record<Page, string> = {
     "": "Introduction",
@@ -34,7 +49,7 @@ const titles: Record<Page, string> = {
 const intro = page === "" ? await renderRepoMarkdown("README.md", version, true) : undefined;
 ---
 
-<PipelineLayout title={titles[page]} version={version} page={page}>
+<PipelineLayout title={subpage ? `${titles[page]}: ${subpage.title}` : titles[page]} version={version} page={page}>
     {
         page === "" && intro && (
             <div class="row">
@@ -47,7 +62,16 @@ const intro = page === "" ? await renderRepoMarkdown("README.md", version, true)
             </div>
         )
     }
-    {page === "usage" && <MarkdownPage file="docs/usage.md" version={version} />}
+    {
+        page === "usage" && (
+            <MarkdownPage
+                file={subpage?.file ?? "docs/usage.md"}
+                title={subpage?.title}
+                version={version}
+                usageNav
+            />
+        )
+    }
     {page === "output" && <MarkdownPage file="docs/output.md" version={version} />}
     {page === "parameters" && <ParametersPage version={version} />}
     {page === "releases" && <ReleasesPage version={version} />}

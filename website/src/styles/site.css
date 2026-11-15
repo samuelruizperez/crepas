@@ -310,3 +310,26 @@ body.show-hidden li.param-hidden {
 .row > [class*="col-"] {
     min-width: 0;
 }
+
+/* Sticky side columns (the Usage menu, "On this page") scroll on their own when taller than the window. */
+.side-column {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Copy button in the top right corner of code blocks */
+.code-block {
+    position: relative;
+}
+
+.code-block .code-copy {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    opacity: 0.6;
+}
+
+.code-block:hover .code-copy,
+.code-block .code-copy:focus-visible {
+    opacity: 1;
+}

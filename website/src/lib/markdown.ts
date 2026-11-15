@@ -11,7 +11,17 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
-import { getManifest, githubRef, type Page, pageHref, readRepoFile, SITE_URL, type SiteVersion } from "./repo";
+import {
+    findUsageSubpage,
+    getManifest,
+    githubRef,
+    type Page,
+    pageHref,
+    readRepoFile,
+    SITE_URL,
+    type SiteVersion,
+    usageSubpageHref,
+} from "./repo";
 
 export interface Heading {
     depth: number;
@@ -128,6 +138,11 @@ function rehypeRepoLinks(options: { sourceFile: string; version: SiteVersion }) 
             const page = PAGE_FOR_FILE[resolved];
             if (attr === "href" && page !== undefined) {
                 node.properties[attr] = pageHref(version, page) + (hash ? `#${hash}` : "");
+                return;
+            }
+            const subpage = attr === "href" ? findUsageSubpage(version.ref, resolved) : undefined;
+            if (subpage) {
+                node.properties[attr] = usageSubpageHref(version, subpage) + (hash ? `#${hash}` : "");
                 return;
             }
             const suffix = attr === "src" ? "?raw=true" : hash ? `#${hash}` : "";

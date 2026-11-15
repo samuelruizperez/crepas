@@ -173,6 +173,96 @@ export function pageHref(version: SiteVersion, page: Page): string {
     return `/${version.id}/${page ? `${page}/` : ""}`;
 }
 
+// Markdown files under docs/usage/<group>/ are pages of their own under the Usage tab, listed in a
+// menu by group (e.g. docs/usage/tutorials/okseq.md is "Tutorials > OK-seq"), as on nf-co.re.
+export interface UsageSubpage {
+    group: string;
+    slug: string;
+    file: string;
+    title: string;
+}
+
+export interface UsageGroup {
+    name: string;
+    title: string;
+    pages: UsageSubpage[];
+}
+
+const USAGE_DIR = "docs/usage";
+
+// Paths of the files in a repo directory (not recursive), relative to the repo root.
+function listRepoDir(dir: string, ref: string | null): { files: string[]; dirs: string[] } {
+    if (ref === null) {
+        const full = path.join(REPO_ROOT, dir);
+        if (!fs.existsSync(full)) return { files: [], dirs: [] };
+        const entries = fs.readdirSync(full, { withFileTypes: true });
+        return {
+            files: entries.filter((e) => e.isFile()).map((e) => `${dir}/${e.name}`),
+            dirs: entries.filter((e) => e.isDirectory()).map((e) => `${dir}/${e.name}`),
+        };
+    }
+    try {
+        const lines = git(["ls-tree", ref, "--", `${dir}/`]).split("\n").filter(Boolean);
+        const entries = lines.map((line) => {
+            const [meta, name] = line.split("\t");
+            return { type: meta.split(" ")[1], name };
+        });
+        return {
+            files: entries.filter((e) => e.type === "blob").map((e) => e.name),
+            dirs: entries.filter((e) => e.type === "tree").map((e) => e.name),
+        };
+    } catch {
+        return { files: [], dirs: [] };
+    }
+}
+
+const usageGroupsCache = new Map<string, UsageGroup[]>();
+
+// The group's introduction.md comes first, then the pages in the order its links list them, then any
+// other page by title.
+export function getUsageGroups(ref: string | null): UsageGroup[] {
+    const key = ref ?? "";
+    const cached = usageGroupsCache.get(key);
+    if (cached) return cached;
+    const groups = listRepoDir(USAGE_DIR, ref)
+        .dirs.sort()
+        .map((dir) => {
+            const name = path.posix.basename(dir);
+            const pages = listRepoDir(dir, ref)
+                .files.filter((file) => file.endsWith(".md"))
+                .map((file) => {
+                    const slug = path.posix.basename(file, ".md");
+                    const title = readRepoFile(file, ref).match(/^#\s+(.+?)\s*$/m)?.[1] ?? slug;
+                    return { group: name, slug, file, title };
+                });
+            const intro = pages.find((p) => p.slug === "introduction");
+            const linked = intro
+                ? [...readRepoFile(intro.file, ref).matchAll(/\]\(([\w-]+)\.md(?:#[^)]*)?\)/g)].map((m) => m[1])
+                : [];
+            const rank = (p: UsageSubpage) => {
+                if (p.slug === "introduction") return -1;
+                const i = linked.indexOf(p.slug);
+                return i === -1 ? linked.length : i;
+            };
+            pages.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+            const title = name.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+            return { name, title, pages };
+        })
+        .filter((group) => group.pages.length > 0);
+    usageGroupsCache.set(key, groups);
+    return groups;
+}
+
+export function usageSubpageHref(version: SiteVersion, subpage: UsageSubpage): string {
+    return `${pageHref(version, "usage")}${subpage.group}/${subpage.slug}/`;
+}
+
+export function findUsageSubpage(ref: string | null, file: string): UsageSubpage | undefined {
+    return getUsageGroups(ref)
+        .flatMap((group) => group.pages)
+        .find((page) => page.file === file);
+}
+
 export interface Components {
     modules: string[];
     subworkflows: string[];

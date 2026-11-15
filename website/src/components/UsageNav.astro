@@ -1,0 +1,57 @@
+---
+// Menu of the Usage tab: the main usage page and the pages of each docs/usage/<group>/ directory.
+import { getUsageGroups, pageHref, type SiteVersion, usageSubpageHref } from "../lib/repo";
+
+export interface Props {
+    version: SiteVersion;
+    // repo file of the page being viewed
+    current: string;
+}
+
+const { version, current } = Astro.props;
+const groups = getUsageGroups(version.ref);
+const linkClass = (active: boolean) => [
+    "d-block py-1 text-decoration-none",
+    active ? "fw-semibold text-body" : "text-body-secondary",
+];
+---
+
+{
+    groups.length > 0 && (
+        <nav class="usage-nav mb-4" aria-label="Usage pages">
+            <p class="text-body-secondary small text-uppercase fw-semibold mb-2">
+                <i class="fa-solid fa-book-open me-2" />
+                Usage
+            </p>
+            <ul class="list-unstyled small mb-0">
+                <li>
+                    <a
+                        class:list={linkClass(current === "docs/usage.md")}
+                        href={pageHref(version, "usage")}
+                        aria-current={current === "docs/usage.md" ? "page" : undefined}
+                    >
+                        Usage
+                    </a>
+                </li>
+                {groups.map((group) => (
+                    <li>
+                        <span class="d-block pt-2 pb-1 fw-semibold text-body-secondary">{group.title}</span>
+                        <ul class="list-unstyled ms-3">
+                            {group.pages.map((subpage) => (
+                                <li>
+                                    <a
+                                        class:list={linkClass(subpage.file === current)}
+                                        href={usageSubpageHref(version, subpage)}
+                                        aria-current={subpage.file === current ? "page" : undefined}
+                                    >
+                                        {subpage.title}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </li>
+                ))}
+            </ul>
+        </nav>
+    )
+}

@@ -1,21 +1,53 @@
 ---
 import { renderRepoMarkdown } from "../lib/markdown";
-import { getManifest, githubRef, repoFileExists, type SiteVersion } from "../lib/repo";
+import { getManifest, getUsageGroups, githubRef, repoFileExists, type SiteVersion } from "../lib/repo";
 import Toc from "./Toc.astro";
+import UsageNav from "./UsageNav.astro";
 
 export interface Props {
     file: string;
     version: SiteVersion;
+    // shown above the content; the file's own top heading is dropped when rendering
+    title?: string;
+    // show the menu of the Usage tab in a left column, as on nf-co.re
+    usageNav?: boolean;
 }
 
-const { file, version } = Astro.props;
+const { file, version, title, usageNav = false } = Astro.props;
 const exists = repoFileExists(file, version.ref);
 const { html, headings } = exists ? await renderRepoMarkdown(file, version, true) : { html: "", headings: [] };
 const editUrl = `${getManifest(version.ref).homePage}/blob/${githubRef(version)}/${file}`;
+// Versions without docs/usage/<group>/ pages keep the two-column layout.
+const showNav = usageNav && getUsageGroups(version.ref).length > 0;
 ---
 
 <div class="row">
-    <article class="col-12 col-md-8 col-xxl-9 pt-3 markdown-content">
+    {
+        showNav && (
+            <div class="col-md-3 col-xl-2 d-none d-md-block">
+                <div class="sticky-top pt-3 side-column">
+                    <UsageNav version={version} current={file} />
+                </div>
+            </div>
+        )
+    }
+    <article
+        class:list={[
+            "col-12 pt-3 markdown-content",
+            showNav ? "col-md-9 col-xl-8" : "col-md-8 col-xxl-9",
+        ]}
+    >
+        {
+            showNav && (
+                <details class="d-md-none border rounded px-3 py-2 mb-3">
+                    <summary class="small fw-semibold">Usage pages</summary>
+                    <div class="pt-2">
+                        <UsageNav version={version} current={file} />
+                    </div>
+                </details>
+            )
+        }
+        {title && <h1 class="h2 mb-4">{title}</h1>}
         {
             exists ? (
                 <Fragment set:html={html} />
@@ -36,7 +68,9 @@ const editUrl = `${getManifest(version.ref).homePage}/blob/${githubRef(version)}
             )
         }
     </article>
-    <div class="col-12 col-md-4 col-xxl-3 d-none d-md-block">
-        <Toc headings={headings} />
+    <div class:list={["d-none", showNav ? "col-xl-2 d-xl-block" : "col-12 col-md-4 col-xxl-3 d-md-block"]}>
+        <div class="sticky-top pt-3 side-column">
+            <Toc headings={headings} />
+        </div>
     </div>
 </div>
